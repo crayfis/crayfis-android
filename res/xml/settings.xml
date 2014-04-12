@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+<CheckBoxPreference
+            android:defaultValue="true"
+            android:key="prefUploadData"
+            android:summary="Upload data?"
+            android:title="data upload" >
+        </CheckBoxPreference>
+    
+<CheckBoxPreference
+            android:defaultValue="true"
+            android:key="prefDoReco"
+            android:summary="@string/pref_do_reco"
+            android:title="@string/pref_do_reco" >
+        </CheckBoxPreference>
+        
+<ListPreference
+            android:key="prefThreshold"
+            android:defaultValue="40"
+            android:entries="@array/pref_threshold"
+            android:summary="@string/pref_threshold"
+            android:entryValues="@array/pref_threshold"
+            android:title="@string/pref_threshold" />
+
+  <EditTextPreference
+                android:title="Runname"
+                android:summary="Run Name"
+                android:defaultValue="default"
+                android:key="prefRunName"/>
+
+</PreferenceScreen>

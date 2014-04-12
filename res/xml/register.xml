@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+     <EditTextPreference
+                android:title="Name"
+                android:summary="Your Name"
+                android:defaultValue="Citizen Scientist"
+                android:key="prefUserName"/>
+     <EditTextPreference
+                android:title="email"
+                android:summary="Your email address"
+                android:defaultValue="we@love.you"
+                android:key="prefUserEmail"/>
+     
+     <CheckBoxPreference
+            android:defaultValue="false"
+            android:key="prefAnon"
+            android:summary="Be anonymous"
+            android:title="privacy" >
+        </CheckBoxPreference>
+     
+
+</PreferenceScreen>
