@@ -19,11 +19,11 @@
 package edu.uci.crayfis;
 
 import edu.uci.crayfis.R;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
@@ -42,6 +42,8 @@ public class MainActivity extends Activity  {
 	
 	private static final int RESULT_SETTINGS = 1;
 	private static final int RESULT_REGISTER = 2;
+	
+	public String build_version = null;
 
 	
 	public void onRestart()
@@ -51,6 +53,13 @@ public class MainActivity extends Activity  {
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		try {
+			build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
+		}
+		catch (NameNotFoundException ex) {
+			Log.w("MainActivity", "Could not find build version!");
+		}
 		
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().clear().commit();
 		PreferenceManager.setDefaultValues(this, R.xml.settings, true);
@@ -113,6 +122,7 @@ public class MainActivity extends Activity  {
 	        builder.append("\n Your email: "+ sharedPrefs.getString("prefUserEmail","NULL"));
 	        builder.append("\n Anonymous?: "
 	                + sharedPrefs.getBoolean("prefAnon", false));
+	        builder.append("\n Build version: " + build_version);
 	        TextView settingsTextView = (TextView) findViewById(R.id.text_settings);
 	
 	       
