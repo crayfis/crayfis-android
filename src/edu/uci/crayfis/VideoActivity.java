@@ -43,6 +43,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
@@ -52,7 +53,6 @@ import android.widget.FrameLayout;
 import java.util.List;
 
 import edu.uci.crayfis.R;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -75,6 +75,9 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 	private Camera mCamera;
 	private Visualization mDraw;
 	private CameraPreview mPreview;
+	
+	// WakeLock to prevent the phone from sleeping during DAQ
+	PowerManager.WakeLock wl;
 
 	private char[][] histo_chars = new char[256][256];
 	private int histo_max=0;
@@ -165,6 +168,9 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		 wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+		 wl.acquire();
 		
 	//	getFragmentManager().beginTransaction().replace(android.R.id.content, new PrefsFragment()).commit();
 		
@@ -240,6 +246,8 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 		for (int i=0;i<maxFrames;i++) current_status[i]=VideoActivity.status.EMPTY;
 	}
 	
+	@Override
+	protected void onDestroy() { wl.release(); super.onDestroy(); }	
 
 	@Override
 	protected void onResume() {

@@ -49,14 +49,8 @@ public class MainActivity extends Activity  {
 		super.onRestart();
 	}
 	
-	PowerManager.WakeLock wl;
-	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-		 wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-		 wl.acquire();
 		
 		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().clear().commit();
 		PreferenceManager.setDefaultValues(this, R.xml.settings, true);
@@ -66,9 +60,6 @@ public class MainActivity extends Activity  {
 		showUserSettings();
 		
 	}
-	
-	@Override
-	protected void onDestroy() { wl.release(); super.onDestroy(); }
 
 	public void clickedVideo( View view ) {
 		Intent intent = new Intent(this, VideoActivity.class);
