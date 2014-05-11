@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.boofcv.example.android;
+package edu.uci.crayfis;
 
 import android.content.Context;
 import android.hardware.Camera;

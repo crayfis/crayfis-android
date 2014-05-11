@@ -1,4 +1,4 @@
-package org.boofcv.example.android;
+package edu.uci.crayfis;
 
 /******************************************
  * 
@@ -11,7 +11,8 @@ import android.util.Log;
 
 import java.io.FileOutputStream;
 import java.util.ArrayList;
-import org.boofcv.example.android.ParticleData;
+
+import edu.uci.crayfis.ParticleData;
 import android.graphics.Bitmap;
 import android.content.Context;
 

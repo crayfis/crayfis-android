@@ -1,4 +1,6 @@
-package org.boofcv.example.android;
+package edu.uci.crayfis;
+
+import org.boofcv.example.android.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;

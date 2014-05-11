@@ -17,11 +17,11 @@
  */
 
 
-package org.boofcv.example.android;
+package edu.uci.crayfis;
 import java.lang.Math;
+
 import android.location.LocationManager;
 import android.location.Location;
-
 import android.location.LocationListener;
 
 import java.io.DataOutputStream;
@@ -39,7 +39,6 @@ import java.nio.ByteBuffer;
 import android.app.Activity;
 import android.graphics.Paint;
 import android.util.Log;
-
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.hardware.Camera;
@@ -51,13 +50,15 @@ import android.view.Window;
 import android.widget.FrameLayout;
 
 import java.util.List;
+
+import org.boofcv.example.android.R;
+
 import android.content.Context;
 import android.content.Intent;
-
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-/*import org.boofcv.example.android;*/
+/*import edu.uci.crayfis;*/
 
 /**
  * Demonstration of how to process a video stream on an Android device using BoofCV.  Most of the code below

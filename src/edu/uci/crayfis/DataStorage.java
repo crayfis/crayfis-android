@@ -1,4 +1,4 @@
-package org.boofcv.example.android;
+package edu.uci.crayfis;
 
 /*********************************************
  * 
