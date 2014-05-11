@@ -18,7 +18,7 @@
 
 package edu.uci.crayfis;
 
-import org.boofcv.example.android.R;
+import edu.uci.crayfis.R;
 
 import android.app.Activity;
 import android.content.Context;

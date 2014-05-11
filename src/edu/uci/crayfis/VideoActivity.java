@@ -51,7 +51,7 @@ import android.widget.FrameLayout;
 
 import java.util.List;
 
-import org.boofcv.example.android.R;
+import edu.uci.crayfis.R;
 
 import android.content.Context;
 import android.content.Intent;
