@@ -243,6 +243,9 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 		dstorage.start_time = starttime;
 		dstorage.latitude = currentLocation.getLatitude();
 		dstorage.longitude = currentLocation.getLongitude();
+		dstorage.server_address = getString(R.string.server_address);
+		dstorage.server_port = getString(R.string.server_port);
+		dstorage.upload_uri = getString(R.string.upload_uri);
 		for (int i=0;i<maxFrames;i++) current_status[i]=VideoActivity.status.EMPTY;
 	}
 	

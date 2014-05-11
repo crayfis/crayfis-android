@@ -22,7 +22,7 @@ import android.util.Log;
 import java.util.ArrayList;
 
 public class DataStorage {
-	
+	public static final String TAG = "DataStorage";
 	
 	// details of the run
 	public String run_name;
@@ -33,6 +33,10 @@ public class DataStorage {
 	public double longitude;
 	public double latitude;
 	public int threshold;
+	
+	public String server_address;
+	public String server_port;
+	public String upload_uri;
 	
 	// next index into 'files' array, where to store filename
 	public int writeIndex;
@@ -273,8 +277,8 @@ public class DataStorage {
 	
 // upload any file	
 public int uploadFile(String sourceFileUri) {
-        
-        String upLoadServerUri = "http://crayfis.ps.uci.edu/data/data.php";
+		String uploadServerUri = "http://"+server_address+":"+server_port+upload_uri;
+        Log.d(TAG, "uploading file to: " + uploadServerUri);
         String fileName = sourceFileUri;
         int serverResponseCode=0;
         HttpURLConnection conn = null;
@@ -303,7 +307,7 @@ public int uploadFile(String sourceFileUri) {
                   
                    // open a URL connection to the Servlet
                  FileInputStream fileInputStream = new FileInputStream(sourceFile);
-                 URL url = new URL(upLoadServerUri);
+                 URL url = new URL(uploadServerUri);
                   
                  // Open a HTTP  connection to  the URL
                  conn = (HttpURLConnection) url.openConnection(); 
