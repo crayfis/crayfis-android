@@ -30,7 +30,7 @@
 		        <action android:name="android.intent.action.ACTION_SCREEN_ON"></action>
 		    </intent-filter>
 		</receiver>
-		<activity android:name="edu.uci.crayfis.VideoActivity" android:screenOrientation="portrait"/>
+		<activity android:name="edu.uci.crayfis.DAQActivity" android:screenOrientation="portrait"/>
 		<activity android:name="edu.uci.crayfis.UserSettingActivity" android:screenOrientation="portrait"/>
 		<activity android:name="edu.uci.crayfis.UserRegisterActivity" android:screenOrientation="portrait"/>
 		

@@ -58,18 +58,12 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-/*import edu.uci.crayfis;*/
-
 /**
- * Demonstration of how to process a video stream on an Android device using BoofCV.  Most of the code below
- * is deals with handling Android and all of its quirks.  Video streams can be accessed in Android by processing
- * a camera preview.  Data from a camera preview comes in an NV21 image format, which needs to be converted.
- * After it has been converted it needs to be processed and then displayed.  Note that several locks are required
- * to avoid the three threads (GUI, camera preview, and processing) from interfering with each other.
- *
- * @author Peter Abeles
+ * This is the main Activity of the app; this activity is started when
+ * the user hits "Run" from the start screen. Here we manage the threads
+ * that acquire, process, and upload the pixel data.
  */
-public class VideoActivity extends Activity implements Camera.PreviewCallback {
+public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// camera and display objects
 	private Camera mCamera;
@@ -223,7 +217,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 		if (L1thresh>=0) 
 		{
 			fixed_threshold=true;
-			current_state = VideoActivity.state.DATA;
+			current_state = DAQActivity.state.DATA;
 
 		}
 		else
@@ -232,7 +226,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 			for (int i=0;i<256;i++)
 				reco.histogram[i]=0;
 			calibration_start= System.currentTimeMillis();
-			current_state = VideoActivity.state.CALIBRATION;
+			current_state = DAQActivity.state.CALIBRATION;
 		}
 		
 		String name = sharedPrefs.getString("prefRunName","NULL");
@@ -246,7 +240,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 		dstorage.server_address = getString(R.string.server_address);
 		dstorage.server_port = getString(R.string.server_port);
 		dstorage.upload_uri = getString(R.string.upload_uri);
-		for (int i=0;i<maxFrames;i++) current_status[i]=VideoActivity.status.EMPTY;
+		for (int i=0;i<maxFrames;i++) current_status[i]=DAQActivity.status.EMPTY;
 	}
 	
 	@Override
@@ -358,7 +352,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 		//Log.d("preview"," ="+L1counter+" mod = "+L1counter%L1prescale);
 		if (L1counter%L1prescale==0)
 		{
-			if (current_status[writeIndex] == VideoActivity.status.EMPTY)
+			if (current_status[writeIndex] == DAQActivity.status.EMPTY)
 			{
 				// whether we keep this frame
 				boolean pass=false;
@@ -381,7 +375,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 				if (pass)
 				{
 					L1pass++;
-					current_status[writeIndex] = VideoActivity.status.VALID;
+					current_status[writeIndex] = DAQActivity.status.VALID;
 					writeIndex++;
 					if (writeIndex==maxFrames) writeIndex=0;
 				}
@@ -537,7 +531,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 				canvas.drawText("200",(float)(50+200*tsize/10.0),(float)(5+(256+15)*tsize/10.0),mypaint3);
 				canvas.drawText("Pixel strength",(float)(50+100*tsize/10.0),(float)(5+(256+25)*tsize/10.0),mypaint3);
 
-				if (current_state==VideoActivity.state.CALIBRATION)
+				if (current_state==DAQActivity.state.CALIBRATION)
 					canvas.drawText("state? "+current_state+" calib time="+(int)(1.0e-3*(float)(System.currentTimeMillis() -calibration_start))+"s",250,15+11*tsize,mypaint);
 				else
 					canvas.drawText("state? "+current_state,250,15+11*tsize,mypaint);
@@ -637,7 +631,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 				boolean doReco = sharedPrefs.getBoolean("prefDoReco",true);
 				
 				//Log.d("thread"," checking for data at index "+readIndex+" status = "+current_status[readIndex]);
-				if (current_status[readIndex] == VideoActivity.status.VALID)
+				if (current_status[readIndex] == DAQActivity.status.VALID)
 				{
 					// prescale
 					if (L2counter%L2prescale==0)
@@ -662,14 +656,14 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 									for (int i=0;i<256;i++)
 										reco.histogram[i]=0;
 									calibration_start= System.currentTimeMillis();
-									current_state=VideoActivity.state.CALIBRATION;	
+									current_state=DAQActivity.state.CALIBRATION;	
 								
 							} 
 
 							// save the data to a file for uploading, if requested
 							// this returns the number of particles left in the array
 							//  in case the files are all full
-							if (current_state==VideoActivity.state.DATA && reco.good_quality==true)
+							if (current_state==DAQActivity.state.DATA && reco.good_quality==true)
 							{
 								// if we have good data after a period of bad, we start the good
 								// data counter again
@@ -690,7 +684,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 					}
 					else L2skip++;
 					// done with this data
-					current_status[readIndex] = VideoActivity.status.EMPTY;
+					current_status[readIndex] = DAQActivity.status.EMPTY;
 					readIndex++;
 					if (readIndex==maxFrames) readIndex=0;
 					
@@ -704,7 +698,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 					// a larger stat factor will mean a more accurate threshold but longer calibration time
 				int calibration_rate=30;
 				// is it time to update the threshold?
-				if (current_state==VideoActivity.state.CALIBRATION 
+				if (current_state==DAQActivity.state.CALIBRATION 
 						&& (System.currentTimeMillis() - calibration_start)*1e-3 > stat_factor*calibration_rate)
 				{
 				
@@ -722,7 +716,7 @@ public class VideoActivity extends Activity implements Camera.PreviewCallback {
 					dstorage.threshold = L1thresh;
 					// clear list of particles
 					reco.particles_size=0;
-					current_state=VideoActivity.state.DATA;
+					current_state=DAQActivity.state.DATA;
 					dstorage.start_time= System.currentTimeMillis();
 
 					// upload the calibration histogram
