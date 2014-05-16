@@ -7,9 +7,11 @@
 
     <ImageView
         android:id="@+id/imageView1"
-        android:layout_width="280dp"
+        android:layout_width="fill_parent"
         android:layout_height="100dp"
         android:src="@drawable/crayfish" />
+
+    
 
     <Button
         android:id="@+id/button_register"

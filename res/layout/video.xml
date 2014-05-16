@@ -5,14 +5,34 @@
 			  android:layout_width="match_parent"
 			  android:layout_height="match_parent">
 
+    <ImageView
+        android:id="@+id/imageView2"
+        android:layout_width="fill_parent"
+        android:background="#FFFFFF"
+        android:layout_height="80dp"
+        android:src="@drawable/crayfish" />
  
-	<FrameLayout
+ 	<Button
+        android:id="@+id/button_registerv"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="clickedRegister"
+        android:text="Registration/Settings" />    
+     <Button
+        android:id="@+id/button_about"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:onClick="clickedAbout"
+        android:text="About" />   
+    
+    <FrameLayout
 			android:id="@+id/camera_preview"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:layout_weight="1">
-
-	</FrameLayout>
-	 
+			android:layout_weight="1" />
+      
+   
+ 
+    
 </LinearLayout>
 

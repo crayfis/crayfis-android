@@ -17,7 +17,7 @@
         
 <ListPreference
             android:key="prefThreshold"
-            android:defaultValue="40"
+            android:defaultValue="5"
             android:entries="@array/pref_threshold"
             android:summary="@string/pref_threshold"
             android:entryValues="@array/pref_threshold"

@@ -3,10 +3,13 @@
     
     
     <string name="pref_save_data">Save Data?</string>			
-	<string name="app_name">CRAYFIS i</string>
+	<string name="app_name">CRAYFIS alpha</string>
 	<string name="pref_show_image">Show Image</string>
 	<string name="pref_do_reco">"Do Reco"</string>
 	<string name="pref_threshold">Threshold</string>
+	<string name="pref_startwait">Waits to start after plugin</string>
+	<string name="pref_startafter">Only runs after this time</string>
+	<string name="pref_startbefore">Only runs before this time</string>
 	<string name="server_address">crayfis.ps.uci.edu</string>
 	<string name="server_port">80</string>
 	<string name="upload_uri">/data/data.php</string>

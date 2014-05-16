@@ -271,7 +271,7 @@ public class DataStorage {
 
 		}
 	
-		return 0;
+		return numUploaded;
 	}
 	
 	

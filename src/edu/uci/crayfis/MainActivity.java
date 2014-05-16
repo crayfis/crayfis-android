@@ -18,13 +18,22 @@
 
 package edu.uci.crayfis;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+
 import edu.uci.crayfis.R;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -65,9 +74,43 @@ public class MainActivity extends Activity  {
 		PreferenceManager.setDefaultValues(this, R.xml.settings, true);
 		PreferenceManager.setDefaultValues(this, R.xml.register, true);		
 		
-		setContentView(R.layout.main);
-		showUserSettings();
+		// look for previous registration information
+		File sdcard = Environment.getExternalStorageDirectory();
+		File file = new File(sdcard,"crayfis_reg.txt");
+		Log.d("MainActivity","Does file exist? "+file.exists());
+		// check if file exists
+		if (file.exists())
+		{
+						
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+			//Read text from file
+			try {
+		    BufferedReader br = new BufferedReader(new FileReader(file));
+		    String firstName= br.readLine();
+		    String lastName = br.readLine();
+		    String email    = br.readLine();
+		    boolean anon = Boolean.parseBoolean(br.readLine());
+
+		    // write to prefs
+		    Editor editor = sharedPrefs.edit();
+		    editor.putString("prefUserName",firstName+" "+lastName);
+		    editor.putString("prefUserEmail",email);
+		    editor.putBoolean("prefAnon",anon);
+		    editor.commit();
+			}
+			catch (IOException e) 
+			{
+			    //You'll need to add proper error handling here
+			}
+		}
+			
+		// now start running
+		Intent intent = new Intent(this, DAQActivity.class);
+		startActivity(intent);
 		
+		// now quit
+		MainActivity.this.finish();
 	}
 
 	public void clickedVideo( View view ) {

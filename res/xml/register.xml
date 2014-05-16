@@ -17,6 +17,27 @@
             android:summary="Be anonymous"
             android:title="privacy" >
         </CheckBoxPreference>
+     <ListPreference
+            android:key="prefStartWait"
+            android:defaultValue="0"
+            android:entries="@array/pref_startwait"
+            android:summary="Seconds to wait before launch, after you plug in phone"
+            android:entryValues="@array/pref_startwait"
+            android:title="@string/pref_startwait" />
+     <ListPreference
+            android:key="prefStartAfter"
+            android:defaultValue="20"
+            android:entries="@array/pref_starttimes"
+            android:summary="The app will not autostart before this time."
+            android:entryValues="@array/pref_starttimes"
+            android:title="@string/pref_startafter" />
+     <ListPreference
+            android:key="prefStartBefore"
+            android:defaultValue="8"
+            android:entries="@array/pref_starttimes"
+            android:summary="The app will not autostart after this time."
+            android:entryValues="@array/pref_starttimes"
+            android:title="@string/pref_startbefore" />
      
 
 </PreferenceScreen>
