@@ -11,11 +11,11 @@
         <item>40</item>   
     </string-array>    
     <string-array name="pref_startwait">
-        <item>0 seconds</item>
-        <item>10 seconds</item>
-        <item>30 seconds</item>
-        <item>60 seconds</item>
-        <item>120 seconds</item>
+        <item>0 </item>
+        <item>10 </item>
+        <item>30 </item>
+        <item>60 </item>
+        <item>120 </item>
     </string-array>  
     <string-array name="pref_starttimes">
         <item>0</item>

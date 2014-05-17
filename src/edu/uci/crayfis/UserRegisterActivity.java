@@ -18,22 +18,5 @@ public class UserRegisterActivity extends PreferenceActivity {
 	 
 	    }
 	
-	public void onDestroy()
-	{
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		Boolean b = sharedPrefs.getBoolean("prefAnon", false);
-		String anon = Boolean.toString(b);
-		String uname = sharedPrefs.getString("prefUserName", "Default Name");
-		String umail = sharedPrefs.getString("prefUserEmail", "DefaultMail");
-		// the file output stream
-		String cfile="crayfis_reg.txt";
-		try {
-		FileOutputStream fos = getApplicationContext().openFileOutput(cfile,android.content.Context.MODE_WORLD_READABLE);
-		fos.write(uname.getBytes());
-		fos.write(umail.getBytes());
-		fos.write(anon.getBytes());
-		} catch (Exception e) { }
-		super.onDestroy();
-	}
 
 }

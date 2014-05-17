@@ -70,41 +70,13 @@ public class MainActivity extends Activity  {
 			Log.w("MainActivity", "Could not find build version!");
 		}
 		
-		PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).edit().clear().commit();
-		PreferenceManager.setDefaultValues(this, R.xml.settings, true);
-		PreferenceManager.setDefaultValues(this, R.xml.register, true);		
+		// start in calibration mode each time
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		Editor editor = settings.edit();
+		editor.putString("prefThreshold", "-1");
+		editor.commit();
+				
 		
-		// look for previous registration information
-		File sdcard = Environment.getExternalStorageDirectory();
-		File file = new File(sdcard,"crayfis_reg.txt");
-		Log.d("MainActivity","Does file exist? "+file.exists());
-		// check if file exists
-		if (file.exists())
-		{
-						
-			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-
-			//Read text from file
-			try {
-		    BufferedReader br = new BufferedReader(new FileReader(file));
-		    String firstName= br.readLine();
-		    String lastName = br.readLine();
-		    String email    = br.readLine();
-		    boolean anon = Boolean.parseBoolean(br.readLine());
-
-		    // write to prefs
-		    Editor editor = sharedPrefs.edit();
-		    editor.putString("prefUserName",firstName+" "+lastName);
-		    editor.putString("prefUserEmail",email);
-		    editor.putBoolean("prefAnon",anon);
-		    editor.commit();
-			}
-			catch (IOException e) 
-			{
-			    //You'll need to add proper error handling here
-			}
-		}
-			
 		// now start running
 		Intent intent = new Intent(this, DAQActivity.class);
 		startActivity(intent);

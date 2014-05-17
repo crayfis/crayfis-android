@@ -39,6 +39,10 @@ import java.nio.ByteBuffer;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Paint;
+import android.text.Html;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -51,6 +55,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import java.util.List;
 
@@ -169,15 +174,38 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	
 	public void clickedAbout(View view) {
 		
+		final SpannableString s = new SpannableString("crayfis.ps.uci.edu/about");
+
+	    final TextView tx1 = new TextView(this);
+	    tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles. More details:  "
+	            + s);
+	            
+	    tx1.setAutoLinkMask(RESULT_OK);
+	    tx1.setMovementMethod(LinkMovementMethod.getInstance());
+
+	    Linkify.addLinks(s, Linkify.WEB_URLS);
+	    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	    builder.setTitle("About CRAYFIS")
+	            .setCancelable(false)
+	            .setPositiveButton("OK",
+	                    new DialogInterface.OnClickListener() {
+	                        public void onClick(DialogInterface dialog,
+	                                int id) {
+	                        }
+	                    })
+
+	            .setView(tx1).show();
+		/*
 		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 				
+		
  
 		// set title
 		alertDialogBuilder.setTitle("About CRAYFIS");
  
 		// set dialog message
 		alertDialogBuilder
-			.setMessage("CRAYFIS is an app which collects cosmic ray data when your phone is not being used. For more information: http://crayfis.ps.uci.edu/about.html")
+			.setMessage(Html.fromHtml("CRAYFIS: <a href=\"http://crayfis.ps.uci.edu\">details</a>"))
 				.setCancelable(false)
 				.setPositiveButton("Ok",new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog,int id) {
@@ -190,6 +218,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
  
 				// show it
 				alertDialog.show();
+*/
 	}	
 	
 	private void newLocation(Location location)
@@ -527,7 +556,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				int yoffset=-300;
 				mypaint.setStyle(android.graphics.Paint.Style.FILL); 
 				mypaint.setColor(android.graphics.Color.RED); 
-				mypaint.setTextSize(tsize*2); 
+				mypaint.setTextSize((int)(tsize*1.5)); 
 				
 				mypaint3.setStyle(android.graphics.Paint.Style.FILL); 
 				mypaint3.setColor(android.graphics.Color.GRAY); 
@@ -549,13 +578,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				float l1rate = (L1counter)/((float)1e-3*(float)(System.currentTimeMillis() -starttime));
 				float l2rate = (L2counter)/((float)1e-3*(float)(System.currentTimeMillis() -starttime));
 				//canvas.drawText("STATISTICS",250, yoffset+1*tsize, mypaint);
-				canvas.drawText("Time: "+(int)(1.0e-3*(float)(System.currentTimeMillis() -starttime))+"s",250, yoffset+4*tsize, mypaint);
+				canvas.drawText("Time: "+(int)(1.0e-3*(float)(System.currentTimeMillis() -starttime))+"s",200, yoffset+4*tsize, mypaint);
 				//canvas.drawText("Frames "+L1proc+" pass?"+L1pass+" analyzed="+L2proc+" skipped="+L2skip,250,yoffset+3*tsize,mypaint);
-				canvas.drawText("Hits : "+numHits, 250,yoffset+6*tsize,mypaint);
+				canvas.drawText("Hits : "+numHits, 200,yoffset+6*tsize,mypaint);
 				//canvas.drawText("Loc: "+String.format("%1.2f",currentLocation.getLongitude())+", "+String.format("%1.2f",currentLocation.getLatitude()), 250,15+5*tsize,mypaint);
 				//canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);
 				
-				canvas.drawText("Files: "+numUploads,250,yoffset+8*tsize,mypaint);
+				canvas.drawText("Files: "+numUploads,200,yoffset+8*tsize,mypaint);
 				//canvas.drawText("readIndex "+dstorage.readIndex+" stored= "+dstorage.stored[dstorage.readIndex],250,15+9*tsize,mypaint);
 
 				///// Histogram
@@ -579,12 +608,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				canvas.drawText(slabelsnum,(float)(42),(float)(yoffset+(256+14)*tsize/10.0),mypaint3);
 
 				canvas.drawText("Pixel value",(float)(50+20*tsize/10.0),(float)(yoffset+(256+25)*tsize/10.0),mypaint3);
-				/*
+				
 				if (current_state==DAQActivity.state.CALIBRATION)
-					canvas.drawText("state? "+current_state+" calib time="+(int)(1.0e-3*(float)(System.currentTimeMillis() -calibration_start))+"s",250,15+11*tsize,mypaint);
+					canvas.drawText(current_state.toString()+" ("+(int)(1.0e-3*(float)(System.currentTimeMillis() -calibration_start))+"s)",200,yoffset+10*tsize,mypaint);
 				else
-					canvas.drawText("state? "+current_state,250,yoffset+11*tsize,mypaint);
-*/
+					canvas.drawText(current_state.toString()+" ("+L1thresh+")",200,yoffset+10*tsize,mypaint);
+
+				canvas.drawLine(195, yoffset+10*tsize, 195,yoffset+3*tsize, mypaint);
+				
 				//canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
 
 				// Y axis labels
