@@ -33,6 +33,8 @@ public class DataStorage {
 	public double longitude;
 	public double latitude;
 	public int threshold;
+	public int sdkv;
+	public String phone_model;
 	
 	public String server_address;
 	public String server_port;
@@ -106,7 +108,7 @@ public class DataStorage {
 	// generate the file header from current info
 	public String generate_header()
 	{
-		String header = "@@@ name "+uname+" email "+umail+" anon "+anon
+		String header = "@@@ name "+uname+" email "+umail+" anon "+anon+" model "+phone_model+" sdkvers"+sdkv
 					+" currtime "+java.lang.System.currentTimeMillis()
 					+"  starttime "+start_time + " loc "+longitude+" "+latitude+" threshold "+threshold+"\n";
 		return header;

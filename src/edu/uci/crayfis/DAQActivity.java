@@ -304,6 +304,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		dstorage.anon = sharedPrefs.getBoolean("prefAnon", false);
 		dstorage.uname = sharedPrefs.getString("prefUserName", "DefaultName");
 		dstorage.umail = sharedPrefs.getString("prefUserEmail", "DefaultMail");
+		dstorage.sdkv = android.os.Build.VERSION.SDK_INT;
+		dstorage.phone_model = android.os.Build.MANUFACTURER+android.os.Build.MODEL;
 		dstorage.start_time = starttime;
 		dstorage.latitude = currentLocation.getLatitude();
 		dstorage.longitude = currentLocation.getLongitude();
