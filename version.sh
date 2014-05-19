@@ -6,7 +6,7 @@
 echo "Auto Version: `pwd`"
 
 CODE=`git tag | grep -c ^v[0-9]`
-NAME=`git describe --dirty | sed -e 's/^v//'`
+NAME=`git describe --tags --dirty | sed -e 's/^v//'`
 COMMITS=`echo ${NAME} | sed -e 's/[0-9\.]*//'`
 
 if [ "x${COMMITS}x" = "xx" ] ; then
