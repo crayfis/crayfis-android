@@ -40,6 +40,9 @@ public class DataStorage {
 	public String server_port;
 	public String upload_uri;
 	
+	public String versionName = null;
+	public int versionCode = -1;
+	
 	// next index into 'files' array, where to store filename
 	public int writeIndex;
 	// next index into 'files' array, file to upload and delete
@@ -109,6 +112,7 @@ public class DataStorage {
 	public String generate_header()
 	{
 		String header = "@@@ name "+uname+" email "+umail+" anon "+anon+" model "+phone_model+" sdkvers"+sdkv
+					+" version_name"+versionName+" version_code"+versionCode
 					+" currtime "+java.lang.System.currentTimeMillis()
 					+"  starttime "+start_time + " loc "+longitude+" "+latitude+" threshold "+threshold+"\n";
 		return header;

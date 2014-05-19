@@ -64,6 +64,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.preference.PreferenceManager;
 
 /**
@@ -73,6 +75,8 @@ import android.preference.PreferenceManager;
  */
 public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
+	public static final String TAG = "DAQActivity";
+	
 	// camera and display objects
 	private Camera mCamera;
 	private Visualization mDraw;
@@ -251,6 +255,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		context = getApplicationContext();
 
 		dstorage = new DataStorage(context);
+		// Resolve the build version for upload purposes.
+		try {
+			PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+			dstorage.versionName = pInfo.versionName;
+			dstorage.versionCode = pInfo.versionCode;
+			
+			Log.d(TAG, "resolved versionName = " + dstorage.versionName + ", versionCode = " + dstorage.versionCode);
+		}
+		catch (PackageManager.NameNotFoundException ex) {
+			Log.e(TAG, "Couldn't resolve package version", ex);
+		}
 		
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
