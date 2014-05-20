@@ -873,7 +873,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 										// until we get stat_factor photons
 				// a larger stat factor will mean a more accurate threshold but
 				// longer calibration time
-				int calibration_rate = 2;
+				int calibration_rate = 30;
 				// is it time to update the threshold?
 				if (current_state == DAQActivity.state.CALIBRATION
 						&& (System.currentTimeMillis() - calibration_start) * 1e-3 > stat_factor
