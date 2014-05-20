@@ -9,7 +9,9 @@ package edu.uci.crayfis;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,6 +50,9 @@ public class DataStorage {
 	// next index into 'files' array, file to upload and delete
 	public int readIndex;
 	
+	// maximum time to keep files (milliseconds)
+	public long maxFileAge = 120*1000;
+	
 	// avoid large files
 	private int max_particles_per_file=1000;
 	
@@ -62,6 +67,8 @@ public class DataStorage {
 	//   VALID = name valid, file exists, not full
 	//   FULL  = name valid, file exists, full
 	status[] current_status = new status[max_files];
+	long[] creation_time = new long[max_files];
+	
 	private enum status  { FULL,VALID, EMPTY };
 
 	// number of particles currently stored in files 
@@ -153,29 +160,11 @@ public class DataStorage {
 		if (size>0)
 		{
 			Log.d("datastorage","Got "+size+" particles to write. Index is "+writeIndex+" status is "+current_status[writeIndex]);
-			try{
 				
-			// only write if there is an empty file or non-full file
-			// if file is FULL, it means we have lapped the data upload
-			// and should write no more data into files --> backpressure!
-			if (current_status[writeIndex]!=DataStorage.status.FULL)
-			{
-				// file is either VALID or EMPTY
-				// if EMPTY, there is no current file, create a new one	
-				if (current_status[writeIndex]==DataStorage.status.EMPTY)
-				{
-						Log.d("datastorage","creating file at index "+writeIndex);
-						files[writeIndex]=update_storage_name(basename);
-						stored[writeIndex]=0;
-						current_status[writeIndex]=DataStorage.status.VALID;
-				}
-						
-				// open the file, append mode
-				fos = context.getApplicationContext().openFileOutput(files[writeIndex],android.content.Context.MODE_APPEND);
-				//write the header if it hasn't been written yet
-				if (stored[writeIndex]==0)
-					fos.write( generate_header().getBytes() );
+			boolean valid_file = openCurrentFile();
 			
+			// only write if there is an empty file or non-full file			
+			if (valid_file) {
 				// write the current particles, starting from the end in case we run out of space
 				for (int i=size-1;i>=0;i--)
 				{	
@@ -189,46 +178,126 @@ public class DataStorage {
 							+"  "+particles[i].lon
 							+"  "+particles[i].lat
 							+"\n";
-					fos.write(line.getBytes());
+					try {
+						fos.write(line.getBytes());
+					}
+					catch (IOException ex) {
+						Log.e("datastorage", "Error writing to file!", ex);
+					}
+					
 					stored[writeIndex]++;
 				
 					// avoid writing the whole thing to one file, to limit file size
 					if (stored[writeIndex]>=max_particles_per_file)
 					{
 						Log.d("datastorage","File "+writeIndex+" is full Nstored="+stored[writeIndex]);
-						fos.close();
-						current_status[writeIndex] = DataStorage.status.FULL;
-					
-						// go to next index
-						writeIndex++;
-						if (writeIndex==max_files) writeIndex=0;
-					
-						if (current_status[writeIndex] == DataStorage.status.EMPTY)
-						{						
-							files[writeIndex]=update_storage_name(basename);
-							stored[writeIndex]=0;
-							fos = context.getApplicationContext().openFileOutput(files[writeIndex],android.content.Context.MODE_APPEND);
-							if (stored[writeIndex]==0)
-								fos.write( generate_header().getBytes() );
-						}
-						else
-						{
-							Log.d("datastorage"," Next file full. Not writing "+(i+1)+" particles");
+						
+						// okay, we've filled up the file. close out the current file and get a new one.
+						closeCurrentFile();
+						valid_file = openCurrentFile();
+						
+						if (! valid_file) {
 							// no more room, return how many particles remain on list
+							Log.d("datastorage"," Next file full. Not writing "+(i+1)+" particles");
 							return i+1;
 						}
 						
 				    }
 			   }
-			fos.close();
-			current_status[writeIndex] = DataStorage.status.VALID;
 			Log.d("datastorage","Saved particles to file at index "+writeIndex+" Nstored="+stored[writeIndex]);
 			}
-		} catch (Exception e) { Log.d("datastorage","Could not open file error: "+e.getMessage());}
 	}
 		
 		return 0;
 }
+	
+	/**
+	 * Close out the current file, making it available to be uploaded.
+	 */
+	public void closeCurrentFile() {
+		try {
+			fos.close();
+		}
+		catch (IOException ex) {
+			// I have no idea what this means...
+			Log.e("datastorage", "Unable to close file pointer in closeCurrentFile()!", ex);
+		}
+		
+		current_status[writeIndex] = DataStorage.status.FULL;
+		
+		// increment the write index.
+		writeIndex = (writeIndex + 1) % max_files;
+		return;
+	}
+	
+	/**
+	 * Close out the current file if it is older than maxFileAge.
+	 */
+	public void closeCurrentFileIfOld() {
+		openCurrentFile();
+		if ( (System.currentTimeMillis() - creation_time[writeIndex]) > maxFileAge) {
+			Log.d("datastorage", "Closing out old file; it has " + stored[writeIndex] + " entries.");
+			closeCurrentFile();
+		}
+	}
+	
+	/**
+	 * Open the current file, creating it if necessary.
+	 * Returns true on success, false otherwise.
+	 */
+	private boolean openCurrentFile() {
+		try {
+			if (fos != null)
+				fos.close();
+		}
+		catch (IOException ex) {
+			// Not sure what this means... probably there wasn't
+			// already an open file handle, which is fine.
+			Log.e("datastorage", "Unable to close file pointer in openCurrentFile()!", ex);
+		}
+		
+		// if file is FULL, it means we have lapped the data upload
+		// and should write no more data into files --> backpressure!
+		if (current_status[writeIndex] == DataStorage.status.FULL) {
+			return false;
+		}
+		
+		// file is either VALID or EMPTY
+		// if EMPTY, there is no current file, create a new one
+		boolean new_file = false;
+		if (current_status[writeIndex]==DataStorage.status.EMPTY)
+		{
+			new_file = true;
+			
+			Log.d("datastorage","creating file at index "+writeIndex);
+			files[writeIndex]=update_storage_name(basename);
+			stored[writeIndex]=0;
+			creation_time[writeIndex] = System.currentTimeMillis();
+			current_status[writeIndex]=DataStorage.status.VALID;
+		}
+		
+		try {
+			// open the file, append mode.
+			fos = context.getApplicationContext().openFileOutput(files[writeIndex],android.content.Context.MODE_APPEND);
+		}
+		catch (FileNotFoundException ex) {
+			Log.e("datastorage","Could not open file error: "+ex.getMessage(), ex);
+			return false;
+		}
+		
+		// write out the header, if this is a new file.
+		if (new_file) {
+			try {
+				fos.write( generate_header().getBytes() );
+			}
+			catch (IOException ex) {
+				Log.e("datastorage", "Error writing header to new file!"+ex.getMessage(), ex);
+				return false;
+			}
+		}
+		
+		return true;
+	}
 	
 	// zero out the file
 	public void deleteFile(String filen)
@@ -255,26 +324,6 @@ public class DataStorage {
 			current_status[readIndex]=DataStorage.status.EMPTY;
 			readIndex++;
 			if (readIndex==max_files) readIndex=0;
-		}
-	
-		// always upload at least one file, even if empty
-		if (numUploaded==0)
-		{
-			
-			try{
-				
-			// make a file with just header info
-			String pingFile=update_storage_name(basename);
-			fos = context.getApplicationContext().openFileOutput(pingFile,android.content.Context.MODE_APPEND);
-			fos.write( generate_header().getBytes() );
-			fos.close();
-			
-			uploadFile(pingFile);
-			deleteFile(pingFile);
-							
-			} catch (Exception e) 
-			{  Log.e("reco","Could not clear storage file");}
-
 		}
 	
 		return numUploaded;

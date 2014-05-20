@@ -132,7 +132,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L1prescale = 1;
 	private int L2prescale = 1;
 
-	private int uploadDelta = 60; // max seconds to wait before uploading a file
+	private int uploadDelta = 10; // number of seconds to wait before checking for new files
 
 	private enum state {
 		CALIBRATION, DATA
@@ -734,12 +734,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// occasionally upload files
 				if (uploadData) {
 					// upload every 'uploadDelta' seconds
-					if ((java.lang.System.currentTimeMillis() / 1000
-							- lastUploadTime > uploadDelta)) {
-						Log.d("upload_thread", " looking for files to upload");
-						// we always upload at least one file
-						numUploads += dstorage.uploadFiles();
+					
+					int uploaded = dstorage.uploadFiles();
+					numUploads += uploaded;
+					if (uploaded > 0) {
+						Log.d("upload_thread", "Found " + uploaded + " files to upload");
 						lastUploadTime = java.lang.System.currentTimeMillis() / 1000;
+					}
+					
+					try {
+						Thread.sleep(uploadDelta * 1000);
+					}
+					catch (InterruptedException ex) {
+						// Somebody interrupted this thread, probably a shutdown request.
 					}
 				}
 			}
@@ -789,8 +796,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				}	
 				
 				if (bytes == null) {
-					Log.d(TAG, "L2 processing timed out while waiting for data");
+					// Log.d(TAG, "L2 processing timed out while waiting for data");
 				}
+				
+				// tell datastorage to close out old files
+				dstorage.closeCurrentFileIfOld();
 				
 				if (bytes != null) {
 					// prescale
