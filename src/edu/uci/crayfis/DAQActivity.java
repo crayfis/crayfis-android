@@ -98,8 +98,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	
 	private static final int maxFrames = 2;
 
+	// simple class to group a timestamp and byte array together
+	public class TimestampedBytes {
+		public final byte[] bytes;
+		public final long t;
+		public TimestampedBytes(byte[] bytes, long t) {
+			this.bytes = bytes;
+			this.t = t;
+		}
+	}
+	
 	// Queue for frames to be processed by the L2 thread
-	ArrayBlockingQueue<byte[]> L2Queue = new ArrayBlockingQueue<byte[]>(maxFrames);
+	ArrayBlockingQueue<TimestampedBytes> L2Queue = new ArrayBlockingQueue<TimestampedBytes>(maxFrames);
 	
 	// max amount of time to wait on L2Queue (seconds)
 	int L2Timeout = 1;
@@ -459,6 +469,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 		
+		long acq_time = System.currentTimeMillis();
+		
 		// prescale
 		// Log.d("preview","Camera vals are"+camera.getParameters.flatten());
 		// Log.d("preview"," ="+L1counter+" mod = "+L1counter%L1prescale);
@@ -481,7 +493,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = L2Queue.offer(bytes);
+					boolean queue_accept = L2Queue.offer(new TimestampedBytes(bytes, acq_time));
 					
 					if (! queue_accept) {
 						// oops! the queue is full. how did that happen, we're the only ones
@@ -786,24 +798,24 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						.getDefaultSharedPreferences(context);
 				boolean doReco = sharedPrefs.getBoolean("prefDoReco", true);
 
-				byte[] bytes = null;
+				TimestampedBytes frame = null;
 				try {
 					// Grab a frame buffer from the queue.
-					bytes = L2Queue.poll(L2Timeout, TimeUnit.SECONDS);
+					frame = L2Queue.poll(L2Timeout, TimeUnit.SECONDS);
 				}
 				catch (InterruptedException ex) {
 					// Interrupted, possibly by app shutdown?
 					Log.d(TAG, "L2 processing interrupted while waiting on queue.");
 				}	
 				
-				if (bytes == null) {
+				if (frame == null) {
 					// Log.d(TAG, "L2 processing timed out while waiting for data");
 				}
 				
 				// tell datastorage to close out old files
 				dstorage.closeCurrentFileIfOld();
 				
-				if (bytes != null) {
+				if (frame != null) {
 					// prescale
 					if (L2counter % L2prescale == 0) {
 						if (doReco) {
@@ -815,8 +827,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 							// look for particles, store them internally to reco
 							// object
-							reco.process(bytes, previewSize.width,
-									previewSize.height, L2thresh, currentLocation);
+							reco.process(frame.bytes, previewSize.width,
+									previewSize.height, L2thresh, currentLocation, frame.t);
 
 							// start calibration mode again if find bad data
 							// continue to restart until good data comes in

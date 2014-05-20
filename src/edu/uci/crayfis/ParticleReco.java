@@ -38,7 +38,7 @@ public class ParticleReco {
 	public int ncount;
 	
 	// take an image and look for hits
-	public void process(byte[] vals, int width, int height, int thresh, Location location)
+	public void process(byte[] vals, int width, int height, int thresh, Location location, long time)
 	{
 		// first we measure the background and variance, but to save time only do it for every
 			// stepW or stepH-th pixel
@@ -87,7 +87,6 @@ public class ParticleReco {
 		
 		// now look for outliers
 		
-		long time = System.currentTimeMillis();
 		for (int ix=0;ix < width;ix++)
 			for (int iy=0;iy<height;iy++)
 			{
