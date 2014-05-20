@@ -144,6 +144,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// L1 hit threshold
 	private int L1thresh = 0;
+	private int L2thresh = 5;
 	long starttime;
 	long lastUploadTime;
 	long lastL2time;
@@ -673,8 +674,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 											.currentTimeMillis() - calibration_start))
 									+ "s)", 200, yoffset + 10 * tsize, mypaint);
 				else
-					canvas.drawText(current_state.toString() + " (" + L1thresh
-							+ ")", 200, yoffset + 10 * tsize, mypaint);
+					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
+							+ ",L2=" + L2thresh + ")", 200, yoffset + 10 * tsize, mypaint);
 
 				canvas.drawLine(195, yoffset + 10 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
@@ -815,7 +816,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							// look for particles, store them internally to reco
 							// object
 							reco.process(bytes, previewSize.width,
-									previewSize.height, L1thresh, currentLocation);
+									previewSize.height, L2thresh, currentLocation);
 
 							// start calibration mode again if find bad data
 							// continue to restart until good data comes in
@@ -891,6 +892,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 					Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 					L1thresh = new_thresh;
+					if (L1thresh < L2thresh) {
+						// If we chose an L1threshold lower than the L2 threshold, then
+						// we should lower it!
+						L2thresh = L1thresh;
+					}
 					dstorage.threshold = L1thresh;
 					// clear list of particles
 					reco.particles_size = 0;
