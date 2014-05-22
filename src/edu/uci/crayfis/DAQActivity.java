@@ -485,7 +485,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				boolean pass = false;
 				int length = previewSize.width * previewSize.height;
 				for (int i = 0; i < length; i++) {
-					if (bytes[i] > L1thresh) {
+					// make sure we promote the (signed) byte to int for comparison!
+					if ( (bytes[i] & 0xFF) > L1thresh) {
 						// Okay, found a pixel above threshold. No need to continue
 						// looping.
 						pass = true;
