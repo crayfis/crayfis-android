@@ -175,14 +175,10 @@ public class ParticleReco {
 		
 	}
 	
-	public int calculateThresholdByEvents() {
-		return calculateThresholdByEvents(1);
-	}
-	
-	public int calculateThresholdByEvents(double nsigma) {
-		// return a threshold that is nsigma standard deviations
-		// above the average mean, with respect to the maximum
-		// pixel value per event.
+	public int calculateThresholdByEvents(int max_count) {
+		// return a the lowest threshold that will give fewer than
+		// max_count events over the integrated period contained
+		// in the histograms.
 		
 		Log.i("calculate", "Cacluating threshold! Event histo:"
 				+ " 0 - " + max_histogram[0] + "\n"
@@ -205,21 +201,19 @@ public class ParticleReco {
 			return 0;
 		}
 		
-		int sum = 0;
-		int sum2 = 0;
-		int norm = 0;
-		for (int i = 0; i < 256; ++i) {
-			sum += i*max_histogram[i];
-			sum2 += i*i*max_histogram[i];
-			norm += max_histogram[i];
+		int integral = 0;
+		int new_thresh;
+		for (new_thresh = 255; new_thresh >= 0; --new_thresh) {
+			integral += max_histogram[new_thresh];
+			if (integral > max_count) {
+				// oops! we've gone over the limit.
+				// bump the threshold back up and break out.
+				new_thresh++;
+				break;
+			}
 		}
-				
-		double mean = ((double) sum) / norm;
-		double mean_sq = ((double) sum2) / norm;
-		double std = Math.sqrt(mean_sq - mean*mean);
-		Log.i("calculateThresholdByEvents", "mean = " + mean + ", mean_sq = " + mean_sq + ", std = " + std);
 		
-		return (int) Math.ceil(mean + nsigma*std);
+		return new_thresh;
 	}
 	
 	public int calculateThresholdByPixels(int stat_factor) {

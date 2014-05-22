@@ -97,10 +97,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	public static final int targetPreviewHeight = 240;
 	
 	private static final int maxFrames = 2;
-	
-	// Option to use event-based calibration. If false,
-	// will fall back to old pixel-based calibration.
-	public static final boolean useEventCalibration = true;
 
 	// simple class to group a timestamp and byte array together
 	public class TimestampedBytes {
@@ -155,7 +151,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	private state current_state;
 	private boolean fixed_threshold;
+	
 	private long calibration_start;
+	
+	// how many frames to sample during calibration
+	// (more frames is longer but gives better statistics)
+	private int calibration_sample_frames = 1000;
+	// targeted max. number of events per minute to allow
+	// (lower rate => higher threshold)
+	private float max_events_per_minute = 50;
 
 	// L1 hit threshold
 	private int L1thresh = 0;
@@ -473,7 +477,22 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 		
+		L1counter++;
+		
 		long acq_time = System.currentTimeMillis();
+		
+		if (current_state == DAQActivity.state.CALIBRATION) {
+			// No need for L1 trigger; just go straight to L2
+			boolean queue_accept = L2Queue.offer(new TimestampedBytes(bytes, acq_time));
+			
+			if (! queue_accept) {
+				// oops! the queue is full. how did that happen, we're the only ones
+				// using it! (shouldn't get here...)
+				Log.e(TAG, "Could not add frame to L2 Queue!");
+			}
+			
+			return;
+		}
 		
 		// prescale
 		// Log.d("preview","Camera vals are"+camera.getParameters.flatten());
@@ -514,7 +533,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			}
 
 		}
-		L1counter++;
 
 		// Can only do trivial amounts of image processing inside this function
 		// or else bad stuff happens.
@@ -687,11 +705,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 				if (current_state == DAQActivity.state.CALIBRATION)
 					canvas.drawText(
-							current_state.toString()
-									+ " ("
-									+ (int) (1.0e-3 * (float) (System
-											.currentTimeMillis() - calibration_start))
-									+ "s)", 200, yoffset + 12 * tsize, mypaint);
+							current_state.toString() + " "
+									+ (int)(( 100.0 * (float) reco.max_histo_count) / calibration_sample_frames)
+									+ "%", 200, yoffset + 12 * tsize, mypaint);
 				else
 					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
 							+ ",L2=" + L2thresh + ")", 200, yoffset + 12 * tsize, mypaint);
@@ -887,26 +903,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 				}
 
-				// calibration analysis
-				// calibration rate = number of seconds per background photon
-				int stat_factor = 5; // run for stat_factor*calibration_rate
-										// until we get stat_factor photons
-				// a larger stat factor will mean a more accurate threshold but
-				// longer calibration time
-				int calibration_rate = 30;
-				// is it time to update the threshold?
+				// If we're calibrating, check if we've processed enough
+				// frames to decide on the threshold(s).
 				if (current_state == DAQActivity.state.CALIBRATION
-						&& (System.currentTimeMillis() - calibration_start) * 1e-3 > stat_factor
-								* calibration_rate) {
-					
+						&& reco.max_histo_count >= calibration_sample_frames) {
 					
 					int new_thresh;
-					if (useEventCalibration) {
-						new_thresh = reco.calculateThresholdByEvents();
-					}
-					else {
-						new_thresh = reco.calculateThresholdByPixels(stat_factor);
-					}
+					long calibration_time = System.currentTimeMillis() - calibration_start;
+					int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
+					
+					Log.i("Calibration", "Processed " + reco.max_histo_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+					
+					new_thresh = reco.calculateThresholdByEvents(target_events);
 					
 					Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 					L1thresh = new_thresh;
