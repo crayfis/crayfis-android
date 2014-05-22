@@ -174,6 +174,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private Location currentLocation;
 	private LocationManager locationManager;
 	private LocationListener locationListener;
+	
+	private long L1_fps_start = 0;
+	private long L1_fps_stop = 0;
 
 	// Thread where image data is processed for L2
 	private ThreadProcess l2thread;
@@ -481,6 +484,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		long acq_time = System.currentTimeMillis();
 		
+		// for calculating fps
+		if (L1counter % 60 == 0) {
+			L1_fps_start = L1_fps_stop;
+			L1_fps_stop = acq_time;
+		}
+		
 		if (current_state == DAQActivity.state.CALIBRATION) {
 			// No need for L1 trigger; just go straight to L2
 			boolean queue_accept = L2Queue.offer(new TimestampedBytes(bytes, acq_time));
@@ -711,8 +720,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				else
 					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
 							+ ",L2=" + L2thresh + ")", 200, yoffset + 12 * tsize, mypaint);
-
-				canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 3
+				
+				String fps = "---";
+				if (L1_fps_start > 0 && L1_fps_stop > 0) {
+					fps = String.format("%.1f", 60.0 / (L1_fps_stop - L1_fps_start) * 1e3);
+				}
+				canvas.drawText(fps + " fps",
+						200, yoffset + 14 * tsize, mypaint);
+				
+				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
 
 				// canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
