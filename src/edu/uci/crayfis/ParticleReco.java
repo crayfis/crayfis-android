@@ -20,13 +20,17 @@ public class ParticleReco {
 	ParticleData[] particles;
 	
 	public int[] histogram = new int[256];
+	public int[] max_histogram = new int[256];
+	
 	public int histo_count = 0;
+	public int max_histo_count = 0;
+	
 	int max_particles=80000;
 	public ParticleReco()
 	{
 	 particles = new ParticleData[max_particles];
 	 good_quality=false;
-	 for (int i=0;i<256;i++) histogram[i]=0;
+	 clearHistograms();
 	 for (int i=0;i<max_particles;i++)
 		 particles[i] = new ParticleData();
 	}
@@ -36,6 +40,17 @@ public class ParticleReco {
 	public float background;
 	public float variance;
 	public int ncount;
+	
+	public int max_val;
+	
+	public void clearHistograms() {
+		for (int i = 0; i<256; ++i) {
+			histogram[i] = 0;
+			max_histogram[i] = 0;
+		}
+		histo_count = 0;
+		max_histo_count = 0;
+	}
 	
 	// take an image and look for hits
 	public void process(byte[] vals, int width, int height, int thresh, Location location, long time)
@@ -48,6 +63,7 @@ public class ParticleReco {
 		// get mean background level 
 		background=0;
 		ncount=0;
+		max_val = 0;
 		//Log.d("reco"," vals length is "+vals.length+" s/w="+width+"/"+height+" tot="+(width*height));
 		for (int ix=0;ix < width;ix+= stepW)
 				for (int iy=0;iy<height;iy+=stepH)
@@ -87,12 +103,17 @@ public class ParticleReco {
 		
 		// now look for outliers
 		
-		for (int ix=0;ix < width;ix++)
+		for (int ix=0;ix < width;ix++) {
 			for (int iy=0;iy<height;iy++)
 			{
 				int val = vals[ix+width*iy]&0xFF; 		
 				histogram[val]++;
 				histo_count++;
+				
+				if (val > max_val) {
+					max_val = val;
+				}
+				
 				if (val > thresh && particles_size<max_particles)
 				{	
 					//Log.d("reco","found particle inserting at"+particles_size);
@@ -147,10 +168,72 @@ public class ParticleReco {
 					particles_size++;
 				}
 			}
+		}
 		
-		
+		max_histogram[max_val] += 1;
+		max_histo_count++;
 		
 	}
 	
+	public int calculateThresholdByEvents() {
+		return calculateThresholdByEvents(1);
+	}
+	
+	public int calculateThresholdByEvents(double nsigma) {
+		// return a threshold that is nsigma standard deviations
+		// above the average mean, with respect to the maximum
+		// pixel value per event.
+		
+		Log.i("calculate", "Cacluating threshold! Event histo:"
+				+ " 0 - " + max_histogram[0] + "\n"
+				+ " 1 - " + max_histogram[1] + "\n"
+				+ " 2 - " + max_histogram[2] + "\n"
+				+ " 3 - " + max_histogram[3] + "\n"
+				+ " 4 - " + max_histogram[4] + "\n"
+				);
+		Log.i("calculate", "Pixel histo:"
+				+ " 0 -" + histogram[0] + "\n"
+				+ " 1 -" + histogram[1] + "\n"
+				+ " 2 -" + histogram[2] + "\n"
+				+ " 3 -" + histogram[3] + "\n"
+				+ " 4 -" + histogram[4] + "\n"
+				);
+		
+		if (max_histo_count == 0) {
+			// wow! no data, either we didn't expose long enough, or
+			// the background is super low. Return 0 threshold.
+			return 0;
+		}
+		
+		int sum = 0;
+		int sum2 = 0;
+		int norm = 0;
+		for (int i = 0; i < 256; ++i) {
+			sum += i*max_histogram[i];
+			sum2 += i*i*max_histogram[i];
+			norm += max_histogram[i];
+		}
+				
+		double mean = ((double) sum) / norm;
+		double mean_sq = ((double) sum2) / norm;
+		double std = Math.sqrt(mean_sq - mean*mean);
+		Log.i("calculateThresholdByEvents", "mean = " + mean + ", mean_sq = " + mean_sq + ", std = " + std);
+		
+		return (int) Math.ceil(mean + nsigma*std);
+	}
+	
+	public int calculateThresholdByPixels(int stat_factor) {
+		int new_thresh = 255;
+		// number of photons above this threshold
+		int above_thresh = 0;
+		do {
+			above_thresh += histogram[new_thresh];
+			Log.d("calibration", "threshold " + new_thresh
+					+ " obs= " + above_thresh + "/" + stat_factor);
+			new_thresh--;
+		} while (new_thresh > 0 && above_thresh < stat_factor);
+		
+		return new_thresh;
+	}
 
 }

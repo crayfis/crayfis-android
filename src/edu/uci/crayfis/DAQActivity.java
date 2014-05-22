@@ -97,6 +97,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	public static final int targetPreviewHeight = 240;
 	
 	private static final int maxFrames = 2;
+	
+	// Option to use event-based calibration. If false,
+	// will fall back to old pixel-based calibration.
+	public static final boolean useEventCalibration = true;
 
 	// simple class to group a timestamp and byte array together
 	public class TimestampedBytes {
@@ -134,6 +138,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	// how many particles seen > thresh
 	private int numHits = 0;
 	private int numFiles = 0;
+	private int numFrames = 0;
 	private int numUploads = 0;
 
 	private long L1counter = 0;
@@ -328,8 +333,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		} else {
 			fixed_threshold = false;
-			for (int i = 0; i < 256; i++)
-				reco.histogram[i] = 0;
+			reco.clearHistograms();
 			calibration_start = System.currentTimeMillis();
 			current_state = DAQActivity.state.CALIBRATION;
 		}
@@ -637,13 +641,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 										.currentTimeMillis() - starttime))
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
 				// canvas.drawText("Frames "+L1proc+" pass?"+L1pass+" analyzed="+L2proc+" skipped="+L2skip,250,yoffset+3*tsize,mypaint);
-				canvas.drawText("Hits : " + numHits, 200, yoffset + 6 * tsize,
+				canvas.drawText("Events : " + numFrames, 200, yoffset + 6 * tsize,
+						mypaint);
+				canvas.drawText("Pixels : " + numHits, 200, yoffset + 8 * tsize,
 						mypaint);
 				// canvas.drawText("Loc: "+String.format("%1.2f",currentLocation.getLongitude())+", "+String.format("%1.2f",currentLocation.getLatitude()),
 				// 250,15+5*tsize,mypaint);
 				// canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);
 
-				canvas.drawText("Files: " + numUploads, 200, yoffset + 8
+				canvas.drawText("Files: " + numUploads, 200, yoffset + 10
 						* tsize, mypaint);
 				// canvas.drawText("readIndex "+dstorage.readIndex+" stored= "+dstorage.stored[dstorage.readIndex],250,15+9*tsize,mypaint);
 
@@ -684,12 +690,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 									+ " ("
 									+ (int) (1.0e-3 * (float) (System
 											.currentTimeMillis() - calibration_start))
-									+ "s)", 200, yoffset + 10 * tsize, mypaint);
+									+ "s)", 200, yoffset + 12 * tsize, mypaint);
 				else
 					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
-							+ ",L2=" + L2thresh + ")", 200, yoffset + 10 * tsize, mypaint);
+							+ ",L2=" + L2thresh + ")", 200, yoffset + 12 * tsize, mypaint);
 
-				canvas.drawLine(195, yoffset + 10 * tsize, 195, yoffset + 3
+				canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
 
 				// canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
@@ -835,8 +841,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							if (reco.good_quality == false
 									&& fixed_threshold == false) {
 								// clear histogram before calibration
-								for (int i = 0; i < 256; i++)
-									reco.histogram[i] = 0;
+								reco.clearHistograms();
 								calibration_start = System.currentTimeMillis();
 								current_state = DAQActivity.state.CALIBRATION;
 
@@ -858,6 +863,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 								// how many did we find? add to running total
 								numHits += (reco.particles_size - old);
+								numFrames += 1;
 
 								Log.d("process_thread", "Writing "
 										+ reco.particles_size
@@ -891,17 +897,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				if (current_state == DAQActivity.state.CALIBRATION
 						&& (System.currentTimeMillis() - calibration_start) * 1e-3 > stat_factor
 								* calibration_rate) {
-
-					int new_thresh = 255;
-					// number of photons above this threshold
-					int above_thresh = 0;
-					do {
-						above_thresh += reco.histogram[new_thresh];
-						Log.d("calibration", "threshold " + new_thresh
-								+ " obs= " + above_thresh + "/" + stat_factor);
-						new_thresh--;
-					} while (new_thresh > 0 && above_thresh < stat_factor);
-
+					
+					
+					int new_thresh;
+					if (useEventCalibration) {
+						new_thresh = reco.calculateThresholdByEvents();
+					}
+					else {
+						new_thresh = reco.calculateThresholdByPixels(stat_factor);
+					}
+					
 					Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 					L1thresh = new_thresh;
 					if (L1thresh < L2thresh) {
@@ -909,6 +914,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						// we should lower it!
 						L2thresh = L1thresh;
 					}
+					
 					dstorage.threshold = L1thresh;
 					// clear list of particles
 					reco.particles_size = 0;
