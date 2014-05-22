@@ -40,9 +40,11 @@ public class ParticleReco {
 	public float background;
 	public float variance;
 	public int ncount;
-	
 	public int max_val;
 	
+	public long time;
+	public Location location;
+
 	public void clearHistograms() {
 		for (int i = 0; i<256; ++i) {
 			histogram[i] = 0;
@@ -55,6 +57,9 @@ public class ParticleReco {
 	// take an image and look for hits
 	public void process(byte[] vals, int width, int height, int thresh, Location location, long time)
 	{
+		this.time = time;
+		this.location = location;
+		
 		// first we measure the background and variance, but to save time only do it for every
 			// stepW or stepH-th pixel
 		int stepW = 10;

@@ -146,7 +146,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int uploadDelta = 10; // number of seconds to wait before checking for new files
 
 	private enum state {
-		CALIBRATION, DATA
+		INIT, CALIBRATION, DATA
 	};
 
 	private state current_state;
@@ -161,6 +161,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	// (lower rate => higher threshold)
 	private float max_events_per_minute = 50;
 
+	private ExposureBlock current_xb;
+	// Previous xb is kept around until either the L2 queue
+	// is empty, or an event outside the block is processed.
+	private ExposureBlock previous_xb;
+	
+	// the nominal period for an exposure block (in seconds)
+	public static final long xb_period = 30;
+
 	// L1 hit threshold
 	private int L1thresh = 0;
 	private int L2thresh = 5;
@@ -170,6 +178,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int writeIndex;
 	private int readIndex;
 
+	// calibration analysis parameters
+	// calibration rate = number of seconds per background photon
+	int stat_factor = 5; // run for stat_factor*calibration_rate
+							// until we get stat_factor photons
+	// a larger stat factor will mean a more accurate threshold but
+	// longer calibration time
+	int calibration_rate = 10;
+	
 	// Location stuff
 	private Location currentLocation;
 	private LocationManager locationManager;
@@ -183,6 +199,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// thread to upload the data
 	private UploadProcess uploadthread;
+	
+	// thread to handle output of committed data
+	private OutputManager outputThread;
 
 	// class to find particles in frames
 	private ParticleReco reco;
@@ -247,6 +266,155 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	private void newLocation(Location location) {
 		currentLocation = location;
+	}
+	
+	private void toCalibrationMode() {
+		switch (current_state) {
+		case INIT:
+			Log.i(TAG, "FSM Transition: INIT -> CALIBRATION");
+
+			fixed_threshold = false;
+			
+			reco.clearHistograms();
+			
+			calibration_start = System.currentTimeMillis();
+			current_state = DAQActivity.state.CALIBRATION;
+			
+			L1thresh = 0;
+			L2thresh = 0;
+			
+			// Start a new exposure block
+			newExposureBlock();
+			
+			break;
+		case DATA:
+			Log.i(TAG, "FSM Transition: DATA -> CALIBRATION");
+			
+			// clear histogram before calibration
+			reco.clearHistograms();
+			
+			calibration_start = System.currentTimeMillis();
+			current_state = DAQActivity.state.CALIBRATION;
+			
+			L1thresh = 0;
+			L2thresh = 0;
+			
+			// Start a new exposure block
+			newExposureBlock();
+			
+			break;
+		case CALIBRATION:
+			Log.i(TAG, "FSM Transition: CALIBRATION -> CALIBRATION");
+			
+			// as far as I can tell, this just happens when we have "bad"
+			// frames during calibration. the only difference here is
+			// we'll stay on the same exposure block.
+			// clear histogram before calibration
+			reco.clearHistograms();
+			
+			calibration_start = System.currentTimeMillis();
+			current_state = DAQActivity.state.CALIBRATION;
+			
+			L1thresh = 0;
+			L2thresh = 0;
+			
+			break;	
+		default:
+			throw new RuntimeException("Bad FSM transition to CALIBRATION");
+		}
+	}
+	
+	private void toDataMode() {
+		switch (current_state) {
+		case INIT:
+			Log.i(TAG, "FSM Transition: INIT -> DATA");
+			fixed_threshold = true;
+			current_state = DAQActivity.state.DATA;
+			
+			// Start a new exposure block
+			newExposureBlock();
+			
+			break;
+		case CALIBRATION:
+			Log.i(TAG, "FSM Transition: CALIBRATION -> DATA");
+
+			int new_thresh;
+			long calibration_time = System.currentTimeMillis() - calibration_start;
+			int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
+			
+			Log.i("Calibration", "Processed " + reco.max_histo_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+			
+			new_thresh = reco.calculateThresholdByEvents(target_events);
+			
+			Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
+			L1thresh = new_thresh;
+			if (L1thresh < L2thresh) {
+				// If we chose an L1threshold lower than the L2 threshold, then
+				// we should lower it!
+				L2thresh = L1thresh;
+			}
+			
+			dstorage.threshold = L1thresh;
+			// clear list of particles
+			reco.particles_size = 0;
+			current_state = DAQActivity.state.DATA;
+			dstorage.start_time = System.currentTimeMillis();
+
+			// upload the calibration histogram
+			dstorage.upload_calibration_hist(reco.histogram);
+
+			// Start a new exposure block
+			newExposureBlock();
+			
+			break;
+		default:
+			throw new RuntimeException("Bad FSM transition to DATA");
+		}
+	}
+	
+	// Start a new exposure block, freezing the current one (if any)
+	void newExposureBlock() {
+		Log.i(TAG, "Sarting new exposure block!");
+		
+		// by the time we start a new XB, we had better have committed the
+		// previous one already!
+		if (previous_xb != null) {
+			throw new RuntimeException("Oh crud! There's still a previous XB sitting around");
+		}
+		
+		// Freeze the current XB, and push it back to the temp slot
+		previous_xb = current_xb;
+		current_xb = new ExposureBlock();
+		
+		current_xb.L1_thresh = L1thresh;
+		current_xb.L2_thresh = L2thresh;
+		current_xb.start_loc = currentLocation;
+		
+		if (previous_xb != null) {
+			previous_xb.freeze();
+			Log.i(TAG, "Old exposure block started at: " + previous_xb.start_time + ", ended at: " + previous_xb.end_time);
+		}
+	}
+	
+	// Commit the previous exposure block (if any).
+	// This is to be called when once we determine the previous
+	// block has no more data coming. I.e. when:
+	//  1) we have processed a frame that is too new for this XB
+	//  2) we have timed out on an empty L2 queue (no recent data from L1) 
+	void commitExposureBlock() {
+		Log.i(TAG, "Commiting old exposure block!");
+		if (previous_xb == null) {
+			return;
+		}
+		
+		ExposureBlock xb = previous_xb;
+		previous_xb = null;
+		boolean success = outputThread.commitExposureBlock(xb);
+		
+		if (! success) {
+			// Oops! The output manager's queue must be full!
+			throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
+		}
 	}
 
 	@Override
@@ -334,15 +502,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				.getDefaultSharedPreferences(context);
 		L1thresh = Integer
 				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
+		
+		current_xb = null;
+		previous_xb = null;
+		current_state = DAQActivity.state.INIT;
+		
 		if (L1thresh >= 0) {
-			fixed_threshold = true;
-			current_state = DAQActivity.state.DATA;
+			toDataMode();
 
 		} else {
-			fixed_threshold = false;
-			reco.clearHistograms();
-			calibration_start = System.currentTimeMillis();
-			current_state = DAQActivity.state.CALIBRATION;
+			toCalibrationMode();
 		}
 
 		String name = sharedPrefs.getString("prefRunName", "NULL");
@@ -435,6 +604,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// output = Bitmap.createBitmap(previewSize.width,previewSize.height,Bitmap.Config.ARGB_8888
 		// );
 		
+		outputThread = new OutputManager(context);
+		outputThread.start();
+		
 		// start image processing thread
 		l2thread = new ThreadProcess();
 		l2thread.start();
@@ -480,7 +652,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 		
+		
+		// get a reference to the current xb, so it doesn't change from underneath us
+		ExposureBlock xb = current_xb;
+		
 		L1counter++;
+		xb.L1_processed++;
 		
 		long acq_time = System.currentTimeMillis();
 		
@@ -523,6 +700,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				}
 				if (pass) {
 					L1pass++;
+					xb.L1_pass++;
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
@@ -539,6 +717,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			else {
 				// no room on the L2 queue! We'll have to skip this frame.
 				L1skip++;
+				xb.L1_skip++;
 			}
 
 		}
@@ -851,10 +1030,36 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					// Log.d(TAG, "L2 processing timed out while waiting for data");
 				}
 				
+				// check if it is time to create a new exposure block:
+				if (current_xb.age() > (xb_period * 1000)) {
+					newExposureBlock();
+				}
+				
 				// tell datastorage to close out old files
 				dstorage.closeCurrentFileIfOld();
 				
 				if (frame != null) {
+					
+					// try to get the exposure block for this event:
+					ExposureBlock xb = current_xb;
+					ExposureBlock prev_xb = previous_xb;
+					if (prev_xb != null) {
+						if (prev_xb.end_time < frame.t) {
+							// looks like we're done with the previous exposure block,
+							// since this frame is too recent for it.
+							// let's commit it and move on with the current_xb
+							commitExposureBlock();
+						}
+						else {
+							// aha, it seems this frame belongs to the old exposure block.
+							// we'll use that one instead.
+							xb = prev_xb;
+						}
+					}
+					
+					
+					xb.L2_processed++;
+					
 					// prescale
 					if (L2counter % L2prescale == 0) {
 						if (doReco) {
@@ -868,16 +1073,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							// object
 							reco.process(frame.bytes, previewSize.width,
 									previewSize.height, L2thresh, currentLocation, frame.t);
+							
+							// for now, everything "passes" L2 reco
+							xb.L2_pass++;
+							
+							// add the event to the proper exposure block.
+							xb.addEvent(reco);
 
 							// start calibration mode again if find bad data
 							// continue to restart until good data comes in
 							if (reco.good_quality == false
 									&& fixed_threshold == false) {
-								// clear histogram before calibration
-								reco.clearHistograms();
-								calibration_start = System.currentTimeMillis();
-								current_state = DAQActivity.state.CALIBRATION;
-
+								toCalibrationMode();
 							}
 
 							// save the data to a file for uploading, if
@@ -911,44 +1118,27 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							}
 						}
 						L2proc++;
-					} else
+					} else {
 						L2skip++;
+						
+						xb.L2_skip++;
+					}
 					// done with this data, gc will deal with bytes array.
 
 					L2counter++;
 
+				}
+				else {
+					// Oops! We must have timed out on an empty queue. If there is
+					// a previous exposure block waiting, we are done with it now.
+					commitExposureBlock();
 				}
 
 				// If we're calibrating, check if we've processed enough
 				// frames to decide on the threshold(s).
 				if (current_state == DAQActivity.state.CALIBRATION
 						&& reco.max_histo_count >= calibration_sample_frames) {
-					
-					int new_thresh;
-					long calibration_time = System.currentTimeMillis() - calibration_start;
-					int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
-					
-					Log.i("Calibration", "Processed " + reco.max_histo_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
-					
-					new_thresh = reco.calculateThresholdByEvents(target_events);
-					
-					Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
-					L1thresh = new_thresh;
-					if (L1thresh < L2thresh) {
-						// If we chose an L1threshold lower than the L2 threshold, then
-						// we should lower it!
-						L2thresh = L1thresh;
-					}
-					
-					dstorage.threshold = L1thresh;
-					// clear list of particles
-					reco.particles_size = 0;
-					current_state = DAQActivity.state.DATA;
-					dstorage.start_time = System.currentTimeMillis();
-
-					// upload the calibration histogram
-					dstorage.upload_calibration_hist(reco.histogram);
-
+					toDataMode();
 				}
 
 				mDraw.postInvalidate();
