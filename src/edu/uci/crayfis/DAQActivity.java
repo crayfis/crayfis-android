@@ -81,9 +81,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	public static final int targetPreviewWidth = 320;
 	public static final int targetPreviewHeight = 240;
-	
-	// Maximum number of raw camera frames to allow on the L2Queue
-	private static final int maxFrames = 2;
 
 	// simple class to group a timestamp and byte array together
 	public class RawCameraFrame {
@@ -97,8 +94,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		}
 	}
 	
+	// Maximum number of raw camera frames to allow on the L2Queue
+	private static final int L2Queue_maxFrames = 2;
 	// Queue for frames to be processed by the L2 thread
-	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(maxFrames);
+	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(L2Queue_maxFrames);
 	
 	public String device_id;
 	public String build_version;
@@ -123,6 +122,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L2skip = 0;
 	// how many events L1 processed (after prescale)
 	private int L2proc = 0;
+	
+	// keep track of how often we had to drop a frame at L1
+	// because the L2 queue was full.
+	private int L2busy = 0;
 
 	// how many particles seen > thresh
 	private int totalPixels = 0;
@@ -635,6 +638,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// oops! the queue is full. how did that happen, we're the only ones
 				// using it! (shouldn't get here...)
 				Log.e(TAG, "Could not add frame to L2 Queue!");
+				L2busy++;
 			}
 			
 			return;
@@ -698,6 +702,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		Paint mypaint2;
 		Paint mypaint2_thresh;
 		Paint mypaint3;
+		Paint mypaint_L2warning;
 
 		private String[] histo_strings_all = new String[256];
 		private String[] histo_strings_thresh = new String[256];
@@ -737,6 +742,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			mypaint2_thresh = new Paint();
 
 			mypaint3 = new Paint();
+			
+			mypaint_L2warning = new Paint();
 
 			// This call is necessary, or else the
 			// draw method will not be called.
@@ -767,6 +774,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				mypaint.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint.setColor(android.graphics.Color.RED);
 				mypaint.setTextSize((int) (tsize * 1.5));
+				
+				mypaint_L2warning.setStyle(android.graphics.Paint.Style.FILL);
+				mypaint_L2warning.setColor(android.graphics.Color.YELLOW);
+				mypaint_L2warning.setTextSize((int) (tsize * 1.1));
 
 				mypaint3.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint3.setColor(android.graphics.Color.GRAY);
@@ -856,6 +867,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				
 				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
+				
+				if (L2busy > 0) {
+					// print a message indicating that we've been dropping frames
+					// due to L2queue overflow.
+					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_L2warning);
+				}
 
 				// canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
 
