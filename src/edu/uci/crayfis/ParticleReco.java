@@ -57,6 +57,23 @@ public class ParticleReco {
 		public float variance;
 		
 		public ArrayList<RecoPixel> pixels = new ArrayList<RecoPixel>();
+		
+		public DataProtos.Event buildProto() {
+			DataProtos.Event.Builder buf = DataProtos.Event.newBuilder();
+			
+			buf.setTimestamp(time);
+			buf.setGpsLat(location.getLatitude());
+			buf.setGpsLon(location.getLongitude());
+			
+			buf.setAvg(background);
+			buf.setStd(variance);
+			
+			for (RecoPixel p : pixels) {
+				buf.addPixels(p.buildProto());
+			}
+			
+			return buf.build();
+		}
 	}
 	
 	public class RecoPixel {
@@ -64,6 +81,18 @@ public class ParticleReco {
 		public int val;
 		public float avg_3, avg_5;
 		public int near_max;
+		
+		public DataProtos.Pixel buildProto() {
+			DataProtos.Pixel.Builder buf = DataProtos.Pixel.newBuilder();
+			buf.setX(x);
+			buf.setY(y);
+			buf.setVal(val);
+			buf.setAvg3(avg_3);
+			buf.setAvg5(avg_5);
+			buf.setNearMax(near_max);
+			
+			return buf.build();
+		}
 	}
 	
 	public class Histogram {

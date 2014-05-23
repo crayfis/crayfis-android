@@ -828,6 +828,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						mypaint);
 				canvas.drawText("Pixels : " + numHits, 200, yoffset + 8 * tsize,
 						mypaint);
+				
 				// canvas.drawText("Loc: "+String.format("%1.2f",currentLocation.getLongitude())+", "+String.format("%1.2f",currentLocation.getLatitude()),
 				// 250,15+5*tsize,mypaint);
 				// canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);

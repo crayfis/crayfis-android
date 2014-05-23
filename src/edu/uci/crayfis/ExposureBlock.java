@@ -60,9 +60,33 @@ public class ExposureBlock implements OutputManager.Writable {
 	public void addEvent(RecoEvent event) {
 		events.add(event);
 		total_pixels += event.pixels.size();
+		Log.d("addevt", "Added event with " + event.pixels.size() + " pixels (total = " + total_pixels + ")");
 	}
 	
-	public byte[] serializeBytes() {
-		return new byte[0];
+	public DataProtos.ExposureBlock buildProto() {
+		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder();
+		buf.setL1Pass((int) L1_pass);
+		buf.setL1Processed((int) L1_processed);
+		buf.setL1Skip((int) L1_skip);
+		buf.setL1Thresh(L1_thresh);
+		
+		buf.setL2Pass((int) L2_pass);
+		buf.setL2Processed((int) L2_processed);
+		buf.setL2Skip((int) L2_skip);
+		buf.setL2Thresh(L2_thresh);
+		
+		buf.setGpsLat(start_loc.getLatitude());
+		buf.setGpsLon(start_loc.getLongitude());
+		
+		for (RecoEvent evt : events) {
+			buf.addEvents(evt.buildProto());
+		}
+				
+		return buf.build();
+	}
+	
+	public byte[] toBytes() {
+		DataProtos.ExposureBlock buf = buildProto();
+		return buf.toByteArray();
 	}
 }

@@ -1,15 +1,17 @@
 package edu.uci.crayfis;
 
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import edu.uci.crayfis.DAQActivity.RawCameraFrame;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class OutputManager extends Thread {
+	public static final String TAG = "OutputManager";
+	
 	// true if a request has been made to stop the thread
 	volatile boolean stopRequested = false;
 	// true if the thread is running and can process more data
@@ -42,7 +44,7 @@ public class OutputManager extends Thread {
 	}
 	
 	public interface Writable {
-		public byte[] serializeBytes();
+		public byte[] toBytes();
 	}
 
 	@Override
