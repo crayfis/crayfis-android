@@ -73,6 +73,11 @@ public class OutputManager extends Thread {
 		return success;
 	}
 	
+	public boolean commitCalibrationResult(DataProtos.CalibrationResult cal) {
+		boolean success = outputQueue.offer(cal);
+		return success;
+	}
+	
 	/**
 	 * Blocks until the thread has stopped
 	 */
@@ -120,8 +125,11 @@ public class OutputManager extends Thread {
 			else if (toWrite instanceof DataProtos.RunConfig) {
 				chunk.addRunConfigs((DataProtos.RunConfig) toWrite);
 			}
+			else if (toWrite instanceof DataProtos.CalibrationResult) {
+				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
+			}
 			
-			// I don't know if this is efficient...
+			// FIXME: I don't know if this is efficient...
 			chunkSize += toWrite.toByteArray().length;
 			
 			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval) {

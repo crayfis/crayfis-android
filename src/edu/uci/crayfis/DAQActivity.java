@@ -22,7 +22,6 @@ import java.lang.Math;
 import android.location.LocationManager;
 import android.location.Location;
 import android.location.LocationListener;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Paint;
@@ -35,7 +34,6 @@ import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -77,15 +75,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	PowerManager.WakeLock wl;
 
 	private char[][] histo_chars = new char[256][256];
-	private int histo_max = 0;
 	// draw some X axis labels
 	char[] labels = new char[256];
 	// settings
-	private boolean uploadData = true;
 
 	public static final int targetPreviewWidth = 320;
 	public static final int targetPreviewHeight = 240;
 	
+	// Maximum number of raw camera frames to allow on the L2Queue
 	private static final int maxFrames = 2;
 
 	// simple class to group a timestamp and byte array together
@@ -121,7 +118,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L1skip = 0;
 	// how many events L1 processed (after prescale)
 	private int L1proc = 0;
-	private int L1pass = 0;
 
 	// how many events L1 skipped (after prescale)
 	private int L2skip = 0;
@@ -130,7 +126,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// how many particles seen > thresh
 	private int totalPixels = 0;
-	private int numFiles = 0;
 	private int totalEvents = 0;
 	private int totalXBs = 0;
 
@@ -140,8 +135,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L1prescale = 1;
 	private int L2prescale = 1;
 
-	private int uploadDelta = 10; // number of seconds to wait before checking for new files
-
 	public enum state {
 		INIT, CALIBRATION, DATA
 	};
@@ -150,6 +143,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private boolean fixed_threshold;
 	
 	private long calibration_start;
+	private long calibration_stop;
 	
 	// how many frames to sample during calibration
 	// (more frames is longer but gives better statistics)
@@ -299,16 +293,37 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			
 			break;
 		case CALIBRATION:
+			// Okay, we're just finished calibrating!
+			
 			Log.i(TAG, "FSM Transition: CALIBRATION -> DATA");
 
 			int new_thresh;
-			long calibration_time = System.currentTimeMillis() - calibration_start;
+			long calibration_time = calibration_stop - calibration_start;
 			int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
-			
+						
 			Log.i("Calibration", "Processed " + reco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+						
+			// build the calibration result object
+			DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
+			// (ugh, why can't primitive arrays be Iterable??)
+			for (int v : reco.h_pixel.values) {
+				cal.addHistPixel(v);
+			}
+			for (int v : reco.h_l2pixel.values) {
+				cal.addHistL2Pixel(v);
+			}
+			for (int v : reco.h_maxpixel.values) {
+				cal.addHistMaxpixel(v);
+			}
+			for (int v : reco.h_numpixel.values) {
+				cal.addHistNumpixel(v);
+			}
+			// and commit it to the output stream
+			Log.i(TAG, "Committing new calibration result.");
+			outputThread.commitCalibrationResult(cal.build());
 			
+			// update the thresholds
 			new_thresh = reco.calculateThresholdByEvents(target_events);
-			
 			Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 			L1thresh = new_thresh;
 			if (L1thresh < L2thresh) {
@@ -316,10 +331,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// we should lower it!
 				L2thresh = L1thresh;
 			}
-			
-			current_state = DAQActivity.state.DATA;
 
-			// Start a new exposure block
+			// Finally, set the state and start a new xb
+			current_state = DAQActivity.state.DATA;
 			newExposureBlock();
 			
 			break;
@@ -427,7 +441,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		preview.addView(mPreview);
 		preview.addView(mDraw);
 		
-		L1counter = L1proc = L1skip = L1pass = 0;
+		L1counter = L1proc = L1skip = 0;
 		starttime = System.currentTimeMillis();
 
 		LocationListener locationListener = new LocationListener() {
@@ -482,7 +496,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	@Override
 	protected void onDestroy() {
-		wl.release();
 		super.onDestroy();
 	}
 
@@ -501,6 +514,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	@Override
 	protected void onPause() {
 		super.onPause();
+		
+		wl.release();
 		
 		Log.i(TAG, "Suspending!");
 
@@ -642,7 +657,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					}
 				}
 				if (pass) {
-					L1pass++;
 					xb.L1_pass++;
 
 					// this frame has passed the L1 threshold, put it on the
@@ -693,7 +707,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			for (int i = 0; i < 256; i++)
 				if (data[i] > max)
 					max = data[i];
-			histo_max = max;
 			// make 256 vertical devisions
 			// each one is at log(data)/log(max) * i /256
 
@@ -782,7 +795,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 								+ (int) (1.0e-3 * (float) (System
 										.currentTimeMillis() - starttime))
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
-				// canvas.drawText("Frames "+L1proc+" pass?"+L1pass+" analyzed="+L2proc+" skipped="+L2skip,250,yoffset+3*tsize,mypaint);
 				canvas.drawText("Events : " + totalEvents, 200, yoffset + 6 * tsize,
 						mypaint);
 				canvas.drawText("Pixels : " + totalPixels, 200, yoffset + 8 * tsize,
@@ -995,21 +1007,24 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// Finally, add the event to the proper exposure block.
 				xb.addEvent(event);
 				
+				L2counter++;
+				
 				// If we got a bad frame, go back to calibration mode
 				if (reco.good_quality == false
 						&& fixed_threshold == false) {
 					toCalibrationMode();
+					continue;
 				}
-				
-				// At this point, we're done with the data; gc will deal with bytes array.
-				L2counter++;
-				
+								
 				// If we're calibrating, check if we've processed enough
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
 				if (current_state == DAQActivity.state.CALIBRATION
 						&& reco.event_count >= calibration_sample_frames) {
+					// mark the time of the last event from the run.
+					calibration_stop = frame.acq_time;
 					toDataMode();
+					continue;
 				}
 			}
 			running = false;

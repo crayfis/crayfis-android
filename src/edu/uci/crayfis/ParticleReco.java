@@ -152,7 +152,7 @@ public class ParticleReco {
 	public Histogram h_pixel = new Histogram(256);
 	public Histogram h_l2pixel = new Histogram(256);
 	public Histogram h_maxpixel = new Histogram(256);
-	public Histogram h_numpixel = new Histogram(4000);
+	public Histogram h_numpixel = new Histogram(200);
 	
 	// counters to keep track of how many events and pixels
 	// have been built since the last reset.

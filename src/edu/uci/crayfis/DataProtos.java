@@ -60,6 +60,31 @@ public final class DataProtos {
      */
     edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder getExposureBlocksOrBuilder(
         int index);
+
+    // repeated .crayfis.CalibrationResult calibration_results = 3;
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult> 
+        getCalibrationResultsList();
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    edu.uci.crayfis.DataProtos.CalibrationResult getCalibrationResults(int index);
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    int getCalibrationResultsCount();
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    java.util.List<? extends edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder> 
+        getCalibrationResultsOrBuilderList();
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder getCalibrationResultsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code crayfis.DataChunk}
@@ -133,6 +158,14 @@ public final class DataProtos {
               exposureBlocks_.add(input.readMessage(edu.uci.crayfis.DataProtos.ExposureBlock.PARSER, extensionRegistry));
               break;
             }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                calibrationResults_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.CalibrationResult>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              calibrationResults_.add(input.readMessage(edu.uci.crayfis.DataProtos.CalibrationResult.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -146,6 +179,9 @@ public final class DataProtos {
         }
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           exposureBlocks_ = java.util.Collections.unmodifiableList(exposureBlocks_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          calibrationResults_ = java.util.Collections.unmodifiableList(calibrationResults_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -250,9 +286,46 @@ public final class DataProtos {
       return exposureBlocks_.get(index);
     }
 
+    // repeated .crayfis.CalibrationResult calibration_results = 3;
+    public static final int CALIBRATION_RESULTS_FIELD_NUMBER = 3;
+    private java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult> calibrationResults_;
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    public java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult> getCalibrationResultsList() {
+      return calibrationResults_;
+    }
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    public java.util.List<? extends edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder> 
+        getCalibrationResultsOrBuilderList() {
+      return calibrationResults_;
+    }
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    public int getCalibrationResultsCount() {
+      return calibrationResults_.size();
+    }
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    public edu.uci.crayfis.DataProtos.CalibrationResult getCalibrationResults(int index) {
+      return calibrationResults_.get(index);
+    }
+    /**
+     * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+     */
+    public edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder getCalibrationResultsOrBuilder(
+        int index) {
+      return calibrationResults_.get(index);
+    }
+
     private void initFields() {
       runConfigs_ = java.util.Collections.emptyList();
       exposureBlocks_ = java.util.Collections.emptyList();
+      calibrationResults_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -272,6 +345,9 @@ public final class DataProtos {
       for (int i = 0; i < exposureBlocks_.size(); i++) {
         output.writeMessage(2, exposureBlocks_.get(i));
       }
+      for (int i = 0; i < calibrationResults_.size(); i++) {
+        output.writeMessage(3, calibrationResults_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -288,6 +364,10 @@ public final class DataProtos {
       for (int i = 0; i < exposureBlocks_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, exposureBlocks_.get(i));
+      }
+      for (int i = 0; i < calibrationResults_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, calibrationResults_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -404,6 +484,7 @@ public final class DataProtos {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
           getRunConfigsFieldBuilder();
           getExposureBlocksFieldBuilder();
+          getCalibrationResultsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -423,6 +504,12 @@ public final class DataProtos {
           bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           exposureBlocksBuilder_.clear();
+        }
+        if (calibrationResultsBuilder_ == null) {
+          calibrationResults_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          calibrationResultsBuilder_.clear();
         }
         return this;
       }
@@ -468,6 +555,15 @@ public final class DataProtos {
           result.exposureBlocks_ = exposureBlocks_;
         } else {
           result.exposureBlocks_ = exposureBlocksBuilder_.build();
+        }
+        if (calibrationResultsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            calibrationResults_ = java.util.Collections.unmodifiableList(calibrationResults_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.calibrationResults_ = calibrationResults_;
+        } else {
+          result.calibrationResults_ = calibrationResultsBuilder_.build();
         }
         onBuilt();
         return result;
@@ -533,6 +629,32 @@ public final class DataProtos {
                    getExposureBlocksFieldBuilder() : null;
             } else {
               exposureBlocksBuilder_.addAllMessages(other.exposureBlocks_);
+            }
+          }
+        }
+        if (calibrationResultsBuilder_ == null) {
+          if (!other.calibrationResults_.isEmpty()) {
+            if (calibrationResults_.isEmpty()) {
+              calibrationResults_ = other.calibrationResults_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureCalibrationResultsIsMutable();
+              calibrationResults_.addAll(other.calibrationResults_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.calibrationResults_.isEmpty()) {
+            if (calibrationResultsBuilder_.isEmpty()) {
+              calibrationResultsBuilder_.dispose();
+              calibrationResultsBuilder_ = null;
+              calibrationResults_ = other.calibrationResults_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              calibrationResultsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getCalibrationResultsFieldBuilder() : null;
+            } else {
+              calibrationResultsBuilder_.addAllMessages(other.calibrationResults_);
             }
           }
         }
@@ -1041,6 +1163,246 @@ public final class DataProtos {
           exposureBlocks_ = null;
         }
         return exposureBlocksBuilder_;
+      }
+
+      // repeated .crayfis.CalibrationResult calibration_results = 3;
+      private java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult> calibrationResults_ =
+        java.util.Collections.emptyList();
+      private void ensureCalibrationResultsIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          calibrationResults_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.CalibrationResult>(calibrationResults_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.CalibrationResult, edu.uci.crayfis.DataProtos.CalibrationResult.Builder, edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder> calibrationResultsBuilder_;
+
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult> getCalibrationResultsList() {
+        if (calibrationResultsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(calibrationResults_);
+        } else {
+          return calibrationResultsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public int getCalibrationResultsCount() {
+        if (calibrationResultsBuilder_ == null) {
+          return calibrationResults_.size();
+        } else {
+          return calibrationResultsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public edu.uci.crayfis.DataProtos.CalibrationResult getCalibrationResults(int index) {
+        if (calibrationResultsBuilder_ == null) {
+          return calibrationResults_.get(index);
+        } else {
+          return calibrationResultsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder setCalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.CalibrationResult value) {
+        if (calibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.set(index, value);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder setCalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.CalibrationResult.Builder builderForValue) {
+        if (calibrationResultsBuilder_ == null) {
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder addCalibrationResults(edu.uci.crayfis.DataProtos.CalibrationResult value) {
+        if (calibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.add(value);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder addCalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.CalibrationResult value) {
+        if (calibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.add(index, value);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder addCalibrationResults(
+          edu.uci.crayfis.DataProtos.CalibrationResult.Builder builderForValue) {
+        if (calibrationResultsBuilder_ == null) {
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.add(builderForValue.build());
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder addCalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.CalibrationResult.Builder builderForValue) {
+        if (calibrationResultsBuilder_ == null) {
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder addAllCalibrationResults(
+          java.lang.Iterable<? extends edu.uci.crayfis.DataProtos.CalibrationResult> values) {
+        if (calibrationResultsBuilder_ == null) {
+          ensureCalibrationResultsIsMutable();
+          super.addAll(values, calibrationResults_);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder clearCalibrationResults() {
+        if (calibrationResultsBuilder_ == null) {
+          calibrationResults_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public Builder removeCalibrationResults(int index) {
+        if (calibrationResultsBuilder_ == null) {
+          ensureCalibrationResultsIsMutable();
+          calibrationResults_.remove(index);
+          onChanged();
+        } else {
+          calibrationResultsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public edu.uci.crayfis.DataProtos.CalibrationResult.Builder getCalibrationResultsBuilder(
+          int index) {
+        return getCalibrationResultsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder getCalibrationResultsOrBuilder(
+          int index) {
+        if (calibrationResultsBuilder_ == null) {
+          return calibrationResults_.get(index);  } else {
+          return calibrationResultsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public java.util.List<? extends edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder> 
+           getCalibrationResultsOrBuilderList() {
+        if (calibrationResultsBuilder_ != null) {
+          return calibrationResultsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(calibrationResults_);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public edu.uci.crayfis.DataProtos.CalibrationResult.Builder addCalibrationResultsBuilder() {
+        return getCalibrationResultsFieldBuilder().addBuilder(
+            edu.uci.crayfis.DataProtos.CalibrationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public edu.uci.crayfis.DataProtos.CalibrationResult.Builder addCalibrationResultsBuilder(
+          int index) {
+        return getCalibrationResultsFieldBuilder().addBuilder(
+            index, edu.uci.crayfis.DataProtos.CalibrationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.CalibrationResult calibration_results = 3;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.CalibrationResult.Builder> 
+           getCalibrationResultsBuilderList() {
+        return getCalibrationResultsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.CalibrationResult, edu.uci.crayfis.DataProtos.CalibrationResult.Builder, edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder> 
+          getCalibrationResultsFieldBuilder() {
+        if (calibrationResultsBuilder_ == null) {
+          calibrationResultsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              edu.uci.crayfis.DataProtos.CalibrationResult, edu.uci.crayfis.DataProtos.CalibrationResult.Builder, edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder>(
+                  calibrationResults_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          calibrationResults_ = null;
+        }
+        return calibrationResultsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:crayfis.DataChunk)
@@ -6175,6 +6537,1192 @@ public final class DataProtos {
     // @@protoc_insertion_point(class_scope:crayfis.Pixel)
   }
 
+  public interface CalibrationResultOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional uint64 run_id = 1;
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    boolean hasRunId();
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    long getRunId();
+
+    // optional uint64 start_time = 2;
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    boolean hasStartTime();
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    long getStartTime();
+
+    // optional uint64 end_time = 3;
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    boolean hasEndTime();
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    long getEndTime();
+
+    // repeated uint32 hist_pixel = 4;
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    java.util.List<java.lang.Integer> getHistPixelList();
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    int getHistPixelCount();
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    int getHistPixel(int index);
+
+    // repeated uint32 hist_l2pixel = 5;
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    java.util.List<java.lang.Integer> getHistL2PixelList();
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    int getHistL2PixelCount();
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    int getHistL2Pixel(int index);
+
+    // repeated uint32 hist_maxpixel = 6;
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    java.util.List<java.lang.Integer> getHistMaxpixelList();
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    int getHistMaxpixelCount();
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    int getHistMaxpixel(int index);
+
+    // repeated uint32 hist_numpixel = 7;
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    java.util.List<java.lang.Integer> getHistNumpixelList();
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    int getHistNumpixelCount();
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    int getHistNumpixel(int index);
+  }
+  /**
+   * Protobuf type {@code crayfis.CalibrationResult}
+   */
+  public static final class CalibrationResult extends
+      com.google.protobuf.GeneratedMessage
+      implements CalibrationResultOrBuilder {
+    // Use CalibrationResult.newBuilder() to construct.
+    private CalibrationResult(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private CalibrationResult(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final CalibrationResult defaultInstance;
+    public static CalibrationResult getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public CalibrationResult getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CalibrationResult(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              runId_ = input.readUInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              startTime_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              endTime_ = input.readUInt64();
+              break;
+            }
+            case 32: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                histPixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              histPixel_.add(input.readUInt32());
+              break;
+            }
+            case 34: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+                histPixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                histPixel_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 40: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                histL2Pixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              histL2Pixel_.add(input.readUInt32());
+              break;
+            }
+            case 42: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
+                histL2Pixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                histL2Pixel_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 48: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                histMaxpixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              histMaxpixel_.add(input.readUInt32());
+              break;
+            }
+            case 50: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
+                histMaxpixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000020;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                histMaxpixel_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 56: {
+              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                histNumpixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000040;
+              }
+              histNumpixel_.add(input.readUInt32());
+              break;
+            }
+            case 58: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+                histNumpixel_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00000040;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                histNumpixel_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          histPixel_ = java.util.Collections.unmodifiableList(histPixel_);
+        }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          histL2Pixel_ = java.util.Collections.unmodifiableList(histL2Pixel_);
+        }
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+          histMaxpixel_ = java.util.Collections.unmodifiableList(histMaxpixel_);
+        }
+        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+          histNumpixel_ = java.util.Collections.unmodifiableList(histNumpixel_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_CalibrationResult_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.uci.crayfis.DataProtos.CalibrationResult.class, edu.uci.crayfis.DataProtos.CalibrationResult.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<CalibrationResult> PARSER =
+        new com.google.protobuf.AbstractParser<CalibrationResult>() {
+      public CalibrationResult parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CalibrationResult(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CalibrationResult> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional uint64 run_id = 1;
+    public static final int RUN_ID_FIELD_NUMBER = 1;
+    private long runId_;
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    public boolean hasRunId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    public long getRunId() {
+      return runId_;
+    }
+
+    // optional uint64 start_time = 2;
+    public static final int START_TIME_FIELD_NUMBER = 2;
+    private long startTime_;
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    public boolean hasStartTime() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    public long getStartTime() {
+      return startTime_;
+    }
+
+    // optional uint64 end_time = 3;
+    public static final int END_TIME_FIELD_NUMBER = 3;
+    private long endTime_;
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    public boolean hasEndTime() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    public long getEndTime() {
+      return endTime_;
+    }
+
+    // repeated uint32 hist_pixel = 4;
+    public static final int HIST_PIXEL_FIELD_NUMBER = 4;
+    private java.util.List<java.lang.Integer> histPixel_;
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getHistPixelList() {
+      return histPixel_;
+    }
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    public int getHistPixelCount() {
+      return histPixel_.size();
+    }
+    /**
+     * <code>repeated uint32 hist_pixel = 4;</code>
+     */
+    public int getHistPixel(int index) {
+      return histPixel_.get(index);
+    }
+
+    // repeated uint32 hist_l2pixel = 5;
+    public static final int HIST_L2PIXEL_FIELD_NUMBER = 5;
+    private java.util.List<java.lang.Integer> histL2Pixel_;
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getHistL2PixelList() {
+      return histL2Pixel_;
+    }
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    public int getHistL2PixelCount() {
+      return histL2Pixel_.size();
+    }
+    /**
+     * <code>repeated uint32 hist_l2pixel = 5;</code>
+     */
+    public int getHistL2Pixel(int index) {
+      return histL2Pixel_.get(index);
+    }
+
+    // repeated uint32 hist_maxpixel = 6;
+    public static final int HIST_MAXPIXEL_FIELD_NUMBER = 6;
+    private java.util.List<java.lang.Integer> histMaxpixel_;
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getHistMaxpixelList() {
+      return histMaxpixel_;
+    }
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    public int getHistMaxpixelCount() {
+      return histMaxpixel_.size();
+    }
+    /**
+     * <code>repeated uint32 hist_maxpixel = 6;</code>
+     */
+    public int getHistMaxpixel(int index) {
+      return histMaxpixel_.get(index);
+    }
+
+    // repeated uint32 hist_numpixel = 7;
+    public static final int HIST_NUMPIXEL_FIELD_NUMBER = 7;
+    private java.util.List<java.lang.Integer> histNumpixel_;
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getHistNumpixelList() {
+      return histNumpixel_;
+    }
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    public int getHistNumpixelCount() {
+      return histNumpixel_.size();
+    }
+    /**
+     * <code>repeated uint32 hist_numpixel = 7;</code>
+     */
+    public int getHistNumpixel(int index) {
+      return histNumpixel_.get(index);
+    }
+
+    private void initFields() {
+      runId_ = 0L;
+      startTime_ = 0L;
+      endTime_ = 0L;
+      histPixel_ = java.util.Collections.emptyList();
+      histL2Pixel_ = java.util.Collections.emptyList();
+      histMaxpixel_ = java.util.Collections.emptyList();
+      histNumpixel_ = java.util.Collections.emptyList();
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt64(1, runId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(2, startTime_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(3, endTime_);
+      }
+      for (int i = 0; i < histPixel_.size(); i++) {
+        output.writeUInt32(4, histPixel_.get(i));
+      }
+      for (int i = 0; i < histL2Pixel_.size(); i++) {
+        output.writeUInt32(5, histL2Pixel_.get(i));
+      }
+      for (int i = 0; i < histMaxpixel_.size(); i++) {
+        output.writeUInt32(6, histMaxpixel_.get(i));
+      }
+      for (int i = 0; i < histNumpixel_.size(); i++) {
+        output.writeUInt32(7, histNumpixel_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, runId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, startTime_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(3, endTime_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < histPixel_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(histPixel_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getHistPixelList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < histL2Pixel_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(histL2Pixel_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getHistL2PixelList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < histMaxpixel_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(histMaxpixel_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getHistMaxpixelList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < histNumpixel_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(histNumpixel_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getHistNumpixelList().size();
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CalibrationResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.uci.crayfis.DataProtos.CalibrationResult prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code crayfis.CalibrationResult}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CalibrationResult_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.uci.crayfis.DataProtos.CalibrationResult.class, edu.uci.crayfis.DataProtos.CalibrationResult.Builder.class);
+      }
+
+      // Construct using edu.uci.crayfis.DataProtos.CalibrationResult.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        runId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        startTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        endTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        histPixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        histL2Pixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        histMaxpixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        histNumpixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
+      }
+
+      public edu.uci.crayfis.DataProtos.CalibrationResult getDefaultInstanceForType() {
+        return edu.uci.crayfis.DataProtos.CalibrationResult.getDefaultInstance();
+      }
+
+      public edu.uci.crayfis.DataProtos.CalibrationResult build() {
+        edu.uci.crayfis.DataProtos.CalibrationResult result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.uci.crayfis.DataProtos.CalibrationResult buildPartial() {
+        edu.uci.crayfis.DataProtos.CalibrationResult result = new edu.uci.crayfis.DataProtos.CalibrationResult(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.runId_ = runId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.startTime_ = startTime_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.endTime_ = endTime_;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          histPixel_ = java.util.Collections.unmodifiableList(histPixel_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.histPixel_ = histPixel_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          histL2Pixel_ = java.util.Collections.unmodifiableList(histL2Pixel_);
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.histL2Pixel_ = histL2Pixel_;
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
+          histMaxpixel_ = java.util.Collections.unmodifiableList(histMaxpixel_);
+          bitField0_ = (bitField0_ & ~0x00000020);
+        }
+        result.histMaxpixel_ = histMaxpixel_;
+        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+          histNumpixel_ = java.util.Collections.unmodifiableList(histNumpixel_);
+          bitField0_ = (bitField0_ & ~0x00000040);
+        }
+        result.histNumpixel_ = histNumpixel_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.uci.crayfis.DataProtos.CalibrationResult) {
+          return mergeFrom((edu.uci.crayfis.DataProtos.CalibrationResult)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.uci.crayfis.DataProtos.CalibrationResult other) {
+        if (other == edu.uci.crayfis.DataProtos.CalibrationResult.getDefaultInstance()) return this;
+        if (other.hasRunId()) {
+          setRunId(other.getRunId());
+        }
+        if (other.hasStartTime()) {
+          setStartTime(other.getStartTime());
+        }
+        if (other.hasEndTime()) {
+          setEndTime(other.getEndTime());
+        }
+        if (!other.histPixel_.isEmpty()) {
+          if (histPixel_.isEmpty()) {
+            histPixel_ = other.histPixel_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureHistPixelIsMutable();
+            histPixel_.addAll(other.histPixel_);
+          }
+          onChanged();
+        }
+        if (!other.histL2Pixel_.isEmpty()) {
+          if (histL2Pixel_.isEmpty()) {
+            histL2Pixel_ = other.histL2Pixel_;
+            bitField0_ = (bitField0_ & ~0x00000010);
+          } else {
+            ensureHistL2PixelIsMutable();
+            histL2Pixel_.addAll(other.histL2Pixel_);
+          }
+          onChanged();
+        }
+        if (!other.histMaxpixel_.isEmpty()) {
+          if (histMaxpixel_.isEmpty()) {
+            histMaxpixel_ = other.histMaxpixel_;
+            bitField0_ = (bitField0_ & ~0x00000020);
+          } else {
+            ensureHistMaxpixelIsMutable();
+            histMaxpixel_.addAll(other.histMaxpixel_);
+          }
+          onChanged();
+        }
+        if (!other.histNumpixel_.isEmpty()) {
+          if (histNumpixel_.isEmpty()) {
+            histNumpixel_ = other.histNumpixel_;
+            bitField0_ = (bitField0_ & ~0x00000040);
+          } else {
+            ensureHistNumpixelIsMutable();
+            histNumpixel_.addAll(other.histNumpixel_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.uci.crayfis.DataProtos.CalibrationResult parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.uci.crayfis.DataProtos.CalibrationResult) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional uint64 run_id = 1;
+      private long runId_ ;
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public boolean hasRunId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public long getRunId() {
+        return runId_;
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public Builder setRunId(long value) {
+        bitField0_ |= 0x00000001;
+        runId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public Builder clearRunId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        runId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional uint64 start_time = 2;
+      private long startTime_ ;
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public boolean hasStartTime() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public long getStartTime() {
+        return startTime_;
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public Builder setStartTime(long value) {
+        bitField0_ |= 0x00000002;
+        startTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public Builder clearStartTime() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        startTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional uint64 end_time = 3;
+      private long endTime_ ;
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public boolean hasEndTime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public long getEndTime() {
+        return endTime_;
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public Builder setEndTime(long value) {
+        bitField0_ |= 0x00000004;
+        endTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public Builder clearEndTime() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        endTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // repeated uint32 hist_pixel = 4;
+      private java.util.List<java.lang.Integer> histPixel_ = java.util.Collections.emptyList();
+      private void ensureHistPixelIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          histPixel_ = new java.util.ArrayList<java.lang.Integer>(histPixel_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getHistPixelList() {
+        return java.util.Collections.unmodifiableList(histPixel_);
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public int getHistPixelCount() {
+        return histPixel_.size();
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public int getHistPixel(int index) {
+        return histPixel_.get(index);
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public Builder setHistPixel(
+          int index, int value) {
+        ensureHistPixelIsMutable();
+        histPixel_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public Builder addHistPixel(int value) {
+        ensureHistPixelIsMutable();
+        histPixel_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public Builder addAllHistPixel(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureHistPixelIsMutable();
+        super.addAll(values, histPixel_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_pixel = 4;</code>
+       */
+      public Builder clearHistPixel() {
+        histPixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+
+      // repeated uint32 hist_l2pixel = 5;
+      private java.util.List<java.lang.Integer> histL2Pixel_ = java.util.Collections.emptyList();
+      private void ensureHistL2PixelIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          histL2Pixel_ = new java.util.ArrayList<java.lang.Integer>(histL2Pixel_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getHistL2PixelList() {
+        return java.util.Collections.unmodifiableList(histL2Pixel_);
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public int getHistL2PixelCount() {
+        return histL2Pixel_.size();
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public int getHistL2Pixel(int index) {
+        return histL2Pixel_.get(index);
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public Builder setHistL2Pixel(
+          int index, int value) {
+        ensureHistL2PixelIsMutable();
+        histL2Pixel_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public Builder addHistL2Pixel(int value) {
+        ensureHistL2PixelIsMutable();
+        histL2Pixel_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public Builder addAllHistL2Pixel(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureHistL2PixelIsMutable();
+        super.addAll(values, histL2Pixel_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_l2pixel = 5;</code>
+       */
+      public Builder clearHistL2Pixel() {
+        histL2Pixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+
+      // repeated uint32 hist_maxpixel = 6;
+      private java.util.List<java.lang.Integer> histMaxpixel_ = java.util.Collections.emptyList();
+      private void ensureHistMaxpixelIsMutable() {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+          histMaxpixel_ = new java.util.ArrayList<java.lang.Integer>(histMaxpixel_);
+          bitField0_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getHistMaxpixelList() {
+        return java.util.Collections.unmodifiableList(histMaxpixel_);
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public int getHistMaxpixelCount() {
+        return histMaxpixel_.size();
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public int getHistMaxpixel(int index) {
+        return histMaxpixel_.get(index);
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public Builder setHistMaxpixel(
+          int index, int value) {
+        ensureHistMaxpixelIsMutable();
+        histMaxpixel_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public Builder addHistMaxpixel(int value) {
+        ensureHistMaxpixelIsMutable();
+        histMaxpixel_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public Builder addAllHistMaxpixel(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureHistMaxpixelIsMutable();
+        super.addAll(values, histMaxpixel_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_maxpixel = 6;</code>
+       */
+      public Builder clearHistMaxpixel() {
+        histMaxpixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+
+      // repeated uint32 hist_numpixel = 7;
+      private java.util.List<java.lang.Integer> histNumpixel_ = java.util.Collections.emptyList();
+      private void ensureHistNumpixelIsMutable() {
+        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+          histNumpixel_ = new java.util.ArrayList<java.lang.Integer>(histNumpixel_);
+          bitField0_ |= 0x00000040;
+         }
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getHistNumpixelList() {
+        return java.util.Collections.unmodifiableList(histNumpixel_);
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public int getHistNumpixelCount() {
+        return histNumpixel_.size();
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public int getHistNumpixel(int index) {
+        return histNumpixel_.get(index);
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public Builder setHistNumpixel(
+          int index, int value) {
+        ensureHistNumpixelIsMutable();
+        histNumpixel_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public Builder addHistNumpixel(int value) {
+        ensureHistNumpixelIsMutable();
+        histNumpixel_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public Builder addAllHistNumpixel(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureHistNumpixelIsMutable();
+        super.addAll(values, histNumpixel_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 hist_numpixel = 7;</code>
+       */
+      public Builder clearHistNumpixel() {
+        histNumpixel_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:crayfis.CalibrationResult)
+    }
+
+    static {
+      defaultInstance = new CalibrationResult(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:crayfis.CalibrationResult)
+  }
+
   private static com.google.protobuf.Descriptors.Descriptor
     internal_static_crayfis_DataChunk_descriptor;
   private static
@@ -6200,6 +7748,11 @@ public final class DataProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_crayfis_Pixel_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_crayfis_CalibrationResult_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_crayfis_CalibrationResult_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -6209,30 +7762,35 @@ public final class DataProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022crayfis_data.proto\022\007crayfis\"e\n\tDataChu" +
-      "nk\022\'\n\013run_configs\030\001 \003(\0132\022.crayfis.RunCon" +
-      "fig\022/\n\017exposure_blocks\030\002 \003(\0132\026.crayfis.E" +
-      "xposureBlock\"\221\001\n\tRunConfig\022\r\n\005id_hi\030\001 \001(" +
-      "\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nstart_time\030\003 \001(\004\022\025\n\r" +
-      "crayfis_build\030\004 \001(\t\022\021\n\thw_params\030\005 \001(\t\022\021" +
-      "\n\tos_params\030\006 \001(\t\022\025\n\rcamera_params\030\007 \001(\t" +
-      "\"\224\003\n\rExposureBlock\022\016\n\006run_id\030\001 \001(\004\022\022\n\nst" +
-      "art_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\017\n\007gps_" +
-      "lat\030\004 \001(\001\022\017\n\007gps_lon\030\005 \001(\001\022/\n\tdaq_state\030",
-      "\006 \001(\0162\034.crayfis.ExposureBlock.State\022\036\n\006e" +
-      "vents\030\007 \003(\0132\016.crayfis.Event\022\021\n\tL1_thresh" +
-      "\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\024\n\014L1_processe" +
-      "d\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(\r\022\026\n\016frames_" +
-      "dropped\030\014 \001(\r\022\017\n\007L1_pass\030\r \001(\r\022\017\n\007L1_ski" +
-      "p\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L2_skip\030\020 \001(" +
-      "\r\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n" +
-      "\004DATA\020\002\"v\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\017\n\007g" +
-      "ps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\036\n\006pixels\030" +
-      "\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030\005 \001(\001\022\013\n\003st",
-      "d\030\006 \001(\001\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013" +
-      "\n\003val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005" +
-      " \001(\002\022\r\n\005avg_5\030\006 \001(\002B\035\n\017edu.uci.crayfisB\n" +
-      "DataProtos"
+      "\n\022crayfis_data.proto\022\007crayfis\"\236\001\n\tDataCh" +
+      "unk\022\'\n\013run_configs\030\001 \003(\0132\022.crayfis.RunCo" +
+      "nfig\022/\n\017exposure_blocks\030\002 \003(\0132\026.crayfis." +
+      "ExposureBlock\0227\n\023calibration_results\030\003 \003" +
+      "(\0132\032.crayfis.CalibrationResult\"\221\001\n\tRunCo" +
+      "nfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nst" +
+      "art_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 \001(\t\022\021\n" +
+      "\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(\t\022\025\n\rc" +
+      "amera_params\030\007 \001(\t\"\224\003\n\rExposureBlock\022\016\n\006" +
+      "run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_",
+      "time\030\003 \001(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007gps_lon\030\005" +
+      " \001(\001\022/\n\tdaq_state\030\006 \001(\0162\034.crayfis.Exposu" +
+      "reBlock.State\022\036\n\006events\030\007 \003(\0132\016.crayfis." +
+      "Event\022\021\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t " +
+      "\001(\005\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2_processe" +
+      "d\030\013 \001(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pa" +
+      "ss\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001" +
+      "(\r\022\017\n\007L2_skip\030\020 \001(\r\",\n\005State\022\010\n\004INIT\020\000\022\017" +
+      "\n\013CALIBRATION\020\001\022\010\n\004DATA\020\002\"v\n\005Event\022\021\n\tti" +
+      "mestamp\030\001 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lo",
+      "n\030\003 \001(\001\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022" +
+      "\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\"Z\n\005Pixel\022\t\n\001x\030" +
+      "\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010near_ma" +
+      "x\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001" +
+      "\n\021CalibrationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n\ns" +
+      "tart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhis" +
+      "t_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rh" +
+      "ist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(" +
+      "\rB\035\n\017edu.uci.crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6244,7 +7802,7 @@ public final class DataProtos {
           internal_static_crayfis_DataChunk_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_DataChunk_descriptor,
-              new java.lang.String[] { "RunConfigs", "ExposureBlocks", });
+              new java.lang.String[] { "RunConfigs", "ExposureBlocks", "CalibrationResults", });
           internal_static_crayfis_RunConfig_descriptor =
             getDescriptor().getMessageTypes().get(1);
           internal_static_crayfis_RunConfig_fieldAccessorTable = new
@@ -6269,6 +7827,12 @@ public final class DataProtos {
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_Pixel_descriptor,
               new java.lang.String[] { "X", "Y", "Val", "NearMax", "Avg3", "Avg5", });
+          internal_static_crayfis_CalibrationResult_descriptor =
+            getDescriptor().getMessageTypes().get(5);
+          internal_static_crayfis_CalibrationResult_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_crayfis_CalibrationResult_descriptor,
+              new java.lang.String[] { "RunId", "StartTime", "EndTime", "HistPixel", "HistL2Pixel", "HistMaxpixel", "HistNumpixel", });
           return null;
         }
       };

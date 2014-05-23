@@ -8,6 +8,7 @@ option java_outer_classname = "DataProtos";
 message DataChunk {
 	repeated RunConfig run_configs = 1;
 	repeated ExposureBlock exposure_blocks = 2;
+	repeated CalibrationResult calibration_results = 3;
 }
 
 message RunConfig {
@@ -75,3 +76,14 @@ message Pixel {
 	optional float avg_5 = 6;
 }
 
+message CalibrationResult {
+	optional uint64 run_id = 1;
+
+	optional uint64 start_time = 2;
+	optional uint64 end_time = 3;
+
+	repeated uint32 hist_pixel = 4;
+	repeated uint32 hist_l2pixel = 5;
+	repeated uint32 hist_maxpixel = 6;
+	repeated uint32 hist_numpixel = 7;
+}
