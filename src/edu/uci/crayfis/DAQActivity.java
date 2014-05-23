@@ -180,7 +180,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private ExposureBlock previous_xb;
 	
 	// the nominal period for an exposure block (in seconds)
-	public static final long xb_period = 30;
+	public static final long xb_period = 2 * 60;
 
 	// L1 hit threshold
 	private int L1thresh = 0;
