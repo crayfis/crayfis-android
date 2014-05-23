@@ -56,10 +56,13 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import edu.uci.crayfis.ParticleReco.RecoEvent;
+import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.R;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -99,17 +102,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private static final int maxFrames = 2;
 
 	// simple class to group a timestamp and byte array together
-	public class TimestampedBytes {
+	public class RawCameraFrame {
 		public final byte[] bytes;
-		public final long t;
-		public TimestampedBytes(byte[] bytes, long t) {
+		public final long acq_time;
+		public Location location;
+		
+		public RawCameraFrame(byte[] bytes, long t) {
 			this.bytes = bytes;
-			this.t = t;
+			this.acq_time = t;
 		}
 	}
 	
 	// Queue for frames to be processed by the L2 thread
-	ArrayBlockingQueue<TimestampedBytes> L2Queue = new ArrayBlockingQueue<TimestampedBytes>(maxFrames);
+	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(maxFrames);
 	
 	// max amount of time to wait on L2Queue (seconds)
 	int L2Timeout = 1;
@@ -275,13 +280,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			fixed_threshold = false;
 			
-			reco.clearHistograms();
+			//reco.clearHistograms();
 			
 			calibration_start = System.currentTimeMillis();
 			current_state = DAQActivity.state.CALIBRATION;
 			
-			L1thresh = 0;
-			L2thresh = 0;
+			//L1thresh = 0;
+			//L2thresh = 0;
 			
 			// Start a new exposure block
 			newExposureBlock();
@@ -388,7 +393,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		current_xb.L1_thresh = L1thresh;
 		current_xb.L2_thresh = L2thresh;
-		current_xb.start_loc = currentLocation;
+		current_xb.start_loc = new Location(currentLocation);
 		
 		if (previous_xb != null) {
 			previous_xb.freeze();
@@ -402,10 +407,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	//  1) we have processed a frame that is too new for this XB
 	//  2) we have timed out on an empty L2 queue (no recent data from L1) 
 	void commitExposureBlock() {
-		Log.i(TAG, "Commiting old exposure block!");
 		if (previous_xb == null) {
 			return;
 		}
+		Log.i(TAG, "Commiting old exposure block!");
 		
 		ExposureBlock xb = previous_xb;
 		previous_xb = null;
@@ -440,7 +445,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreview(this, this, true);
 
-		reco = new ParticleReco();
 		context = getApplicationContext();
 
 		dstorage = new DataStorage(context);
@@ -604,6 +608,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// output = Bitmap.createBitmap(previewSize.width,previewSize.height,Bitmap.Config.ARGB_8888
 		// );
 		
+		reco = new ParticleReco(previewSize);
+		
 		outputThread = new OutputManager(context);
 		outputThread.start();
 		
@@ -669,7 +675,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		if (current_state == DAQActivity.state.CALIBRATION) {
 			// No need for L1 trigger; just go straight to L2
-			boolean queue_accept = L2Queue.offer(new TimestampedBytes(bytes, acq_time));
+			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
 			
 			if (! queue_accept) {
 				// oops! the queue is full. how did that happen, we're the only ones
@@ -704,7 +710,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = L2Queue.offer(new TimestampedBytes(bytes, acq_time));
+					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
 					
 					if (! queue_accept) {
 						// oops! the queue is full. how did that happen, we're the only ones
@@ -1016,7 +1022,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						.getDefaultSharedPreferences(context);
 				boolean doReco = sharedPrefs.getBoolean("prefDoReco", true);
 
-				TimestampedBytes frame = null;
+				RawCameraFrame frame = null;
 				try {
 					// Grab a frame buffer from the queue.
 					frame = L2Queue.poll(L2Timeout, TimeUnit.SECONDS);
@@ -1044,7 +1050,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					ExposureBlock xb = current_xb;
 					ExposureBlock prev_xb = previous_xb;
 					if (prev_xb != null) {
-						if (prev_xb.end_time < frame.t) {
+						if (prev_xb.end_time < frame.acq_time) {
 							// looks like we're done with the previous exposure block,
 							// since this frame is too recent for it.
 							// let's commit it and move on with the current_xb
@@ -1067,18 +1073,34 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							int old = reco.particles_size;
 							dstorage.latitude = currentLocation.getLatitude();
 							dstorage.longitude = currentLocation.getLongitude();
+							
+							// FIXME: should we worry about setting currentLocation at
+							// L1 (acquisition) time? Or is it okay here?
+							frame.location = new Location(currentLocation);
+							
 							boolean current_quality = reco.good_quality;
 
 							// look for particles, store them internally to reco
 							// object
 							reco.process(frame.bytes, previewSize.width,
-									previewSize.height, L2thresh, currentLocation, frame.t);
+									previewSize.height, L2thresh, currentLocation, frame.acq_time);
 							
 							// for now, everything "passes" L2 reco
 							xb.L2_pass++;
 							
+							// Build the event from the raw frame.
+							RecoEvent event = reco.buildEvent(frame);
+							
+							int thresh = 0;
+							if (current_state == DAQActivity.state.DATA) {
+								thresh = xb.L2_thresh;
+							}
+							// Now pick out the L2 pixels and add them to the event.
+							ArrayList<RecoPixel> pixels = reco.buildL2Pixels(frame, thresh);
+							event.pixels = pixels;
+							
 							// add the event to the proper exposure block.
-							xb.addEvent(reco);
+							xb.addEvent(event);
 
 							// start calibration mode again if find bad data
 							// continue to restart until good data comes in

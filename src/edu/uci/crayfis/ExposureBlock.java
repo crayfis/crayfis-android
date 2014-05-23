@@ -2,6 +2,7 @@ package edu.uci.crayfis;
 
 import java.util.ArrayList;
 
+import edu.uci.crayfis.ParticleReco.RecoEvent;
 import android.location.Location;
 import android.util.Log;
 
@@ -28,7 +29,9 @@ public class ExposureBlock implements OutputManager.Writable {
 	public long L2_pass;
 	public long L2_skip;
 	
-	private ArrayList<Event> events = new ArrayList<Event>();
+	public int total_pixels;
+	
+	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
 	public ExposureBlock() {
 		reset();
@@ -43,6 +46,7 @@ public class ExposureBlock implements OutputManager.Writable {
 		frames_dropped = 0;
 		L1_processed = L1_pass = L1_skip = 0;
 		L2_processed = L2_pass = L2_skip = 0;
+		total_pixels = 0;
 	}
 	
 	public void freeze() {
@@ -53,41 +57,12 @@ public class ExposureBlock implements OutputManager.Writable {
 		return System.currentTimeMillis() - start_time;
 	}
 	
-	public void addEvent(ParticleReco reco) {
-		Log.d(TAG, "adding new event to xb");
-		
-		events.add(new Event(reco));
+	public void addEvent(RecoEvent event) {
+		events.add(event);
+		total_pixels += event.pixels.size();
 	}
 	
 	public byte[] serializeBytes() {
 		return new byte[0];
-	}
-	
-	public class Event {
-		public long time;
-		public double lat;
-		public double lon;
-		
-		public boolean quality;
-		public float background;
-		public float variance;
-		
-		public ArrayList<RecoPixel> pixels;
-		
-		public Event() {
-			// no-op;
-		}
-		
-		// Construct an event from the results of a ParticleReco object
-		public Event(ParticleReco reco) {
-			// todo;
-		}
-	}
-	
-	public class RecoPixel {
-		public int x, y;
-		public int val;
-		public float avg_3, avg_5;
-		public int near_max;
 	}
 }

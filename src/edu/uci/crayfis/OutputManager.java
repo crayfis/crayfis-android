@@ -3,7 +3,7 @@ package edu.uci.crayfis;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import edu.uci.crayfis.DAQActivity.TimestampedBytes;
+import edu.uci.crayfis.DAQActivity.RawCameraFrame;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
