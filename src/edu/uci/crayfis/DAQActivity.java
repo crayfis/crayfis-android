@@ -137,10 +137,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L2proc = 0;
 
 	// how many particles seen > thresh
-	private int numHits = 0;
+	private int totalPixels = 0;
 	private int numFiles = 0;
-	private int numFrames = 0;
-	private int numUploads = 0;
+	private int totalEvents = 0;
+	private int totalXBs = 0;
 
 	private long L1counter = 0;
 	private long L2counter = 0;
@@ -150,7 +150,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	private int uploadDelta = 10; // number of seconds to wait before checking for new files
 
-	private enum state {
+	public enum state {
 		INIT, CALIBRATION, DATA
 	};
 
@@ -380,10 +380,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// Freeze the current XB, and push it back to the temp slot
 		previous_xb = current_xb;
 		current_xb = new ExposureBlock();
+		totalXBs++;
 		
 		current_xb.L1_thresh = L1thresh;
 		current_xb.L2_thresh = L2thresh;
 		current_xb.start_loc = new Location(currentLocation);
+		current_xb.daq_state = current_state;
 		
 		if (previous_xb != null) {
 			previous_xb.freeze();
@@ -824,16 +826,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 										.currentTimeMillis() - starttime))
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
 				// canvas.drawText("Frames "+L1proc+" pass?"+L1pass+" analyzed="+L2proc+" skipped="+L2skip,250,yoffset+3*tsize,mypaint);
-				canvas.drawText("Events : " + numFrames, 200, yoffset + 6 * tsize,
+				canvas.drawText("Events : " + totalEvents, 200, yoffset + 6 * tsize,
 						mypaint);
-				canvas.drawText("Pixels : " + numHits, 200, yoffset + 8 * tsize,
+				canvas.drawText("Pixels : " + totalPixels, 200, yoffset + 8 * tsize,
 						mypaint);
 				
 				// canvas.drawText("Loc: "+String.format("%1.2f",currentLocation.getLongitude())+", "+String.format("%1.2f",currentLocation.getLatitude()),
 				// 250,15+5*tsize,mypaint);
 				// canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);
 
-				canvas.drawText("Files: " + numUploads, 200, yoffset + 10
+				canvas.drawText("XBs: " + totalXBs, 200, yoffset + 10
 						* tsize, mypaint);
 
 				// /// Histogram
@@ -1070,6 +1072,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// Now pick out the L2 pixels and add them to the event.
 				ArrayList<RecoPixel> pixels = reco.buildL2Pixels(frame, thresh);
 				event.pixels = pixels;
+				
+				if (current_state == DAQActivity.state.DATA) {
+					// keep track of the running totals for acquired
+					// events/pixels over the app lifetime.
+					totalEvents++;
+					totalPixels += pixels.size();
+				}
 				
 				// Finally, add the event to the proper exposure block.
 				xb.addEvent(event);

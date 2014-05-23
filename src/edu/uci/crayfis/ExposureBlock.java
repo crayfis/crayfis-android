@@ -31,6 +31,8 @@ public class ExposureBlock implements OutputManager.Writable {
 	
 	public int total_pixels;
 	
+	public DAQActivity.state daq_state;
+	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
 	public ExposureBlock() {
@@ -58,13 +60,35 @@ public class ExposureBlock implements OutputManager.Writable {
 	}
 	
 	public void addEvent(RecoEvent event) {
+		// Don't keep event information during calibration... it's too much data.
+		if (daq_state == DAQActivity.state.CALIBRATION) {
+			return;
+		}
+		
 		events.add(event);
 		total_pixels += event.pixels.size();
 		Log.d("addevt", "Added event with " + event.pixels.size() + " pixels (total = " + total_pixels + ")");
 	}
 	
+	// Translate between the internal and external enums
+	private static DataProtos.ExposureBlock.State translateState(DAQActivity.state orig) {
+		switch (orig) {
+		case INIT:
+			return DataProtos.ExposureBlock.State.INIT;
+		case CALIBRATION:
+			return DataProtos.ExposureBlock.State.CALIBRATION;
+		case DATA:
+			return DataProtos.ExposureBlock.State.DATA;
+		default:
+			throw new RuntimeException("Unknown state! " + orig.toString());
+		}
+	}
+	
 	public DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder();
+		
+		buf.setDaqState(translateState(daq_state));
+		
 		buf.setL1Pass((int) L1_pass);
 		buf.setL1Processed((int) L1_processed);
 		buf.setL1Skip((int) L1_skip);
@@ -78,8 +102,12 @@ public class ExposureBlock implements OutputManager.Writable {
 		buf.setGpsLat(start_loc.getLatitude());
 		buf.setGpsLon(start_loc.getLongitude());
 		
-		for (RecoEvent evt : events) {
-			buf.addEvents(evt.buildProto());
+		// don't output event information for calibration blocks...
+		// they're really huge.
+		if (daq_state != DAQActivity.state.CALIBRATION) {
+			for (RecoEvent evt : events) {
+				buf.addEvents(evt.buildProto());
+			}
 		}
 				
 		return buf.build();
