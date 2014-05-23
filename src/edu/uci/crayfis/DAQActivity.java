@@ -23,27 +23,13 @@ import android.location.LocationManager;
 import android.location.Location;
 import android.location.LocationListener;
 
-import java.io.DataOutputStream;
-//import android.preference.PreferenceFragment;
-//import android.preference.PreferenceManager;
-//import android.content.SharedPreferences;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.graphics.Paint;
-import android.text.Html;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Typeface;
 import android.hardware.Camera;
@@ -69,8 +55,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
@@ -188,8 +172,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	long starttime;
 	long lastUploadTime;
 	long lastL2time;
-	private int writeIndex;
-	private int readIndex;
 
 	// calibration analysis parameters
 	// calibration rate = number of seconds per background photon
@@ -212,9 +194,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// Thread where image data is processed for L2
 	private ThreadProcess l2thread;
-
-	// thread to upload the data
-	private UploadProcess uploadthread;
 	
 	// thread to handle output of committed data
 	private OutputManager outputThread;
@@ -254,27 +233,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				})
 
 				.setView(tx1).show();
-		/*
-		 * AlertDialog.Builder alertDialogBuilder = new
-		 * AlertDialog.Builder(this);
-		 * 
-		 * 
-		 * 
-		 * // set title alertDialogBuilder.setTitle("About CRAYFIS");
-		 * 
-		 * // set dialog message alertDialogBuilder .setMessage(Html.fromHtml(
-		 * "CRAYFIS: <a href=\"http://crayfis.ps.uci.edu\">details</a>"))
-		 * .setCancelable(false) .setPositiveButton("Ok",new
-		 * DialogInterface.OnClickListener() { public void
-		 * onClick(DialogInterface dialog,int id) {
-		 * 
-		 * } });
-		 * 
-		 * // create alert dialog AlertDialog alertDialog =
-		 * alertDialogBuilder.create();
-		 * 
-		 * // show it alertDialog.show();
-		 */
 	}
 
 	private void newLocation(Location location) {
@@ -293,9 +251,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			
 			calibration_start = System.currentTimeMillis();
 			current_state = DAQActivity.state.CALIBRATION;
-			
-			//L1thresh = 0;
-			//L2thresh = 0;
 			
 			// Start a new exposure block
 			newExposureBlock();
@@ -350,7 +305,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			long calibration_time = System.currentTimeMillis() - calibration_start;
 			int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
 			
-			Log.i("Calibration", "Processed " + reco.max_histo_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+			Log.i("Calibration", "Processed " + reco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
 			
 			new_thresh = reco.calculateThresholdByEvents(target_events);
 			
@@ -362,8 +317,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				L2thresh = L1thresh;
 			}
 			
-			// clear list of particles
-			reco.particles_size = 0;
 			current_state = DAQActivity.state.DATA;
 
 			// Start a new exposure block
@@ -439,12 +392,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		/*
-		 * for debugging PowerManager pm = (PowerManager)
-		 * getSystemService(Context.POWER_SERVICE); wl =
-		 * pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-		 * wl.acquire();
-		 */
+		// FIXME: for debugging only!!! We need to figure out how
+		// to keep DAQ going without taking over the phone.
+		PowerManager pm = (PowerManager)
+		getSystemService(Context.POWER_SERVICE); wl =
+		pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+		wl.acquire();
 		
 		// Generate a UUID to represent this run
 		run_id = UUID.randomUUID();
@@ -459,9 +412,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			Log.e(TAG, "Failed to resolve build version!");
 		}
 
-		// getFragmentManager().beginTransaction().replace(android.R.id.content,
-		// new PrefsFragment()).commit();
-
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.video);
 
@@ -472,25 +422,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		mPreview = new CameraPreview(this, this, true);
 
 		context = getApplicationContext();
-		
-		// Resolve the build version for upload purposes.
-		try {
-			PackageInfo pInfo = getPackageManager().getPackageInfo(
-					getPackageName(), 0);
-			//dstorage.versionName = pInfo.versionName;
-			//dstorage.versionCode = pInfo.versionCode;
-
-			Log.d(TAG, "resolved versionName = " + pInfo.versionName
-					+ ", versionCode = " + pInfo.versionCode);
-		} catch (PackageManager.NameNotFoundException ex) {
-			Log.e(TAG, "Couldn't resolve package version", ex);
-		}
 
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 		preview.addView(mDraw);
-		writeIndex = 0;
-		readIndex = 0;
+		
 		L1counter = L1proc = L1skip = L1pass = 0;
 		starttime = System.currentTimeMillis();
 
@@ -511,7 +447,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			public void onProviderDisabled(String provider) {
 			}
 		};
-		// gget the manager
+		// get the manager
 		locationManager = (LocationManager) this
 				.getSystemService(Context.LOCATION_SERVICE);
 
@@ -545,7 +481,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	}
 
 	@Override
-	protected void onDestroy() { /* wl.release(); */
+	protected void onDestroy() {
+		wl.release();
 		super.onDestroy();
 	}
 
@@ -580,8 +517,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			l2thread.stopThread();
 			l2thread = null;
-			uploadthread.stopThread();
-			uploadthread = null;
 		}
 	}
 
@@ -624,10 +559,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// start image processing thread
 		l2thread = new ThreadProcess();
 		l2thread.start();
-
-		// start data upload thread
-		uploadthread = new UploadProcess();
-		uploadthread.start();
 
 		// Create an instance of Camera
 		mPreview.setCamera(mCamera);
@@ -695,8 +626,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		}
 		
 		// prescale
-		// Log.d("preview","Camera vals are"+camera.getParameters.flatten());
-		// Log.d("preview"," ="+L1counter+" mod = "+L1counter%L1prescale);
 		if (L1counter % L1prescale == 0) {
 			// make sure there's room on the queue
 			if (L2Queue.remainingCapacity() > 0) {
@@ -751,7 +680,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	 */
 	private class Visualization extends SurfaceView {
 
-		Activity activity;
 		Paint mypaint;
 		Paint mypaint2;
 		Paint mypaint2_thresh;
@@ -790,7 +718,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		public Visualization(Activity context) {
 			super(context);
-			this.activity = context;
 
 			mypaint = new Paint();
 			mypaint2 = new Paint();
@@ -805,12 +732,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		@Override
 		protected void onDraw(Canvas canvas) {
-
-			SharedPreferences sharedPrefs = PreferenceManager
-					.getDefaultSharedPreferences(context);
-
-			// Log.d("frames","onDraw() called");
-			boolean doReco = sharedPrefs.getBoolean("prefDoReco", true);
 
 			synchronized (lockOutput) {
 				int w = canvas.getWidth();
@@ -945,51 +866,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			}
 
-		}
-	}
-
-	private class UploadProcess extends Thread {
-		// true if a request has been made to stop the thread
-		volatile boolean stopRequested = false;
-		// true if the thread is running and can process more data
-		volatile boolean running = true;
-
-		/**
-		 * Blocks until the thread has stopped
-		 */
-		public void stopThread() {
-			stopRequested = true;
-			while (running) {
-				uploadthread.interrupt();
-				Thread.yield();
-			}
-		}
-
-		@Override
-		public void run() {
-			SharedPreferences sharedPrefs = PreferenceManager
-					.getDefaultSharedPreferences(context);
-			boolean doUpload = sharedPrefs.getBoolean("prefUploadData", true);
-
-			while (!stopRequested) {
-				// check datastorage for size, upload if too bit
-				// needs to be buffered if no connection
-				// Log.d("uploads"," reco? "+doReco+" uploads? "+uploadData);
-
-				// occasionally upload files
-				if (uploadData) {					
-					// TODO: upload committed exposure blocks
-					
-					try {
-						Thread.sleep(uploadDelta * 1000);
-					}
-					catch (InterruptedException ex) {
-						// Somebody interrupted this thread, probably a shutdown request.
-					}
-				}
-			}
-
-			running = false;
 		}
 	}
 
