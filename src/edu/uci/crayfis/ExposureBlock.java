@@ -1,15 +1,18 @@
 package edu.uci.crayfis;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import edu.uci.crayfis.ParticleReco.RecoEvent;
 import android.location.Location;
 import android.util.Log;
 
-public class ExposureBlock implements OutputManager.Writable {
+public class ExposureBlock {
 	public static final String TAG = "ExposureBlock";
 	
-	public long run_id;
+	public UUID run_id;
 
 	public long start_time;
 	public long end_time;
@@ -36,10 +39,6 @@ public class ExposureBlock implements OutputManager.Writable {
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
 	public ExposureBlock() {
-		reset();
-	}
-	public ExposureBlock(long run_id) {
-		this.run_id = run_id;
 		reset();
 	}
 	
@@ -101,6 +100,8 @@ public class ExposureBlock implements OutputManager.Writable {
 		
 		buf.setGpsLat(start_loc.getLatitude());
 		buf.setGpsLon(start_loc.getLongitude());
+		
+		buf.setRunId(run_id.getLeastSignificantBits());
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.

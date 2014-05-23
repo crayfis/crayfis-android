@@ -11,33 +11,63 @@ public final class DataProtos {
   public interface DataChunkOrBuilder
       extends com.google.protobuf.MessageOrBuilder {
 
-    // repeated .crayfis.ExposureBlock exposure_blocks = 1;
+    // repeated .crayfis.RunConfig run_configs = 1;
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    java.util.List<edu.uci.crayfis.DataProtos.RunConfig> 
+        getRunConfigsList();
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    edu.uci.crayfis.DataProtos.RunConfig getRunConfigs(int index);
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    int getRunConfigsCount();
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    java.util.List<? extends edu.uci.crayfis.DataProtos.RunConfigOrBuilder> 
+        getRunConfigsOrBuilderList();
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    edu.uci.crayfis.DataProtos.RunConfigOrBuilder getRunConfigsOrBuilder(
+        int index);
+
+    // repeated .crayfis.ExposureBlock exposure_blocks = 2;
+    /**
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock> 
         getExposureBlocksList();
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     edu.uci.crayfis.DataProtos.ExposureBlock getExposureBlocks(int index);
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     int getExposureBlocksCount();
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     java.util.List<? extends edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder> 
         getExposureBlocksOrBuilderList();
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder getExposureBlocksOrBuilder(
         int index);
   }
   /**
    * Protobuf type {@code crayfis.DataChunk}
+   *
+   * <pre>
+   * A DataChunk just allows us to easily throw a bunch
+   * of mixed types into the same file/uploadstream/whatever.
+   * </pre>
    */
   public static final class DataChunk extends
       com.google.protobuf.GeneratedMessage
@@ -89,8 +119,16 @@ public final class DataProtos {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                exposureBlocks_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.ExposureBlock>();
+                runConfigs_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.RunConfig>();
                 mutable_bitField0_ |= 0x00000001;
+              }
+              runConfigs_.add(input.readMessage(edu.uci.crayfis.DataProtos.RunConfig.PARSER, extensionRegistry));
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                exposureBlocks_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.ExposureBlock>();
+                mutable_bitField0_ |= 0x00000002;
               }
               exposureBlocks_.add(input.readMessage(edu.uci.crayfis.DataProtos.ExposureBlock.PARSER, extensionRegistry));
               break;
@@ -104,6 +142,9 @@ public final class DataProtos {
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          runConfigs_ = java.util.Collections.unmodifiableList(runConfigs_);
+        }
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           exposureBlocks_ = java.util.Collections.unmodifiableList(exposureBlocks_);
         }
         this.unknownFields = unknownFields.build();
@@ -137,36 +178,72 @@ public final class DataProtos {
       return PARSER;
     }
 
-    // repeated .crayfis.ExposureBlock exposure_blocks = 1;
-    public static final int EXPOSURE_BLOCKS_FIELD_NUMBER = 1;
+    // repeated .crayfis.RunConfig run_configs = 1;
+    public static final int RUN_CONFIGS_FIELD_NUMBER = 1;
+    private java.util.List<edu.uci.crayfis.DataProtos.RunConfig> runConfigs_;
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    public java.util.List<edu.uci.crayfis.DataProtos.RunConfig> getRunConfigsList() {
+      return runConfigs_;
+    }
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    public java.util.List<? extends edu.uci.crayfis.DataProtos.RunConfigOrBuilder> 
+        getRunConfigsOrBuilderList() {
+      return runConfigs_;
+    }
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    public int getRunConfigsCount() {
+      return runConfigs_.size();
+    }
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    public edu.uci.crayfis.DataProtos.RunConfig getRunConfigs(int index) {
+      return runConfigs_.get(index);
+    }
+    /**
+     * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+     */
+    public edu.uci.crayfis.DataProtos.RunConfigOrBuilder getRunConfigsOrBuilder(
+        int index) {
+      return runConfigs_.get(index);
+    }
+
+    // repeated .crayfis.ExposureBlock exposure_blocks = 2;
+    public static final int EXPOSURE_BLOCKS_FIELD_NUMBER = 2;
     private java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock> exposureBlocks_;
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     public java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock> getExposureBlocksList() {
       return exposureBlocks_;
     }
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     public java.util.List<? extends edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder> 
         getExposureBlocksOrBuilderList() {
       return exposureBlocks_;
     }
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     public int getExposureBlocksCount() {
       return exposureBlocks_.size();
     }
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     public edu.uci.crayfis.DataProtos.ExposureBlock getExposureBlocks(int index) {
       return exposureBlocks_.get(index);
     }
     /**
-     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+     * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
      */
     public edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder getExposureBlocksOrBuilder(
         int index) {
@@ -174,6 +251,7 @@ public final class DataProtos {
     }
 
     private void initFields() {
+      runConfigs_ = java.util.Collections.emptyList();
       exposureBlocks_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
@@ -188,8 +266,11 @@ public final class DataProtos {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       getSerializedSize();
+      for (int i = 0; i < runConfigs_.size(); i++) {
+        output.writeMessage(1, runConfigs_.get(i));
+      }
       for (int i = 0; i < exposureBlocks_.size(); i++) {
-        output.writeMessage(1, exposureBlocks_.get(i));
+        output.writeMessage(2, exposureBlocks_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -200,9 +281,13 @@ public final class DataProtos {
       if (size != -1) return size;
 
       size = 0;
+      for (int i = 0; i < runConfigs_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, runConfigs_.get(i));
+      }
       for (int i = 0; i < exposureBlocks_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, exposureBlocks_.get(i));
+          .computeMessageSize(2, exposureBlocks_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -284,6 +369,11 @@ public final class DataProtos {
     }
     /**
      * Protobuf type {@code crayfis.DataChunk}
+     *
+     * <pre>
+     * A DataChunk just allows us to easily throw a bunch
+     * of mixed types into the same file/uploadstream/whatever.
+     * </pre>
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessage.Builder<Builder>
@@ -312,6 +402,7 @@ public final class DataProtos {
       }
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          getRunConfigsFieldBuilder();
           getExposureBlocksFieldBuilder();
         }
       }
@@ -321,9 +412,15 @@ public final class DataProtos {
 
       public Builder clear() {
         super.clear();
+        if (runConfigsBuilder_ == null) {
+          runConfigs_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          runConfigsBuilder_.clear();
+        }
         if (exposureBlocksBuilder_ == null) {
           exposureBlocks_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
+          bitField0_ = (bitField0_ & ~0x00000002);
         } else {
           exposureBlocksBuilder_.clear();
         }
@@ -354,10 +451,19 @@ public final class DataProtos {
       public edu.uci.crayfis.DataProtos.DataChunk buildPartial() {
         edu.uci.crayfis.DataProtos.DataChunk result = new edu.uci.crayfis.DataProtos.DataChunk(this);
         int from_bitField0_ = bitField0_;
-        if (exposureBlocksBuilder_ == null) {
+        if (runConfigsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
-            exposureBlocks_ = java.util.Collections.unmodifiableList(exposureBlocks_);
+            runConfigs_ = java.util.Collections.unmodifiableList(runConfigs_);
             bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.runConfigs_ = runConfigs_;
+        } else {
+          result.runConfigs_ = runConfigsBuilder_.build();
+        }
+        if (exposureBlocksBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            exposureBlocks_ = java.util.Collections.unmodifiableList(exposureBlocks_);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.exposureBlocks_ = exposureBlocks_;
         } else {
@@ -378,11 +484,37 @@ public final class DataProtos {
 
       public Builder mergeFrom(edu.uci.crayfis.DataProtos.DataChunk other) {
         if (other == edu.uci.crayfis.DataProtos.DataChunk.getDefaultInstance()) return this;
+        if (runConfigsBuilder_ == null) {
+          if (!other.runConfigs_.isEmpty()) {
+            if (runConfigs_.isEmpty()) {
+              runConfigs_ = other.runConfigs_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureRunConfigsIsMutable();
+              runConfigs_.addAll(other.runConfigs_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.runConfigs_.isEmpty()) {
+            if (runConfigsBuilder_.isEmpty()) {
+              runConfigsBuilder_.dispose();
+              runConfigsBuilder_ = null;
+              runConfigs_ = other.runConfigs_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              runConfigsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getRunConfigsFieldBuilder() : null;
+            } else {
+              runConfigsBuilder_.addAllMessages(other.runConfigs_);
+            }
+          }
+        }
         if (exposureBlocksBuilder_ == null) {
           if (!other.exposureBlocks_.isEmpty()) {
             if (exposureBlocks_.isEmpty()) {
               exposureBlocks_ = other.exposureBlocks_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensureExposureBlocksIsMutable();
               exposureBlocks_.addAll(other.exposureBlocks_);
@@ -395,7 +527,7 @@ public final class DataProtos {
               exposureBlocksBuilder_.dispose();
               exposureBlocksBuilder_ = null;
               exposureBlocks_ = other.exposureBlocks_;
-              bitField0_ = (bitField0_ & ~0x00000001);
+              bitField0_ = (bitField0_ & ~0x00000002);
               exposureBlocksBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getExposureBlocksFieldBuilder() : null;
@@ -431,13 +563,253 @@ public final class DataProtos {
       }
       private int bitField0_;
 
-      // repeated .crayfis.ExposureBlock exposure_blocks = 1;
+      // repeated .crayfis.RunConfig run_configs = 1;
+      private java.util.List<edu.uci.crayfis.DataProtos.RunConfig> runConfigs_ =
+        java.util.Collections.emptyList();
+      private void ensureRunConfigsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          runConfigs_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.RunConfig>(runConfigs_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.RunConfig, edu.uci.crayfis.DataProtos.RunConfig.Builder, edu.uci.crayfis.DataProtos.RunConfigOrBuilder> runConfigsBuilder_;
+
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.RunConfig> getRunConfigsList() {
+        if (runConfigsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(runConfigs_);
+        } else {
+          return runConfigsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public int getRunConfigsCount() {
+        if (runConfigsBuilder_ == null) {
+          return runConfigs_.size();
+        } else {
+          return runConfigsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public edu.uci.crayfis.DataProtos.RunConfig getRunConfigs(int index) {
+        if (runConfigsBuilder_ == null) {
+          return runConfigs_.get(index);
+        } else {
+          return runConfigsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder setRunConfigs(
+          int index, edu.uci.crayfis.DataProtos.RunConfig value) {
+        if (runConfigsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRunConfigsIsMutable();
+          runConfigs_.set(index, value);
+          onChanged();
+        } else {
+          runConfigsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder setRunConfigs(
+          int index, edu.uci.crayfis.DataProtos.RunConfig.Builder builderForValue) {
+        if (runConfigsBuilder_ == null) {
+          ensureRunConfigsIsMutable();
+          runConfigs_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          runConfigsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder addRunConfigs(edu.uci.crayfis.DataProtos.RunConfig value) {
+        if (runConfigsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRunConfigsIsMutable();
+          runConfigs_.add(value);
+          onChanged();
+        } else {
+          runConfigsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder addRunConfigs(
+          int index, edu.uci.crayfis.DataProtos.RunConfig value) {
+        if (runConfigsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRunConfigsIsMutable();
+          runConfigs_.add(index, value);
+          onChanged();
+        } else {
+          runConfigsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder addRunConfigs(
+          edu.uci.crayfis.DataProtos.RunConfig.Builder builderForValue) {
+        if (runConfigsBuilder_ == null) {
+          ensureRunConfigsIsMutable();
+          runConfigs_.add(builderForValue.build());
+          onChanged();
+        } else {
+          runConfigsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder addRunConfigs(
+          int index, edu.uci.crayfis.DataProtos.RunConfig.Builder builderForValue) {
+        if (runConfigsBuilder_ == null) {
+          ensureRunConfigsIsMutable();
+          runConfigs_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          runConfigsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder addAllRunConfigs(
+          java.lang.Iterable<? extends edu.uci.crayfis.DataProtos.RunConfig> values) {
+        if (runConfigsBuilder_ == null) {
+          ensureRunConfigsIsMutable();
+          super.addAll(values, runConfigs_);
+          onChanged();
+        } else {
+          runConfigsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder clearRunConfigs() {
+        if (runConfigsBuilder_ == null) {
+          runConfigs_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          runConfigsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public Builder removeRunConfigs(int index) {
+        if (runConfigsBuilder_ == null) {
+          ensureRunConfigsIsMutable();
+          runConfigs_.remove(index);
+          onChanged();
+        } else {
+          runConfigsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public edu.uci.crayfis.DataProtos.RunConfig.Builder getRunConfigsBuilder(
+          int index) {
+        return getRunConfigsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public edu.uci.crayfis.DataProtos.RunConfigOrBuilder getRunConfigsOrBuilder(
+          int index) {
+        if (runConfigsBuilder_ == null) {
+          return runConfigs_.get(index);  } else {
+          return runConfigsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public java.util.List<? extends edu.uci.crayfis.DataProtos.RunConfigOrBuilder> 
+           getRunConfigsOrBuilderList() {
+        if (runConfigsBuilder_ != null) {
+          return runConfigsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(runConfigs_);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public edu.uci.crayfis.DataProtos.RunConfig.Builder addRunConfigsBuilder() {
+        return getRunConfigsFieldBuilder().addBuilder(
+            edu.uci.crayfis.DataProtos.RunConfig.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public edu.uci.crayfis.DataProtos.RunConfig.Builder addRunConfigsBuilder(
+          int index) {
+        return getRunConfigsFieldBuilder().addBuilder(
+            index, edu.uci.crayfis.DataProtos.RunConfig.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.RunConfig run_configs = 1;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.RunConfig.Builder> 
+           getRunConfigsBuilderList() {
+        return getRunConfigsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.RunConfig, edu.uci.crayfis.DataProtos.RunConfig.Builder, edu.uci.crayfis.DataProtos.RunConfigOrBuilder> 
+          getRunConfigsFieldBuilder() {
+        if (runConfigsBuilder_ == null) {
+          runConfigsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              edu.uci.crayfis.DataProtos.RunConfig, edu.uci.crayfis.DataProtos.RunConfig.Builder, edu.uci.crayfis.DataProtos.RunConfigOrBuilder>(
+                  runConfigs_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          runConfigs_ = null;
+        }
+        return runConfigsBuilder_;
+      }
+
+      // repeated .crayfis.ExposureBlock exposure_blocks = 2;
       private java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock> exposureBlocks_ =
         java.util.Collections.emptyList();
       private void ensureExposureBlocksIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
           exposureBlocks_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.ExposureBlock>(exposureBlocks_);
-          bitField0_ |= 0x00000001;
+          bitField0_ |= 0x00000002;
          }
       }
 
@@ -445,7 +817,7 @@ public final class DataProtos {
           edu.uci.crayfis.DataProtos.ExposureBlock, edu.uci.crayfis.DataProtos.ExposureBlock.Builder, edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder> exposureBlocksBuilder_;
 
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock> getExposureBlocksList() {
         if (exposureBlocksBuilder_ == null) {
@@ -455,7 +827,7 @@ public final class DataProtos {
         }
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public int getExposureBlocksCount() {
         if (exposureBlocksBuilder_ == null) {
@@ -465,7 +837,7 @@ public final class DataProtos {
         }
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public edu.uci.crayfis.DataProtos.ExposureBlock getExposureBlocks(int index) {
         if (exposureBlocksBuilder_ == null) {
@@ -475,7 +847,7 @@ public final class DataProtos {
         }
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder setExposureBlocks(
           int index, edu.uci.crayfis.DataProtos.ExposureBlock value) {
@@ -492,7 +864,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder setExposureBlocks(
           int index, edu.uci.crayfis.DataProtos.ExposureBlock.Builder builderForValue) {
@@ -506,7 +878,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder addExposureBlocks(edu.uci.crayfis.DataProtos.ExposureBlock value) {
         if (exposureBlocksBuilder_ == null) {
@@ -522,7 +894,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder addExposureBlocks(
           int index, edu.uci.crayfis.DataProtos.ExposureBlock value) {
@@ -539,7 +911,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder addExposureBlocks(
           edu.uci.crayfis.DataProtos.ExposureBlock.Builder builderForValue) {
@@ -553,7 +925,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder addExposureBlocks(
           int index, edu.uci.crayfis.DataProtos.ExposureBlock.Builder builderForValue) {
@@ -567,7 +939,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder addAllExposureBlocks(
           java.lang.Iterable<? extends edu.uci.crayfis.DataProtos.ExposureBlock> values) {
@@ -581,12 +953,12 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder clearExposureBlocks() {
         if (exposureBlocksBuilder_ == null) {
           exposureBlocks_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000001);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           exposureBlocksBuilder_.clear();
@@ -594,7 +966,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public Builder removeExposureBlocks(int index) {
         if (exposureBlocksBuilder_ == null) {
@@ -607,14 +979,14 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public edu.uci.crayfis.DataProtos.ExposureBlock.Builder getExposureBlocksBuilder(
           int index) {
         return getExposureBlocksFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder getExposureBlocksOrBuilder(
           int index) {
@@ -624,7 +996,7 @@ public final class DataProtos {
         }
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public java.util.List<? extends edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder> 
            getExposureBlocksOrBuilderList() {
@@ -635,14 +1007,14 @@ public final class DataProtos {
         }
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public edu.uci.crayfis.DataProtos.ExposureBlock.Builder addExposureBlocksBuilder() {
         return getExposureBlocksFieldBuilder().addBuilder(
             edu.uci.crayfis.DataProtos.ExposureBlock.getDefaultInstance());
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public edu.uci.crayfis.DataProtos.ExposureBlock.Builder addExposureBlocksBuilder(
           int index) {
@@ -650,7 +1022,7 @@ public final class DataProtos {
             index, edu.uci.crayfis.DataProtos.ExposureBlock.getDefaultInstance());
       }
       /**
-       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 1;</code>
+       * <code>repeated .crayfis.ExposureBlock exposure_blocks = 2;</code>
        */
       public java.util.List<edu.uci.crayfis.DataProtos.ExposureBlock.Builder> 
            getExposureBlocksBuilderList() {
@@ -663,7 +1035,7 @@ public final class DataProtos {
           exposureBlocksBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               edu.uci.crayfis.DataProtos.ExposureBlock, edu.uci.crayfis.DataProtos.ExposureBlock.Builder, edu.uci.crayfis.DataProtos.ExposureBlockOrBuilder>(
                   exposureBlocks_,
-                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  ((bitField0_ & 0x00000002) == 0x00000002),
                   getParentForChildren(),
                   isClean());
           exposureBlocks_ = null;
@@ -680,6 +1052,1188 @@ public final class DataProtos {
     }
 
     // @@protoc_insertion_point(class_scope:crayfis.DataChunk)
+  }
+
+  public interface RunConfigOrBuilder
+      extends com.google.protobuf.MessageOrBuilder {
+
+    // optional uint64 id_hi = 1;
+    /**
+     * <code>optional uint64 id_hi = 1;</code>
+     */
+    boolean hasIdHi();
+    /**
+     * <code>optional uint64 id_hi = 1;</code>
+     */
+    long getIdHi();
+
+    // optional uint64 id_lo = 2;
+    /**
+     * <code>optional uint64 id_lo = 2;</code>
+     */
+    boolean hasIdLo();
+    /**
+     * <code>optional uint64 id_lo = 2;</code>
+     */
+    long getIdLo();
+
+    // optional uint64 start_time = 3;
+    /**
+     * <code>optional uint64 start_time = 3;</code>
+     */
+    boolean hasStartTime();
+    /**
+     * <code>optional uint64 start_time = 3;</code>
+     */
+    long getStartTime();
+
+    // optional string crayfis_build = 4;
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    boolean hasCrayfisBuild();
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    java.lang.String getCrayfisBuild();
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    com.google.protobuf.ByteString
+        getCrayfisBuildBytes();
+
+    // optional string hw_params = 5;
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    boolean hasHwParams();
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    java.lang.String getHwParams();
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getHwParamsBytes();
+
+    // optional string os_params = 6;
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    boolean hasOsParams();
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    java.lang.String getOsParams();
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getOsParamsBytes();
+
+    // optional string camera_params = 7;
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    boolean hasCameraParams();
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    java.lang.String getCameraParams();
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    com.google.protobuf.ByteString
+        getCameraParamsBytes();
+  }
+  /**
+   * Protobuf type {@code crayfis.RunConfig}
+   */
+  public static final class RunConfig extends
+      com.google.protobuf.GeneratedMessage
+      implements RunConfigOrBuilder {
+    // Use RunConfig.newBuilder() to construct.
+    private RunConfig(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private RunConfig(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final RunConfig defaultInstance;
+    public static RunConfig getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public RunConfig getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private RunConfig(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              idHi_ = input.readUInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              idLo_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              startTime_ = input.readUInt64();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              crayfisBuild_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              hwParams_ = input.readBytes();
+              break;
+            }
+            case 50: {
+              bitField0_ |= 0x00000020;
+              osParams_ = input.readBytes();
+              break;
+            }
+            case 58: {
+              bitField0_ |= 0x00000040;
+              cameraParams_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_RunConfig_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_RunConfig_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.uci.crayfis.DataProtos.RunConfig.class, edu.uci.crayfis.DataProtos.RunConfig.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<RunConfig> PARSER =
+        new com.google.protobuf.AbstractParser<RunConfig>() {
+      public RunConfig parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new RunConfig(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RunConfig> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    // optional uint64 id_hi = 1;
+    public static final int ID_HI_FIELD_NUMBER = 1;
+    private long idHi_;
+    /**
+     * <code>optional uint64 id_hi = 1;</code>
+     */
+    public boolean hasIdHi() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional uint64 id_hi = 1;</code>
+     */
+    public long getIdHi() {
+      return idHi_;
+    }
+
+    // optional uint64 id_lo = 2;
+    public static final int ID_LO_FIELD_NUMBER = 2;
+    private long idLo_;
+    /**
+     * <code>optional uint64 id_lo = 2;</code>
+     */
+    public boolean hasIdLo() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional uint64 id_lo = 2;</code>
+     */
+    public long getIdLo() {
+      return idLo_;
+    }
+
+    // optional uint64 start_time = 3;
+    public static final int START_TIME_FIELD_NUMBER = 3;
+    private long startTime_;
+    /**
+     * <code>optional uint64 start_time = 3;</code>
+     */
+    public boolean hasStartTime() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint64 start_time = 3;</code>
+     */
+    public long getStartTime() {
+      return startTime_;
+    }
+
+    // optional string crayfis_build = 4;
+    public static final int CRAYFIS_BUILD_FIELD_NUMBER = 4;
+    private java.lang.Object crayfisBuild_;
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    public boolean hasCrayfisBuild() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    public java.lang.String getCrayfisBuild() {
+      java.lang.Object ref = crayfisBuild_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          crayfisBuild_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string crayfis_build = 4;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCrayfisBuildBytes() {
+      java.lang.Object ref = crayfisBuild_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        crayfisBuild_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string hw_params = 5;
+    public static final int HW_PARAMS_FIELD_NUMBER = 5;
+    private java.lang.Object hwParams_;
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    public boolean hasHwParams() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    public java.lang.String getHwParams() {
+      java.lang.Object ref = hwParams_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          hwParams_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string hw_params = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getHwParamsBytes() {
+      java.lang.Object ref = hwParams_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        hwParams_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string os_params = 6;
+    public static final int OS_PARAMS_FIELD_NUMBER = 6;
+    private java.lang.Object osParams_;
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    public boolean hasOsParams() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    public java.lang.String getOsParams() {
+      java.lang.Object ref = osParams_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          osParams_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string os_params = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getOsParamsBytes() {
+      java.lang.Object ref = osParams_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        osParams_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    // optional string camera_params = 7;
+    public static final int CAMERA_PARAMS_FIELD_NUMBER = 7;
+    private java.lang.Object cameraParams_;
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    public boolean hasCameraParams() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    public java.lang.String getCameraParams() {
+      java.lang.Object ref = cameraParams_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          cameraParams_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string camera_params = 7;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCameraParamsBytes() {
+      java.lang.Object ref = cameraParams_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        cameraParams_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private void initFields() {
+      idHi_ = 0L;
+      idLo_ = 0L;
+      startTime_ = 0L;
+      crayfisBuild_ = "";
+      hwParams_ = "";
+      osParams_ = "";
+      cameraParams_ = "";
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized != -1) return isInitialized == 1;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt64(1, idHi_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(2, idLo_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(3, startTime_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, getCrayfisBuildBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getHwParamsBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getOsParamsBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeBytes(7, getCameraParamsBytes());
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, idHi_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, idLo_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(3, startTime_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, getCrayfisBuildBytes());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getHwParamsBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getOsParamsBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(7, getCameraParamsBytes());
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.RunConfig parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.uci.crayfis.DataProtos.RunConfig prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code crayfis.RunConfig}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder>
+       implements edu.uci.crayfis.DataProtos.RunConfigOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_RunConfig_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_RunConfig_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.uci.crayfis.DataProtos.RunConfig.class, edu.uci.crayfis.DataProtos.RunConfig.Builder.class);
+      }
+
+      // Construct using edu.uci.crayfis.DataProtos.RunConfig.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        idHi_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        idLo_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        startTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        crayfisBuild_ = "";
+        bitField0_ = (bitField0_ & ~0x00000008);
+        hwParams_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        osParams_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        cameraParams_ = "";
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_RunConfig_descriptor;
+      }
+
+      public edu.uci.crayfis.DataProtos.RunConfig getDefaultInstanceForType() {
+        return edu.uci.crayfis.DataProtos.RunConfig.getDefaultInstance();
+      }
+
+      public edu.uci.crayfis.DataProtos.RunConfig build() {
+        edu.uci.crayfis.DataProtos.RunConfig result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.uci.crayfis.DataProtos.RunConfig buildPartial() {
+        edu.uci.crayfis.DataProtos.RunConfig result = new edu.uci.crayfis.DataProtos.RunConfig(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.idHi_ = idHi_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.idLo_ = idLo_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.startTime_ = startTime_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.crayfisBuild_ = crayfisBuild_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.hwParams_ = hwParams_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.osParams_ = osParams_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.cameraParams_ = cameraParams_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.uci.crayfis.DataProtos.RunConfig) {
+          return mergeFrom((edu.uci.crayfis.DataProtos.RunConfig)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.uci.crayfis.DataProtos.RunConfig other) {
+        if (other == edu.uci.crayfis.DataProtos.RunConfig.getDefaultInstance()) return this;
+        if (other.hasIdHi()) {
+          setIdHi(other.getIdHi());
+        }
+        if (other.hasIdLo()) {
+          setIdLo(other.getIdLo());
+        }
+        if (other.hasStartTime()) {
+          setStartTime(other.getStartTime());
+        }
+        if (other.hasCrayfisBuild()) {
+          bitField0_ |= 0x00000008;
+          crayfisBuild_ = other.crayfisBuild_;
+          onChanged();
+        }
+        if (other.hasHwParams()) {
+          bitField0_ |= 0x00000010;
+          hwParams_ = other.hwParams_;
+          onChanged();
+        }
+        if (other.hasOsParams()) {
+          bitField0_ |= 0x00000020;
+          osParams_ = other.osParams_;
+          onChanged();
+        }
+        if (other.hasCameraParams()) {
+          bitField0_ |= 0x00000040;
+          cameraParams_ = other.cameraParams_;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.uci.crayfis.DataProtos.RunConfig parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.uci.crayfis.DataProtos.RunConfig) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      // optional uint64 id_hi = 1;
+      private long idHi_ ;
+      /**
+       * <code>optional uint64 id_hi = 1;</code>
+       */
+      public boolean hasIdHi() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional uint64 id_hi = 1;</code>
+       */
+      public long getIdHi() {
+        return idHi_;
+      }
+      /**
+       * <code>optional uint64 id_hi = 1;</code>
+       */
+      public Builder setIdHi(long value) {
+        bitField0_ |= 0x00000001;
+        idHi_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 id_hi = 1;</code>
+       */
+      public Builder clearIdHi() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        idHi_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional uint64 id_lo = 2;
+      private long idLo_ ;
+      /**
+       * <code>optional uint64 id_lo = 2;</code>
+       */
+      public boolean hasIdLo() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional uint64 id_lo = 2;</code>
+       */
+      public long getIdLo() {
+        return idLo_;
+      }
+      /**
+       * <code>optional uint64 id_lo = 2;</code>
+       */
+      public Builder setIdLo(long value) {
+        bitField0_ |= 0x00000002;
+        idLo_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 id_lo = 2;</code>
+       */
+      public Builder clearIdLo() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        idLo_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional uint64 start_time = 3;
+      private long startTime_ ;
+      /**
+       * <code>optional uint64 start_time = 3;</code>
+       */
+      public boolean hasStartTime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint64 start_time = 3;</code>
+       */
+      public long getStartTime() {
+        return startTime_;
+      }
+      /**
+       * <code>optional uint64 start_time = 3;</code>
+       */
+      public Builder setStartTime(long value) {
+        bitField0_ |= 0x00000004;
+        startTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 start_time = 3;</code>
+       */
+      public Builder clearStartTime() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        startTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // optional string crayfis_build = 4;
+      private java.lang.Object crayfisBuild_ = "";
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public boolean hasCrayfisBuild() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public java.lang.String getCrayfisBuild() {
+        java.lang.Object ref = crayfisBuild_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          crayfisBuild_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCrayfisBuildBytes() {
+        java.lang.Object ref = crayfisBuild_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          crayfisBuild_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public Builder setCrayfisBuild(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        crayfisBuild_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public Builder clearCrayfisBuild() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        crayfisBuild_ = getDefaultInstance().getCrayfisBuild();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string crayfis_build = 4;</code>
+       */
+      public Builder setCrayfisBuildBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        crayfisBuild_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string hw_params = 5;
+      private java.lang.Object hwParams_ = "";
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public boolean hasHwParams() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public java.lang.String getHwParams() {
+        java.lang.Object ref = hwParams_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          hwParams_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getHwParamsBytes() {
+        java.lang.Object ref = hwParams_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          hwParams_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public Builder setHwParams(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        hwParams_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public Builder clearHwParams() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        hwParams_ = getDefaultInstance().getHwParams();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string hw_params = 5;</code>
+       */
+      public Builder setHwParamsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        hwParams_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string os_params = 6;
+      private java.lang.Object osParams_ = "";
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public boolean hasOsParams() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public java.lang.String getOsParams() {
+        java.lang.Object ref = osParams_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          osParams_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getOsParamsBytes() {
+        java.lang.Object ref = osParams_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          osParams_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public Builder setOsParams(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        osParams_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public Builder clearOsParams() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        osParams_ = getDefaultInstance().getOsParams();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string os_params = 6;</code>
+       */
+      public Builder setOsParamsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        osParams_ = value;
+        onChanged();
+        return this;
+      }
+
+      // optional string camera_params = 7;
+      private java.lang.Object cameraParams_ = "";
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public boolean hasCameraParams() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public java.lang.String getCameraParams() {
+        java.lang.Object ref = cameraParams_;
+        if (!(ref instanceof java.lang.String)) {
+          java.lang.String s = ((com.google.protobuf.ByteString) ref)
+              .toStringUtf8();
+          cameraParams_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCameraParamsBytes() {
+        java.lang.Object ref = cameraParams_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          cameraParams_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public Builder setCameraParams(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        cameraParams_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public Builder clearCameraParams() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        cameraParams_ = getDefaultInstance().getCameraParams();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string camera_params = 7;</code>
+       */
+      public Builder setCameraParamsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000040;
+        cameraParams_ = value;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:crayfis.RunConfig)
+    }
+
+    static {
+      defaultInstance = new RunConfig(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:crayfis.RunConfig)
   }
 
   public interface ExposureBlockOrBuilder
@@ -4627,6 +6181,11 @@ public final class DataProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_crayfis_DataChunk_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_crayfis_RunConfig_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_crayfis_RunConfig_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_crayfis_ExposureBlock_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -4650,25 +6209,30 @@ public final class DataProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022crayfis_data.proto\022\007crayfis\"<\n\tDataChu" +
-      "nk\022/\n\017exposure_blocks\030\001 \003(\0132\026.crayfis.Ex" +
-      "posureBlock\"\224\003\n\rExposureBlock\022\016\n\006run_id\030" +
-      "\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 " +
-      "\001(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007gps_lon\030\005 \001(\001\022/\n" +
-      "\tdaq_state\030\006 \001(\0162\034.crayfis.ExposureBlock" +
-      ".State\022\036\n\006events\030\007 \003(\0132\016.crayfis.Event\022\021" +
-      "\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\024\n\014" +
-      "L1_processed\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(\r" +
-      "\022\026\n\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pass\030\r \001(",
-      "\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L" +
-      "2_skip\030\020 \001(\r\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIB" +
-      "RATION\020\001\022\010\n\004DATA\020\002\"v\n\005Event\022\021\n\ttimestamp" +
-      "\030\001 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001" +
-      "\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030" +
-      "\005 \001(\001\022\013\n\003std\030\006 \001(\001\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t" +
-      "\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r" +
-      "\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002B\035\n\017edu.uc" +
-      "i.crayfisB\nDataProtos"
+      "\n\022crayfis_data.proto\022\007crayfis\"e\n\tDataChu" +
+      "nk\022\'\n\013run_configs\030\001 \003(\0132\022.crayfis.RunCon" +
+      "fig\022/\n\017exposure_blocks\030\002 \003(\0132\026.crayfis.E" +
+      "xposureBlock\"\221\001\n\tRunConfig\022\r\n\005id_hi\030\001 \001(" +
+      "\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nstart_time\030\003 \001(\004\022\025\n\r" +
+      "crayfis_build\030\004 \001(\t\022\021\n\thw_params\030\005 \001(\t\022\021" +
+      "\n\tos_params\030\006 \001(\t\022\025\n\rcamera_params\030\007 \001(\t" +
+      "\"\224\003\n\rExposureBlock\022\016\n\006run_id\030\001 \001(\004\022\022\n\nst" +
+      "art_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\017\n\007gps_" +
+      "lat\030\004 \001(\001\022\017\n\007gps_lon\030\005 \001(\001\022/\n\tdaq_state\030",
+      "\006 \001(\0162\034.crayfis.ExposureBlock.State\022\036\n\006e" +
+      "vents\030\007 \003(\0132\016.crayfis.Event\022\021\n\tL1_thresh" +
+      "\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\024\n\014L1_processe" +
+      "d\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(\r\022\026\n\016frames_" +
+      "dropped\030\014 \001(\r\022\017\n\007L1_pass\030\r \001(\r\022\017\n\007L1_ski" +
+      "p\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L2_skip\030\020 \001(" +
+      "\r\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n" +
+      "\004DATA\020\002\"v\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\017\n\007g" +
+      "ps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\036\n\006pixels\030" +
+      "\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030\005 \001(\001\022\013\n\003st",
+      "d\030\006 \001(\001\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013" +
+      "\n\003val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005" +
+      " \001(\002\022\r\n\005avg_5\030\006 \001(\002B\035\n\017edu.uci.crayfisB\n" +
+      "DataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -4680,21 +6244,27 @@ public final class DataProtos {
           internal_static_crayfis_DataChunk_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_DataChunk_descriptor,
-              new java.lang.String[] { "ExposureBlocks", });
-          internal_static_crayfis_ExposureBlock_descriptor =
+              new java.lang.String[] { "RunConfigs", "ExposureBlocks", });
+          internal_static_crayfis_RunConfig_descriptor =
             getDescriptor().getMessageTypes().get(1);
+          internal_static_crayfis_RunConfig_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_crayfis_RunConfig_descriptor,
+              new java.lang.String[] { "IdHi", "IdLo", "StartTime", "CrayfisBuild", "HwParams", "OsParams", "CameraParams", });
+          internal_static_crayfis_ExposureBlock_descriptor =
+            getDescriptor().getMessageTypes().get(2);
           internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_ExposureBlock_descriptor,
               new java.lang.String[] { "RunId", "StartTime", "EndTime", "GpsLat", "GpsLon", "DaqState", "Events", "L1Thresh", "L2Thresh", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", });
           internal_static_crayfis_Event_descriptor =
-            getDescriptor().getMessageTypes().get(2);
+            getDescriptor().getMessageTypes().get(3);
           internal_static_crayfis_Event_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_Event_descriptor,
               new java.lang.String[] { "Timestamp", "GpsLat", "GpsLon", "Pixels", "Avg", "Std", });
           internal_static_crayfis_Pixel_descriptor =
-            getDescriptor().getMessageTypes().get(3);
+            getDescriptor().getMessageTypes().get(4);
           internal_static_crayfis_Pixel_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_Pixel_descriptor,

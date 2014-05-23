@@ -58,6 +58,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -70,7 +71,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.preference.PreferenceManager;
+import android.provider.Settings.Secure;
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -115,6 +118,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	
 	// Queue for frames to be processed by the L2 thread
 	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(maxFrames);
+	
+	public String device_id;
+	public String build_version;
+	public UUID run_id;
+	DataProtos.RunConfig run_config;
 	
 	// max amount of time to wait on L2Queue (seconds)
 	int L2Timeout = 1;
@@ -386,6 +394,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		current_xb.L2_thresh = L2thresh;
 		current_xb.start_loc = new Location(currentLocation);
 		current_xb.daq_state = current_state;
+		current_xb.run_id = run_id;
 		
 		if (previous_xb != null) {
 			previous_xb.freeze();
@@ -413,6 +422,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
 		}
 	}
+	
+	public void generateRunConfig() {
+		DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
+
+		b.setIdHi(run_id.getMostSignificantBits());
+		b.setIdLo(run_id.getLeastSignificantBits());
+		b.setCrayfisBuild(build_version);
+		b.setStartTime(System.currentTimeMillis());
+		b.setCameraParams(mCamera.getParameters().flatten());
+		
+		run_config = b.build();
+	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -424,6 +445,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		 * pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
 		 * wl.acquire();
 		 */
+		
+		// Generate a UUID to represent this run
+		run_id = UUID.randomUUID();
+		
+		device_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+		build_version = "unknown";
+		try {
+			build_version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+		}
+		catch (NameNotFoundException ex) {
+			// don't know why we'd get here...
+			Log.e(TAG, "Failed to resolve build version!");
+		}
 
 		// getFragmentManager().beginTransaction().replace(android.R.id.content,
 		// new PrefsFragment()).commit();
@@ -438,7 +472,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		mPreview = new CameraPreview(this, this, true);
 
 		context = getApplicationContext();
-
+		
 		// Resolve the build version for upload purposes.
 		try {
 			PackageInfo pInfo = getPackageManager().getPackageInfo(
@@ -575,15 +609,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// param.setFocusMode("FIXED");
 		param.setExposureCompensation(0);
 		mCamera.setParameters(param);
-
-		// declare image data
-		// output = Bitmap.createBitmap(previewSize.width,previewSize.height,Bitmap.Config.ARGB_8888
-		// );
+		
+		// now that all the hardware is set up, generate the runconfig metadata.
+		generateRunConfig();
 		
 		reco = new ParticleReco(previewSize);
 		
 		outputThread = new OutputManager(context);
 		outputThread.start();
+		
+		// once the output manager is running, we can commit the runconfig
+		outputThread.commitRunConfig(run_config);
 		
 		// start image processing thread
 		l2thread = new ThreadProcess();

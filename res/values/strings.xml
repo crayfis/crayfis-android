@@ -12,7 +12,7 @@
 	<string name="pref_startbefore">Only runs before this time</string>
 	<string name="server_address">crayfis.ps.uci.edu</string>
 	<string name="server_port">80</string>
-	<string name="upload_uri">/data/data.php</string>
+	<string name="upload_uri">/data/data2.php</string>
 	
 	
 </resources>
