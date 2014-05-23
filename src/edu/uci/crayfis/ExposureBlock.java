@@ -36,6 +36,8 @@ public class ExposureBlock {
 	
 	public DAQActivity.state daq_state;
 	
+	public boolean aborted = false;
+	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
 	public ExposureBlock() {

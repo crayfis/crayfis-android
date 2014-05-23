@@ -139,7 +139,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L2prescale = 1;
 
 	public enum state {
-		INIT, CALIBRATION, DATA
+		INIT, CALIBRATION, DATA, STABILIZATION,
 	};
 
 	private state current_state;
@@ -162,6 +162,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	
 	// the nominal period for an exposure block (in seconds)
 	public static final long xb_period = 2 * 60;
+	
+	// number of frames to pass during stabilization periods.
+	public static final int stabilization_sample_frames = 45;
+	// counter for stabilization mode
+	private int stabilization_counter;
 
 	// L1 hit threshold
 	private int L1thresh = 0;
@@ -237,7 +242,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	}
 	
 	private void toCalibrationMode() {
+		// The *only* valid way to get into calibration mode
+		// is after stabilizaton.
 		switch (current_state) {
+		/*
 		case INIT:
 			Log.i(TAG, "FSM Transition: INIT -> CALIBRATION");
 
@@ -279,8 +287,23 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			current_state = DAQActivity.state.CALIBRATION;
 			
 			break;	
+		*/
+		case STABILIZATION:
+			Log.i(TAG, "FSM Transition: STABILIZATION -> CALIBRATION");
+			
+			// clear histograms and counters before calibration
+			reco.reset();
+			
+			calibration_start = System.currentTimeMillis();
+			current_state = DAQActivity.state.CALIBRATION;
+			
+			// Start a new exposure block
+			newExposureBlock();
+			
+			break;
+			
 		default:
-			throw new RuntimeException("Bad FSM transition to CALIBRATION");
+			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> CALIBRATION");
 		}
 	}
 	
@@ -341,7 +364,48 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			
 			break;
 		default:
-			throw new RuntimeException("Bad FSM transition to DATA");
+			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> DATA");
+		}
+	}
+	
+	// we go to stabilization mode in order to wait for the camera to settle down
+	// after a period of bad data.
+	private void toStabilizationMode() {
+		switch(current_state) {
+		case INIT:
+			// This is the first state transisiton of the app. Go straight into stabilization
+			// so the calibratoin will be clean.
+			fixed_threshold = false;
+			current_state = DAQActivity.state.STABILIZATION;
+			L2Queue.clear();
+			stabilization_counter = 0;
+			newExposureBlock();
+			break;
+			
+		// coming out of calibration and data should be the same.
+		case CALIBRATION:
+		case DATA:
+			Log.i(TAG, "FSM transition " + current_state.toString() + " -> STABILIZATION");
+			
+			// transition immediately
+			current_state = DAQActivity.state.STABILIZATION;
+			
+			// clear the L2Queue.
+			L2Queue.clear();
+			
+			// reset the stabilization counter
+			stabilization_counter = 0;
+			
+			// mark the current XB as aborted
+			current_xb.aborted = true;
+			
+			// start a new exposure block
+			newExposureBlock();
+			
+			break;
+			
+		default:
+			throw new RuntimeException("Bad FSM transition to STABILZE");
 		}
 	}
 	
@@ -352,7 +416,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// by the time we start a new XB, we had better have committed the
 		// previous one already!
 		if (previous_xb != null) {
-			throw new RuntimeException("Oh crud! There's still a previous XB sitting around");
+			// well, rather than crash out, we should just commit the old one. NB, however, it
+			// may loose some data if there were still frames on the L2Queue (unlikely, though).
+			commitExposureBlock();
+			Log.w(TAG, "Warning! Commiting prevoius exposure block prematurely.");
 		}
 		
 		// Freeze the current XB, and push it back to the temp slot
@@ -379,11 +446,25 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	//  2) we have timed out on an empty L2 queue (no recent data from L1) 
 	void commitExposureBlock() {
 		if (previous_xb == null) {
+			// nothing to do here.
 			return;
 		}
+		ExposureBlock xb = previous_xb;
+
+		if (xb.daq_state == DAQActivity.state.STABILIZATION) {
+			// don't commit stabilization blocks! theyr'e just deadtime.
+			Log.i(TAG, "Skipping stabilization exposure block!");
+			previous_xb = null;
+			return;
+		}
+		if (xb.daq_state == DAQActivity.state.CALIBRATION
+			&& xb.aborted) {
+			// also, don't commit aborted calibration blocks
+			Log.i(TAG, "Skipping aborted calibration block!");
+		}
+		
 		Log.i(TAG, "Commiting old exposure block!");
 		
-		ExposureBlock xb = previous_xb;
 		previous_xb = null;
 		boolean success = outputThread.commitExposureBlock(xb);
 		
@@ -493,7 +574,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			toDataMode();
 
 		} else {
-			toCalibrationMode();
+			toStabilizationMode();
 		}
 	}
 
@@ -631,14 +712,24 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		}
 		
 		if (current_state == DAQActivity.state.CALIBRATION) {
-			// No need for L1 trigger; just go straight to L2
+			// In calbration mode, there's no need for L1 trigger; just go straight to L2
 			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
 			
 			if (! queue_accept) {
-				// oops! the queue is full. how did that happen, we're the only ones
-				// using it! (shouldn't get here...)
+				// oops! the queue is full... this frame will be dropped.
 				Log.e(TAG, "Could not add frame to L2 Queue!");
 				L2busy++;
+			}
+			
+			return;
+		}
+		
+		if (current_state == DAQActivity.state.STABILIZATION) {
+			// If we're in stabilization mode, just drop frames until we've skipped enough
+			stabilization_counter++;
+			if (stabilization_counter > stabilization_sample_frames) {
+				// We're done! Go to calibration.
+				toCalibrationMode();
 			}
 			
 			return;
@@ -668,9 +759,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
 					
 					if (! queue_accept) {
-						// oops! the queue is full. how did that happen, we're the only ones
-						// using it! (shouldn't get here...)
+						// oops! the queue is full... this frame will be dropped.
 						Log.e(TAG, "Could not add frame to L2 Queue!");
+						L2busy++;
 					}
 				}
 				L1proc++;
@@ -849,14 +940,24 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						(float) (50 + 20 * tsize / 10.0),
 						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
 
-				if (current_state == DAQActivity.state.CALIBRATION)
-					canvas.drawText(
-							current_state.toString() + " "
-									+ (int)(( 100.0 * (float) reco.event_count) / calibration_sample_frames)
-									+ "%", 200, yoffset + 12 * tsize, mypaint);
-				else
-					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
-							+ ",L2=" + L2thresh + ")", 200, yoffset + 12 * tsize, mypaint);
+				String state_message = "";
+				switch (current_state) {
+				case CALIBRATION:
+					state_message = current_state.toString() + " "
+							+ (int)(( 100.0 * (float) reco.event_count) / calibration_sample_frames) + "%";
+					break;
+				case DATA:
+					state_message = current_state.toString() + " (L1=" + L1thresh
+						+ ",L2=" + L2thresh + ")";
+					break;
+				case STABILIZATION:
+					state_message = current_state.toString() + " "
+							+ (int)(( 100.0 * (float) stabilization_counter) / stabilization_sample_frames) + "%";
+					break;
+				default:
+					state_message = current_state.toString();
+				}
+				canvas.drawText(state_message, 200, yoffset + 12 * tsize, mypaint);
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {
@@ -1026,10 +1127,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				
 				L2counter++;
 				
-				// If we got a bad frame, go back to calibration mode
+				// If we got a bad frame, go to stabilization mode.
 				if (reco.good_quality == false
 						&& fixed_threshold == false) {
-					toCalibrationMode();
+					toStabilizationMode();
 					continue;
 				}
 								
