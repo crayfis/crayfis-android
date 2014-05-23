@@ -144,7 +144,20 @@ public class ParticleReco {
 	public Histogram h_l2pixel = new Histogram(256);
 	public Histogram h_maxpixel = new Histogram(256);
 	public Histogram h_numpixel = new Histogram(4000);
+	
+	// counters to keep track of how many events and pixels
+	// have been built since the last reset.
+	public int event_count = 0;
+	public int pixel_count = 0;
 
+	// reset the state of the ParticleReco object;
+	// that means clearing histograms and counters
+	public void reset() {
+		clearHistograms();
+		event_count = 0;
+		pixel_count = 0;
+	}
+	
 	public void clearHistograms() {
 		h_pixel.clear();
 		h_l2pixel.clear();
@@ -168,6 +181,8 @@ public class ParticleReco {
 	public Camera.Size previewSize = null;
 
 	public RecoEvent buildEvent(RawCameraFrame frame) {
+		event_count++;
+		
 		RecoEvent event = new RecoEvent();
 		
 		event.time = frame.acq_time;
@@ -314,6 +329,8 @@ public class ParticleReco {
 		h_maxpixel.fill(max_val);
 		h_numpixel.fill(num_pix);
 		
+		pixel_count += num_pix;
+		
 		return pixels;
 	}
 	
@@ -447,11 +464,11 @@ public class ParticleReco {
 		// in the histograms.
 		
 		Log.i("calculate", "Cacluating threshold! Event histo:"
-				+ " 0 - " + max_histogram[0] + "\n"
-				+ " 1 - " + max_histogram[1] + "\n"
-				+ " 2 - " + max_histogram[2] + "\n"
-				+ " 3 - " + max_histogram[3] + "\n"
-				+ " 4 - " + max_histogram[4] + "\n"
+				+ " 0 - " + h_maxpixel.values[0] + "\n"
+				+ " 1 - " + h_maxpixel.values[1] + "\n"
+				+ " 2 - " + h_maxpixel.values[2] + "\n"
+				+ " 3 - " + h_maxpixel.values[3] + "\n"
+				+ " 4 - " + h_maxpixel.values[4] + "\n"
 				);
 		Log.i("calculate", "Pixel histo:"
 				+ " 0 -" + histogram[0] + "\n"
@@ -461,7 +478,7 @@ public class ParticleReco {
 				+ " 4 -" + histogram[4] + "\n"
 				);
 		
-		if (max_histo_count == 0) {
+		if (h_maxpixel.integral == 0) {
 			// wow! no data, either we didn't expose long enough, or
 			// the background is super low. Return 0 threshold.
 			return 0;
@@ -470,7 +487,7 @@ public class ParticleReco {
 		int integral = 0;
 		int new_thresh;
 		for (new_thresh = 255; new_thresh >= 0; --new_thresh) {
-			integral += max_histogram[new_thresh];
+			integral += h_maxpixel.values[new_thresh];
 			if (integral > max_count) {
 				// oops! we've gone over the limit.
 				// bump the threshold back up and break out.

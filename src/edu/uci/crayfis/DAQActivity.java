@@ -196,6 +196,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private LocationManager locationManager;
 	private LocationListener locationListener;
 	
+	// number of frames to wait between fps updates
+	public static final int fps_update_interval = 30;
+	
 	private long L1_fps_start = 0;
 	private long L1_fps_stop = 0;
 
@@ -210,9 +213,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// class to find particles in frames
 	private ParticleReco reco;
-
-	// class to store data to file and upload it
-	private DataStorage dstorage;
 
 	// Object used for synchronizing output image
 	private final Object lockOutput = new Object();
@@ -280,6 +280,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			fixed_threshold = false;
 			
+			// during INIT state, the reco object may not exist yet...
 			//reco.clearHistograms();
 			
 			calibration_start = System.currentTimeMillis();
@@ -295,14 +296,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		case DATA:
 			Log.i(TAG, "FSM Transition: DATA -> CALIBRATION");
 			
-			// clear histogram before calibration
-			reco.clearHistograms();
+			// clear histograms and counters before calibration
+			reco.reset();
 			
 			calibration_start = System.currentTimeMillis();
 			current_state = DAQActivity.state.CALIBRATION;
-			
-			L1thresh = 0;
-			L2thresh = 0;
 			
 			// Start a new exposure block
 			newExposureBlock();
@@ -315,13 +313,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			// frames during calibration. the only difference here is
 			// we'll stay on the same exposure block.
 			// clear histogram before calibration
-			reco.clearHistograms();
+			reco.reset();
 			
 			calibration_start = System.currentTimeMillis();
 			current_state = DAQActivity.state.CALIBRATION;
-			
-			L1thresh = 0;
-			L2thresh = 0;
 			
 			break;	
 		default:
@@ -359,14 +354,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				L2thresh = L1thresh;
 			}
 			
-			dstorage.threshold = L1thresh;
 			// clear list of particles
 			reco.particles_size = 0;
 			current_state = DAQActivity.state.DATA;
-			dstorage.start_time = System.currentTimeMillis();
-
-			// upload the calibration histogram
-			dstorage.upload_calibration_hist(reco.histogram);
 
 			// Start a new exposure block
 			newExposureBlock();
@@ -447,16 +437,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		context = getApplicationContext();
 
-		dstorage = new DataStorage(context);
 		// Resolve the build version for upload purposes.
 		try {
 			PackageInfo pInfo = getPackageManager().getPackageInfo(
 					getPackageName(), 0);
-			dstorage.versionName = pInfo.versionName;
-			dstorage.versionCode = pInfo.versionCode;
+			//dstorage.versionName = pInfo.versionName;
+			//dstorage.versionCode = pInfo.versionCode;
 
-			Log.d(TAG, "resolved versionName = " + dstorage.versionName
-					+ ", versionCode = " + dstorage.versionCode);
+			Log.d(TAG, "resolved versionName = " + pInfo.versionName
+					+ ", versionCode = " + pInfo.versionCode);
 		} catch (PackageManager.NameNotFoundException ex) {
 			Log.e(TAG, "Couldn't resolve package version", ex);
 		}
@@ -517,25 +506,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		} else {
 			toCalibrationMode();
 		}
-
-		String name = sharedPrefs.getString("prefRunName", "NULL");
-		dstorage.setRunName(name);
-		dstorage.anon = sharedPrefs.getBoolean("prefAnon", false);
-		dstorage.uname = sharedPrefs.getString("prefUserName", "DefaultName");
-		dstorage.umail = sharedPrefs.getString("prefUserEmail", "DefaultMail");
-		dstorage.sdkv = android.os.Build.VERSION.SDK_INT;
-		dstorage.phone_model = android.os.Build.MANUFACTURER
-				+ android.os.Build.MODEL;
-		dstorage.start_time = starttime;
-		dstorage.latitude = currentLocation.getLatitude();
-		dstorage.longitude = currentLocation.getLongitude();
-		dstorage.server_address = getString(R.string.server_address);
-		dstorage.server_port = getString(R.string.server_port);
-		dstorage.upload_uri = getString(R.string.upload_uri);
-		/**
-		for (int i = 0; i < maxFrames; i++)
-			frameBuffer_status[i] = DAQActivity.status.EMPTY;
-		**/
 	}
 
 	@Override
@@ -668,7 +638,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		long acq_time = System.currentTimeMillis();
 		
 		// for calculating fps
-		if (L1counter % 60 == 0) {
+		if (L1counter % fps_update_interval == 0) {
 			L1_fps_start = L1_fps_stop;
 			L1_fps_stop = acq_time;
 		}
@@ -864,16 +834,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 				canvas.drawText("Files: " + numUploads, 200, yoffset + 10
 						* tsize, mypaint);
-				// canvas.drawText("readIndex "+dstorage.readIndex+" stored= "+dstorage.stored[dstorage.readIndex],250,15+9*tsize,mypaint);
 
 				// /// Histogram
-				makeHistogram(reco.histogram, 0, histo_strings_all);
+				makeHistogram(reco.h_pixel.values, 0, histo_strings_all);
 				for (int j = 256; j > 0; j--)
 					canvas.drawText(histo_strings_all[j - 1], 50,
 							(float) (yoffset + (256 - j) * tsize / 10.0),
 							mypaint2);
 
-				makeHistogram(reco.histogram, L1thresh, histo_strings_thresh);
+				makeHistogram(reco.h_pixel.values, L1thresh, histo_strings_thresh);
 				for (int j = 256; j > 0; j--)
 					canvas.drawText(histo_strings_thresh[j - 1], 50,
 							(float) (yoffset + (256 - j) * tsize / 10.0),
@@ -900,7 +869,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				if (current_state == DAQActivity.state.CALIBRATION)
 					canvas.drawText(
 							current_state.toString() + " "
-									+ (int)(( 100.0 * (float) reco.max_histo_count) / calibration_sample_frames)
+									+ (int)(( 100.0 * (float) reco.event_count) / calibration_sample_frames)
 									+ "%", 200, yoffset + 12 * tsize, mypaint);
 				else
 					canvas.drawText(current_state.toString() + " (L1=" + L1thresh
@@ -908,7 +877,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {
-					fps = String.format("%.1f", 60.0 / (L1_fps_stop - L1_fps_start) * 1e3);
+					fps = String.format("%.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
 				}
 				canvas.drawText(fps + " fps",
 						200, yoffset + 14 * tsize, mypaint);
@@ -969,15 +938,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// Log.d("uploads"," reco? "+doReco+" uploads? "+uploadData);
 
 				// occasionally upload files
-				if (uploadData) {
-					// upload every 'uploadDelta' seconds
-					
-					int uploaded = dstorage.uploadFiles();
-					numUploads += uploaded;
-					if (uploaded > 0) {
-						Log.d("upload_thread", "Found " + uploaded + " files to upload");
-						lastUploadTime = java.lang.System.currentTimeMillis() / 1000;
-					}
+				if (uploadData) {					
+					// TODO: upload committed exposure blocks
 					
 					try {
 						Thread.sleep(uploadDelta * 1000);
@@ -1017,153 +979,116 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		public void run() {
 
 			while (!stopRequested) {
-
-				SharedPreferences sharedPrefs = PreferenceManager
-						.getDefaultSharedPreferences(context);
-				boolean doReco = sharedPrefs.getBoolean("prefDoReco", true);
+				boolean interrupted = false;
 
 				RawCameraFrame frame = null;
 				try {
-					// Grab a frame buffer from the queue.
+					// Grab a frame buffer from the queue, blocking if none
+					// is available.
 					frame = L2Queue.poll(L2Timeout, TimeUnit.SECONDS);
 				}
 				catch (InterruptedException ex) {
 					// Interrupted, possibly by app shutdown?
 					Log.d(TAG, "L2 processing interrupted while waiting on queue.");
+					interrupted = true;
 				}	
 				
-				if (frame == null) {
-					// Log.d(TAG, "L2 processing timed out while waiting for data");
-				}
-				
+				// *yawn*, we've just come off the blocking queue. Not matter the reason,
 				// check if it is time to create a new exposure block:
 				if (current_xb.age() > (xb_period * 1000)) {
 					newExposureBlock();
 				}
 				
-				// tell datastorage to close out old files
-				dstorage.closeCurrentFileIfOld();
+				// also update the GUI (does it make sense to do handle this somewhere else?)
+				mDraw.postInvalidate();
 				
-				if (frame != null) {
-					
-					// try to get the exposure block for this event:
-					ExposureBlock xb = current_xb;
-					ExposureBlock prev_xb = previous_xb;
-					if (prev_xb != null) {
-						if (prev_xb.end_time < frame.acq_time) {
-							// looks like we're done with the previous exposure block,
-							// since this frame is too recent for it.
-							// let's commit it and move on with the current_xb
-							commitExposureBlock();
-						}
-						else {
-							// aha, it seems this frame belongs to the old exposure block.
-							// we'll use that one instead.
-							xb = prev_xb;
-						}
-					}
-					
-					
-					xb.L2_processed++;
-					
-					// prescale
-					if (L2counter % L2prescale == 0) {
-						if (doReco) {
-							// find particles
-							int old = reco.particles_size;
-							dstorage.latitude = currentLocation.getLatitude();
-							dstorage.longitude = currentLocation.getLongitude();
-							
-							// FIXME: should we worry about setting currentLocation at
-							// L1 (acquisition) time? Or is it okay here?
-							frame.location = new Location(currentLocation);
-							
-							boolean current_quality = reco.good_quality;
-
-							// look for particles, store them internally to reco
-							// object
-							reco.process(frame.bytes, previewSize.width,
-									previewSize.height, L2thresh, currentLocation, frame.acq_time);
-							
-							// for now, everything "passes" L2 reco
-							xb.L2_pass++;
-							
-							// Build the event from the raw frame.
-							RecoEvent event = reco.buildEvent(frame);
-							
-							int thresh = 0;
-							if (current_state == DAQActivity.state.DATA) {
-								thresh = xb.L2_thresh;
-							}
-							// Now pick out the L2 pixels and add them to the event.
-							ArrayList<RecoPixel> pixels = reco.buildL2Pixels(frame, thresh);
-							event.pixels = pixels;
-							
-							// add the event to the proper exposure block.
-							xb.addEvent(event);
-
-							// start calibration mode again if find bad data
-							// continue to restart until good data comes in
-							if (reco.good_quality == false
-									&& fixed_threshold == false) {
-								toCalibrationMode();
-							}
-
-							// save the data to a file for uploading, if
-							// requested
-							// this returns the number of particles left in the
-							// array
-							// in case the files are all full
-							if (current_state == DAQActivity.state.DATA
-									&& reco.good_quality == true) {
-								// if we have good data after a period of bad,
-								// we start the good
-								// data counter again
-								if (current_quality == false)
-									dstorage.start_time = System
-											.currentTimeMillis();
-
-								// how many did we find? add to running total
-								numHits += (reco.particles_size - old);
-								numFrames += 1;
-
-								Log.d("process_thread", "Writing "
-										+ reco.particles_size
-										+ " particles to file");
-								reco.particles_size = dstorage.write_particles(
-										reco.particles, reco.particles_size);
-							} else {
-								Log.d("process_thread", "Not writing "
-										+ reco.particles_size
-										+ " particles to file");
-
-							}
-						}
-						L2proc++;
-					} else {
-						L2skip++;
-						
-						xb.L2_skip++;
-					}
-					// done with this data, gc will deal with bytes array.
-
-					L2counter++;
-
+				if (interrupted) {
+					// Somebody is trying to wake us. Bail out of this loop iteration
+					// so we can check stopRequested.
+					// Note that frame is null, so we're not loosing any data.
+					continue;
 				}
-				else {
-					// Oops! We must have timed out on an empty queue. If there is
-					// a previous exposure block waiting, we are done with it now.
+				
+				if (frame == null) {
+					// We must have timed out on an empty queue (or been interrupted).
+					// If there is a previous exposure block waiting, we are done with it now.
+					// Other than that, there's nothing to do.
 					commitExposureBlock();
+					continue;
 				}
-
+				
+				// Okay, if we made it here, we've got an actual data frame
+				// that is ready for L2 processing.
+				
+				// Try to get the appropriate exposure block for this event.
+				// Note that since the frame was sitting on a queue, it's possible
+				// that the appropriate xb has already lapsed. 
+				ExposureBlock xb = current_xb;
+				ExposureBlock prev_xb = previous_xb;
+				if (prev_xb != null) {
+					if (prev_xb.end_time < frame.acq_time) {
+						// looks like we're done with the previous exposure block,
+						// since this frame is too recent for it.
+						// let's commit it and move on with the current_xb
+						commitExposureBlock();
+					}
+					else {
+						// aha, it seems this frame belongs to the old exposure block.
+						// we'll use that one instead.
+						xb = prev_xb;
+					}
+				}
+				
+				xb.L2_processed++;
+				
+				if (L2counter % L2prescale != 0) {
+					// prescaled! Drop the event.
+					xb.L2_skip++;
+					L2skip++;
+					
+					continue;
+				}
+				
+				L2proc++;
+				// FIXME: should we worry about setting currentLocation at
+				// L1 (acquisition) time? Or is it okay here?
+				frame.location = new Location(currentLocation);
+				
+				// only enforce the L2 threshold if we're not calibrating.
+				int thresh = 0;
+				if (current_state == DAQActivity.state.DATA) {
+					thresh = xb.L2_thresh;
+				}
+				
+				// First, build the event from the raw frame.
+				RecoEvent event = reco.buildEvent(frame);
+				
+				// for now, everything "passes" L2 reco
+				xb.L2_pass++;
+				
+				// Now pick out the L2 pixels and add them to the event.
+				ArrayList<RecoPixel> pixels = reco.buildL2Pixels(frame, thresh);
+				event.pixels = pixels;
+				
+				// Finally, add the event to the proper exposure block.
+				xb.addEvent(event);
+				
+				// If we got a bad frame, go back to calibration mode
+				if (reco.good_quality == false
+						&& fixed_threshold == false) {
+					toCalibrationMode();
+				}
+				
+				// At this point, we're done with the data; gc will deal with bytes array.
+				L2counter++;
+				
 				// If we're calibrating, check if we've processed enough
-				// frames to decide on the threshold(s).
+				// frames to decide on the threshold(s) and go back to
+				// data-taking mode.
 				if (current_state == DAQActivity.state.CALIBRATION
-						&& reco.max_histo_count >= calibration_sample_frames) {
+						&& reco.event_count >= calibration_sample_frames) {
 					toDataMode();
 				}
-
-				mDraw.postInvalidate();
 			}
 			running = false;
 		}
