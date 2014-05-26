@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="server_address">crayfis.ps.uci.edu</string>
+	<string name="server_port">80</string>
+	<string name="upload_uri">/data/data2.php</string>
+	
+	<bool name="debug_stream">false</bool>
+</resources>

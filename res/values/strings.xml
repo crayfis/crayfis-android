@@ -10,9 +10,5 @@
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="server_address">crayfis.ps.uci.edu</string>
-	<string name="server_port">80</string>
-	<string name="upload_uri">/data/data2.php</string>
-	
 	
 </resources>

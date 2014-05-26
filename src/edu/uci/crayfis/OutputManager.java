@@ -37,6 +37,8 @@ public class OutputManager extends Thread {
 	public String server_port;
 	public String upload_uri;
 	
+	public boolean debug_stream;
+	
 	public String device_id;
 	public String build_version;
 	
@@ -50,6 +52,8 @@ public class OutputManager extends Thread {
 		server_address = context.getString(R.string.server_address);
 		server_port = context.getString(R.string.server_port);
 		upload_uri = context.getString(R.string.upload_uri);
+		
+		debug_stream = context.getResources().getBoolean(R.bool.debug_stream);
 		
 		device_id = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
 		
@@ -173,6 +177,9 @@ public class OutputManager extends Thread {
 			c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
 			c.setRequestProperty("Device-id", device_id);
 			c.setRequestProperty("Crayfis-version", "a " + build_version);
+			if (debug_stream) {
+				c.setRequestProperty("Debug-stream", "yes");
+			}
 			c.setUseCaches(false);
 			c.setAllowUserInteraction(false);
 			c.setConnectTimeout(connect_timeout);
