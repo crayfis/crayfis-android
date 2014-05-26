@@ -103,6 +103,9 @@ public class ExposureBlock {
 		buf.setGpsLat(start_loc.getLatitude());
 		buf.setGpsLon(start_loc.getLongitude());
 		
+		buf.setStartTime(start_time);
+		buf.setEndTime(end_time);
+		
 		buf.setRunId(run_id.getLeastSignificantBits());
 		
 		// don't output event information for calibration blocks...

@@ -290,6 +290,7 @@ public class ParticleReco {
 					// look at the 8 adjacent pixels to measure max and ave values
 					int sum3 = 0, sum5 = 0;
 					int norm3 = 0, norm5 = 0;
+					int nearMax = 0, nearMax5 = 0;
 					for (int dx = -2; dx <= 2; ++dx) {
 						for (int dy = -2; dy <= 2; ++dy) {
 							if (dx == 0 && dy == 0) {
@@ -307,16 +308,19 @@ public class ParticleReco {
 							int dval = bytes[idx + width*idy] & 0xFF;
 							sum5 += dval;
 							norm5++;
+							nearMax5 = Math.max(nearMax5, dval);
 							if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
 								// we're in the 3x3 part
 								sum3 += dval;
 								norm3++;
+								nearMax = Math.max(nearMax, dval);
 							}
 						}
 					}
 					
 					p.avg_3 = ((float) sum3) / norm3;
 					p.avg_5 = ((float) sum5) / norm5;
+					p.near_max = nearMax;
 					
 					pixels.add(p);
 				}
