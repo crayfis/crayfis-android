@@ -42,6 +42,8 @@ public class OutputManager extends Thread {
 	public String device_id;
 	public String build_version;
 	
+	private boolean start_uploading = false;
+	
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
 
 	Context context;
@@ -69,6 +71,7 @@ public class OutputManager extends Thread {
 	
 	public boolean commitExposureBlock(ExposureBlock xb) {
 		boolean success = outputQueue.offer(xb.buildProto());
+		start_uploading = true;
 		return success; 
 	}
 	
@@ -79,6 +82,7 @@ public class OutputManager extends Thread {
 	
 	public boolean commitCalibrationResult(DataProtos.CalibrationResult cal) {
 		boolean success = outputQueue.offer(cal);
+		start_uploading = true;
 		return success;
 	}
 	
@@ -135,6 +139,14 @@ public class OutputManager extends Thread {
 			
 			// FIXME: I don't know if this is efficient...
 			chunkSize += toWrite.toByteArray().length;
+			
+			// if we haven't gotten anything interesting to upload yet
+			// (i.e. an exposure block or calibration histo), then don't upload
+			// yet. This is to prevent being flooded with a bunch of RunConfigs
+			// from apps starting up but not doing anything interesting.
+			if (! start_uploading) {
+				continue;
+			}
 			
 			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval) {
 				// time to upload!
