@@ -1108,7 +1108,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// First, build the event from the raw frame.
 				RecoEvent event = reco.buildEvent(frame);
 				
-				// for now, everything "passes" L2 reco
+				// If we got a bad frame, go straight to stabilization mode.
+				if (reco.good_quality == false
+						&& fixed_threshold == false) {
+					toStabilizationMode();
+					continue;
+				}
+				
 				xb.L2_pass++;
 				
 				// Now pick out the L2 pixels and add them to the event.
@@ -1122,18 +1128,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					totalPixels += pixels.size();
 				}
 				
+				L2counter++;
+				
 				// Finally, add the event to the proper exposure block.
 				xb.addEvent(event);
 				
-				L2counter++;
-				
-				// If we got a bad frame, go to stabilization mode.
-				if (reco.good_quality == false
-						&& fixed_threshold == false) {
-					toStabilizationMode();
-					continue;
-				}
-								
 				// If we're calibrating, check if we've processed enough
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
