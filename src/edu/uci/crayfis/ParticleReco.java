@@ -36,6 +36,8 @@ public class ParticleReco {
 		public float background;
 		public float variance;
 		
+		public int xbn;
+		
 		public ArrayList<RecoPixel> pixels = new ArrayList<RecoPixel>();
 		
 		public DataProtos.Event buildProto() {
@@ -47,6 +49,8 @@ public class ParticleReco {
 			
 			buf.setAvg(background);
 			buf.setStd(variance);
+			
+			buf.setXbn(xbn);
 			
 			for (RecoPixel p : pixels) {
 				buf.addPixels(p.buildProto());

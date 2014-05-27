@@ -34,8 +34,12 @@ public class ExposureBlock {
 	
 	public int total_pixels;
 	
+	// the exposure block number within the given run
+	public int xbn;
+		
 	public DAQActivity.state daq_state;
 	
+	public boolean frozen = false;
 	public boolean aborted = false;
 	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
@@ -53,11 +57,17 @@ public class ExposureBlock {
 	}
 	
 	public void freeze() {
+		frozen = true;
 		end_time = System.currentTimeMillis();
 	}
 	
 	public long age() {
-		return System.currentTimeMillis() - start_time;
+		if (frozen) {
+			return end_time - start_time;
+		}
+		else {
+			return System.currentTimeMillis() - start_time;
+		}
 	}
 	
 	public void addEvent(RecoEvent event) {
@@ -65,7 +75,7 @@ public class ExposureBlock {
 		if (daq_state == DAQActivity.state.CALIBRATION) {
 			return;
 		}
-		
+		event.xbn = xbn;
 		events.add(event);
 		total_pixels += event.pixels.size();
 		Log.d("addevt", "Added event with " + event.pixels.size() + " pixels (total = " + total_pixels + ")");
@@ -107,6 +117,8 @@ public class ExposureBlock {
 		buf.setEndTime(end_time);
 		
 		buf.setRunId(run_id.getLeastSignificantBits());
+		
+		buf.setXbn(xbn);
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.

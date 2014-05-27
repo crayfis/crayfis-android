@@ -54,6 +54,8 @@ message ExposureBlock {
 
 	optional uint32 L2_pass = 15;
 	optional uint32 L2_skip = 16;
+
+	optional uint32 xbn = 17;
 }
 
 message Event {
@@ -65,6 +67,8 @@ message Event {
 
 	optional double avg = 5;
 	optional double std = 6;
+
+	optional uint32 xbn = 7;
 }
 
 message Pixel {

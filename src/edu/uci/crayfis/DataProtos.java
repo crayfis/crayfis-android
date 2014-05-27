@@ -2791,6 +2791,16 @@ public final class DataProtos {
      * <code>optional uint32 L2_skip = 16;</code>
      */
     int getL2Skip();
+
+    // optional uint32 xbn = 17;
+    /**
+     * <code>optional uint32 xbn = 17;</code>
+     */
+    boolean hasXbn();
+    /**
+     * <code>optional uint32 xbn = 17;</code>
+     */
+    int getXbn();
   }
   /**
    * Protobuf type {@code crayfis.ExposureBlock}
@@ -2930,6 +2940,11 @@ public final class DataProtos {
             case 128: {
               bitField0_ |= 0x00004000;
               l2Skip_ = input.readUInt32();
+              break;
+            }
+            case 136: {
+              bitField0_ |= 0x00008000;
+              xbn_ = input.readUInt32();
               break;
             }
           }
@@ -3358,6 +3373,22 @@ public final class DataProtos {
       return l2Skip_;
     }
 
+    // optional uint32 xbn = 17;
+    public static final int XBN_FIELD_NUMBER = 17;
+    private int xbn_;
+    /**
+     * <code>optional uint32 xbn = 17;</code>
+     */
+    public boolean hasXbn() {
+      return ((bitField0_ & 0x00008000) == 0x00008000);
+    }
+    /**
+     * <code>optional uint32 xbn = 17;</code>
+     */
+    public int getXbn() {
+      return xbn_;
+    }
+
     private void initFields() {
       runId_ = 0L;
       startTime_ = 0L;
@@ -3375,6 +3406,7 @@ public final class DataProtos {
       l1Skip_ = 0;
       l2Pass_ = 0;
       l2Skip_ = 0;
+      xbn_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -3435,6 +3467,9 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00004000) == 0x00004000)) {
         output.writeUInt32(16, l2Skip_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        output.writeUInt32(17, xbn_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3508,6 +3543,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00004000) == 0x00004000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(16, l2Skip_);
+      }
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(17, xbn_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3662,6 +3701,8 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00004000);
         l2Skip_ = 0;
         bitField0_ = (bitField0_ & ~0x00008000);
+        xbn_ = 0;
+        bitField0_ = (bitField0_ & ~0x00010000);
         return this;
       }
 
@@ -3759,6 +3800,10 @@ public final class DataProtos {
           to_bitField0_ |= 0x00004000;
         }
         result.l2Skip_ = l2Skip_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00008000;
+        }
+        result.xbn_ = xbn_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3845,6 +3890,9 @@ public final class DataProtos {
         }
         if (other.hasL2Skip()) {
           setL2Skip(other.getL2Skip());
+        }
+        if (other.hasXbn()) {
+          setXbn(other.getXbn());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -4643,6 +4691,39 @@ public final class DataProtos {
         return this;
       }
 
+      // optional uint32 xbn = 17;
+      private int xbn_ ;
+      /**
+       * <code>optional uint32 xbn = 17;</code>
+       */
+      public boolean hasXbn() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional uint32 xbn = 17;</code>
+       */
+      public int getXbn() {
+        return xbn_;
+      }
+      /**
+       * <code>optional uint32 xbn = 17;</code>
+       */
+      public Builder setXbn(int value) {
+        bitField0_ |= 0x00010000;
+        xbn_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 xbn = 17;</code>
+       */
+      public Builder clearXbn() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        xbn_ = 0;
+        onChanged();
+        return this;
+      }
+
       // @@protoc_insertion_point(builder_scope:crayfis.ExposureBlock)
     }
 
@@ -4731,6 +4812,16 @@ public final class DataProtos {
      * <code>optional double std = 6;</code>
      */
     double getStd();
+
+    // optional uint32 xbn = 7;
+    /**
+     * <code>optional uint32 xbn = 7;</code>
+     */
+    boolean hasXbn();
+    /**
+     * <code>optional uint32 xbn = 7;</code>
+     */
+    int getXbn();
   }
   /**
    * Protobuf type {@code crayfis.Event}
@@ -4814,6 +4905,11 @@ public final class DataProtos {
             case 49: {
               bitField0_ |= 0x00000010;
               std_ = input.readDouble();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000020;
+              xbn_ = input.readUInt32();
               break;
             }
           }
@@ -4975,6 +5071,22 @@ public final class DataProtos {
       return std_;
     }
 
+    // optional uint32 xbn = 7;
+    public static final int XBN_FIELD_NUMBER = 7;
+    private int xbn_;
+    /**
+     * <code>optional uint32 xbn = 7;</code>
+     */
+    public boolean hasXbn() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional uint32 xbn = 7;</code>
+     */
+    public int getXbn() {
+      return xbn_;
+    }
+
     private void initFields() {
       timestamp_ = 0L;
       gpsLat_ = 0D;
@@ -4982,6 +5094,7 @@ public final class DataProtos {
       pixels_ = java.util.Collections.emptyList();
       avg_ = 0D;
       std_ = 0D;
+      xbn_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5012,6 +5125,9 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeDouble(6, std_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt32(7, xbn_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -5045,6 +5161,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(6, std_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, xbn_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5179,6 +5299,8 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000010);
         std_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000020);
+        xbn_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -5236,6 +5358,10 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000010;
         }
         result.std_ = std_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.xbn_ = xbn_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5292,6 +5418,9 @@ public final class DataProtos {
         }
         if (other.hasStd()) {
           setStd(other.getStd());
+        }
+        if (other.hasXbn()) {
+          setXbn(other.getXbn());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5721,6 +5850,39 @@ public final class DataProtos {
       public Builder clearStd() {
         bitField0_ = (bitField0_ & ~0x00000020);
         std_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      // optional uint32 xbn = 7;
+      private int xbn_ ;
+      /**
+       * <code>optional uint32 xbn = 7;</code>
+       */
+      public boolean hasXbn() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional uint32 xbn = 7;</code>
+       */
+      public int getXbn() {
+        return xbn_;
+      }
+      /**
+       * <code>optional uint32 xbn = 7;</code>
+       */
+      public Builder setXbn(int value) {
+        bitField0_ |= 0x00000040;
+        xbn_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 xbn = 7;</code>
+       */
+      public Builder clearXbn() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        xbn_ = 0;
         onChanged();
         return this;
       }
@@ -7770,7 +7932,7 @@ public final class DataProtos {
       "nfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nst" +
       "art_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 \001(\t\022\021\n" +
       "\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(\t\022\025\n\rc" +
-      "amera_params\030\007 \001(\t\"\224\003\n\rExposureBlock\022\016\n\006" +
+      "amera_params\030\007 \001(\t\"\241\003\n\rExposureBlock\022\016\n\006" +
       "run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_",
       "time\030\003 \001(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007gps_lon\030\005" +
       " \001(\001\022/\n\tdaq_state\030\006 \001(\0162\034.crayfis.Exposu" +
@@ -7779,18 +7941,19 @@ public final class DataProtos {
       "\001(\005\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2_processe" +
       "d\030\013 \001(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pa" +
       "ss\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001" +
-      "(\r\022\017\n\007L2_skip\030\020 \001(\r\",\n\005State\022\010\n\004INIT\020\000\022\017" +
-      "\n\013CALIBRATION\020\001\022\010\n\004DATA\020\002\"v\n\005Event\022\021\n\tti" +
-      "mestamp\030\001 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lo",
-      "n\030\003 \001(\001\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022" +
-      "\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\"Z\n\005Pixel\022\t\n\001x\030" +
-      "\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010near_ma" +
-      "x\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001" +
-      "\n\021CalibrationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n\ns" +
-      "tart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhis" +
-      "t_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rh" +
-      "ist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(" +
-      "\rB\035\n\017edu.uci.crayfisB\nDataProtos"
+      "(\r\022\017\n\007L2_skip\030\020 \001(\r\022\013\n\003xbn\030\021 \001(\r\",\n\005Stat" +
+      "e\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DATA\020\002\"\203" +
+      "\001\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\017\n\007gps_lat\030\002",
+      " \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\036\n\006pixels\030\004 \003(\0132\016." +
+      "crayfis.Pixel\022\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022" +
+      "\013\n\003xbn\030\007 \001(\r\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 " +
+      "\001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005av" +
+      "g_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021Calibration" +
+      "Result\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001" +
+      "(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r" +
+      "\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030" +
+      "\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\rB\035\n\017edu.uci." +
+      "crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -7814,13 +7977,13 @@ public final class DataProtos {
           internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_ExposureBlock_descriptor,
-              new java.lang.String[] { "RunId", "StartTime", "EndTime", "GpsLat", "GpsLon", "DaqState", "Events", "L1Thresh", "L2Thresh", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", });
+              new java.lang.String[] { "RunId", "StartTime", "EndTime", "GpsLat", "GpsLon", "DaqState", "Events", "L1Thresh", "L2Thresh", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", "Xbn", });
           internal_static_crayfis_Event_descriptor =
             getDescriptor().getMessageTypes().get(3);
           internal_static_crayfis_Event_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_Event_descriptor,
-              new java.lang.String[] { "Timestamp", "GpsLat", "GpsLon", "Pixels", "Avg", "Std", });
+              new java.lang.String[] { "Timestamp", "GpsLat", "GpsLon", "Pixels", "Avg", "Std", "Xbn", });
           internal_static_crayfis_Pixel_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_crayfis_Pixel_fieldAccessorTable = new

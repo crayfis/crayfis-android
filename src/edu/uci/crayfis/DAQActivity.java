@@ -131,6 +131,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int totalPixels = 0;
 	private int totalEvents = 0;
 	private int totalXBs = 0;
+	private int committedXBs = 0;
+	private long committedExposure = 0;
 
 	private long L1counter = 0;
 	private long L2counter = 0;
@@ -427,6 +429,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		current_xb = new ExposureBlock();
 		totalXBs++;
 		
+		current_xb.xbn = totalXBs;
 		current_xb.L1_thresh = L1thresh;
 		current_xb.L2_thresh = L2thresh;
 		current_xb.start_loc = new Location(currentLocation);
@@ -452,7 +455,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		ExposureBlock xb = previous_xb;
 
 		if (xb.daq_state == DAQActivity.state.STABILIZATION) {
-			// don't commit stabilization blocks! theyr'e just deadtime.
+			// don't commit stabilization blocks! they're just deadtime.
 			Log.i(TAG, "Skipping stabilization exposure block!");
 			previous_xb = null;
 			return;
@@ -461,6 +464,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			&& xb.aborted) {
 			// also, don't commit aborted calibration blocks
 			Log.i(TAG, "Skipping aborted calibration block!");
+			previous_xb = null;
+			return;
 		}
 		
 		Log.i(TAG, "Commiting old exposure block!");
@@ -471,6 +476,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		if (! success) {
 			// Oops! The output manager's queue must be full!
 			throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
+		}
+		
+		committedXBs++;
+		if (xb.daq_state == DAQActivity.state.DATA) {
+			committedExposure += xb.age();
 		}
 	}
 	
@@ -892,10 +902,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				float l2rate = (L2counter)
 						/ ((float) 1e-3 * (float) (System.currentTimeMillis() - starttime));
 				// canvas.drawText("STATISTICS",250, yoffset+1*tsize, mypaint);
+				long exposed_time = committedExposure;
+				if (previous_xb != null && previous_xb.daq_state==DAQActivity.state.DATA) {
+					exposed_time += previous_xb.age();
+				}
+				if (current_xb != null && current_xb.daq_state==DAQActivity.state.DATA) {
+					exposed_time += current_xb.age();
+				}
 				canvas.drawText(
-						"Time: "
-								+ (int) (1.0e-3 * (float) (System
-										.currentTimeMillis() - starttime))
+						"Exposure: "
+								+ (int) (1.0e-3 * exposed_time)
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
 				canvas.drawText("Events : " + totalEvents, 200, yoffset + 6 * tsize,
 						mypaint);
@@ -906,7 +922,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// 250,15+5*tsize,mypaint);
 				// canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);
 
-				canvas.drawText("XBs: " + totalXBs, 200, yoffset + 10
+				canvas.drawText("XBs: " + committedXBs, 200, yoffset + 10
 						* tsize, mypaint);
 
 				// /// Histogram
