@@ -15,3 +15,7 @@
 bin/
 gen/
 local.properties
+
+# Mac OS X system files
+.DS_Store
+._*

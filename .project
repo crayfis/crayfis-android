@@ -44,11 +44,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>res/drawable-xxhdpi/large_logo.png</name>
-			<type>1</type>
-			<location>/Users/danielwhiteson/crayfish.png</location>
-		</link>
-	</linkedResources>
 </projectDescription>
