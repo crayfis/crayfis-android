@@ -691,6 +691,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		//Paint mypaint2_thresh;
 		Paint mypaint3;
 		Paint mypaint_L2warning;
+		Paint mypaint_version;
 
 		private String[] histo_strings_all = new String[256];
 		private String[] histo_strings_thresh = new String[256];
@@ -731,6 +732,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			mypaint3 = new Paint();
 			
 			mypaint_L2warning = new Paint();
+			mypaint_version = new Paint();
 
 			// This call is necessary, or else the
 			// draw method will not be called.
@@ -765,6 +767,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				mypaint_L2warning.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint_L2warning.setColor(android.graphics.Color.YELLOW);
 				mypaint_L2warning.setTextSize((int) (tsize * 1.1));
+				
+				mypaint_version.setStyle(android.graphics.Paint.Style.FILL);
+				mypaint_version.setColor(android.graphics.Color.MAGENTA);
+				mypaint_version.setTextSize((int) (tsize * 1.1));
 
 				mypaint3.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint3.setColor(android.graphics.Color.GRAY);
@@ -867,12 +873,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
 				
+				
 				if (L2busy > 0) {
 					// print a message indicating that we've been dropping frames
 					// due to L2queue overflow.
 					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_L2warning);
 				}
+				
+				canvas.drawText(build_version, 220, yoffset + 24 * tsize, mypaint_version);
 
+				
 				// canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
 
 				// Y axis labels
