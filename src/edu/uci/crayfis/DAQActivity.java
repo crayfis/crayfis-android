@@ -41,6 +41,8 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -86,11 +88,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	public class RawCameraFrame {
 		public final byte[] bytes;
 		public final long acq_time;
+		public final ExposureBlock xb;
 		public Location location;
 		
-		public RawCameraFrame(byte[] bytes, long t) {
+		public RawCameraFrame(byte[] bytes, long t, ExposureBlock xb) {
 			this.bytes = bytes;
 			this.acq_time = t;
+			this.xb = xb;
 		}
 	}
 	
@@ -132,7 +136,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int totalEvents = 0;
 	private int totalXBs = 0;
 	private int committedXBs = 0;
-	private long committedExposure = 0;
+	
+	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
 	private long L2counter = 0;
@@ -156,11 +161,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	// targeted max. number of events per minute to allow
 	// (lower rate => higher threshold)
 	private float max_events_per_minute = 50;
-
-	private ExposureBlock current_xb;
-	// Previous xb is kept around until either the L2 queue
-	// is empty, or an event outside the block is processed.
-	private ExposureBlock previous_xb;
 	
 	// the nominal period for an exposure block (in seconds)
 	public static final long xb_period = 2 * 60;
@@ -247,49 +247,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		// The *only* valid way to get into calibration mode
 		// is after stabilizaton.
 		switch (current_state) {
-		/*
-		case INIT:
-			Log.i(TAG, "FSM Transition: INIT -> CALIBRATION");
-
-			fixed_threshold = false;
-			
-			// during INIT state, the reco object may not exist yet...
-			//reco.clearHistograms();
-			
-			calibration_start = System.currentTimeMillis();
-			current_state = DAQActivity.state.CALIBRATION;
-			
-			// Start a new exposure block
-			newExposureBlock();
-			
-			break;
-		case DATA:
-			Log.i(TAG, "FSM Transition: DATA -> CALIBRATION");
-			
-			// clear histograms and counters before calibration
-			reco.reset();
-			
-			calibration_start = System.currentTimeMillis();
-			current_state = DAQActivity.state.CALIBRATION;
-			
-			// Start a new exposure block
-			newExposureBlock();
-			
-			break;
-		case CALIBRATION:
-			Log.i(TAG, "FSM Transition: CALIBRATION -> CALIBRATION");
-			
-			// as far as I can tell, this just happens when we have "bad"
-			// frames during calibration. the only difference here is
-			// we'll stay on the same exposure block.
-			// clear histogram before calibration
-			reco.reset();
-			
-			calibration_start = System.currentTimeMillis();
-			current_state = DAQActivity.state.CALIBRATION;
-			
-			break;	
-		*/
 		case STABILIZATION:
 			Log.i(TAG, "FSM Transition: STABILIZATION -> CALIBRATION");
 			
@@ -300,7 +257,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			current_state = DAQActivity.state.CALIBRATION;
 			
 			// Start a new exposure block
-			newExposureBlock();
+			xbManager.newExposureBlock();
 			
 			break;
 			
@@ -317,7 +274,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			current_state = DAQActivity.state.DATA;
 			
 			// Start a new exposure block
-			newExposureBlock();
+			xbManager.newExposureBlock();
 			
 			break;
 		case CALIBRATION:
@@ -362,7 +319,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			// Finally, set the state and start a new xb
 			current_state = DAQActivity.state.DATA;
-			newExposureBlock();
+			xbManager.newExposureBlock();
 			
 			break;
 		default:
@@ -381,7 +338,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			current_state = DAQActivity.state.STABILIZATION;
 			L2Queue.clear();
 			stabilization_counter = 0;
-			newExposureBlock();
+			xbManager.newExposureBlock();
 			break;
 			
 		// coming out of calibration and data should be the same.
@@ -398,89 +355,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			// reset the stabilization counter
 			stabilization_counter = 0;
 			
-			// mark the current XB as aborted
-			current_xb.aborted = true;
-			
-			// start a new exposure block
-			newExposureBlock();
+			// mark the current XB as aborted and start a new one
+			xbManager.abortExposureBlock();
 			
 			break;
 			
 		default:
 			throw new RuntimeException("Bad FSM transition to STABILZE");
-		}
-	}
-	
-	// Start a new exposure block, freezing the current one (if any)
-	void newExposureBlock() {
-		Log.i(TAG, "Sarting new exposure block!");
-		
-		// by the time we start a new XB, we had better have committed the
-		// previous one already!
-		if (previous_xb != null) {
-			// well, rather than crash out, we should just commit the old one. NB, however, it
-			// may loose some data if there were still frames on the L2Queue (unlikely, though).
-			commitExposureBlock();
-			Log.w(TAG, "Warning! Commiting prevoius exposure block prematurely.");
-		}
-		
-		// Freeze the current XB, and push it back to the temp slot
-		previous_xb = current_xb;
-		current_xb = new ExposureBlock();
-		totalXBs++;
-		
-		current_xb.xbn = totalXBs;
-		current_xb.L1_thresh = L1thresh;
-		current_xb.L2_thresh = L2thresh;
-		current_xb.start_loc = new Location(currentLocation);
-		current_xb.daq_state = current_state;
-		current_xb.run_id = run_id;
-		
-		if (previous_xb != null) {
-			previous_xb.freeze();
-			Log.i(TAG, "Old exposure block started at: " + previous_xb.start_time + ", ended at: " + previous_xb.end_time);
-		}
-	}
-	
-	// Commit the previous exposure block (if any).
-	// This is to be called when once we determine the previous
-	// block has no more data coming. I.e. when:
-	//  1) we have processed a frame that is too new for this XB
-	//  2) we have timed out on an empty L2 queue (no recent data from L1) 
-	void commitExposureBlock() {
-		if (previous_xb == null) {
-			// nothing to do here.
-			return;
-		}
-		ExposureBlock xb = previous_xb;
-
-		if (xb.daq_state == DAQActivity.state.STABILIZATION) {
-			// don't commit stabilization blocks! they're just deadtime.
-			Log.i(TAG, "Skipping stabilization exposure block!");
-			previous_xb = null;
-			return;
-		}
-		if (xb.daq_state == DAQActivity.state.CALIBRATION
-			&& xb.aborted) {
-			// also, don't commit aborted calibration blocks
-			Log.i(TAG, "Skipping aborted calibration block!");
-			previous_xb = null;
-			return;
-		}
-		
-		Log.i(TAG, "Commiting old exposure block!");
-		
-		previous_xb = null;
-		boolean success = outputThread.commitExposureBlock(xb);
-		
-		if (! success) {
-			// Oops! The output manager's queue must be full!
-			throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
-		}
-		
-		committedXBs++;
-		if (xb.daq_state == DAQActivity.state.DATA) {
-			committedExposure += xb.age();
 		}
 	}
 	
@@ -576,8 +457,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		L1thresh = Integer
 				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
 		
-		current_xb = null;
-		previous_xb = null;
+		xbManager = new ExposureBlockManager();
 		current_state = DAQActivity.state.INIT;
 		
 		if (L1thresh >= 0) {
@@ -708,7 +588,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		
 		// get a reference to the current xb, so it doesn't change from underneath us
-		ExposureBlock xb = current_xb;
+		ExposureBlock xb = xbManager.getCurrentExposureBlock();
 		
 		L1counter++;
 		xb.L1_processed++;
@@ -723,7 +603,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		if (current_state == DAQActivity.state.CALIBRATION) {
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
-			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
+			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb));
 			
 			if (! queue_accept) {
 				// oops! the queue is full... this frame will be dropped.
@@ -766,7 +646,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time));
+					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb));
 					
 					if (! queue_accept) {
 						// oops! the queue is full... this frame will be dropped.
@@ -816,7 +696,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			// make 256 vertical devisions
 			// each one is at log(data)/log(max) * i /256
 
-			int ip = 0;
 			// height loop
 
 			for (int j = 256; j > 0; j--) {
@@ -902,13 +781,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				float l2rate = (L2counter)
 						/ ((float) 1e-3 * (float) (System.currentTimeMillis() - starttime));
 				// canvas.drawText("STATISTICS",250, yoffset+1*tsize, mypaint);
-				long exposed_time = committedExposure;
-				if (previous_xb != null && previous_xb.daq_state==DAQActivity.state.DATA) {
-					exposed_time += previous_xb.age();
-				}
-				if (current_xb != null && current_xb.daq_state==DAQActivity.state.DATA) {
-					exposed_time += current_xb.age();
-				}
+				
+				long exposed_time = xbManager.getExposureTime();
 				canvas.drawText(
 						"Exposure: "
 								+ (int) (1.0e-3 * exposed_time)
@@ -1014,6 +888,129 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		}
 	}
+	
+	private class ExposureBlockManager {
+		public static final String TAG = "ExposureBlockManager";
+		
+		// This is where the current xb is kept. The DAQActivity must access
+		// the current exposure block through the public methods here.
+		private ExposureBlock current_xb;
+		
+		// We keep a list of retired blocks, which have been closed but
+		// may not be ready to commit yet (e.g. events belonging to this block
+		// might be sequested in a queue somewhere, still)
+		private LinkedList<ExposureBlock> retired_blocks = new LinkedList<ExposureBlock>();
+		
+		private long safe_time = 0;
+		
+		private long committed_exposure;
+		
+		// Atomically check whether the current XB is to old, and if so,
+		// create a new one. Then return the current block in either case.
+		public synchronized ExposureBlock getCurrentExposureBlock() {
+			if (current_xb == null) {
+				// not sure what to do here?
+				return null;
+			}
+			
+			// check and see whether this XB is too old
+			if (current_xb.age() > xb_period * 1000) {
+				newExposureBlock();
+			}
+			
+			return current_xb;
+		}
+		
+		// Return an estimate of the exposure time in committed + current
+		// exposure blocks.
+		public synchronized long getExposureTime() {
+			if (current_xb.daq_state == DAQActivity.state.DATA) {
+				return committed_exposure + current_xb.age();
+			}
+			else {
+				return committed_exposure;
+			}
+		}
+
+		public synchronized void newExposureBlock() {
+			if (current_xb != null) {
+				current_xb.freeze();
+				retireExposureBlock(current_xb);
+			}
+
+			Log.i(TAG, "Sarting new exposure block!");
+			current_xb = new ExposureBlock();
+			totalXBs++;
+			
+			current_xb.xbn = totalXBs;
+			current_xb.L1_thresh = L1thresh;
+			current_xb.L2_thresh = L2thresh;
+			current_xb.start_loc = new Location(currentLocation);
+			current_xb.daq_state = current_state;
+			current_xb.run_id = run_id;
+		}
+		
+		public synchronized void abortExposureBlock() {
+			current_xb.aborted = true;
+			newExposureBlock();
+		}
+		
+		private void retireExposureBlock(ExposureBlock xb) {
+			// anything that's being committed must have already been frozen.
+			assert xb.frozen == true;
+			retired_blocks.add(xb);
+			committed_exposure += xb.age();
+		}
+
+		public void updateSafeTime(long time) {
+			// this time should be monotonically increasing
+			assert time >= safe_time;
+			safe_time = time;
+		}
+		
+		public void flushCommittedBlocks() {
+			// Try to flush out any committed exposure blocks that
+			// have no new events coming.
+			if (retired_blocks.size() == 0) {
+				// nothing to be done.
+				return;
+			}
+			
+			for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
+				ExposureBlock xb = it.next();
+				if (xb.end_time < safe_time) {
+					// okay, it's safe to commit this block now.
+					it.remove();
+					commitExposureBlock(xb);
+				}
+			}
+		}
+		
+		private void commitExposureBlock(ExposureBlock xb) {
+			if (xb.daq_state == DAQActivity.state.STABILIZATION) {
+				// don't commit stabilization blocks! they're just deadtime.
+				Log.i(TAG, "Skipping stabilization exposure block!");
+				return;
+			}
+			if (xb.daq_state == DAQActivity.state.CALIBRATION
+				&& xb.aborted) {
+				// also, don't commit *aborted* calibration blocks
+				Log.i(TAG, "Skipping aborted calibration block!");
+				return;
+			}
+			
+			Log.i(TAG, "Commiting old exposure block!");
+			
+			boolean success = outputThread.commitExposureBlock(xb);
+			
+			if (! success) {
+				// Oops! The output manager's queue must be full!
+				throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
+			}
+			
+			committedXBs++;
+		}
+	}
 
 	/**
 	 * External thread used to do more time consuming image processing
@@ -1052,16 +1049,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					// Interrupted, possibly by app shutdown?
 					Log.d(TAG, "L2 processing interrupted while waiting on queue.");
 					interrupted = true;
-				}	
-				
-				// *yawn*, we've just come off the blocking queue. Not matter the reason,
-				// check if it is time to create a new exposure block:
-				if (current_xb.age() > (xb_period * 1000)) {
-					newExposureBlock();
 				}
 				
-				// also update the GUI (does it make sense to do handle this somewhere else?)
+				// update the GUI (does it make sense to do handle this somewhere else?)
 				mDraw.postInvalidate();
+				
+				// also try to clear out any old committed XB's that are sitting around.
+				xbManager.flushCommittedBlocks();
 				
 				if (interrupted) {
 					// Somebody is trying to wake us. Bail out of this loop iteration
@@ -1072,33 +1066,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				
 				if (frame == null) {
 					// We must have timed out on an empty queue (or been interrupted).
-					// If there is a previous exposure block waiting, we are done with it now.
-					// Other than that, there's nothing to do.
-					commitExposureBlock();
+					// If no new exposure blocks are coming, we can update the last known
+					// safe time to commit XB's (with a small fudge factor just incase there's
+					// something making its way onto the L2 queue now)
+					xbManager.updateSafeTime(System.currentTimeMillis() - 1000);
 					continue;
 				}
 				
-				// Okay, if we made it here, we've got an actual data frame
-				// that is ready for L2 processing.
+				// If we made it this far, we have a real data frame ready to go.
+				// First update the XB manager's safe time (so it knows which old XB
+				// it can commit. 
+				xbManager.updateSafeTime(frame.acq_time);
 				
-				// Try to get the appropriate exposure block for this event.
-				// Note that since the frame was sitting on a queue, it's possible
-				// that the appropriate xb has already lapsed. 
-				ExposureBlock xb = current_xb;
-				ExposureBlock prev_xb = previous_xb;
-				if (prev_xb != null) {
-					if (prev_xb.end_time < frame.acq_time) {
-						// looks like we're done with the previous exposure block,
-						// since this frame is too recent for it.
-						// let's commit it and move on with the current_xb
-						commitExposureBlock();
-					}
-					else {
-						// aha, it seems this frame belongs to the old exposure block.
-						// we'll use that one instead.
-						xb = prev_xb;
-					}
-				}
+				ExposureBlock xb = frame.xb;
 				
 				xb.L2_processed++;
 				
