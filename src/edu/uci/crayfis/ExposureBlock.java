@@ -77,8 +77,13 @@ public class ExposureBlock {
 		}
 		event.xbn = xbn;
 		events.add(event);
-		total_pixels += event.pixels.size();
-		Log.d("addevt", "Added event with " + event.pixels.size() + " pixels (total = " + total_pixels + ")");
+		
+		int npix = 0;
+		if (event.pixels != null) {
+			npix = event.pixels.size();
+		}
+		total_pixels += npix;
+		Log.d("addevt", "Added event with " + npix + " pixels (total = " + total_pixels + ")");
 	}
 	
 	// Translate between the internal and external enums

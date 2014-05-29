@@ -1115,12 +1115,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				// L1 (acquisition) time? Or is it okay here?
 				frame.location = new Location(currentLocation);
 				
-				// only enforce the L2 threshold if we're not calibrating.
-				int thresh = 0;
-				if (current_state == DAQActivity.state.DATA) {
-					thresh = xb.L2_thresh;
-				}
-				
 				// First, build the event from the raw frame.
 				RecoEvent event = reco.buildEvent(frame);
 				
@@ -1133,8 +1127,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				
 				xb.L2_pass++;
 				
-				// Now pick out the L2 pixels and add them to the event.
-				ArrayList<RecoPixel> pixels = reco.buildL2Pixels(frame, thresh);
+				// Now do the L2 (pixel-level analysis)
+				ArrayList<RecoPixel> pixels;
+				if (current_state == DAQActivity.state.DATA) {
+					pixels = reco.buildL2Pixels(frame, xb.L2_thresh);
+				}
+				else {
+					// Don't bother with full pixel reco and L2 threshold
+					// if we're not actually taking data.
+					pixels = reco.buildL2PixelsQuick(frame, 0);
+				}
+				
+				// Now add them to the event.
 				event.pixels = pixels;
 				
 				if (current_state == DAQActivity.state.DATA) {

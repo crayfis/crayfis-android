@@ -250,6 +250,10 @@ public class ParticleReco {
 		return buildL2Pixels(frame, thresh, false);
 	}
 	
+	public ArrayList<RecoPixel> buildL2PixelsQuick(RawCameraFrame frame, int thresh) {
+		return buildL2Pixels(frame, thresh, true);
+	}
+	
 	public ArrayList<RecoPixel> buildL2Pixels(RawCameraFrame frame, int thresh, boolean quick) {
 		ArrayList<RecoPixel> pixels = null;
 		
