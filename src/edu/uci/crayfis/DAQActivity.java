@@ -489,7 +489,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	protected void onPause() {
 		super.onPause();
 		
-		wl.release();
+		if (wl.isHeld())
+			wl.release();
 		
 		Log.i(TAG, "Suspending!");
 
