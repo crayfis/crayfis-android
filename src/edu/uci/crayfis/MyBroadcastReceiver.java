@@ -21,7 +21,10 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 		long plugged_in= System.currentTimeMillis();
 
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-	    int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
+		boolean noAutoStart = sharedPrefs.getBoolean("prefNoAutoStart", false);
+		if (!noAutoStart)
+		{
+		int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
 	    int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter","0"));
 	    int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore","0"));
 
@@ -42,6 +45,7 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 	    	it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	    	context.getApplicationContext().startActivity(it);
 	    }
+		}
 	}
 
 }

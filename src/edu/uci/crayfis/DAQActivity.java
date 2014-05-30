@@ -215,6 +215,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		Intent i = new Intent(this, UserRegisterActivity.class);
 		startActivity(i);
 	}
+	
+	public void clickedClose(View view) {
+
+		onPause();
+		DAQActivity.this.finish();
+	}
 
 	public void clickedAbout(View view) {
 
@@ -682,7 +688,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 		Paint mypaint;
 		Paint mypaint2;
-		Paint mypaint2_thresh;
+		//Paint mypaint2_thresh;
 		Paint mypaint3;
 		Paint mypaint_L2warning;
 
@@ -720,7 +726,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			mypaint = new Paint();
 			mypaint2 = new Paint();
-			mypaint2_thresh = new Paint();
+			//mypaint2_thresh = new Paint();
 
 			mypaint3 = new Paint();
 			
@@ -770,9 +776,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
 				mypaint2.setTypeface(tf);
 
-				mypaint2_thresh.setStyle(android.graphics.Paint.Style.FILL);
+				/* mypaint2_thresh.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint2_thresh.setColor(android.graphics.Color.GREEN);
-				mypaint2_thresh.setTextSize(tsize / (float) 10.0);
+				mypaint2_thresh.setTextSize(tsize / (float) 10.0); */
 
 				float deadtime = L1skip / ((float) L1skip + L1proc);
 				float l2deadtime = L2skip / ((float) L2skip + L2proc);
@@ -807,11 +813,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 							(float) (yoffset + (256 - j) * tsize / 10.0),
 							mypaint2);
 
+				/*
 				makeHistogram(reco.h_pixel.values, L1thresh, histo_strings_thresh);
 				for (int j = 256; j > 0; j--)
 					canvas.drawText(histo_strings_thresh[j - 1], 50,
 							(float) (yoffset + (256 - j) * tsize / 10.0),
-							mypaint2_thresh);
+							mypaint2_thresh); */
 
 				for (int i = 0; i < 256; i++)
 					if (i % 10 == 0)

@@ -38,6 +38,12 @@
             android:summary="The app will not autostart after this time."
             android:entryValues="@array/pref_starttimes"
             android:title="@string/pref_startbefore" />
+     <CheckBoxPreference
+            android:defaultValue="true"
+            android:key="prefNoAutoStart"
+            android:summary="Do not autostart"
+            android:title="Click to prevent autostart" >
+        </CheckBoxPreference>
      
 
 </PreferenceScreen>
