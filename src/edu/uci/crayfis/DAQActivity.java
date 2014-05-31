@@ -51,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import edu.uci.crayfis.ParticleReco.RecoEvent;
 import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.R;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -222,6 +223,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		DAQActivity.this.finish();
 	}
 
+	// received message when power is disconnected -- should end run
+	public class MyDisconnectReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context arg0, Intent arg1) {
+			// TODO Auto-generated method stub
+			DAQActivity.this.onPause();
+			DAQActivity.this.finish();
+		}
+
+	}
+	
+	
 	public void clickedAbout(View view) {
 
 		final SpannableString s = new SpannableString(

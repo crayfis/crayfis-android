@@ -26,8 +26,11 @@
 		<receiver android:name="edu.uci.crayfis.MyBroadcastReceiver">
 		    <intent-filter>
 		        <action android:name="android.intent.action.ACTION_POWER_CONNECTED"></action>
-		         <action android:name="android.intent.action.ACTION_SCREEN_OFF"></action>
-		        <action android:name="android.intent.action.ACTION_SCREEN_ON"></action>
+		    </intent-filter>
+		</receiver>
+		<receiver android:name="edu.uci.crayfis.MyDisconnectReceiver">
+		    <intent-filter>
+		        <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"></action>
 		    </intent-filter>
 		</receiver>
 		<activity android:name="edu.uci.crayfis.DAQActivity" android:screenOrientation="portrait"/>
