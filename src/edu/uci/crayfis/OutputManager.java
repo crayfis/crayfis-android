@@ -194,6 +194,7 @@ public class OutputManager extends Thread {
 			}
 			c.setUseCaches(false);
 			c.setAllowUserInteraction(false);
+			c.setDoOutput(true);
 			c.setConnectTimeout(connect_timeout);
 			c.setReadTimeout(read_timeout);
 			
