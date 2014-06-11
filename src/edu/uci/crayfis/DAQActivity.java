@@ -525,10 +525,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	protected void onDestroy() {
 		super.onDestroy();
 		
-		// stop the image processing and data threads.
+		// make sure we're in IDLE state, to make sure
+		// everything's closed.
+		toIdleMode();
+		
+		// flush all the closed exposure blocks immediately.
+		xbManager.flushCommittedBlocks(true);
+		
+		// stop the image processing thread.
 		l2thread.stopThread();
 		l2thread = null;
 		
+		// request to stop the OutputManager. It will automatically
+		// try to upload any remaining data before dying.
 		outputThread.stopThread();
 		outputThread = null;
 	}
@@ -1097,6 +1106,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					commitExposureBlock(xb);
 				}
 			}
+		}
+		
+		public void flushCommittedBlocks(boolean force) {
+			// If force == true, immediately flush all blocks.
+			if (force) {
+				updateSafeTime(System.currentTimeMillis());
+			}
+			flushCommittedBlocks();
 		}
 		
 		private void commitExposureBlock(ExposureBlock xb) {

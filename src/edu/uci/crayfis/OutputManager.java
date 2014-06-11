@@ -70,17 +70,32 @@ public class OutputManager extends Thread {
 	}
 	
 	public boolean commitExposureBlock(ExposureBlock xb) {
+		if (stopRequested) {
+			// oops! too late. We're shutting down.
+			Log.w(TAG, "Rejecting ExposureBlock; stop has already been requested.");
+			return false;
+		}
 		boolean success = outputQueue.offer(xb.buildProto());
 		start_uploading = true;
 		return success; 
 	}
 	
 	public boolean commitRunConfig(DataProtos.RunConfig rc) {
+		if (stopRequested) {
+			// oops! too late. We're shutting down.
+			Log.w(TAG, "Rejecting RunConfig; stop has already been requested.");
+			return false;
+		}
 		boolean success = outputQueue.offer(rc);
 		return success;
 	}
 	
 	public boolean commitCalibrationResult(DataProtos.CalibrationResult cal) {
+		if (stopRequested) {
+			// oops! too late. We're shutting down.
+			Log.w(TAG, "Rejecting CalibrationResult; stop has already been requested.");
+			return false;
+		}
 		boolean success = outputQueue.offer(cal);
 		start_uploading = true;
 		return success;
@@ -103,7 +118,9 @@ public class OutputManager extends Thread {
 		int chunkSize = 0;
 		long lastUpload = 0;
 		
-		while (! stopRequested) {
+		// Loop until a stop is requested. Even after that, don't stop
+		// until we've emptied the queue.
+		while (! (stopRequested && outputQueue.isEmpty())) {
 			AbstractMessage toWrite = null;
 			boolean interrupted = false;
 			
@@ -137,8 +154,7 @@ public class OutputManager extends Thread {
 				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
 			}
 			
-			// FIXME: I don't know if this is efficient...
-			chunkSize += toWrite.toByteArray().length;
+			chunkSize = toWrite.getSerializedSize();
 			
 			// if we haven't gotten anything interesting to upload yet
 			// (i.e. an exposure block or calibration histo), then don't upload
@@ -160,9 +176,7 @@ public class OutputManager extends Thread {
 			}
 		}
 		
-		// before we stop running, make sure we upload any
-		// leftovers.
-		// FIXME: we should also empty the queue??
+		// before we stop running, make sure we upload any leftovers.
 		if (chunk != null) {
 			Log.i(TAG, "OutputManager is exiting... uploading last data chunk.");
 			directUpload(chunk.build());
