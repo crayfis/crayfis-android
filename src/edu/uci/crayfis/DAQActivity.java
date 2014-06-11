@@ -107,7 +107,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	public String device_id;
 	public String build_version;
 	public UUID run_id;
-	DataProtos.RunConfig run_config;
+	DataProtos.RunConfig run_config = null;
 	
 	// max amount of time to wait on L2Queue (seconds)
 	int L2Timeout = 1;
@@ -147,7 +147,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private int L2prescale = 1;
 
 	public enum state {
-		INIT, CALIBRATION, DATA, STABILIZATION,
+		INIT, CALIBRATION, DATA, STABILIZATION, IDLE,
 	};
 
 	private state current_state;
@@ -198,7 +198,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private long L1_fps_stop = 0;
 
 	// Thread where image data is processed for L2
-	private ThreadProcess l2thread;
+	private L2Processor l2thread;
 	
 	// thread to handle output of committed data
 	private OutputManager outputThread;
@@ -352,6 +352,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	private void toStabilizationMode() {
 		switch(current_state) {
 		case INIT:
+		case IDLE:
 			// This is the first state transisiton of the app. Go straight into stabilization
 			// so the calibratoin will be clean.
 			fixed_threshold = false;
@@ -379,13 +380,44 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			xbManager.abortExposureBlock();
 			
 			break;
+		case STABILIZATION:
+			// just reset the counter.
+			stabilization_counter = 0;
 			
+			break;
 		default:
-			throw new RuntimeException("Bad FSM transition to STABILZE");
+			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> STABILZATION");
+		}
+	}
+	
+	public void toIdleMode() {
+		// This mode is basically just used to cleanly close out any
+		// current exposure blocks. For example, we transition here when
+		// the phone is locked or the app is suspended.
+		switch(current_state) {
+		case IDLE:
+			// nothing to do here...
+			break;
+		case CALIBRATION:
+		case STABILIZATION:
+			// for calibration or stabilization, mark the block as aborted
+			current_state = DAQActivity.state.IDLE;
+			xbManager.abortExposureBlock();
+			break;
+		case DATA:
+			// for data, just close out the current XB
+			current_state = DAQActivity.state.IDLE;
+			xbManager.newExposureBlock();
+			break;
+		default:
+			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> IDLE");
 		}
 	}
 	
 	public void generateRunConfig() {
+		if (run_config != null) {
+			// we've already constructed the object. nothing to do here.
+		}
 		DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
 
 		b.setIdHi(run_id.getMostSignificantBits());
@@ -406,7 +438,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		PowerManager pm = (PowerManager)
 		getSystemService(Context.POWER_SERVICE); wl =
 		pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
-		wl.acquire();
 		
 		// Generate a UUID to represent this run
 		run_id = UUID.randomUUID();
@@ -478,31 +509,58 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
 		
 		xbManager = new ExposureBlockManager();
+		
+		// Set the initial state
 		current_state = DAQActivity.state.INIT;
 		
-		if (L1thresh >= 0) {
-			toDataMode();
+		// Spin up the output and image processing threads:
+		outputThread = new OutputManager(context);
+		outputThread.start();
 
-		} else {
-			toStabilizationMode();
-		}
+		l2thread = new L2Processor();
+		l2thread.start();
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		
+		// stop the image processing and data threads.
+		l2thread.stopThread();
+		l2thread = null;
+		
+		outputThread.stopThread();
+		outputThread = null;
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		
+		wl.acquire();
 
 		if (mCamera != null)
 			throw new RuntimeException(
 					"Bug, camera should not be initialized already");
+		
+		// Transition to stabilization mode as we resume data-taking
+		toStabilizationMode();
 
+		// configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
 
+		if (reco == null) {
+			// if we don't already have a particleReco object setup,
+			// do that now that we know the camera size.
+			reco = new ParticleReco(previewSize);
+		}
+		
+		// once all the hardware is set up and the output manager is running,
+		// we can generate and commit the runconfig
+		if (run_config == null) {
+			generateRunConfig();
+			outputThread.commitRunConfig(run_config);
+		}
 	}
 
 	@Override
@@ -522,11 +580,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			mCamera.release();
 			mCamera = null;
 			
-			// clear out the (old) buffers
+			// clear out any (old) buffers
 			L2Queue.clear();
-
-			l2thread.stopThread();
-			l2thread = null;
+			
+			// If the app is being paused, we don't want that
+			// counting towards the current exposure block.
+			// So close it out cleaning by moving to the IDLE state.
+			toIdleMode();
 		}
 	}
 
@@ -579,21 +639,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			
 			mCamera.setParameters(param);
 		}
-		
-		// now that all the hardware is set up, generate the runconfig metadata.
-		generateRunConfig();
-		
-		reco = new ParticleReco(previewSize);
-		
-		outputThread = new OutputManager(context);
-		outputThread.start();
-		
-		// once the output manager is running, we can commit the runconfig
-		outputThread.commitRunConfig(run_config);
-		
-		// start image processing thread
-		l2thread = new ThreadProcess();
-		l2thread.start();
 
 		// Create an instance of Camera
 		mPreview.setCamera(mCamera);
@@ -668,6 +713,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				toCalibrationMode();
 			}
 			
+			return;
+		}
+		
+		if (current_state == DAQActivity.state.IDLE) {
+			// Not sure why we're still acquiring frames in IDLE mode...
+			Log.w(TAG, "Frames still being recieved in IDLE mode");
 			return;
 		}
 		
@@ -1049,8 +1100,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		}
 		
 		private void commitExposureBlock(ExposureBlock xb) {
-			if (xb.daq_state == DAQActivity.state.STABILIZATION) {
-				// don't commit stabilization blocks! they're just deadtime.
+			if (xb.daq_state == DAQActivity.state.STABILIZATION
+					|| xb.daq_state == DAQActivity.state.IDLE) {
+				// don't commit stabilization/idle blocks! they're just deadtime.
 				return;
 			}
 			if (xb.daq_state == DAQActivity.state.CALIBRATION
@@ -1075,7 +1127,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	/**
 	 * External thread used to do more time consuming image processing
 	 */
-	private class ThreadProcess extends Thread {
+	private class L2Processor extends Thread {
 
 		// true if a request has been made to stop the thread
 		volatile boolean stopRequested = false;
