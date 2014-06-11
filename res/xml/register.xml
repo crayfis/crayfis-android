@@ -17,6 +17,14 @@
             android:summary="Be anonymous"
             android:title="privacy" >
         </CheckBoxPreference>
+     
+     <CheckBoxPreference
+         	android:defaultValue="true"
+         	android:key="prefWifiOnly"
+         	android:summary="Only use Wifi to upload data"
+         	android:title="Wifi only" >
+     </CheckBoxPreference>
+     
      <ListPreference
             android:key="prefStartWait"
             android:defaultValue="0"

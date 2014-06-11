@@ -12,7 +12,11 @@ import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.ByteString;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.util.Log;
 
@@ -36,7 +40,7 @@ public class OutputManager extends Thread {
 	public String server_address;
 	public String server_port;
 	public String upload_uri;
-	
+		
 	public boolean debug_stream;
 	
 	public String device_id;
@@ -67,6 +71,29 @@ public class OutputManager extends Thread {
 			// don't know why we'd get here...
 			Log.e(TAG, "Failed to resolve build version!");
 		}
+	}
+	
+	public boolean useWifiOnly() {
+		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+		return sharedPrefs.getBoolean("prefWifiOnly", true);
+	}
+	
+	// Some utilities for determining the network state
+	public NetworkInfo getNetworkInfo() {
+		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+		return cm.getActiveNetworkInfo();
+	}
+	
+	// Check if there is *any* connectivity
+	public boolean isConnected() {
+		NetworkInfo info = getNetworkInfo();
+		return (info != null && info.isConnected());
+	}
+	
+	// Check if we're connected to WiFi
+	public boolean isConnectedWifi() {
+		NetworkInfo info = getNetworkInfo();
+		return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
 	}
 	
 	public boolean commitExposureBlock(ExposureBlock xb) {
@@ -166,7 +193,7 @@ public class OutputManager extends Thread {
 			
 			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval) {
 				// time to upload!
-				directUpload(chunk.build());
+				outputChunk(chunk.build());
 				chunk = null;
 				chunkSize = 0;
 				lastUpload = System.currentTimeMillis();
@@ -179,13 +206,33 @@ public class OutputManager extends Thread {
 		// before we stop running, make sure we upload any leftovers.
 		if (chunk != null) {
 			Log.i(TAG, "OutputManager is exiting... uploading last data chunk.");
-			directUpload(chunk.build());
+			outputChunk(chunk.build());
 		}
 		
 		running = false;
 	}
 	
-	private void directUpload(AbstractMessage toWrite) {
+	// output the given data chunk, either by uploading if the network
+	// is available, or (TODO: by outputting to file.)
+	private void outputChunk(AbstractMessage toWrite) {
+		boolean uploaded = false;
+		if ((!useWifiOnly() && isConnected()) || isConnectedWifi()) {
+			// Upload to network:
+			uploaded = directUpload(toWrite);
+		}
+		
+		if (uploaded) {
+			// Looks like everything went okay. We're done here.
+			return;
+		}
+		
+		// oops! network is either not available, or there was an
+		// error during the upload.
+		// TODO: write out to a file.
+		Log.w(TAG, "Unable to upload to network! Dropping data.");
+	}
+	
+	private boolean directUpload(AbstractMessage toWrite) {
 		// okay, we got an writable object, let's dump it to the server!
 		String upload_url = "http://"+server_address+":"+server_port+upload_uri;
 		
@@ -195,6 +242,7 @@ public class OutputManager extends Thread {
 		
 		int serverResponseCode = 0;
 		
+		boolean success = false;
 		try {
 			URL u = new URL(upload_url);
 			HttpURLConnection c = (HttpURLConnection) u.openConnection();
@@ -224,6 +272,11 @@ public class OutputManager extends Thread {
 			
 			// and now disconnect
 			c.disconnect();
+			
+			if (serverResponseCode == 200) {
+				// looks like everything went okay!
+				success = true;
+			}
 		}
 		catch (MalformedURLException ex) {
 			Log.e(TAG, "Oh noes! The upload url is malformed.", ex);
@@ -231,5 +284,7 @@ public class OutputManager extends Thread {
 		catch (IOException ex) {
 			Log.e(TAG, "Oh noes! An IOException occured.", ex);
 		}
+		
+		return success;
 	}
 }

@@ -1061,7 +1061,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				retireExposureBlock(current_xb);
 			}
 
-			Log.i(TAG, "Sarting new exposure block!");
+			Log.i(TAG, "Starting new exposure block!");
 			current_xb = new ExposureBlock();
 			totalXBs++;
 			
