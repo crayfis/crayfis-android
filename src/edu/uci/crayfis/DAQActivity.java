@@ -331,9 +331,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			new_thresh = reco.calculateThresholdByEvents(target_events);
 			Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 			L1thresh = new_thresh;
-			if (L1thresh < L2thresh) {
-				// If we chose an L1threshold lower than the L2 threshold, then
-				// we should lower it!
+			
+			// FIXME: we should have a better calibration for L2 threshold.
+			// For now, we choose it to be just below L1thresh.
+			if (L1thresh > 2) {
+				L2thresh = L1thresh - 1;
+			}
+			else {
+				// Okay, if we're getting this low, we shouldn't try to
+				// set the L2thresh any lower, else event frames will be huge.
 				L2thresh = L1thresh;
 			}
 
