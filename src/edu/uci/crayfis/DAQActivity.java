@@ -1016,7 +1016,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 			// anything that's being committed must have already been frozen.
 			assert xb.frozen == true;
 			retired_blocks.add(xb);
-			committed_exposure += xb.age();
+			
+			// if this is a DATA block, add its age to the commited
+			// exposure time.
+			if (xb.daq_state == DAQActivity.state.DATA) {
+				committed_exposure += xb.age();
+			}
 		}
 
 		public void updateSafeTime(long time) {
@@ -1046,13 +1051,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		private void commitExposureBlock(ExposureBlock xb) {
 			if (xb.daq_state == DAQActivity.state.STABILIZATION) {
 				// don't commit stabilization blocks! they're just deadtime.
-				Log.i(TAG, "Skipping stabilization exposure block!");
 				return;
 			}
 			if (xb.daq_state == DAQActivity.state.CALIBRATION
 				&& xb.aborted) {
 				// also, don't commit *aborted* calibration blocks
-				Log.i(TAG, "Skipping aborted calibration block!");
 				return;
 			}
 			
