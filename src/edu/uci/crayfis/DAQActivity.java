@@ -106,6 +106,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 	
 	public String device_id;
 	public String build_version;
+	public int build_version_code;
 	public UUID run_id;
 	DataProtos.RunConfig run_config = null;
 	
@@ -450,8 +451,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		device_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 		build_version = "unknown";
+		build_version_code = 0;
 		try {
 			build_version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+			build_version_code = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
 		}
 		catch (NameNotFoundException ex) {
 			// don't know why we'd get here...
@@ -520,7 +523,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		current_state = DAQActivity.state.INIT;
 		
 		// Spin up the output and image processing threads:
-		outputThread = new OutputManager(context);
+		outputThread = new OutputManager(this);
 		outputThread.start();
 
 		l2thread = new L2Processor();

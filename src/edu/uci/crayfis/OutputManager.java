@@ -40,11 +40,13 @@ public class OutputManager extends Thread {
 	public String server_address;
 	public String server_port;
 	public String upload_uri;
-		
+	
 	public boolean debug_stream;
 	
 	public String device_id;
+	public String run_id_string;
 	public String build_version;
+	public int build_version_code;
 	
 	private boolean start_uploading = false;
 	
@@ -52,7 +54,7 @@ public class OutputManager extends Thread {
 
 	Context context;
 	
-	public OutputManager(Context context) {
+	public OutputManager(DAQActivity context) {
 		this.context = context;
 		
 		server_address = context.getString(R.string.server_address);
@@ -60,17 +62,12 @@ public class OutputManager extends Thread {
 		upload_uri = context.getString(R.string.upload_uri);
 		
 		debug_stream = context.getResources().getBoolean(R.bool.debug_stream);
+				
+		build_version = context.build_version;
+		build_version_code = context.build_version_code;
+		device_id = context.device_id;
 		
-		device_id = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
-		
-		build_version = "unknown";
-		try {
-			build_version = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionName;
-		}
-		catch (NameNotFoundException ex) {
-			// don't know why we'd get here...
-			Log.e(TAG, "Failed to resolve build version!");
-		}
+		run_id_string = context.run_id.toString();
 	}
 	
 	public boolean useWifiOnly() {
@@ -250,7 +247,9 @@ public class OutputManager extends Thread {
 			c.setRequestProperty("Content-type", "application/octet-stream");
 			c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
 			c.setRequestProperty("Device-id", device_id);
+			c.setRequestProperty("Run-id", run_id_string);
 			c.setRequestProperty("Crayfis-version", "a " + build_version);
+			c.setRequestProperty("Crayfis-version-code", Integer.toString(build_version_code));
 			if (debug_stream) {
 				c.setRequestProperty("Debug-stream", "yes");
 			}
@@ -273,7 +272,7 @@ public class OutputManager extends Thread {
 			// and now disconnect
 			c.disconnect();
 			
-			if (serverResponseCode == 200) {
+			if (serverResponseCode == 202 || serverResponseCode == 200) {
 				// looks like everything went okay!
 				success = true;
 			}
