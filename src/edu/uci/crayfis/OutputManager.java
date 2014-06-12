@@ -94,6 +94,10 @@ public class OutputManager extends Thread {
 		return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
 	}
 	
+	public boolean canUpload() {
+		return ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
+	}
+	
 	public boolean commitExposureBlock(ExposureBlock xb) {
 		if (stopRequested) {
 			// oops! too late. We're shutting down.
@@ -215,7 +219,7 @@ public class OutputManager extends Thread {
 	// is available, or (TODO: by outputting to file.)
 	private void outputChunk(AbstractMessage toWrite) {
 		boolean uploaded = false;
-		if ((!useWifiOnly() && isConnected()) || isConnectedWifi()) {
+		if (canUpload()) {
 			// Upload to network:
 			uploaded = directUpload(toWrite, run_id_string);
 		}
@@ -246,7 +250,7 @@ public class OutputManager extends Thread {
 	
 	// check to see if there is a file, and if so, upload it.
 	private void uploadFile() {
-		if (!isConnected() || (useWifiOnly() && !isConnectedWifi())) {
+		if (!canUpload()) {
 			// No network connection available... nothing to do here.
 			return;
 		}

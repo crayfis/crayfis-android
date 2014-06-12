@@ -798,7 +798,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		Paint mypaint2;
 		//Paint mypaint2_thresh;
 		Paint mypaint3;
-		Paint mypaint_L2warning;
+		Paint mypaint_warning;
 		Paint mypaint_version;
 
 		private String[] histo_strings_all = new String[256];
@@ -839,7 +839,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 			mypaint3 = new Paint();
 			
-			mypaint_L2warning = new Paint();
+			mypaint_warning = new Paint();
 			mypaint_version = new Paint();
 
 			// This call is necessary, or else the
@@ -872,10 +872,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				mypaint.setColor(android.graphics.Color.RED);
 				mypaint.setTextSize((int) (tsize * 1.5));
 				
-				mypaint_L2warning.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint_L2warning.setColor(android.graphics.Color.YELLOW);
-				mypaint_L2warning.setTextSize((int) (tsize * 1.1));
-				
+				mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
+				mypaint_warning.setColor(android.graphics.Color.YELLOW);
+				mypaint_warning.setTextSize((int) (tsize * 1.1));
+								
 				mypaint_version.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint_version.setColor(android.graphics.Color.MAGENTA);
 				mypaint_version.setTextSize((int) (tsize * 1.1));
@@ -889,19 +889,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				mypaint2.setTextSize(tsize / (float) 10.0);
 				Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
 				mypaint2.setTypeface(tf);
-
-				/* mypaint2_thresh.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint2_thresh.setColor(android.graphics.Color.GREEN);
-				mypaint2_thresh.setTextSize(tsize / (float) 10.0); */
-
-				float deadtime = L1skip / ((float) L1skip + L1proc);
-				float l2deadtime = L2skip / ((float) L2skip + L2proc);
-
-				float l1rate = (L1counter)
-						/ ((float) 1e-3 * (float) (System.currentTimeMillis() - starttime));
-				float l2rate = (L2counter)
-						/ ((float) 1e-3 * (float) (System.currentTimeMillis() - starttime));
-				// canvas.drawText("STATISTICS",250, yoffset+1*tsize, mypaint);
 				
 				long exposed_time = xbManager.getExposureTime();
 				canvas.drawText(
@@ -912,10 +899,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 						mypaint);
 				canvas.drawText("Pixels : " + totalPixels, 200, yoffset + 8 * tsize,
 						mypaint);
-				
-				// canvas.drawText("Loc: "+String.format("%1.2f",currentLocation.getLongitude())+", "+String.format("%1.2f",currentLocation.getLatitude()),
-				// 250,15+5*tsize,mypaint);
-				// canvas.drawText("Data quality good? "+reco.good_quality,250,15+6*tsize,mypaint);
 
 				canvas.drawText("XBs: " + committedXBs, 200, yoffset + 10
 						* tsize, mypaint);
@@ -926,14 +909,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 					canvas.drawText(histo_strings_all[j - 1], 50,
 							(float) (yoffset + (256 - j) * tsize / 10.0),
 							mypaint2);
-
-				/*
-				makeHistogram(reco.h_pixel.values, L1thresh, histo_strings_thresh);
-				for (int j = 256; j > 0; j--)
-					canvas.drawText(histo_strings_thresh[j - 1], 50,
-							(float) (yoffset + (256 - j) * tsize / 10.0),
-							mypaint2_thresh); */
-
+				
 				for (int i = 0; i < 256; i++)
 					if (i % 10 == 0)
 						labels[i] = '|';
@@ -981,27 +957,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
 						* tsize, mypaint);
 				
+				if (! outputThread.canUpload()) {
+					canvas.drawText("Warning! Network unavailable.", 250, yoffset+16 * tsize, mypaint_warning);
+				}
 				
 				if (L2busy > 0) {
 					// print a message indicating that we've been dropping frames
 					// due to L2queue overflow.
-					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_L2warning);
+					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 18 * tsize, mypaint_warning);
 				}
 				
-				canvas.drawText(build_version, 220, yoffset + 24 * tsize, mypaint_version);
-
+				canvas.drawText(build_version, 220, yoffset + 22 * tsize, mypaint_version);
 				
-				// canvas.drawText("Threshold: "+L1thresh,250,15+12*tsize,mypaint);
-
-				// Y axis labels
-
-				// draw grid for debugging
-				/*
-				 * for (int x = -500;x<1500;x+=250) for (int y =
-				 * -500;y<1500;y+=250)
-				 * canvas.drawText("(x="+x+",y="+y+")",(float
-				 * )x,(float)y,mypaint3);
-				 */
 				canvas.save();
 				canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
 						(float) (yoffset + (256 - 50) * tsize / 10.0));
