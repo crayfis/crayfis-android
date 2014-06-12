@@ -56,6 +56,8 @@ message ExposureBlock {
 	optional uint32 L2_skip = 16;
 
 	optional uint32 xbn = 17;
+	
+	optional bool aborted = 18;
 }
 
 message Event {
