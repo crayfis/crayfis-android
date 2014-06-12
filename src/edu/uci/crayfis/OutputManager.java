@@ -1,5 +1,8 @@
 package edu.uci.crayfis;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -13,11 +16,9 @@ import com.google.protobuf.ByteString;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.provider.Settings.Secure;
 import android.util.Log;
 
 public class OutputManager extends Thread {
@@ -145,8 +146,10 @@ public class OutputManager extends Thread {
 		// Loop until a stop is requested. Even after that, don't stop
 		// until we've emptied the queue.
 		while (! (stopRequested && outputQueue.isEmpty())) {
+			// first, check to see if there's any local file(s) to be uploaded:
+			uploadFile();
+			
 			AbstractMessage toWrite = null;
-			boolean interrupted = false;
 			
 			try {
 				toWrite = outputQueue.poll(1, TimeUnit.SECONDS);
@@ -154,7 +157,6 @@ public class OutputManager extends Thread {
 			catch (InterruptedException ex) {
 				// probably somebody trying to kill the thread. go back
 				// to the top, where we'll check stopRequested
-				interrupted = true;
 				continue;
 			}
 			
@@ -215,7 +217,7 @@ public class OutputManager extends Thread {
 		boolean uploaded = false;
 		if ((!useWifiOnly() && isConnected()) || isConnectedWifi()) {
 			// Upload to network:
-			uploaded = directUpload(toWrite);
+			uploaded = directUpload(toWrite, run_id_string);
 		}
 		
 		if (uploaded) {
@@ -226,10 +228,70 @@ public class OutputManager extends Thread {
 		// oops! network is either not available, or there was an
 		// error during the upload.
 		// TODO: write out to a file.
-		Log.w(TAG, "Unable to upload to network! Dropping data.");
+		Log.i(TAG, "Unable to upload to network! Falling back to local storage.");
+		int timestamp = (int) (System.currentTimeMillis()/1e3);
+		String filename = run_id_string + "_" + timestamp + ".bin";
+		//File outfile = new File(context.getFilesDir(), filename);
+		FileOutputStream outputStream;
+		try {
+			outputStream = context.openFileOutput(filename, Context.MODE_PRIVATE);
+			toWrite.writeTo(outputStream);
+			outputStream.close();
+			Log.i(TAG, "Data saved to " + filename);
+		}
+		catch (Exception ex) {
+			Log.e(TAG, "Error saving to file! Dropping data.", ex);
+		}
 	}
 	
-	private boolean directUpload(AbstractMessage toWrite) {
+	// check to see if there is a file, and if so, upload it.
+	private void uploadFile() {
+		if (!isConnected() || (useWifiOnly() && !isConnectedWifi())) {
+			// No network connection available... nothing to do here.
+			return;
+		}
+		
+		File localDir = context.getFilesDir();
+		for (File f : localDir.listFiles()) {
+			String filename = f.getName();
+			if (! filename.endsWith(".bin"))
+				continue;
+			String[] pieces = filename.split("_");
+			if (pieces.length < 2) {
+				Log.w(TAG, "Skipping malformatted filename: " + filename);
+				continue;
+			}
+			String run_id = pieces[0];
+			Log.i(TAG, "Found local file from run: " + run_id);
+
+			DataProtos.DataChunk chunk;
+			try {
+				chunk = DataProtos.DataChunk.parseFrom(new FileInputStream(f));
+			}
+			catch (IOException ex) {
+				Log.e(TAG, "Failed to read local file!", ex);
+				// TODO: should we remove the file?
+				continue;
+			}
+			
+			// okay, lets send the file off to upload:
+			boolean uploaded = directUpload(chunk, run_id);
+			
+			if (uploaded) {
+				// great! the file uploaded successfully.
+				// now we can delete it from the local store.
+				Log.i(TAG, "Successfully uploaded local file: " + filename);
+				f.delete();
+			}
+			else {
+				Log.w(TAG, "Failed to upload file: " + filename);
+			}
+			
+			break; // only try to upload one file at a time.
+		}
+	}
+	
+	private boolean directUpload(AbstractMessage toWrite, String run_id) {
 		// okay, we got an writable object, let's dump it to the server!
 		String upload_url = "http://"+server_address+":"+server_port+upload_uri;
 		
@@ -247,7 +309,7 @@ public class OutputManager extends Thread {
 			c.setRequestProperty("Content-type", "application/octet-stream");
 			c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
 			c.setRequestProperty("Device-id", device_id);
-			c.setRequestProperty("Run-id", run_id_string);
+			c.setRequestProperty("Run-id", run_id);
 			c.setRequestProperty("Crayfis-version", "a " + build_version);
 			c.setRequestProperty("Crayfis-version-code", Integer.toString(build_version_code));
 			if (debug_stream) {
