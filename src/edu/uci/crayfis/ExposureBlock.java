@@ -125,6 +125,8 @@ public class ExposureBlock {
 		
 		buf.setXbn(xbn);
 		
+		buf.setAborted(aborted);
+		
 		// don't output event information for calibration blocks...
 		// they're really huge.
 		if (daq_state != DAQActivity.state.CALIBRATION) {

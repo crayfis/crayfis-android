@@ -201,7 +201,7 @@ public class OutputManager extends Thread {
 		}
 		
 		// before we stop running, make sure we upload any leftovers.
-		if (chunk != null) {
+		if (chunk != null && start_uploading) {
 			Log.i(TAG, "OutputManager is exiting... uploading last data chunk.");
 			outputChunk(chunk.build());
 		}
