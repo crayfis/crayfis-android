@@ -19,3 +19,7 @@ local.properties
 # Mac OS X system files
 .DS_Store
 ._*
+
+# ItelliJ IDEA Community Edition
+.idea/
+*.iml
