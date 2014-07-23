@@ -31,6 +31,7 @@ public class ParticleReco {
 	public class RecoEvent {
 		public long time;
 		public Location location;
+		public float[] orientation;
 		
 		public boolean quality;
 		public float background;
@@ -46,6 +47,9 @@ public class ParticleReco {
 			buf.setTimestamp(time);
 			buf.setGpsLat(location.getLatitude());
 			buf.setGpsLon(location.getLongitude());
+			buf.setOrientX(orientation[0]);
+			buf.setOrientY(orientation[1]);
+			buf.setOrientZ(orientation[2]);
 			
 			buf.setAvg(background);
 			buf.setStd(variance);
@@ -193,6 +197,7 @@ public class ParticleReco {
 		
 		event.time = frame.acq_time;
 		event.location = frame.location;
+		event.orientation = frame.orientation;
 		
 		// first we measure the background and variance, but to save time only do it for every
 		// stepW or stepH-th pixel

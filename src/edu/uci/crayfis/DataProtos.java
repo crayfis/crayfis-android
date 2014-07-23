@@ -4903,6 +4903,36 @@ public final class DataProtos {
      * <code>optional uint32 xbn = 7;</code>
      */
     int getXbn();
+
+    // optional float orient_x = 8;
+    /**
+     * <code>optional float orient_x = 8;</code>
+     */
+    boolean hasOrientX();
+    /**
+     * <code>optional float orient_x = 8;</code>
+     */
+    float getOrientX();
+
+    // optional float orient_y = 9;
+    /**
+     * <code>optional float orient_y = 9;</code>
+     */
+    boolean hasOrientY();
+    /**
+     * <code>optional float orient_y = 9;</code>
+     */
+    float getOrientY();
+
+    // optional float orient_z = 10;
+    /**
+     * <code>optional float orient_z = 10;</code>
+     */
+    boolean hasOrientZ();
+    /**
+     * <code>optional float orient_z = 10;</code>
+     */
+    float getOrientZ();
   }
   /**
    * Protobuf type {@code crayfis.Event}
@@ -4991,6 +5021,21 @@ public final class DataProtos {
             case 56: {
               bitField0_ |= 0x00000020;
               xbn_ = input.readUInt32();
+              break;
+            }
+            case 69: {
+              bitField0_ |= 0x00000040;
+              orientX_ = input.readFloat();
+              break;
+            }
+            case 77: {
+              bitField0_ |= 0x00000080;
+              orientY_ = input.readFloat();
+              break;
+            }
+            case 85: {
+              bitField0_ |= 0x00000100;
+              orientZ_ = input.readFloat();
               break;
             }
           }
@@ -5168,6 +5213,54 @@ public final class DataProtos {
       return xbn_;
     }
 
+    // optional float orient_x = 8;
+    public static final int ORIENT_X_FIELD_NUMBER = 8;
+    private float orientX_;
+    /**
+     * <code>optional float orient_x = 8;</code>
+     */
+    public boolean hasOrientX() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional float orient_x = 8;</code>
+     */
+    public float getOrientX() {
+      return orientX_;
+    }
+
+    // optional float orient_y = 9;
+    public static final int ORIENT_Y_FIELD_NUMBER = 9;
+    private float orientY_;
+    /**
+     * <code>optional float orient_y = 9;</code>
+     */
+    public boolean hasOrientY() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional float orient_y = 9;</code>
+     */
+    public float getOrientY() {
+      return orientY_;
+    }
+
+    // optional float orient_z = 10;
+    public static final int ORIENT_Z_FIELD_NUMBER = 10;
+    private float orientZ_;
+    /**
+     * <code>optional float orient_z = 10;</code>
+     */
+    public boolean hasOrientZ() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional float orient_z = 10;</code>
+     */
+    public float getOrientZ() {
+      return orientZ_;
+    }
+
     private void initFields() {
       timestamp_ = 0L;
       gpsLat_ = 0D;
@@ -5176,6 +5269,9 @@ public final class DataProtos {
       avg_ = 0D;
       std_ = 0D;
       xbn_ = 0;
+      orientX_ = 0F;
+      orientY_ = 0F;
+      orientZ_ = 0F;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -5209,6 +5305,15 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeUInt32(7, xbn_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeFloat(8, orientX_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeFloat(9, orientY_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeFloat(10, orientZ_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -5246,6 +5351,18 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(7, xbn_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeFloatSize(8, orientX_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeFloatSize(9, orientY_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeFloatSize(10, orientZ_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5382,6 +5499,12 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000020);
         xbn_ = 0;
         bitField0_ = (bitField0_ & ~0x00000040);
+        orientX_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00000080);
+        orientY_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00000100);
+        orientZ_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -5443,6 +5566,18 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000020;
         }
         result.xbn_ = xbn_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.orientX_ = orientX_;
+        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.orientY_ = orientY_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.orientZ_ = orientZ_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5502,6 +5637,15 @@ public final class DataProtos {
         }
         if (other.hasXbn()) {
           setXbn(other.getXbn());
+        }
+        if (other.hasOrientX()) {
+          setOrientX(other.getOrientX());
+        }
+        if (other.hasOrientY()) {
+          setOrientY(other.getOrientY());
+        }
+        if (other.hasOrientZ()) {
+          setOrientZ(other.getOrientZ());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -5964,6 +6108,105 @@ public final class DataProtos {
       public Builder clearXbn() {
         bitField0_ = (bitField0_ & ~0x00000040);
         xbn_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // optional float orient_x = 8;
+      private float orientX_ ;
+      /**
+       * <code>optional float orient_x = 8;</code>
+       */
+      public boolean hasOrientX() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional float orient_x = 8;</code>
+       */
+      public float getOrientX() {
+        return orientX_;
+      }
+      /**
+       * <code>optional float orient_x = 8;</code>
+       */
+      public Builder setOrientX(float value) {
+        bitField0_ |= 0x00000080;
+        orientX_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional float orient_x = 8;</code>
+       */
+      public Builder clearOrientX() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        orientX_ = 0F;
+        onChanged();
+        return this;
+      }
+
+      // optional float orient_y = 9;
+      private float orientY_ ;
+      /**
+       * <code>optional float orient_y = 9;</code>
+       */
+      public boolean hasOrientY() {
+        return ((bitField0_ & 0x00000100) == 0x00000100);
+      }
+      /**
+       * <code>optional float orient_y = 9;</code>
+       */
+      public float getOrientY() {
+        return orientY_;
+      }
+      /**
+       * <code>optional float orient_y = 9;</code>
+       */
+      public Builder setOrientY(float value) {
+        bitField0_ |= 0x00000100;
+        orientY_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional float orient_y = 9;</code>
+       */
+      public Builder clearOrientY() {
+        bitField0_ = (bitField0_ & ~0x00000100);
+        orientY_ = 0F;
+        onChanged();
+        return this;
+      }
+
+      // optional float orient_z = 10;
+      private float orientZ_ ;
+      /**
+       * <code>optional float orient_z = 10;</code>
+       */
+      public boolean hasOrientZ() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional float orient_z = 10;</code>
+       */
+      public float getOrientZ() {
+        return orientZ_;
+      }
+      /**
+       * <code>optional float orient_z = 10;</code>
+       */
+      public Builder setOrientZ(float value) {
+        bitField0_ |= 0x00000200;
+        orientZ_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional float orient_z = 10;</code>
+       */
+      public Builder clearOrientZ() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        orientZ_ = 0F;
         onChanged();
         return this;
       }
@@ -8024,17 +8267,19 @@ public final class DataProtos {
       "ss\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001" +
       "(\r\022\017\n\007L2_skip\030\020 \001(\r\022\013\n\003xbn\030\021 \001(\r\022\017\n\007abor" +
       "ted\030\022 \001(\010\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRAT" +
-      "ION\020\001\022\010\n\004DATA\020\002\"\203\001\n\005Event\022\021\n\ttimestamp\030\001",
+      "ION\020\001\022\010\n\004DATA\020\002\"\271\001\n\005Event\022\021\n\ttimestamp\030\001",
       " \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\036" +
       "\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030\005 " +
-      "\001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\"Z\n\005Pixel\022\t" +
-      "\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010nea" +
-      "r_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(" +
-      "\002\"\241\001\n\021CalibrationResult\022\016\n\006run_id\030\001 \001(\004\022" +
-      "\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n" +
-      "\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022" +
-      "\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030" +
-      "\007 \003(\rB\035\n\017edu.uci.crayfisB\nDataProtos"
+      "\001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_" +
+      "x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orient_z\030\n " +
+      "\001(\002\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003va" +
+      "l\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002" +
+      "\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021CalibrationResult\022\016\n" +
+      "\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end" +
+      "_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_" +
+      "l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\r",
+      "hist_numpixel\030\007 \003(\rB\035\n\017edu.uci.crayfisB\n" +
+      "DataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -8064,7 +8309,7 @@ public final class DataProtos {
           internal_static_crayfis_Event_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_crayfis_Event_descriptor,
-              new java.lang.String[] { "Timestamp", "GpsLat", "GpsLon", "Pixels", "Avg", "Std", "Xbn", });
+              new java.lang.String[] { "Timestamp", "GpsLat", "GpsLon", "Pixels", "Avg", "Std", "Xbn", "OrientX", "OrientY", "OrientZ", });
           internal_static_crayfis_Pixel_descriptor =
             getDescriptor().getMessageTypes().get(4);
           internal_static_crayfis_Pixel_fieldAccessorTable = new

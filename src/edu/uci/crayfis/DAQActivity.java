@@ -32,6 +32,10 @@ import android.util.Log;
 import android.graphics.Canvas;
 import android.graphics.Typeface;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.view.SurfaceView;
@@ -65,7 +69,7 @@ import android.provider.Settings.Secure;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends Activity implements Camera.PreviewCallback {
+public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
 
 	public static final String TAG = "DAQActivity";
 
@@ -91,11 +95,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		public final long acq_time;
 		public final ExposureBlock xb;
 		public Location location;
+		public float[] orientation;
 		
-		public RawCameraFrame(byte[] bytes, long t, ExposureBlock xb) {
+		public RawCameraFrame(byte[] bytes, long t, ExposureBlock xb, float[] orient) {
 			this.bytes = bytes;
 			this.acq_time = t;
 			this.xb = xb;
+			this.orientation = orient.clone();
 		}
 	}
 	
@@ -115,6 +121,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 	// to keep track of height/width
 	private Camera.Size previewSize;
+	
+	// sensors
+	SensorManager mSensorManager;
+	private Sensor gravSensor = null;
+	private Sensor accelSensor = null;
+	private Sensor magSensor = null;
+	private float[] gravity = new float[3];
+	private float[] geomagnetic = new float[3];
+	private float[] orientation = new float[3];
 
 	// Android image data used for displaying the results
 	// private Bitmap output;
@@ -446,6 +461,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		getSystemService(Context.POWER_SERVICE); wl =
 		pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
 		
+		// get the grav/accelerometer, if any
+		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+		gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+		accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+		
 		// Generate a UUID to represent this run
 		run_id = UUID.randomUUID();
 		
@@ -556,6 +577,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		super.onResume();
 		
 		wl.acquire();
+		
+		Sensor sens = gravSensor;
+		if (sens == null) {
+			sens = accelSensor;
+		}
+		mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
+		mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 		if (mCamera != null)
 			throw new RuntimeException(
@@ -587,6 +615,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		if (wl.isHeld())
 			wl.release();
+		
+		mSensorManager.unregisterListener(this);
 		
 		Log.i(TAG, "Suspending!");
 
@@ -712,7 +742,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 		
 		if (current_state == DAQActivity.state.CALIBRATION) {
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
-			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb));
+			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
 			
 			if (! queue_accept) {
 				// oops! the queue is full... this frame will be dropped.
@@ -761,7 +791,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb));
+					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
 					
 					if (! queue_accept) {
 						// oops! the queue is full... this frame will be dropped.
@@ -1251,6 +1281,39 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback {
 				}
 			}
 			running = false;
+		}
+	}
+
+
+	@Override
+	public void onAccuracyChanged(Sensor arg0, int arg1) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		if (event.sensor.getType() == gravSensor.getType()) {
+			// get the gravity vector:
+			gravity[0] = event.values[0];
+			gravity[1] = event.values[1];
+			gravity[2] = event.values[2];
+		}
+		if (event.sensor.getType() == magSensor.getType()) {
+			geomagnetic[0] = event.values[0];
+			geomagnetic[1] = event.values[1];
+			geomagnetic[2] = event.values[2];
+		}
+		
+		// now update the orientation vector
+		float[] R = new float[9];
+		boolean succ = SensorManager.getRotationMatrix(R, null, gravity, geomagnetic);
+		if (succ) {
+			SensorManager.getOrientation(R, orientation);
+		} else {
+			orientation[0] = 0;
+			orientation[1] = 0;
+			orientation[2] = 0;
 		}
 	}
 }

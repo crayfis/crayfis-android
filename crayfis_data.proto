@@ -71,6 +71,10 @@ message Event {
 	optional double std = 6;
 
 	optional uint32 xbn = 7;
+
+	optional float orient_x = 8;
+	optional float orient_y = 9;
+	optional float orient_z = 10;
 }
 
 message Pixel {
