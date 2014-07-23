@@ -1,15 +1,22 @@
 package edu.uci.crayfis;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.StringBufferInputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.ByteString;
@@ -41,6 +48,10 @@ public class OutputManager extends Thread {
 	public String server_address;
 	public String server_port;
 	public String upload_uri;
+	
+	// Some interesting stuff from the server response
+	public String current_experiment = null;
+	public String device_nickname = null;
 	
 	public boolean debug_stream;
 	
@@ -333,6 +344,23 @@ public class OutputManager extends Thread {
 			Log.i(TAG, "Connecting to upload server at: " + upload_url);
 			c.connect();
 			serverResponseCode = c.getResponseCode();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+			String line;
+			StringBuilder sb = new StringBuilder();
+			while ((line = reader.readLine()) != null) {
+				sb.append(line + "\n");
+			}
+			
+			JSONObject jObject;
+			try {
+				jObject = new JSONObject(sb.toString());
+				current_experiment = jObject.getString("experiment");
+				device_nickname = jObject.getString("nickname");
+			}
+			catch (JSONException ex) {
+				Log.w(TAG, "Warning: malformed JSON response from server.");
+			}
+			
 			Log.i(TAG, "Connected! Status = " + serverResponseCode);
 			
 			// and now disconnect

@@ -988,17 +988,31 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						* tsize, mypaint);
 				
 				if (! outputThread.canUpload()) {
-					canvas.drawText("Warning! Network unavailable.", 250, yoffset+16 * tsize, mypaint_warning);
+					canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
 				}
 				
 				if (L2busy > 0) {
 					// print a message indicating that we've been dropping frames
 					// due to L2queue overflow.
-					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 18 * tsize, mypaint_warning);
+					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_warning);
 				}
 				
-				canvas.drawText("hw id: "+device_id, 220, yoffset + 20*tsize, mypaint_info);
-				canvas.drawText(build_version, 220, yoffset + 22 * tsize, mypaint_info);
+				String device_msg = "dev: ";
+				if (outputThread.device_nickname != null) {
+					device_msg += outputThread.device_nickname + " (" + device_id + ")";
+				}
+				else {
+					device_msg += device_id;
+				}
+				String run_msg = "run: " + run_id.toString().substring(19);
+
+				canvas.drawText(build_version, 175, yoffset + 18 * tsize, mypaint_info);
+				canvas.drawText(device_msg, 175, yoffset + 19*tsize, mypaint_info);
+				canvas.drawText(run_msg, 175, yoffset+20*tsize, mypaint_info);
+				if (outputThread.current_experiment != null) {
+					String exp_msg = "exp: " + outputThread.current_experiment;
+					canvas.drawText(exp_msg, 175, yoffset+21*tsize, mypaint_info);
+				}
 				
 				canvas.save();
 				canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
