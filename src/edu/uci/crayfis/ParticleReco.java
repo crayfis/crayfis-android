@@ -211,7 +211,7 @@ public class ParticleReco {
 		int height = previewSize.height;
 		
 		int npixels = 0;
-		int npix_hit = 0;
+		int npixels_hit = 0;
 		
 		byte[] bytes = frame.bytes;
 		
@@ -253,13 +253,13 @@ public class ParticleReco {
 			for (int iy = 0; iy < height; iy++) {
 				int val = bytes[ix+width*iy]&0xFF;
 				if (val > 0) {
-					npix_hit++;
+					npixels_hit++;
 				}
 			}
 		}
 				
 		// Find percent hit
-		percent_hit = (float)npix_hit/tot_pix;
+		percent_hit = (float)npixels_hit/tot_pix;
 				
 		// is the data good?
 		// TODO: investigate what makes sense here!
