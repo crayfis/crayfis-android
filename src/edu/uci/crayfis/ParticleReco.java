@@ -228,8 +228,8 @@ public class ParticleReco {
 		}
 		
 		if (npixels > 0) {
-			  background = (float)background/((float)1.0*npixels);
-			}
+			background = (float)background/((float)1.0*npixels);
+		}
 			
 		// calculate variance
 		for (int ix=0;ix < width;ix+= stepW)
@@ -238,9 +238,11 @@ public class ParticleReco {
 					int val = bytes[ix+width*iy]&0xFF; 
 					variance += (val-background)*(val - background);
 				}
-			if (npixels>0)
-			  variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
-				
+		
+		if (npixels>0) {
+			variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
+		}		
+		
 		// Reject an image if too many pixels were hit
 		// Good for security and one more check for image quality
 				
