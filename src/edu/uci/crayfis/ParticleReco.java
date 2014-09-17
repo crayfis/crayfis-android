@@ -263,7 +263,7 @@ public class ParticleReco {
 				
 		// is the data good?
 		// TODO: investigate what makes sense here!
-		good_quality = (background < 30 && variance < 5 && percent_hit < 0.05);
+		good_quality = (background < 30 && variance < 5 && percent_hit < 0.15);
 				
 		Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 				
