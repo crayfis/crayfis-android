@@ -348,6 +348,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			Log.i(TAG, "Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
 			L1thresh = new_thresh;
 			
+			//If we don't want a threshHold...
+			L1thresh = 0;
+			
 			// FIXME: we should have a better calibration for L2 threshold.
 			// For now, we choose it to be just below L1thresh.
 			if (L1thresh > 2) {
@@ -537,6 +540,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				.getDefaultSharedPreferences(context);
 		L1thresh = Integer
 				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
+		
+		//If we don't want a threshHold...
+		L1thresh = 0;
 		
 		xbManager = new ExposureBlockManager();
 		
