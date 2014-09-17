@@ -233,11 +233,10 @@ public class ParticleReco {
 			
 		// calculate variance
 		for (int ix=0;ix < width;ix+= stepW)
-			for (int iy=0;iy<height;iy+=stepH)
-				{
-					int val = bytes[ix+width*iy]&0xFF; 
-					variance += (val-background)*(val - background);
-				}
+			for (int iy=0;iy<height;iy+=stepH) {
+				int val = bytes[ix+width*iy]&0xFF; 
+				variance += (val-background)*(val - background);
+			}
 		
 		if (npixels>0) {
 			variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
