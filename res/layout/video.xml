@@ -11,32 +11,50 @@
         android:background="#FFFFFF"
         android:layout_height="80dp"
         android:src="@drawable/crayfish" />
- 
+ 	
  	<Button
         android:id="@+id/button_registerv"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
         android:onClick="clickedRegister"
-        android:text="Registration/Settings" />    
-     <Button
-        android:id="@+id/button_about"
+        
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+		android:layout_marginTop="7dip"
+        android:background="@drawable/buttonshape" 
+        
+        android:text="Registration/Settings"
+        android:textSize="18sp"        
+        android:textColor="#242424" />  
+          
+	<Button
+        android:id="@+id/button_about"
         android:onClick="clickedAbout"
-        android:text="About" />   
-    
+        
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+ 	    android:layout_marginTop="7dip"
+        android:background="@drawable/buttonshape"
+        
+        android:text="About"
+        android:textSize="18sp"
+        android:textColor="#242424" />    
+
     <FrameLayout
 			android:id="@+id/camera_preview"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
 			android:layout_weight="1" />
       
-   <Button
+   	<Button
         android:id="@+id/button_close"
+        android:onClick="clickedClose"
+        
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:onClick="clickedClose"
-        android:text="C L O S E" /> 
+        android:layout_marginBottom="7dip"
+        android:background="@drawable/buttonshape"
+        
+        android:text="CLOSE"
+        android:textSize="22sp" /> 
  
     
 </LinearLayout>
