@@ -41,6 +41,7 @@ import android.os.PowerManager;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -60,7 +61,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 
@@ -227,9 +230,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	Context context;
 
-	public void clickedRegister(View view) {
+	public void clickedSettings(View view) {
 
-		Intent i = new Intent(this, UserRegisterActivity.class);
+		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
 	
@@ -484,7 +487,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.video);
-
+		
 		// Used to visualize the results
 		mDraw = new Visualization(this);
 

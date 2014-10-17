@@ -36,7 +36,6 @@
 		</receiver>
 		<activity android:name="edu.uci.crayfis.DAQActivity" android:screenOrientation="portrait"/>
 		<activity android:name="edu.uci.crayfis.UserSettingActivity" android:screenOrientation="portrait"/>
-		<activity android:name="edu.uci.crayfis.UserRegisterActivity" android:screenOrientation="portrait"/>
 		
 	</application>
 </manifest>

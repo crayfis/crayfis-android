@@ -206,10 +206,13 @@ public class ParticleReco {
 		float background = 0;
 		float variance = 0;
 		
+		float percent_hit = 0;
+		
 		int width = previewSize.width;
 		int height = previewSize.height;
 		
 		int npixels = 0;
+		int npixels_hit = 0;
 		
 		byte[] bytes = frame.bytes;
 		
@@ -238,11 +241,30 @@ public class ParticleReco {
 		if (npixels>0)
 		  variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
 		
+		// Reject an image if too many pixels were hit
+		// Good for security and one more check for image quality
+				
+		// Get total number of pixels of frame
+		float tot_pix = (float)width*(float)height;
+				
+		// Find the number of pixels hit in frame
+		for (int ix = 0; ix < width; ix++) {
+			for (int iy = 0; iy < height; iy++) {
+				int val = bytes[ix+width*iy]&0xFF;
+				if (val > 0) {
+					npixels_hit++;
+				}
+			}
+		}
+				
+		// Find percent hit
+		percent_hit = (float)npixels_hit/tot_pix;
+		
 		// is the data good?
 		// TODO: investigate what makes sense here!
-		good_quality = (background < 30 && variance < 5);
-		
-		Log.d("reco","background = "+background+" var = "+variance+" qual = "+good_quality);
+		good_quality = (background < 30 && variance < 5 && percent_hit < 0.15);
+				
+		Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 		
 		event.background = background;
 		event.variance = variance;
