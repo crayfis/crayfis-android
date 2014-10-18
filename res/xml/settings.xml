@@ -1,67 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-     <PreferenceCategory 
-         android:title="User Information">
- 
-	     <EditTextPreference
-	                android:title="Name"
-	                android:summary="Your Name"
-	                android:defaultValue="Citizen Scientist"
-	                android:key="prefUserName"/>
-	     <EditTextPreference
-		     		android:title="Email"
-		     		android:summary="Your email address"
-		    		android:defaultValue="we@love.you"
-		    		android:key="prefUserEmail"/>
-	     <EditTextPreference
-	         		android:title="User ID"
-	         		android:summary="Your CRAYFIS user ID"
-	         		android:key="prefUserID" />
-     </PreferenceCategory>
-         
-     <PreferenceCategory
-         android:title="Run Settings" >
-	     
-	     <CheckBoxPreference
-	            android:defaultValue="false"
-	            android:key="prefAnon"
-	            android:summary="Be anonymous"
-	            android:title="Privacy" >
-	     </CheckBoxPreference>
+    
+<CheckBoxPreference
+            android:defaultValue="true"
+            android:key="prefUploadData"
+            android:summary="Upload data?"
+            android:title="data upload" >
+        </CheckBoxPreference>
+    
+<CheckBoxPreference
+            android:defaultValue="true"
+            android:key="prefDoReco"
+            android:summary="@string/pref_do_reco"
+            android:title="@string/pref_do_reco" >
+        </CheckBoxPreference>
+        
+<ListPreference
+            android:key="prefThreshold"
+            android:defaultValue="5"
+            android:entries="@array/pref_threshold"
+            android:summary="@string/pref_threshold"
+            android:entryValues="@array/pref_threshold"
+            android:title="@string/pref_threshold" />
 
-	     <CheckBoxPreference
-	         	android:defaultValue="true"
-	         	android:key="prefWifiOnly"
-	         	android:summary="Only use Wifi to upload data"
-	         	android:title="Wifi only" >
-	     </CheckBoxPreference>
-	     
-	     <ListPreference
-	            android:key="prefStartWait"
-	            android:defaultValue="0"
-	            android:entries="@array/pref_startwait"
-	            android:summary="Seconds to wait before launch, after you plug in phone"
-	            android:entryValues="@array/pref_startwait"
-	            android:title="@string/pref_startwait" />
-	     <ListPreference
-	            android:key="prefStartAfter"
-	            android:defaultValue="20"
-	            android:entries="@array/pref_starttimes"
-	            android:summary="The app will not autostart before this time."
-	            android:entryValues="@array/pref_starttimes"
-	            android:title="@string/pref_startafter" />
-	     <ListPreference
-	            android:key="prefStartBefore"
-	            android:defaultValue="8"
-	            android:entries="@array/pref_starttimes"
-	            android:summary="The app will not autostart after this time."
-	            android:entryValues="@array/pref_starttimes"
-	            android:title="@string/pref_startbefore" />
-	     <CheckBoxPreference
-	            android:defaultValue="true"
-	            android:key="prefNoAutoStart"
-	            android:summary="Do not autostart"
-	            android:title="Click to prevent autostart" >
-	     </CheckBoxPreference>
-     </PreferenceCategory>
+  <EditTextPreference
+                android:title="Runname"
+                android:summary="Run Name"
+                android:defaultValue="default"
+                android:key="prefRunName"/>
+
 </PreferenceScreen>
