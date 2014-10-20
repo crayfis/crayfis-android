@@ -23,20 +23,29 @@ import com.google.protobuf.ByteString;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-public class OutputManager extends Thread {
+public class OutputManager extends Thread implements OnSharedPreferenceChangeListener {
 	public static final String TAG = "OutputManager";
 	
 	public static final int connect_timeout = 2 * 1000; // ms
 	public static final int read_timeout = 5 * 1000; // ms
 	
 	// maximum time and size to allow between upload attempts.
-	public static final int max_upload_interval = 180 * 1000; // ms
-	public static final int max_chunk_size = 250000; // bytes
+	public static final int default_max_upload_interval = 180; // s
+	public int max_upload_interval;
+		
+	public static final int default_max_chunk_size = 250000; // bytes
+	public int max_chunk_size; // bytes
+	
+	public static final int default_min_cache_upload_interval = 30; //s
+	public int min_cache_upload_interval;
+	
+	private long last_cache_upload = 0;
 	
 	// true if a request has been made to stop the thread
 	volatile boolean stopRequested = false;
@@ -61,10 +70,11 @@ public class OutputManager extends Thread {
 	public int build_version_code;
 	
 	private boolean start_uploading = false;
+	public boolean permit_upload = true;
 	
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
 
-	Context context;
+	DAQActivity context;
 	
 	public OutputManager(DAQActivity context) {
 		this.context = context;
@@ -80,6 +90,23 @@ public class OutputManager extends Thread {
 		device_id = context.device_id;
 		
 		run_id_string = context.run_id.toString();
+		
+		context.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(this);
+		updateSettings();
+	}
+	
+	public void updateSettings() {
+		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
+		max_upload_interval = localPrefs.getInt("max_upload_interval", default_max_upload_interval);
+		max_chunk_size = localPrefs.getInt("max_chunk_size", default_max_chunk_size);
+		min_cache_upload_interval = localPrefs.getInt("min_cache_upload_interval", default_min_cache_upload_interval);
+	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences prefs,
+			String key) {
+		updateSettings();
+		
 	}
 	
 	public boolean useWifiOnly() {
@@ -106,7 +133,7 @@ public class OutputManager extends Thread {
 	}
 	
 	public boolean canUpload() {
-		return ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
+		return permit_upload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
 	}
 	
 	public boolean commitExposureBlock(ExposureBlock xb) {
@@ -162,7 +189,9 @@ public class OutputManager extends Thread {
 		// until we've emptied the queue.
 		while (! (stopRequested && outputQueue.isEmpty())) {
 			// first, check to see if there's any local file(s) to be uploaded:
-			uploadFile();
+			if (canUpload() && ((System.currentTimeMillis() - last_cache_upload) > min_cache_upload_interval)) {
+				uploadFile();
+			}
 			
 			AbstractMessage toWrite = null;
 			
@@ -195,7 +224,7 @@ public class OutputManager extends Thread {
 				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
 			}
 			
-			chunkSize = toWrite.getSerializedSize();
+			chunkSize += toWrite.getSerializedSize();
 			
 			// if we haven't gotten anything interesting to upload yet
 			// (i.e. an exposure block or calibration histo), then don't upload
@@ -205,8 +234,8 @@ public class OutputManager extends Thread {
 				continue;
 			}
 			
-			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval) {
-				// time to upload!
+			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval*1e3) {
+				// time to upload! (or commit to file if that fails)
 				outputChunk(chunk.build());
 				chunk = null;
 				chunkSize = 0;
@@ -260,14 +289,17 @@ public class OutputManager extends Thread {
 	}
 	
 	// check to see if there is a file, and if so, upload it.
-	private void uploadFile() {
-		if (!canUpload()) {
-			// No network connection available... nothing to do here.
-			return;
-		}
+	// return the number of files uploaded (currently fixed to 1 max)
+	private int uploadFile() {
 		
 		File localDir = context.getFilesDir();
+		int n_uploaded = 0;
 		for (File f : localDir.listFiles()) {
+			if (!canUpload()) {
+				// No network connection available... nothing to do here.
+				return n_uploaded;
+			}
+			
 			String filename = f.getName();
 			if (! filename.endsWith(".bin"))
 				continue;
@@ -297,6 +329,8 @@ public class OutputManager extends Thread {
 				// now we can delete it from the local store.
 				Log.i(TAG, "Successfully uploaded local file: " + filename);
 				f.delete();
+				n_uploaded += 1;
+				last_cache_upload = System.currentTimeMillis();
 			}
 			else {
 				Log.w(TAG, "Failed to upload file: " + filename);
@@ -304,6 +338,7 @@ public class OutputManager extends Thread {
 			
 			break; // only try to upload one file at a time.
 		}
+		return n_uploaded;
 	}
 	
 	private boolean directUpload(AbstractMessage toWrite, String run_id) {
@@ -344,6 +379,13 @@ public class OutputManager extends Thread {
 			Log.i(TAG, "Connecting to upload server at: " + upload_url);
 			c.connect();
 			serverResponseCode = c.getResponseCode();
+			if (serverResponseCode == 403) {
+				// server rejected us! so we are not allowed to upload.
+				// oh well! we can still take data at least.
+				
+				permit_upload = false;
+				return false;
+			}
 			BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
 			String line;
 			StringBuilder sb = new StringBuilder();
@@ -354,8 +396,16 @@ public class OutputManager extends Thread {
 			JSONObject jObject;
 			try {
 				jObject = new JSONObject(sb.toString());
-				current_experiment = jObject.getString("experiment");
-				device_nickname = jObject.getString("nickname");
+				context.updateSettings(jObject);
+				
+				if (jObject.has("experiment")) {
+					current_experiment = jObject.getString("experiment");
+				}
+				if (jObject.has("nickname")) {
+					device_nickname = jObject.getString("nickname");
+				}
+				
+				
 			}
 			catch (JSONException ex) {
 				Log.w(TAG, "Warning: malformed JSON response from server.");

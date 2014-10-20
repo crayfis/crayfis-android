@@ -7,25 +7,55 @@ package edu.uci.crayfis;
  */
 
 import android.location.Location;
-
 import android.util.Log;
 
 import java.util.ArrayList;
 
 import edu.uci.crayfis.DAQActivity.RawCameraFrame;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera;
 
-public class ParticleReco {
+public class ParticleReco implements OnSharedPreferenceChangeListener{
 	public boolean good_quality;
 	
 	public long time;
 	public Location location;
 	
-	public ParticleReco(Camera.Size previewSize)
+	public static float default_bg_avg_cut = 30;
+	public static float default_bg_var_cut = 5;
+	public static float default_max_pix_frac = (float)0.15;
+	
+	private float bg_avg_cut;
+	private float bg_var_cut;
+	private float max_pix_frac;
+	
+	private DAQActivity context;
+	
+	public ParticleReco(Camera.Size previewSize, DAQActivity context)
 	{
 		this.previewSize = previewSize;
 		good_quality=false;
 		clearHistograms();
+		
+		this.context = context;
+		
+		context.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(this);
+		updateSettings();
+	}
+	
+	public void updateSettings() {
+		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
+		bg_avg_cut = localPrefs.getFloat("qual_bg_avg", default_bg_avg_cut);
+		bg_var_cut = localPrefs.getFloat("qual_bg_var", default_bg_var_cut);
+		max_pix_frac = localPrefs.getFloat("qual_pix_frac", default_max_pix_frac);
+	}
+	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+		// someone changed the settings. update the local variables.
+		updateSettings();
 	}
 	
 	public class RecoEvent {
@@ -262,9 +292,9 @@ public class ParticleReco {
 		
 		// is the data good?
 		// TODO: investigate what makes sense here!
-		good_quality = (background < 30 && variance < 5 && percent_hit < 0.15);
+		good_quality = (background < bg_avg_cut && variance < bg_var_cut && percent_hit < max_pix_frac);
 				
-		Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+		//Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 		
 		event.background = background;
 		event.variance = variance;

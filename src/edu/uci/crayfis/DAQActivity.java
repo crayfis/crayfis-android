@@ -52,6 +52,9 @@ import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.uci.crayfis.ParticleReco.RecoEvent;
 import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.R;
@@ -60,6 +63,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
@@ -69,7 +73,7 @@ import android.provider.Settings.Secure;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
+public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener, OnSharedPreferenceChangeListener {
 
 	public static final String TAG = "DAQActivity";
 
@@ -174,13 +178,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	
 	// how many frames to sample during calibration
 	// (more frames is longer but gives better statistics)
-	private int calibration_sample_frames = 1000;
+	public final int default_calibration_sample_frames = 1000;
+	private int calibration_sample_frames;
+	
 	// targeted max. number of events per minute to allow
 	// (lower rate => higher threshold)
-	private float max_events_per_minute = 50;
+	public final float default_target_events_per_minute = 60;
+	private float target_events_per_minute = default_target_events_per_minute;
 	
 	// the nominal period for an exposure block (in seconds)
-	public static final long xb_period = 2 * 60;
+	public static final int default_xb_period = 2*60;
+	private int xb_period = default_xb_period;
 	
 	// number of frames to pass during stabilization periods.
 	public static final int stabilization_sample_frames = 45;
@@ -251,7 +259,96 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	}
 	
-	
+ 	public void updateSettings(JSONObject json) {
+ 		if (json == null) {
+ 			return;
+ 		}
+		SharedPreferences localPrefs = getPreferences(Context.MODE_PRIVATE);
+		SharedPreferences.Editor editor = localPrefs.edit();
+		boolean restart_xb = false;
+ 		try {
+ 			if (json.has("set_L1_thresh")) {
+ 				editor.putInt("L1_thresh", json.getInt("set_L1_thresh"));
+ 				Log.i(TAG, "GOT L1 from SERVER" + json.getInt("set_L1_thresh"));
+ 				restart_xb = true;
+ 			}
+ 			if (json.has("set_L2_thresh")) {
+ 				editor.putInt("L2_thresh", json.getInt("set_L2_thresh"));
+ 				restart_xb = true;
+ 			}
+ 			if (json.has("set_target_L2_rate")) {
+ 				editor.putFloat("target_events_per_minute", (float)json.getDouble("set_target_L2_rate"));
+ 			}
+ 			if (json.has("set_calib_len")) {
+ 				editor.putInt("calibration_sample_frames", json.getInt("set_calib_len"));
+ 			}
+ 			if (json.has("set_xb_period")) {
+ 				editor.putInt("xb_period", json.getInt("set_xb_period"));
+ 			}
+ 			if (json.has("set_max_upload_interval")) {
+ 				editor.putInt("max_upload_interval", json.getInt("set_max_upload_interval"));
+ 			}
+ 			if (json.has("set_upload_size_max")) {
+ 				editor.putInt("max_chunk_size", json.getInt("set_upload_size_max"));
+ 			}
+ 			if (json.has("set_cache_upload_interval")) {
+ 				editor.putInt("min_cache_upload_interval", json.getInt("set_cache_upload_interval"));
+ 			}
+ 			if (json.has("set_qual_pix_frac")) {
+ 				editor.putFloat("qual_pix_frac", (float)json.getDouble("set_qual_pix_frac"));
+ 				restart_xb = true;
+ 			}
+ 			if (json.has("set_qual_bg_avg")) {
+ 				editor.putFloat("qual_bg_avg", (float)json.getDouble("set_qual_bg_avg"));
+ 				restart_xb = true;
+ 			}
+ 			if (json.has("set_qual_bg_var")) {
+ 				editor.putFloat("qual_bg_var", (float)json.getDouble("set_qual_bg_var"));
+ 				restart_xb = true;
+ 			}
+ 		} catch (JSONException ex) {
+ 			Log.e(TAG, "Malformed JSON from server!");
+ 			return;
+ 		}
+ 		// save the changes.
+ 		editor.apply();
+ 		
+ 		// restart the XB if we changed some setting that should invalidate it:
+ 		if (restart_xb) {
+ 			xbManager.newExposureBlock();
+ 		}
+ 		
+ 		// finally, if the server commanded us to enter calibration mode, do so now.
+ 		if (json.has("cmd_recalibrate")) {
+ 			Log.i(TAG, "SERVER commands us to recalibrate.");
+ 			toStabilizationMode();
+ 		}
+	}
+ 	
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
+		Log.i(TAG, "UPDATED SHARED PREF: " + key);
+		if (key == "L1_thresh") {
+			L1thresh = prefs.getInt(key, 0);
+		} else if (key == "L2_thresh") {
+			L2thresh = prefs.getInt(key, 0);
+		}
+		
+		// make sure we didn't set the threshold(s) to zero... otherwise something weird is happening
+		if (L1thresh == 0 || L2thresh == 0) {
+			// okay i have no idea how we got here, but let's force recalibration.
+			toStabilizationMode();
+		}
+		
+		if (key == "target_events_per_minute") {
+			target_events_per_minute = prefs.getFloat(key, default_target_events_per_minute);
+		} else if (key == "calibration_sample_frames") {
+			calibration_sample_frames = prefs.getInt(key, default_calibration_sample_frames);
+		} else if (key == "xb_period") {
+			xb_period = prefs.getInt(key, default_xb_period);
+		}
+	}
+ 	
 	public void clickedAbout(View view) {
 
 		final SpannableString s = new SpannableString(
@@ -320,7 +417,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			int new_thresh;
 			long calibration_time = calibration_stop - calibration_start;
-			int target_events = (int) (max_events_per_minute * calibration_time* 1e-3 / 60.0);
+			int target_events = (int) (target_events_per_minute * calibration_time* 1e-3 / 60.0);
 						
 			Log.i("Calibration", "Processed " + reco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
 						
@@ -471,6 +568,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		run_id = UUID.randomUUID();
 		
 		device_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
+		
+		// load up the server-adjustable preferences from last time
+		SharedPreferences localPrefs = getPreferences(Context.MODE_PRIVATE);
+		calibration_sample_frames = localPrefs.getInt("calibration_sample_frames", default_calibration_sample_frames);
+		target_events_per_minute = localPrefs.getFloat("target_events_per_minute", default_target_events_per_minute);
+		xb_period = localPrefs.getInt("xb_period", default_xb_period);
+		
+		localPrefs.registerOnSharedPreferenceChangeListener(this);
+		/*
+		// clear saved settings (for debug purposes)
+		SharedPreferences.Editor editor = localPrefs.edit();
+		editor.clear();
+		editor.commit();
+		*/
+		
 		build_version = "unknown";
 		build_version_code = 0;
 		try {
@@ -535,6 +647,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 		SharedPreferences sharedPrefs = PreferenceManager
 				.getDefaultSharedPreferences(context);
+		
 		L1thresh = Integer
 				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
 		
@@ -598,7 +711,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		if (reco == null) {
 			// if we don't already have a particleReco object setup,
 			// do that now that we know the camera size.
-			reco = new ParticleReco(previewSize);
+			reco = new ParticleReco(previewSize, this);
 		}
 		
 		// once all the hardware is set up and the output manager is running,
@@ -988,7 +1101,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						* tsize, mypaint);
 				
 				if (! outputThread.canUpload()) {
-					canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
+					if (outputThread.permit_upload) {
+						canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
+					} else {
+						canvas.drawText("Server is overloaded!", 240, yoffset+15 * tsize, mypaint_warning);
+						canvas.drawText("Saving data locally.", 240, yoffset+16 * tsize, mypaint_warning);
+					}
 				}
 				
 				if (L2busy > 0) {
@@ -1330,4 +1448,5 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			orientation[2] = 0;
 		}
 	}
+	
 }
