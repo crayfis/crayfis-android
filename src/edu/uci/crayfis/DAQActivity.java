@@ -227,9 +227,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	Context context;
 
-	public void clickedRegister(View view) {
+	public void clickedSettings(View view) {
 
-		Intent i = new Intent(this, UserRegisterActivity.class);
+		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
 	

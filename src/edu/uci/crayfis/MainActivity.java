@@ -38,7 +38,10 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 
@@ -49,10 +52,8 @@ import android.widget.TextView;
  */
 public class MainActivity extends Activity  {
 	
-	private static final int RESULT_SETTINGS = 1;
-	private static final int RESULT_REGISTER = 2;
-	
 	public String build_version = null;
+	public String userID = null;
 
 	
 	public void onRestart()
@@ -69,81 +70,60 @@ public class MainActivity extends Activity  {
 		catch (NameNotFoundException ex) {
 			Log.w("MainActivity", "Could not find build version!");
 		}
-		
-		// start in calibration mode each time
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		Editor editor = settings.edit();
-		editor.putString("prefThreshold", "-1");
-		editor.commit();
-				
-		
-		// now start running
-		Intent intent = new Intent(this, DAQActivity.class);
-		startActivity(intent);
-		
-		// now quit
-		MainActivity.this.finish();
-	}
 
-	public void clickedVideo( View view ) {
-		Intent intent = new Intent(this, DAQActivity.class);
-		startActivity(intent);
-	}
+		//Pull the existing shared preferences and set editor
+		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+		final Editor editor = sharedprefs.edit();
+		//Check if userID already inputted, and if not, go to sign in page
+		String ID = sharedprefs.getString("prefUserID", "");
+		if (ID == "") {
+			
+			setContentView(R.layout.main);
+			
+			final Button button = (Button)findViewById(R.id.sign_in);
+			final EditText input = (EditText)findViewById(R.id.userIDlogin);
+			
+			button.setOnClickListener(new View.OnClickListener() {
+				@Override
+				public void onClick (View view) {
+					//Store the userID
+					userID = input.getText().toString();
+					Log.d("User ID", userID);
+					
+					
+					//Check that they input something
+					if (!("".equals(userID))) {
+						//Commit the ID to sharedprefs..
+						editor.putString("prefUserID", userID);
+						editor.commit();
+						
+						// now start running
+						Intent intent = new Intent(MainActivity.this, DAQActivity.class);
+						startActivity(intent);
 	
-	
- 
-    public void clickedSettings(View view) {
-
-            Intent i = new Intent(this, UserSettingActivity.class);
-            startActivityForResult(i, RESULT_SETTINGS); 
-    }
- 
-    public void clickedRegister(View view) {
-
-        Intent i = new Intent(this, UserRegisterActivity.class);
-        startActivityForResult(i, RESULT_REGISTER); 
-}
- 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
- 
-        switch (requestCode) {
-        case RESULT_SETTINGS:
-            showUserSettings();
-            break;       
-        case RESULT_REGISTER:
-        	showUserSettings();
-        	break;
-
-    } 
-    }
+						// now quit
+						MainActivity.this.finish();
+					}
+					else {
+						String text = "Please enter an user ID!";
+						int duration = Toast.LENGTH_LONG;
+						
+						Toast toast = Toast.makeText(getApplicationContext(),  text,  duration);
+						toast.show();
+					}
+				}
+			});
+		}
+		
+		//See if we already have user ID saved
+		//Because then no need to login again
+		if(ID != "") {
+			// If user ID already inputted, just start running
+			Intent intent = new Intent(MainActivity.this, DAQActivity.class);
+			startActivity(intent);
+			//and quit
+			MainActivity.this.finish();
+		}
+	}
     
-	 private void showUserSettings() {
-	        SharedPreferences sharedPrefs = PreferenceManager
-	                .getDefaultSharedPreferences(this);
-	 
-	        StringBuilder builder = new StringBuilder();
-	 
-	        builder.append("\n Upload data? "
-	                + sharedPrefs.getBoolean("prefUploadData", false));
-	        builder.append("\n Do Reco? "
-	                + sharedPrefs.getBoolean("prefDoReco", false));
-	        builder.append("\n Threshold: "
-	                + sharedPrefs.getString("prefThreshold", "NULL"));
-	        builder.append("\n Run Name: "+ sharedPrefs.getString("prefRunName","NULL"));
-	        
-	        builder.append("\n Your Name: "+ sharedPrefs.getString("prefUserName","NULL"));
-	        builder.append("\n Your email: "+ sharedPrefs.getString("prefUserEmail","NULL"));
-	        builder.append("\n Anonymous?: "
-	                + sharedPrefs.getBoolean("prefAnon", false));
-	        builder.append("\n Build version: " + build_version);
-	        TextView settingsTextView = (TextView) findViewById(R.id.text_settings);
-	
-	       
-	        settingsTextView.setTextSize(15);
-	       
-	        settingsTextView.setText(builder.toString());
-	    }
-	 
 }

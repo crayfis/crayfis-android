@@ -14,7 +14,7 @@
  	
  	<Button
         android:id="@+id/button_registerv"
-        android:onClick="clickedRegister"
+        android:onClick="clickedSettings"
         
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

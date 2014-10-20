@@ -10,5 +10,7 @@
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	
+	<string name="userIDlogin">Please enter your user ID.\nYou will not be able to upload data to the server 
+	    without a valid user ID. If you need to register, go to crayfis.ps.uci.edu to sign up!</string>
+	    
 </resources>
