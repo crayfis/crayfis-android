@@ -1104,7 +1104,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					if (outputThread.permit_upload) {
 						canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
 					} else {
-						canvas.drawText("Server is overloaded!", 240, yoffset+15 * tsize, mypaint_warning);
+						String reason;
+						if (outputThread.valid_id){
+							reason="Server is overloaded.";
+						} else {
+							reason="Invalid invite code.";
+						}
+						canvas.drawText(reason, 240, yoffset+15 * tsize, mypaint_warning);
 						canvas.drawText("Saving data locally.", 240, yoffset+16 * tsize, mypaint_warning);
 					}
 				}

@@ -77,8 +77,13 @@ public class MainActivity extends Activity  {
 		//Check if userID already inputted, and if not, go to sign in page
 		String ID = sharedprefs.getString("prefUserID", "");
 		boolean badID = sharedprefs.getBoolean("badID", false);
+		boolean firstRun = sharedprefs.getBoolean("firstRun", true);
+		if (firstRun) {
+			editor.putBoolean("firstRun", false);
+			editor.apply();
+		}
 
-		if ((ID == "") || badID) {
+		if (firstRun) {
 			
 			setContentView(R.layout.main);
 			
@@ -135,10 +140,10 @@ public class MainActivity extends Activity  {
 				}
 			});
 		}
-		
+		else {
 		//See if we already have user ID saved
 		//Because then no need to login again
-		if((ID != "") && !badID) {
+		//if((ID != "") && !badID) {
 			// If user ID already inputted, just start running
 			Intent intent = new Intent(MainActivity.this, DAQActivity.class);
 			startActivity(intent);

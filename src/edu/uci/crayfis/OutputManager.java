@@ -74,6 +74,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	
 	private boolean start_uploading = false;
 	public boolean permit_upload = true;
+	public boolean valid_id = true;
 	
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
 
@@ -410,6 +411,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 					editor.putBoolean("badID", true);
 					editor.apply();
 					Log.w(TAG, "setting bad ID flag!");
+					valid_id = false;
 				}
 				return false;
 			}
@@ -450,6 +452,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 				SharedPreferences.Editor editor = sharedprefs.edit();
 				editor.putBoolean("badID", true);
 				editor.apply();
+				valid_id = true;
 			}
 		}
 		catch (MalformedURLException ex) {
