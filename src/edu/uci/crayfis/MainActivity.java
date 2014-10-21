@@ -76,7 +76,8 @@ public class MainActivity extends Activity  {
 		final Editor editor = sharedprefs.edit();
 		//Check if userID already inputted, and if not, go to sign in page
 		String ID = sharedprefs.getString("prefUserID", "");
-		if (ID == "") {
+		boolean badID = sharedprefs.getBoolean("badID", false);
+		if (ID == "" || badID) {
 			
 			setContentView(R.layout.main);
 			

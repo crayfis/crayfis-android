@@ -351,6 +351,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 		
 		int serverResponseCode = 0;
 		
+		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 		boolean success = false;
 		try {
 			URL u = new URL(upload_url);
@@ -362,6 +363,12 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			c.setRequestProperty("Run-id", run_id);
 			c.setRequestProperty("Crayfis-version", "a " + build_version);
 			c.setRequestProperty("Crayfis-version-code", Integer.toString(build_version_code));
+			
+			String app_code = sharedprefs.getString("prefUserID", "");
+			if (app_code != "") {
+				c.setRequestProperty("App-code", app_code);
+			}
+			
 			if (debug_stream) {
 				c.setRequestProperty("Debug-stream", "yes");
 			}
@@ -379,11 +386,20 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			Log.i(TAG, "Connecting to upload server at: " + upload_url);
 			c.connect();
 			serverResponseCode = c.getResponseCode();
-			if (serverResponseCode == 403) {
+			if (serverResponseCode == 403 || serverResponseCode == 401) {
 				// server rejected us! so we are not allowed to upload.
 				// oh well! we can still take data at least.
 				
 				permit_upload = false;
+				
+				if (serverResponseCode == 401) {
+					// server rejected us because our app code is invalid.
+					Log.w("ww2", "foo ctx" + context.getApplicationContext());
+					SharedPreferences.Editor editor = sharedprefs.edit();
+					editor.putBoolean("badID", true);
+					editor.apply();
+					Log.w(TAG, "setting bad ID flag!");
+				}
 				return false;
 			}
 			BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -419,6 +435,10 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			if (serverResponseCode == 202 || serverResponseCode == 200) {
 				// looks like everything went okay!
 				success = true;
+				// make sure we clear the badID flag.
+				SharedPreferences.Editor editor = sharedprefs.edit();
+				editor.putBoolean("badID", true);
+				editor.apply();
 			}
 		}
 		catch (MalformedURLException ex) {
