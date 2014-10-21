@@ -57,6 +57,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	public String server_address;
 	public String server_port;
 	public String upload_uri;
+	public boolean force_https;
 	
 	// Some interesting stuff from the server response
 	public String current_experiment = null;
@@ -68,6 +69,8 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	public String run_id_string;
 	public String build_version;
 	public int build_version_code;
+	
+	public String upload_url;
 	
 	private boolean start_uploading = false;
 	public boolean permit_upload = true;
@@ -82,9 +85,18 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 		server_address = context.getString(R.string.server_address);
 		server_port = context.getString(R.string.server_port);
 		upload_uri = context.getString(R.string.upload_uri);
+		force_https = (context.getString(R.string.force_https) != "false");
+		
+		String upload_proto;
+		if (force_https) {
+			upload_proto = "https://";
+		} else {
+			upload_proto = "http://";
+		}
+		upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 		
 		debug_stream = context.getResources().getBoolean(R.bool.debug_stream);
-				
+		
 		build_version = context.build_version;
 		build_version_code = context.build_version_code;
 		device_id = context.device_id;
@@ -342,8 +354,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	}
 	
 	private boolean directUpload(AbstractMessage toWrite, String run_id) {
-		// okay, we got an writable object, let's dump it to the server!
-		String upload_url = "http://"+server_address+":"+server_port+upload_uri;
+		// okay, we got a writable object, let's dump it to the server!
 		
 		ByteString raw_data = toWrite.toByteString();
 		
