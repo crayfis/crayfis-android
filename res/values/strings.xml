@@ -12,5 +12,7 @@
 	<string name="pref_startbefore">Only runs before this time</string>
 	<string name="userIDlogin">Please enter your user ID.\nYou will not be able to upload data to the server 
 	    without a valid user ID. If you need to register, go to crayfis.ps.uci.edu to sign up!</string>
+	<string name="run_without_user_ID">Don\'t have a valid user ID yet?\nYou can still run the app and save the data
+		locally!\nWe will let you know when we are ready to expand our number of beta testers.</string>
 	    
 </resources>

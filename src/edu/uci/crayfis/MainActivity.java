@@ -77,7 +77,8 @@ public class MainActivity extends Activity  {
 		//Check if userID already inputted, and if not, go to sign in page
 		String ID = sharedprefs.getString("prefUserID", "");
 		boolean badID = sharedprefs.getBoolean("badID", false);
-		if (ID == "" || badID) {
+
+		if ((ID == "") || badID) {
 			
 			setContentView(R.layout.main);
 			
@@ -114,11 +115,30 @@ public class MainActivity extends Activity  {
 					}
 				}
 			});
+			
+			//They want to run and save locally.
+			final Button button2 = (Button)findViewById(R.id.run_without_user_id);
+			button2.setOnClickListener(new View.OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					//This is so that if they have entered in an invalid user ID before, but
+					//then just decide to run it locally, it will reset the userID to empty
+					editor.putString("prefUserID", "");
+					
+					// now start running
+					Intent intent = new Intent(MainActivity.this, DAQActivity.class);
+					startActivity(intent);
+
+					// now quit
+					MainActivity.this.finish();					
+				}
+			});
 		}
 		
 		//See if we already have user ID saved
 		//Because then no need to login again
-		if(ID != "") {
+		if((ID != "") && !badID) {
 			// If user ID already inputted, just start running
 			Intent intent = new Intent(MainActivity.this, DAQActivity.class);
 			startActivity(intent);

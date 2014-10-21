@@ -3,7 +3,8 @@
     android:layout_height="fill_parent"
     android:background="#ffffff"
     android:contentDescription="logo"
-    android:orientation="vertical" >
+    android:orientation="vertical"
+    android:baselineAligned="false" >
 
     <ImageView
         android:id="@+id/imageView2"
@@ -11,6 +12,7 @@
         android:layout_height="80dp"
         android:background="#FFFFFF"
         android:src="@drawable/crayfish" />
+    
 	<TextView 
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
@@ -39,6 +41,27 @@
         android:background="@drawable/buttonshape"        
         android:text="Sign in and begin running!"
         android:textSize="18sp"        
-        android:textColor="#242424" />        
+        android:textColor="#242424" /> 
+         
+    <TextView 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom"
+		android:layout_marginTop="5dip"
+		android:text="@string/run_without_user_ID"
+		android:textColor="#000000"
+		android:textSize="15sp"
+		android:gravity="center" />  
+		
+ 	<Button
+        android:id="@+id/run_without_user_id"
+		android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+ 		android:layout_marginTop="7dip"
+ 		android:layout_gravity="bottom"
+        android:background="@drawable/buttonshape"   
+        android:text="Run without user ID!"
+        android:textSize="18sp"        
+        android:textColor="#242424" /> 
         
 </LinearLayout>
