@@ -281,7 +281,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		for (int ix = 0; ix < width; ix++) {
 			for (int iy = 0; iy < height; iy++) {
 				int val = bytes[ix+width*iy]&0xFF;
-				if (val > 0) {
+				if (val >= 5) {
 					npixels_hit++;
 				}
 			}
