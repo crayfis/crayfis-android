@@ -10,9 +10,7 @@
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="userIDlogin">Please enter your user ID.\nYou will not be able to upload data to the server 
-	    without a valid user ID. If you need to register, go to crayfis.ps.uci.edu to sign up!</string>
-	<string name="run_without_user_ID">Don\'t have a valid user ID yet?\nYou can still run the app and save the data
-		locally!\nWe will let you know when we are ready to expand our number of beta testers.</string>
+	<string name="userIDlogin">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n Please enter your user ID below. If you do not have one yet, register at http://crayfis.io/.</string>
+	<string name="run_without_user_ID">\n\n\nNo CRAYFIS ID?  \n No problem! Your data will not be uploaded to the server, but you can still run the app, and enter your ID later in the settings pane.</string>
 	    
 </resources>

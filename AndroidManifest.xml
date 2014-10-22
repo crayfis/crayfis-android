@@ -36,6 +36,7 @@
 		</receiver>
 		<activity android:name="edu.uci.crayfis.DAQActivity" android:screenOrientation="portrait"/>
 		<activity android:name="edu.uci.crayfis.UserSettingActivity" android:screenOrientation="portrait"/>
+		<meta-data android:name="com.crashlytics.ApiKey" android:value="2e730bea6fb33d746b55551b0fa2338ef7dfac5b"/>
 		
 	</application>
 </manifest>

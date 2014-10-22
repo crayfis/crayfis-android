@@ -18,6 +18,7 @@
 
 package edu.uci.crayfis;
 
+import com.crashlytics.android.Crashlytics;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,6 +64,7 @@ public class MainActivity extends Activity  {
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		Crashlytics.start(this);
 		
 		try {
 			build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;

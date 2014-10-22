@@ -26,7 +26,7 @@
 	    android:id="@+id/userIDlogin"
 	    android:layout_width="fill_parent"
 	    android:layout_height="wrap_content"
-	    android:hint="User ID"
+	    android:hint="Enter your CRAYFIS ID here"
 	    android:singleLine="true"
 	    android:textSize="14dip"
 	    android:layout_gravity="center" 

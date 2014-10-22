@@ -25,11 +25,11 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	
 	public static float default_bg_avg_cut = 30;
 	public static float default_bg_var_cut = 5;
-	public static float default_max_pix_frac = (float)0.15;
+	//public static float default_max_pix_frac = (float)0.15;
 	
 	private float bg_avg_cut;
 	private float bg_var_cut;
-	private float max_pix_frac;
+	//private float max_pix_frac;
 	
 	private DAQActivity context;
 	
@@ -49,7 +49,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
 		bg_avg_cut = localPrefs.getFloat("qual_bg_avg", default_bg_avg_cut);
 		bg_var_cut = localPrefs.getFloat("qual_bg_var", default_bg_var_cut);
-		max_pix_frac = localPrefs.getFloat("qual_pix_frac", default_max_pix_frac);
+		//max_pix_frac = localPrefs.getFloat("qual_pix_frac", default_max_pix_frac);
 	}
 	
 	@Override
@@ -271,6 +271,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		if (npixels>0)
 		  variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
 		
+		/** this is not really an image quality check, do this in DAQActivity
 		// Reject an image if too many pixels were hit
 		// Good for security and one more check for image quality
 				
@@ -289,12 +290,12 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 				
 		// Find percent hit
 		percent_hit = (float)npixels_hit/tot_pix;
-		
+		*/
 		// is the data good?
 		// TODO: investigate what makes sense here!
-		good_quality = (background < bg_avg_cut && variance < bg_var_cut && percent_hit < max_pix_frac);
+		good_quality = (background < bg_avg_cut && variance < bg_var_cut); // && percent_hit < max_pix_frac);
 				
-		Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+		//Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 		
 		event.background = background;
 		event.variance = variance;

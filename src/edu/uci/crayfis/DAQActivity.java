@@ -1039,12 +1039,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						"Exposure: "
 								+ (int) (1.0e-3 * exposed_time)
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
-				canvas.drawText("Events : " + totalEvents, 200, yoffset + 6 * tsize,
+				canvas.drawText("Frames : " + totalEvents, 200, yoffset + 6 * tsize,
 						mypaint);
-				canvas.drawText("Pixels : " + totalPixels, 200, yoffset + 8 * tsize,
+				canvas.drawText("Candidates : " + totalPixels, 200, yoffset + 8 * tsize,
 						mypaint);
 
-				canvas.drawText("XBs: " + committedXBs, 200, yoffset + 10
+				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 10
 						* tsize, mypaint);
 
 				// /// Histogram
@@ -1075,15 +1075,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				String state_message = "";
 				switch (current_state) {
 				case CALIBRATION:
-					state_message = current_state.toString() + " "
+					state_message = "Mode: "+current_state.toString() + " "
 							+ (int)(( 100.0 * (float) reco.event_count) / calibration_sample_frames) + "%";
 					break;
 				case DATA:
-					state_message = current_state.toString() + " (L1=" + L1thresh
+					state_message = "Mode: "+current_state.toString() + " (L1=" + L1thresh
 						+ ",L2=" + L2thresh + ")";
 					break;
 				case STABILIZATION:
-					state_message = current_state.toString() + " "
+					state_message = "Mode: "+current_state.toString() + " "
 							+ (int)(( 100.0 * (float) stabilization_counter) / stabilization_sample_frames) + "%";
 					break;
 				default:
@@ -1093,7 +1093,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {
-					fps = String.format("%.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
+					fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
 				}
 				canvas.drawText(fps + " fps",
 						200, yoffset + 14 * tsize, mypaint);
@@ -1380,7 +1380,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					continue;
 				}
 				
-				xb.L2_pass++;
+				
 				
 				// Now do the L2 (pixel-level analysis)
 				ArrayList<RecoPixel> pixels;
@@ -1391,7 +1391,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					// Don't bother with full pixel reco and L2 threshold
 					// if we're not actually taking data.
 					pixels = reco.buildL2PixelsQuick(frame, 0);
+					
+					// later add here a check on the fraction of pixels hit
+					
 				}
+				
+				xb.L2_pass++;
 				
 				// Now add them to the event.
 				event.pixels = pixels;
