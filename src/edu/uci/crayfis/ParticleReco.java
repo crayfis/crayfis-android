@@ -281,7 +281,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		for (int ix = 0; ix < width; ix++) {
 			for (int iy = 0; iy < height; iy++) {
 				int val = bytes[ix+width*iy]&0xFF;
-				if (val >= 5) {
+				if (val >= 10) {
 					npixels_hit++;
 				}
 			}
@@ -294,7 +294,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		// TODO: investigate what makes sense here!
 		good_quality = (background < bg_avg_cut && variance < bg_var_cut && percent_hit < max_pix_frac);
 				
-		//Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+		Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 		
 		event.background = background;
 		event.variance = variance;

@@ -778,13 +778,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Try to pick the highest FPS range possible
 		int minfps = 0, maxfps = 0;
 		List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-		for (int[] rng : validRanges) {
-			Log.i(TAG, "Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-			if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-				maxfps = rng[1];
-				minfps = rng[0];
+		if (validRanges != null)
+			for (int[] rng : validRanges) {
+				Log.i(TAG, "Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
+				if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
+					maxfps = rng[1];
+					minfps = rng[0];
+				}
 			}
-		}
 		Log.i(TAG, "Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
 		try{
 			// Try to set minimum=maximum FPS range.
