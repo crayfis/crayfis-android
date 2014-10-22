@@ -1437,13 +1437,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	@Override
 	public void onSensorChanged(SensorEvent event) {
-		if (event.sensor.getType() == gravSensor.getType()) {
+		if (gravSensor !=null && event.sensor.getType() == gravSensor.getType()) {
 			// get the gravity vector:
 			gravity[0] = event.values[0];
 			gravity[1] = event.values[1];
 			gravity[2] = event.values[2];
 		}
-		if (event.sensor.getType() == magSensor.getType()) {
+		if (magSensor != null && event.sensor.getType() == magSensor.getType()) {
 			geomagnetic[0] = event.values[0];
 			geomagnetic[1] = event.values[1];
 			geomagnetic[2] = event.values[2];
