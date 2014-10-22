@@ -23,3 +23,7 @@ local.properties
 # ItelliJ IDEA Community Edition
 .idea/
 *.iml
+
+# stuff from Crashlytics
+res/values/com_crashlytics_export_strings.xml
+assets/crashlytics-build.properties
