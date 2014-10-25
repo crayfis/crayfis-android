@@ -30,8 +30,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
-
 import edu.uci.crayfis.util.CFLog;
 
 
@@ -54,8 +52,7 @@ public class MainActivity extends Activity  {
 	
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Crashlytics.start(this);
-		
+
 		try {
 			build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
 		}
