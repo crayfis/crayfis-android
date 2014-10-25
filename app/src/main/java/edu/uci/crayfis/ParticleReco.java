@@ -6,16 +6,16 @@ package edu.uci.crayfis;
  * 
  */
 
-import android.location.Location;
-import android.util.Log;
-
-import java.util.ArrayList;
-
-import edu.uci.crayfis.DAQActivity.RawCameraFrame;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera;
+import android.location.Location;
+
+import java.util.ArrayList;
+
+import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.util.CFLog;
 
 public class ParticleReco implements OnSharedPreferenceChangeListener{
 	public boolean good_quality;
@@ -224,10 +224,10 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		event_count++;
 		
 		RecoEvent event = new RecoEvent();
-		
-		event.time = frame.acq_time;
-		event.location = frame.location;
-		event.orientation = frame.orientation;
+        // XXX RecoEvent could use RawCameraFrame in the constructor?
+		event.time = frame.getAcquiredTime();
+		event.location = frame.getLocation();
+		event.orientation = frame.getOrientation();
 		
 		// first we measure the background and variance, but to save time only do it for every
 		// stepW or stepH-th pixel
@@ -244,7 +244,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		int npixels = 0;
 		int npixels_hit = 0;
 		
-		byte[] bytes = frame.bytes;
+		byte[] bytes = frame.getBytes();
 		
 		// TODO: see if we can do this more efficiently
 		// (there is a one-pass algorithm but it may not be stable)
@@ -295,64 +295,64 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		// TODO: investigate what makes sense here!
 		good_quality = (background < bg_avg_cut && variance < bg_var_cut); // && percent_hit < max_pix_frac);
 				
-		//Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
-		
+		//CFLog.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+
 		event.background = background;
 		event.variance = variance;
 		event.quality = good_quality;
-		
+
 		return event;
 	}
-	
+
 	public ArrayList<RecoPixel> buildL2Pixels(RawCameraFrame frame, int thresh) {
 		return buildL2Pixels(frame, thresh, false);
 	}
-	
+
 	public ArrayList<RecoPixel> buildL2PixelsQuick(RawCameraFrame frame, int thresh) {
 		return buildL2Pixels(frame, thresh, true);
 	}
-	
+
 	public ArrayList<RecoPixel> buildL2Pixels(RawCameraFrame frame, int thresh, boolean quick) {
 		ArrayList<RecoPixel> pixels = null;
-		
+
 		if (! quick) {
 			pixels = new ArrayList<RecoPixel>();
 		}
-		
+
 		int width = previewSize.width;
 		int height = previewSize.height;
 		int max_val = 0;
 		int num_pix = 0;
-		
-		byte[] bytes = frame.bytes;
-		
+
+		byte[] bytes = frame.getBytes();
+
 		for (int ix=0; ix < width; ix++) {
 			for (int iy=0; iy < height; iy++) {
 				// NB: cast (signed) byte to integer for meaningful comparisons!
-				int val = bytes[ix+width*iy] & 0xFF; 		
-				
+				int val = bytes[ix+width*iy] & 0xFF;
+
 				h_pixel.fill(val);
-				
+
 				if (val > max_val) {
 					max_val = val;
 				}
-				
+
 				if (val > thresh)
 				{
 					h_l2pixel.fill(val);
 					num_pix++;
-					
+
 					if (quick) {
 						// okay, bail out without any further reco
 						continue;
 					}
-					
+
 					// okay, found a pixel above threshold!
 					RecoPixel p = new RecoPixel();
 					p.x = ix;
 					p.y = iy;
 					p.val = val;
-					
+
 					// look at the 8 adjacent pixels to measure max and ave values
 					int sum3 = 0, sum5 = 0;
 					int norm3 = 0, norm5 = 0;
@@ -363,14 +363,14 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 								// exclude center from average
 								continue;
 							}
-							
+
 							int idx = ix + dx;
 							int idy = iy + dy;
 							if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
 								// we're off the sensor plane.
 								continue;
 							}
-							
+
 							int dval = bytes[idx + width*idy] & 0xFF;
 							sum5 += dval;
 							norm5++;
@@ -383,44 +383,44 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 							}
 						}
 					}
-					
+
 					p.avg_3 = ((float) sum3) / norm3;
 					p.avg_5 = ((float) sum5) / norm5;
 					p.near_max = nearMax;
-					
+
 					pixels.add(p);
 				}
 			}
 		}
-		
+
 		// update the event-level histograms.
 		h_maxpixel.fill(max_val);
 		h_numpixel.fill(num_pix);
-		
+
 		pixel_count += num_pix;
-		
+
 		return pixels;
 	}
-	
+
 	public int calculateThresholdByEvents(int max_count) {
 		// return a the lowest threshold that will give fewer than
 		// max_count events over the integrated period contained
 		// in the histograms.
-		
-		Log.i("calculate", "Cacluating threshold! Event histo:"
-				+ " 0 - " + h_maxpixel.values[0] + "\n"
-				+ " 1 - " + h_maxpixel.values[1] + "\n"
-				+ " 2 - " + h_maxpixel.values[2] + "\n"
-				+ " 3 - " + h_maxpixel.values[3] + "\n"
-				+ " 4 - " + h_maxpixel.values[4] + "\n"
-				);
-		
+
+		CFLog.i("calculate: Cacluating threshold! Event histo:"
+                        + " 0 - " + h_maxpixel.values[0] + "\n"
+                        + " 1 - " + h_maxpixel.values[1] + "\n"
+                        + " 2 - " + h_maxpixel.values[2] + "\n"
+                        + " 3 - " + h_maxpixel.values[3] + "\n"
+                        + " 4 - " + h_maxpixel.values[4] + "\n"
+        );
+
 		if (h_maxpixel.integral == 0) {
 			// wow! no data, either we didn't expose long enough, or
 			// the background is super low. Return 0 threshold.
 			return 0;
 		}
-		
+
 		int integral = 0;
 		int new_thresh;
 		for (new_thresh = 255; new_thresh >= 0; --new_thresh) {
@@ -432,17 +432,17 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 				break;
 			}
 		}
-		
+
 		return new_thresh;
 	}
-	
+
 	public int calculateThresholdByPixels(int stat_factor) {
 		int new_thresh = 255;
 		// number of photons above this threshold
 		int above_thresh = 0;
 		do {
 			above_thresh += h_pixel.values[new_thresh];
-			Log.d("calibration", "threshold " + new_thresh
+			CFLog.d("calibration: threshold " + new_thresh
 					+ " obs= " + above_thresh + "/" + stat_factor);
 			new_thresh--;
 		} while (new_thresh > 0 && above_thresh < stat_factor);

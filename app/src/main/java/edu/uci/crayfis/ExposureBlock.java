@@ -1,13 +1,12 @@
 package edu.uci.crayfis;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
+import android.location.Location;
+
 import java.util.ArrayList;
 import java.util.UUID;
 
 import edu.uci.crayfis.ParticleReco.RecoEvent;
-import android.location.Location;
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
 
 public class ExposureBlock {
 	public static final String TAG = "ExposureBlock";
@@ -83,7 +82,7 @@ public class ExposureBlock {
 			npix = event.pixels.size();
 		}
 		total_pixels += npix;
-		Log.d("addevt", "Added event with " + npix + " pixels (total = " + total_pixels + ")");
+		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
 	}
 	
 	// Translate between the internal and external enums

@@ -28,6 +28,8 @@ import android.view.ViewGroup;
 
 import java.io.IOException;
 
+import edu.uci.crayfis.util.CFLog;
+
 /**
  * Displays (or hides) the camera preview.  Adjusts the camera preview so that the displayed ratio is the same
  * as the input image ratio.
@@ -132,7 +134,7 @@ public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callba
 				mCamera.setPreviewDisplay(holder);
 			}
 		} catch (IOException exception) {
-			Log.e(TAG, "IOException caused by setPreviewDisplay()", exception);
+			CFLog.e("DAQActivity IOException caused by setPreviewDisplay()", exception);
 		}
 	}
 
@@ -172,9 +174,9 @@ public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callba
 			mCamera.setPreviewDisplay(mHolder);
 			mCamera.setPreviewCallback(previewCallback);
 			mCamera.startPreview();
-			Log.d(TAG, "No error starting camera preview! ");
+			CFLog.d("DAQActivity No error starting camera preview! ");
 		} catch (Exception e){
-			Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+			CFLog.d("DAQActivity Error starting camera preview: " + e.getMessage());
 		}
 	}
 }

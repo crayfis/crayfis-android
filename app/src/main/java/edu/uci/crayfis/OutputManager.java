@@ -1,33 +1,32 @@
 package edu.uci.crayfis;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.StringBufferInputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.ByteString;
-
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
-import android.util.Log;
+
+import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.ByteString;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import edu.uci.crayfis.util.CFLog;
 
 public class OutputManager extends Thread implements OnSharedPreferenceChangeListener {
 	public static final String TAG = "OutputManager";
@@ -152,35 +151,35 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	public boolean commitExposureBlock(ExposureBlock xb) {
 		if (stopRequested) {
 			// oops! too late. We're shutting down.
-			Log.w(TAG, "Rejecting ExposureBlock; stop has already been requested.");
+			CFLog.w("DAQActivity Rejecting ExposureBlock; stop has already been requested.");
 			return false;
 		}
 		boolean success = outputQueue.offer(xb.buildProto());
 		start_uploading = true;
-		return success; 
+		return success;
 	}
-	
+
 	public boolean commitRunConfig(DataProtos.RunConfig rc) {
 		if (stopRequested) {
 			// oops! too late. We're shutting down.
-			Log.w(TAG, "Rejecting RunConfig; stop has already been requested.");
+			CFLog.w("DAQActivity Rejecting RunConfig; stop has already been requested.");
 			return false;
 		}
 		boolean success = outputQueue.offer(rc);
 		return success;
 	}
-	
+
 	public boolean commitCalibrationResult(DataProtos.CalibrationResult cal) {
 		if (stopRequested) {
 			// oops! too late. We're shutting down.
-			Log.w(TAG, "Rejecting CalibrationResult; stop has already been requested.");
+			CFLog.w("DAQActivity Rejecting CalibrationResult; stop has already been requested.");
 			return false;
 		}
 		boolean success = outputQueue.offer(cal);
 		start_uploading = true;
 		return success;
 	}
-	
+
 	/**
 	 * Blocks until the thread has stopped
 	 */
@@ -191,13 +190,13 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			Thread.yield();
 		}
 	}
-	
+
 	@Override
 	public void run() {
 		DataProtos.DataChunk.Builder chunk = null;
 		int chunkSize = 0;
 		long lastUpload = 0;
-		
+
 		// Loop until a stop is requested. Even after that, don't stop
 		// until we've emptied the queue.
 		while (! (stopRequested && outputQueue.isEmpty())) {
@@ -205,9 +204,9 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			if (canUpload() && ((System.currentTimeMillis() - last_cache_upload) > min_cache_upload_interval)) {
 				uploadFile();
 			}
-			
+
 			AbstractMessage toWrite = null;
-			
+
 			try {
 				toWrite = outputQueue.poll(1, TimeUnit.SECONDS);
 			}
@@ -216,17 +215,17 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 				// to the top, where we'll check stopRequested
 				continue;
 			}
-			
+
 			if (toWrite == null) {
 				// oops! nothing on the queue. oh well?
 				continue;
 			}
-			
+
 			if (chunk == null) {
 				// make a new chunk builder
 				chunk = DataProtos.DataChunk.newBuilder();
 			}
-			
+
 			if (toWrite instanceof DataProtos.ExposureBlock) {
 				chunk.addExposureBlocks((DataProtos.ExposureBlock) toWrite);
 			}
@@ -236,9 +235,9 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			else if (toWrite instanceof DataProtos.CalibrationResult) {
 				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
 			}
-			
+
 			chunkSize += toWrite.getSerializedSize();
-			
+
 			// if we haven't gotten anything interesting to upload yet
 			// (i.e. an exposure block or calibration histo), then don't upload
 			// yet. This is to prevent being flooded with a bunch of RunConfigs
@@ -246,7 +245,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			if (! start_uploading) {
 				continue;
 			}
-			
+
 			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval*1e3) {
 				// time to upload! (or commit to file if that fails)
 				outputChunk(chunk.build());
@@ -255,19 +254,19 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 				lastUpload = System.currentTimeMillis();
 			}
 			else {
-				Log.i(TAG, "Not uploading chunk... current age = " + (System.currentTimeMillis() - lastUpload)/1e3 + ", current size = " + chunkSize);
+				CFLog.i("DAQActivity Not uploading chunk... current age = " + (System.currentTimeMillis() - lastUpload)/1e3 + ", current size = " + chunkSize);
 			}
 		}
-		
+
 		// before we stop running, make sure we upload any leftovers.
 		if (chunk != null && start_uploading) {
-			Log.i(TAG, "OutputManager is exiting... uploading last data chunk.");
+			CFLog.i("DAQActivity OutputManager is exiting... uploading last data chunk.");
 			outputChunk(chunk.build());
 		}
-		
+
 		running = false;
 	}
-	
+
 	// output the given data chunk, either by uploading if the network
 	// is available, or (TODO: by outputting to file.)
 	private void outputChunk(AbstractMessage toWrite) {
@@ -276,16 +275,16 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			// Upload to network:
 			uploaded = directUpload(toWrite, run_id_string);
 		}
-		
+
 		if (uploaded) {
 			// Looks like everything went okay. We're done here.
 			return;
 		}
-		
+
 		// oops! network is either not available, or there was an
 		// error during the upload.
 		// TODO: write out to a file.
-		Log.i(TAG, "Unable to upload to network! Falling back to local storage.");
+		CFLog.i("DAQActivity Unable to upload to network! Falling back to local storage.");
 		int timestamp = (int) (System.currentTimeMillis()/1e3);
 		String filename = run_id_string + "_" + timestamp + ".bin";
 		//File outfile = new File(context.getFilesDir(), filename);
@@ -294,17 +293,17 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			outputStream = context.openFileOutput(filename, Context.MODE_PRIVATE);
 			toWrite.writeTo(outputStream);
 			outputStream.close();
-			Log.i(TAG, "Data saved to " + filename);
+			CFLog.i("DAQActivity Data saved to " + filename);
 		}
 		catch (Exception ex) {
-			Log.e(TAG, "Error saving to file! Dropping data.", ex);
+			CFLog.e("DAQActivity Error saving to file! Dropping data.", ex);
 		}
 	}
-	
+
 	// check to see if there is a file, and if so, upload it.
 	// return the number of files uploaded (currently fixed to 1 max)
 	private int uploadFile() {
-		
+
 		File localDir = context.getFilesDir();
 		int n_uploaded = 0;
 		for (File f : localDir.listFiles()) {
@@ -312,57 +311,57 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 				// No network connection available... nothing to do here.
 				return n_uploaded;
 			}
-			
+
 			String filename = f.getName();
 			if (! filename.endsWith(".bin"))
 				continue;
 			String[] pieces = filename.split("_");
 			if (pieces.length < 2) {
-				Log.w(TAG, "Skipping malformatted filename: " + filename);
+				CFLog.w("DAQActivity Skipping malformatted filename: " + filename);
 				continue;
 			}
 			String run_id = pieces[0];
-			Log.i(TAG, "Found local file from run: " + run_id);
+			CFLog.i("DAQActivity Found local file from run: " + run_id);
 
 			DataProtos.DataChunk chunk;
 			try {
 				chunk = DataProtos.DataChunk.parseFrom(new FileInputStream(f));
 			}
 			catch (IOException ex) {
-				Log.e(TAG, "Failed to read local file!", ex);
+				CFLog.e("DAQActivity Failed to read local file!", ex);
 				// TODO: should we remove the file?
 				continue;
 			}
-			
+
 			// okay, lets send the file off to upload:
 			boolean uploaded = directUpload(chunk, run_id);
-			
+
 			if (uploaded) {
 				// great! the file uploaded successfully.
 				// now we can delete it from the local store.
-				Log.i(TAG, "Successfully uploaded local file: " + filename);
+				CFLog.i("DAQActivity Successfully uploaded local file: " + filename);
 				f.delete();
 				n_uploaded += 1;
 				last_cache_upload = System.currentTimeMillis();
 			}
 			else {
-				Log.w(TAG, "Failed to upload file: " + filename);
+				CFLog.w("DAQActivity Failed to upload file: " + filename);
 			}
-			
+
 			break; // only try to upload one file at a time.
 		}
 		return n_uploaded;
 	}
-	
+
 	private boolean directUpload(AbstractMessage toWrite, String run_id) {
 		// okay, we got a writable object, let's dump it to the server!
-		
+
 		ByteString raw_data = toWrite.toByteString();
-		
-		Log.i(TAG, "Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
-		
+
+		CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
+
 		int serverResponseCode = 0;
-		
+
 		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 		boolean success = false;
 		try {
@@ -375,12 +374,12 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			c.setRequestProperty("Run-id", run_id);
 			c.setRequestProperty("Crayfis-version", "a " + build_version);
 			c.setRequestProperty("Crayfis-version-code", Integer.toString(build_version_code));
-			
+
 			String app_code = sharedprefs.getString("prefUserID", "");
 			if (app_code != "") {
 				c.setRequestProperty("App-code", app_code);
 			}
-			
+
 			if (debug_stream) {
 				c.setRequestProperty("Debug-stream", "yes");
 			}
@@ -389,28 +388,28 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			c.setDoOutput(true);
 			c.setConnectTimeout(connect_timeout);
 			c.setReadTimeout(read_timeout);
-			
+
 			OutputStream os = c.getOutputStream();
-			
+
 			// try writing to the output stream
 			raw_data.writeTo(os);
-			
-			Log.i(TAG, "Connecting to upload server at: " + upload_url);
+
+			CFLog.i("DAQActivity Connecting to upload server at: " + upload_url);
 			c.connect();
 			serverResponseCode = c.getResponseCode();
 			if (serverResponseCode == 403 || serverResponseCode == 401) {
 				// server rejected us! so we are not allowed to upload.
 				// oh well! we can still take data at least.
-				
+
 				permit_upload = false;
-				
+
 				if (serverResponseCode == 401) {
 					// server rejected us because our app code is invalid.
-					Log.w("ww2", "foo ctx" + context.getApplicationContext());
+					CFLog.w("ww2: foo ctx" + context.getApplicationContext());
 					SharedPreferences.Editor editor = sharedprefs.edit();
 					editor.putBoolean("badID", true);
 					editor.apply();
-					Log.w(TAG, "setting bad ID flag!");
+					CFLog.w("DAQActivity setting bad ID flag!");
 					valid_id = false;
 				}
 				return false;
@@ -421,30 +420,30 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			while ((line = reader.readLine()) != null) {
 				sb.append(line + "\n");
 			}
-			
+
 			JSONObject jObject;
 			try {
 				jObject = new JSONObject(sb.toString());
 				context.updateSettings(jObject);
-				
+
 				if (jObject.has("experiment")) {
 					current_experiment = jObject.getString("experiment");
 				}
 				if (jObject.has("nickname")) {
 					device_nickname = jObject.getString("nickname");
 				}
-				
-				
+
+
 			}
 			catch (JSONException ex) {
-				Log.w(TAG, "Warning: malformed JSON response from server.");
+				CFLog.w("DAQActivity Warning: malformed JSON response from server.");
 			}
-			
-			Log.i(TAG, "Connected! Status = " + serverResponseCode);
-			
+
+			CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
+
 			// and now disconnect
 			c.disconnect();
-			
+
 			if (serverResponseCode == 202 || serverResponseCode == 200) {
 				// looks like everything went okay!
 				success = true;
@@ -456,10 +455,10 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			}
 		}
 		catch (MalformedURLException ex) {
-			Log.e(TAG, "Oh noes! The upload url is malformed.", ex);
+			CFLog.e("DAQActivity Oh noes! The upload url is malformed.", ex);
 		}
 		catch (IOException ex) {
-			Log.e(TAG, "Oh noes! An IOException occured.", ex);
+			CFLog.e("DAQActivity Oh noes! An IOException occured.", ex);
 		}
 		
 		return success;
