@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import android.content.Context;
 import android.hardware.Camera;
@@ -34,7 +34,7 @@ import java.io.IOException;
  *
  * @author Peter Abeles
  */
-public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
+public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callback {
 	private final String TAG = "CameraPreview";
 
 	SurfaceView mSurfaceView;
@@ -43,7 +43,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 	Camera.PreviewCallback previewCallback;
 	boolean hidden;
 
-	CameraPreview(Context context, Camera.PreviewCallback previewCallback, boolean hidden ) {
+	public CameraPreviewView(Context context, Camera.PreviewCallback previewCallback, boolean hidden) {
 		super(context);
 		this.previewCallback = previewCallback;
 		this.hidden = hidden;
