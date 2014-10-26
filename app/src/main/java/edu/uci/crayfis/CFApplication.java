@@ -3,6 +3,7 @@ package edu.uci.crayfis;
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Location;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -13,6 +14,8 @@ public class CFApplication extends Application {
 
     private static final String SHARED_PREFS_NAME = "global";
     private static State sApplicationState = State.INIT;
+
+    private static Location mLastKnownLocation;
 
     @Override
     public void onCreate() {
@@ -33,6 +36,14 @@ public class CFApplication extends Application {
 
     public static void setApplicationState(State applicationState) {
         sApplicationState = applicationState;
+    }
+
+    public static Location getLastKnownLocation() {
+        return mLastKnownLocation;
+    }
+
+    public static void setLastKnownLocation(Location lastKnownLocation) {
+        mLastKnownLocation = lastKnownLocation;
     }
 
     public enum State {

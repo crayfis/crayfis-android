@@ -46,6 +46,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	}
 	
 	public void updateSettings() {
+        // FIXME This needs to move to CFConfig
 		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
 		bg_avg_cut = localPrefs.getFloat("qual_bg_avg", default_bg_avg_cut);
 		bg_var_cut = localPrefs.getFloat("qual_bg_var", default_bg_var_cut);

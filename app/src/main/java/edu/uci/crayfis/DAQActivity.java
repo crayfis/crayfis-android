@@ -38,7 +38,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 import android.provider.Settings.Secure;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -128,15 +127,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
-	private long L2counter = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private int L1prescale = 1;
-	private int L2prescale = 1;
-
-    ;
-
+    // This gets set in the data state transition, false in the idle transition
 	private boolean fixed_threshold;
 
 	private long calibration_start;
@@ -147,9 +141,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	// L1 hit threshold
 	long starttime;
-
-	// Location stuff
-	private Location currentLocation;
 
     // number of frames to wait between fps updates
 	public static final int fps_update_interval = 30;
@@ -285,7 +276,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	}
 
 	private void newLocation(Location location) {
-		currentLocation = location;
+        CFApplication.setLastKnownLocation(location);
 	}
 
 	private void toCalibrationMode() {
@@ -553,13 +544,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// 0, 0, locationListener);
 
 		// get the last known coordinates for an initial value
-		currentLocation = locationManager
-				.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		if (null == currentLocation) {
-			currentLocation = new Location("BLANK");
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		if (null == location) {
+			location = new Location("BLANK");
 		}
-		SharedPreferences sharedPrefs = PreferenceManager
-				.getDefaultSharedPreferences(context);
+        CFApplication.setLastKnownLocation(location);
 
 		xbManager = new ExposureBlockManager();
 
@@ -792,7 +781,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 
 		// prescale
-		if (L1counter % L1prescale == 0) {
+		// Jodi - removed L1prescale as it never changed.
+		if (L1counter % 1 == 0) {
 			// make sure there's room on the queue
 			if (L2Queue.remainingCapacity() > 0) {
 				// check if we pass the L1 threshold
@@ -1110,7 +1100,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			current_xb.xbn = totalXBs;
 			current_xb.L1_thresh = CONFIG.getL1Threshold();
 			current_xb.L2_thresh = CONFIG.getL2Threshold();
-			current_xb.start_loc = new Location(currentLocation);
+			current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
 			current_xb.daq_state = CFApplication.getApplicationState();
 			current_xb.run_id = run_id;
 		}
@@ -1194,6 +1184,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	 */
 	private class L2Processor extends Thread {
 
+        private long L2counter = 0;
+        private final CFConfig CONFIG = CFConfig.getInstance();
+
 		// true if a request has been made to stop the thread
 		volatile boolean stopRequested = false;
 		// true if the thread is running and can process more data
@@ -1258,16 +1251,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				ExposureBlock xb = frame.getExposureBlock();
 				
 				xb.L2_processed++;
-				
-				if (L2counter % L2prescale != 0) {
+
+                // Jodi - Removed L2prescale as it was never changed.
+				if (L2counter % 1 != 0) {
 					// prescaled! Drop the event.
 					xb.L2_skip++;
 					continue;
 				}
-				
-				// FIXME: should we worry about setting currentLocation at L1 (acquisition) time? Or is it okay here?
-				frame.setLocation(new Location(currentLocation));
-				
+
+                frame.setLocation(CFApplication.getLastKnownLocation());
+
 				// First, build the event from the raw frame.
 				RecoEvent event = reco.buildEvent(frame);
 				
