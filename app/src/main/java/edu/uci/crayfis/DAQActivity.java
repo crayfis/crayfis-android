@@ -72,7 +72,7 @@ import edu.uci.crayfis.util.CFLog;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener, OnSharedPreferenceChangeListener {
+public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
 
 	// camera and display objects
 	private Camera mCamera;
@@ -131,17 +131,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private long L1counter = 0;
 	private long L2counter = 0;
 
-    // TODO I think these belong in a standard configuration class
-	private int L1prescale = 1;
+    private final CFConfig CONFIG = CFConfig.getInstance();
+
+    private int L1prescale = 1;
 	private int L2prescale = 1;
-    // how many frames to sample during calibration
-    // (more frames is longer but gives better statistics)
-    public final int default_calibration_sample_frames = 1000;
-    // targeted max. number of events per minute to allow
-    // (lower rate => higher threshold)
-    public final float default_target_events_per_minute = 60;
-    // number of frames to pass during stabilization periods.
-    public static final int stabilization_sample_frames = 45;
 
 	public enum state {
 		INIT, CALIBRATION, DATA, STABILIZATION, IDLE,
@@ -153,20 +146,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private long calibration_start;
 	private long calibration_stop;
 
-	private int calibration_sample_frames;
-
-	private float target_events_per_minute = default_target_events_per_minute;
-
-	// the nominal period for an exposure block (in seconds)
-	public static final int default_xb_period = 2*60;
-	private int xb_period = default_xb_period;
-
 	// counter for stabilization mode
 	private int stabilization_counter;
 
 	// L1 hit threshold
-	private int L1thresh = 0;
-	private int L2thresh = 5;
 	long starttime;
 
 	// Location stuff
@@ -282,30 +265,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
  		}
 	}
 
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-		CFLog.i("DAQActivity UPDATED SHARED PREF: " + key);
-		if (key.equals("L1_thresh")) {
-			L1thresh = prefs.getInt(key, 0);
-		} else if (key.equals("L2_thresh")) {
-			L2thresh = prefs.getInt(key, 0);
-		}
-
-		// make sure we didn't set the threshold(s) to zero... otherwise something weird is happening
-		if (L1thresh == 0 || L2thresh == 0) {
-			// okay i have no idea how we got here, but let's force recalibration.
-			toStabilizationMode();
-		}
-
-		if (key.equals("target_events_per_minute")) {
-			target_events_per_minute = prefs.getFloat(key, default_target_events_per_minute);
-		} else if (key.equals("calibration_sample_frames")) {
-			calibration_sample_frames = prefs.getInt(key, default_calibration_sample_frames);
-		} else if (key.equals("xb_period")) {
-			xb_period = prefs.getInt(key, default_xb_period);
-		}
-	}
-
 	public void clickedAbout(View view) {
 
 		final SpannableString s = new SpannableString(
@@ -374,7 +333,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			int new_thresh;
 			long calibration_time = calibration_stop - calibration_start;
-			int target_events = (int) (target_events_per_minute * calibration_time* 1e-3 / 60.0);
+			int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time* 1e-3 / 60.0);
 
 			CFLog.i("Calibration: Processed " + reco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
 
@@ -399,18 +358,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			// update the thresholds
 			new_thresh = reco.calculateThresholdByEvents(target_events);
-			CFLog.i("DAQActivity Setting new L1 threshold: {"+ L1thresh + "} -> {" + new_thresh + "}");
-			L1thresh = new_thresh;
+			CFLog.i("DAQActivity Setting new L1 threshold: {"+ CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
+            CONFIG.setL1Threshold(new_thresh);
 
 			// FIXME: we should have a better calibration for L2 threshold.
 			// For now, we choose it to be just below L1thresh.
-			if (L1thresh > 2) {
-				L2thresh = L1thresh - 1;
+            final int l1Threshold = CONFIG.getL1Threshold();
+			if (l1Threshold > 2) {
+                CONFIG.setL2Threshold(l1Threshold - 1);
 			}
 			else {
 				// Okay, if we're getting this low, we shouldn't try to
 				// set the L2thresh any lower, else event frames will be huge.
-				L2thresh = L1thresh;
+                CONFIG.setL2Threshold(l1Threshold);
 			}
 
 			// Finally, set the state and start a new xb
@@ -523,13 +483,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		device_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
 
-		// load up the server-adjustable preferences from last time
-		SharedPreferences localPrefs = getPreferences(Context.MODE_PRIVATE);
-		calibration_sample_frames = localPrefs.getInt("calibration_sample_frames", default_calibration_sample_frames);
-		target_events_per_minute = localPrefs.getFloat("target_events_per_minute", default_target_events_per_minute);
-		xb_period = localPrefs.getInt("xb_period", default_xb_period);
-
-		localPrefs.registerOnSharedPreferenceChangeListener(this);
 		/*
 		// clear saved settings (for debug purposes)
 		SharedPreferences.Editor editor = localPrefs.edit();
@@ -601,9 +554,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 		SharedPreferences sharedPrefs = PreferenceManager
 				.getDefaultSharedPreferences(context);
-
-		L1thresh = Integer
-				.parseInt(sharedPrefs.getString("prefThreshold", "0"));
 
 		xbManager = new ExposureBlockManager();
 
@@ -824,7 +774,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		if (current_state == DAQActivity.state.STABILIZATION) {
 			// If we're in stabilization mode, just drop frames until we've skipped enough
 			stabilization_counter++;
-			if (stabilization_counter > stabilization_sample_frames) {
+			if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
 				// We're done! Go to calibration.
 				toCalibrationMode();
 			}
@@ -847,7 +797,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				int length = previewSize.width * previewSize.height;
 				for (int i = 0; i < length; i++) {
 					// make sure we promote the (signed) byte to int for comparison!
-					if ( (bytes[i] & 0xFF) > L1thresh) {
+					if ( (bytes[i] & 0xFF) > CONFIG.getL1Threshold()) {
 						// Okay, found a pixel above threshold. No need to continue
 						// looping.
 						pass = true;
@@ -1026,15 +976,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				switch (current_state) {
 				case CALIBRATION:
 					state_message = "Mode: "+current_state.toString() + " "
-							+ (int)(( 100.0 * (float) reco.event_count) / calibration_sample_frames) + "%";
+							+ (int)(( 100.0 * (float) reco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
 					break;
 				case DATA:
-					state_message = "Mode: "+current_state.toString() + " (L1=" + L1thresh
-						+ ",L2=" + L2thresh + ")";
+					state_message = "Mode: "+current_state.toString() + " (L1=" + CONFIG.getL1Threshold()
+						+ ",L2=" + CONFIG.getL2Threshold() + ")";
 					break;
 				case STABILIZATION:
 					state_message = "Mode: "+current_state.toString() + " "
-							+ (int)(( 100.0 * (float) stabilization_counter) / stabilization_sample_frames) + "%";
+							+ (int)(( 100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
 					break;
 				default:
 					state_message = current_state.toString();
@@ -1126,7 +1076,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			}
 
 			// check and see whether this XB is too old
-			if (current_xb.age() > xb_period * 1000) {
+			if (current_xb.age() > CONFIG.getExposureBlockPeriod() * 1000) {
 				newExposureBlock();
 			}
 
@@ -1155,8 +1105,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			totalXBs++;
 
 			current_xb.xbn = totalXBs;
-			current_xb.L1_thresh = L1thresh;
-			current_xb.L2_thresh = L2thresh;
+			current_xb.L1_thresh = CONFIG.getL1Threshold();
+			current_xb.L2_thresh = CONFIG.getL2Threshold();
 			current_xb.start_loc = new Location(currentLocation);
 			current_xb.daq_state = current_state;
 			current_xb.run_id = run_id;
@@ -1361,7 +1311,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
 				if (current_state == DAQActivity.state.CALIBRATION
-						&& reco.event_count >= calibration_sample_frames) {
+						&& reco.event_count >= CONFIG.getCalibrationSampleFrames()) {
 					// mark the time of the last event from the run.
 					calibration_stop = frame.getAcquiredTime();
 					toDataMode();
