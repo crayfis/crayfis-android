@@ -36,7 +36,7 @@ public class ExposureBlock {
 	// the exposure block number within the given run
 	public int xbn;
 		
-	public DAQActivity.state daq_state;
+	public CFApplication.State daq_state;
 	
 	public boolean frozen = false;
 	public boolean aborted = false;
@@ -71,7 +71,7 @@ public class ExposureBlock {
 	
 	public void addEvent(RecoEvent event) {
 		// Don't keep event information during calibration... it's too much data.
-		if (daq_state == DAQActivity.state.CALIBRATION) {
+		if (daq_state == CFApplication.State.CALIBRATION) {
 			return;
 		}
 		event.xbn = xbn;
@@ -86,7 +86,7 @@ public class ExposureBlock {
 	}
 	
 	// Translate between the internal and external enums
-	private static DataProtos.ExposureBlock.State translateState(DAQActivity.state orig) {
+	private static DataProtos.ExposureBlock.State translateState(CFApplication.State orig) {
 		switch (orig) {
 		case INIT:
 			return DataProtos.ExposureBlock.State.INIT;
@@ -128,7 +128,7 @@ public class ExposureBlock {
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.
-		if (daq_state != DAQActivity.state.CALIBRATION) {
+		if (daq_state != CFApplication.State.CALIBRATION) {
 			for (RecoEvent evt : events) {
 				buf.addEvents(evt.buildProto());
 			}

@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -136,11 +135,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
     private int L1prescale = 1;
 	private int L2prescale = 1;
 
-	public enum state {
-		INIT, CALIBRATION, DATA, STABILIZATION, IDLE,
-	};
+    ;
 
-	private state current_state;
 	private boolean fixed_threshold;
 
 	private long calibration_start;
@@ -295,7 +291,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private void toCalibrationMode() {
 		// The *only* valid way to get into calibration mode
 		// is after stabilizaton.
-		switch (current_state) {
+		switch (CFApplication.getApplicationState()) {
 		case STABILIZATION:
 			CFLog.i("DAQActivity FSM Transition: STABILIZATION -> CALIBRATION");
 
@@ -303,7 +299,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			reco.reset();
 
 			calibration_start = System.currentTimeMillis();
-			current_state = DAQActivity.state.CALIBRATION;
+            CFApplication.setApplicationState(CFApplication.State.CALIBRATION);
 
 			// Start a new exposure block
 			xbManager.newExposureBlock();
@@ -311,16 +307,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			break;
 
 		default:
-			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> CALIBRATION");
+            final CFApplication.State state = CFApplication.getApplicationState();
+			throw new RuntimeException("Bad FSM transition: "
+                    + ((state == null) ? "NULL" : state)
+                    + " -> CALIBRATION");
 		}
 	}
 
 	private void toDataMode() {
-		switch (current_state) {
+		switch (CFApplication.getApplicationState()) {
 		case INIT:
 			CFLog.i("DAQActivity FSM Transition: INIT -> DATA");
 			fixed_threshold = true;
-			current_state = DAQActivity.state.DATA;
+			CFApplication.setApplicationState(CFApplication.State.DATA);
 
 			// Start a new exposure block
 			xbManager.newExposureBlock();
@@ -374,25 +373,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			}
 
 			// Finally, set the state and start a new xb
-			current_state = DAQActivity.state.DATA;
+            CFApplication.setApplicationState(CFApplication.State.DATA);
 			xbManager.newExposureBlock();
 
 			break;
 		default:
-			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> DATA");
+            final CFApplication.State state = CFApplication.getApplicationState();
+            throw new RuntimeException("Bad FSM transition: "
+                    + ((state == null) ? "NULL" : state)
+                    + " -> CALIBRATION");
 		}
 	}
 
 	// we go to stabilization mode in order to wait for the camera to settle down
 	// after a period of bad data.
 	private void toStabilizationMode() {
-		switch(current_state) {
+		switch(CFApplication.getApplicationState()) {
 		case INIT:
 		case IDLE:
 			// This is the first state transisiton of the app. Go straight into stabilization
 			// so the calibratoin will be clean.
 			fixed_threshold = false;
-			current_state = DAQActivity.state.STABILIZATION;
+			CFApplication.setApplicationState(CFApplication.State.STABILIZATION);
 			L2Queue.clear();
 			stabilization_counter = 0;
 			xbManager.newExposureBlock();
@@ -401,10 +403,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// coming out of calibration and data should be the same.
 		case CALIBRATION:
 		case DATA:
-			CFLog.i("DAQActivity FSM transition " + current_state.toString() + " -> STABILIZATION");
+			CFLog.i("DAQActivity FSM transition " + CFApplication.getApplicationState() + " -> STABILIZATION");
 
 			// transition immediately
-			current_state = DAQActivity.state.STABILIZATION;
+			CFApplication.setApplicationState(CFApplication.State.STABILIZATION);
 
 			// clear the L2Queue.
 			L2Queue.clear();
@@ -422,32 +424,36 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			break;
 		default:
-			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> STABILZATION");
-		}
+            final CFApplication.State state = CFApplication.getApplicationState();
+            throw new RuntimeException("Bad FSM transition: "
+                    + ((state == null) ? "NULL" : state)
+                    + " -> STABILIZATION");		}
 	}
 
 	public void toIdleMode() {
 		// This mode is basically just used to cleanly close out any
 		// current exposure blocks. For example, we transition here when
 		// the phone is locked or the app is suspended.
-		switch(current_state) {
+		switch(CFApplication.getApplicationState()) {
 		case IDLE:
 			// nothing to do here...
 			break;
 		case CALIBRATION:
 		case STABILIZATION:
 			// for calibration or stabilization, mark the block as aborted
-			current_state = DAQActivity.state.IDLE;
+            CFApplication.setApplicationState(CFApplication.State.IDLE);
 			xbManager.abortExposureBlock();
 			break;
 		case DATA:
 			// for data, just close out the current XB
-			current_state = DAQActivity.state.IDLE;
+            CFApplication.setApplicationState(CFApplication.State.IDLE);
 			xbManager.newExposureBlock();
 			break;
 		default:
-			throw new RuntimeException("Bad FSM transition: " + current_state.toString() + " -> IDLE");
-		}
+            final CFApplication.State state = CFApplication.getApplicationState();
+            throw new RuntimeException("Bad FSM transition: "
+                    + ((state == null) ? "NULL" : state)
+                    + " -> IDLE");		}
 	}
 
 	public void generateRunConfig() {
@@ -556,9 +562,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				.getDefaultSharedPreferences(context);
 
 		xbManager = new ExposureBlockManager();
-
-		// Set the initial state
-		current_state = DAQActivity.state.INIT;
 
 		// Spin up the output and image processing threads:
 		outputThread = new OutputManager(this);
@@ -758,7 +761,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			L1_fps_stop = acq_time;
 		}
 
-		if (current_state == DAQActivity.state.CALIBRATION) {
+		if (CFApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
 			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
 
@@ -771,7 +774,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			return;
 		}
 
-		if (current_state == DAQActivity.state.STABILIZATION) {
+		if (CFApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
 			// If we're in stabilization mode, just drop frames until we've skipped enough
 			stabilization_counter++;
 			if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
@@ -782,7 +785,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			return;
 		}
 
-		if (current_state == DAQActivity.state.IDLE) {
+		if (CFApplication.getApplicationState() == CFApplication.State.IDLE) {
 			// Not sure why we're still acquiring frames in IDLE mode...
 			CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
 			return;
@@ -973,21 +976,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
 
 				String state_message;
-				switch (current_state) {
+				switch (CFApplication.getApplicationState()) {
 				case CALIBRATION:
-					state_message = "Mode: "+current_state.toString() + " "
+					state_message = "Mode: "+ CFApplication.getApplicationState() + " "
 							+ (int)(( 100.0 * (float) reco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
 					break;
 				case DATA:
-					state_message = "Mode: "+current_state.toString() + " (L1=" + CONFIG.getL1Threshold()
+					state_message = "Mode: "+CFApplication.getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
 						+ ",L2=" + CONFIG.getL2Threshold() + ")";
 					break;
 				case STABILIZATION:
-					state_message = "Mode: "+current_state.toString() + " "
+					state_message = "Mode: "+CFApplication.getApplicationState() + " "
 							+ (int)(( 100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
 					break;
 				default:
-					state_message = current_state.toString();
+					state_message = CFApplication.getApplicationState().toString();
 				}
 				canvas.drawText(state_message, 200, yoffset + 12 * tsize, mypaint);
 
@@ -1086,7 +1089,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Return an estimate of the exposure time in committed + current
 		// exposure blocks.
 		public synchronized long getExposureTime() {
-			if (current_xb.daq_state == DAQActivity.state.DATA) {
+			if (current_xb.daq_state == CFApplication.State.DATA) {
 				return committed_exposure + current_xb.age();
 			}
 			else {
@@ -1108,7 +1111,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			current_xb.L1_thresh = CONFIG.getL1Threshold();
 			current_xb.L2_thresh = CONFIG.getL2Threshold();
 			current_xb.start_loc = new Location(currentLocation);
-			current_xb.daq_state = current_state;
+			current_xb.daq_state = CFApplication.getApplicationState();
 			current_xb.run_id = run_id;
 		}
 
@@ -1124,7 +1127,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			// if this is a DATA block, add its age to the commited
 			// exposure time.
-			if (xb.daq_state == DAQActivity.state.DATA) {
+			if (xb.daq_state == CFApplication.State.DATA) {
 				committed_exposure += xb.age();
 			}
 		}
@@ -1162,12 +1165,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 
 		private void commitExposureBlock(ExposureBlock xb) {
-			if (xb.daq_state == DAQActivity.state.STABILIZATION
-					|| xb.daq_state == DAQActivity.state.IDLE) {
+			if (xb.daq_state == CFApplication.State.STABILIZATION
+					|| xb.daq_state == CFApplication.State.IDLE) {
 				// don't commit stabilization/idle blocks! they're just deadtime.
 				return;
 			}
-			if (xb.daq_state == DAQActivity.state.CALIBRATION
+			if (xb.daq_state == CFApplication.State.CALIBRATION
 				&& xb.aborted) {
 				// also, don't commit *aborted* calibration blocks
 				return;
@@ -1278,7 +1281,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				
 				// Now do the L2 (pixel-level analysis)
 				ArrayList<RecoPixel> pixels;
-				if (current_state == DAQActivity.state.DATA) {
+				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
 					pixels = reco.buildL2Pixels(frame, xb.L2_thresh);
 				}
 				else {
@@ -1295,7 +1298,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// Now add them to the event.
 				event.pixels = pixels;
 				
-				if (current_state == DAQActivity.state.DATA) {
+				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
 					// keep track of the running totals for acquired
 					// events/pixels over the app lifetime.
 					totalEvents++;
@@ -1310,7 +1313,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// If we're calibrating, check if we've processed enough
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
-				if (current_state == DAQActivity.state.CALIBRATION
+				if (CFApplication.getApplicationState() == CFApplication.State.CALIBRATION
 						&& reco.event_count >= CONFIG.getCalibrationSampleFrames()) {
 					// mark the time of the last event from the run.
 					calibration_stop = frame.getAcquiredTime();

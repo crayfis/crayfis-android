@@ -12,6 +12,7 @@ import com.crashlytics.android.Crashlytics;
 public class CFApplication extends Application {
 
     private static final String SHARED_PREFS_NAME = "global";
+    private static State sApplicationState = State.INIT;
 
     @Override
     public void onCreate() {
@@ -24,5 +25,21 @@ public class CFApplication extends Application {
         localPrefs.registerOnSharedPreferenceChangeListener(config);
         // FIXME This is not needed when dependency injection is done, this can be handled in the constructor.
         config.onSharedPreferenceChanged(localPrefs, null);
+    }
+
+    public static State getApplicationState() {
+        return sApplicationState;
+    }
+
+    public static void setApplicationState(State applicationState) {
+        sApplicationState = applicationState;
+    }
+
+    public enum State {
+        INIT,
+        CALIBRATION,
+        DATA,
+        STABILIZATION,
+        IDLE
     }
 }
