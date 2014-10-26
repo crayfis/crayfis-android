@@ -116,19 +116,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private float[] geomagnetic = new float[3];
 	private float[] orientation = new float[3];
 
-	// Android image data used for displaying the results
-	// private Bitmap output;
-
-	// how many events L1 skipped (after prescale)
-	private int L1skip = 0;
-	// how many events L1 processed (after prescale)
-	private int L1proc = 0;
-
-	// how many events L1 skipped (after prescale)
-	private int L2skip = 0;
-	// how many events L1 processed (after prescale)
-	private int L2proc = 0;
-
 	// keep track of how often we had to drop a frame at L1
 	// because the L2 queue was full.
 	private int L2busy = 0;
@@ -144,8 +131,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private long L1counter = 0;
 	private long L2counter = 0;
 
+    // TODO I think these belong in a standard configuration class
 	private int L1prescale = 1;
 	private int L2prescale = 1;
+    // how many frames to sample during calibration
+    // (more frames is longer but gives better statistics)
+    public final int default_calibration_sample_frames = 1000;
+    // targeted max. number of events per minute to allow
+    // (lower rate => higher threshold)
+    public final float default_target_events_per_minute = 60;
+    // number of frames to pass during stabilization periods.
+    public static final int stabilization_sample_frames = 45;
 
 	public enum state {
 		INIT, CALIBRATION, DATA, STABILIZATION, IDLE,
@@ -157,22 +153,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private long calibration_start;
 	private long calibration_stop;
 
-	// how many frames to sample during calibration
-	// (more frames is longer but gives better statistics)
-	public final int default_calibration_sample_frames = 1000;
 	private int calibration_sample_frames;
 
-	// targeted max. number of events per minute to allow
-	// (lower rate => higher threshold)
-	public final float default_target_events_per_minute = 60;
 	private float target_events_per_minute = default_target_events_per_minute;
 
 	// the nominal period for an exposure block (in seconds)
 	public static final int default_xb_period = 2*60;
 	private int xb_period = default_xb_period;
 
-	// number of frames to pass during stabilization periods.
-	public static final int stabilization_sample_frames = 45;
 	// counter for stabilization mode
 	private int stabilization_counter;
 
@@ -180,23 +168,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private int L1thresh = 0;
 	private int L2thresh = 5;
 	long starttime;
-	long lastUploadTime;
-	long lastL2time;
-
-	// calibration analysis parameters
-	// calibration rate = number of seconds per background photon
-	int stat_factor = 5; // run for stat_factor*calibration_rate
-							// until we get stat_factor photons
-	// a larger stat factor will mean a more accurate threshold but
-	// longer calibration time
-	int calibration_rate = 10;
 
 	// Location stuff
 	private Location currentLocation;
-	private LocationManager locationManager;
-	private LocationListener locationListener;
 
-	// number of frames to wait between fps updates
+    // number of frames to wait between fps updates
 	public static final int fps_update_interval = 30;
 
 	private long L1_fps_start = 0;
@@ -309,9 +285,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
 		CFLog.i("DAQActivity UPDATED SHARED PREF: " + key);
-		if (key == "L1_thresh") {
+		if (key.equals("L1_thresh")) {
 			L1thresh = prefs.getInt(key, 0);
-		} else if (key == "L2_thresh") {
+		} else if (key.equals("L2_thresh")) {
 			L2thresh = prefs.getInt(key, 0);
 		}
 
@@ -321,11 +297,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			toStabilizationMode();
 		}
 
-		if (key == "target_events_per_minute") {
+		if (key.equals("target_events_per_minute")) {
 			target_events_per_minute = prefs.getFloat(key, default_target_events_per_minute);
-		} else if (key == "calibration_sample_frames") {
+		} else if (key.equals("calibration_sample_frames")) {
 			calibration_sample_frames = prefs.getInt(key, default_calibration_sample_frames);
-		} else if (key == "xb_period") {
+		} else if (key.equals("xb_period")) {
 			xb_period = prefs.getInt(key, default_xb_period);
 		}
 	}
@@ -515,9 +491,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	}
 
 	public void generateRunConfig() {
-		if (run_config != null) {
-			// we've already constructed the object. nothing to do here.
-		}
 		DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
 
 		b.setIdHi(run_id.getMostSignificantBits());
@@ -590,7 +563,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		preview.addView(mPreview);
 		preview.addView(mDraw);
 
-		L1counter = L1proc = L1skip = 0;
+		L1counter = 0;
 		starttime = System.currentTimeMillis();
 
 		LocationListener locationListener = new LocationListener() {
@@ -611,8 +584,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			}
 		};
 		// get the manager
-		locationManager = (LocationManager) this
-				.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager locationManager = (LocationManager) this
+                .getSystemService(Context.LOCATION_SERVICE);
 
 		// ask for updates from network and GPS
 		// locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
@@ -748,7 +721,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// operations are very expensive
 		List<Camera.Size> sizes = param.getSupportedPreviewSizes();
 		// previewSize = sizes.get(closest(sizes,640,480));
-		previewSize = sizes.get(closest(sizes, targetPreviewHeight, targetPreviewWidth));
+		previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
 		// Camera.Size previewSize = sizes.get(closest(sizes,176,144));
 
 		CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
@@ -894,11 +867,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						L2busy++;
 					}
 				}
-				L1proc++;
 			}
 			else {
 				// no room on the L2 queue! We'll have to skip this frame.
-				L1skip++;
 				xb.L1_skip++;
 			}
 
@@ -927,7 +898,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		Paint mypaint_info;
 
 		private String[] histo_strings_all = new String[256];
-		private String[] histo_strings_thresh = new String[256];
 
 		void makeHistogram(int data[], int min, String[] histo_strings) {
 			int max = 1;
@@ -980,8 +950,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				int h = canvas.getHeight();
 
 				// fill the window and center it
-				double scaleX = w / (double) 640.0;
-				double scaleY = h / (double) 480.0;
+				double scaleX = w / 640.0;
+				double scaleY = h / 480.0;
 
 				double scale = Math.min(scaleX, scaleY);
 				double tranX = (w - scale * 640.0) / 2;
@@ -1042,8 +1012,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						labels[i] = ' ';
 
 				String slabels = new String(labels);
-				String slabelsnum = new String(
-						"0              100               200");
+				String slabelsnum = "0              100               200";
 				canvas.drawText(slabels, (float) (50),
 						(float) (yoffset + (256 + 5) * tsize / 10.0), mypaint2);
 				canvas.drawText(slabelsnum, (float) (42),
@@ -1053,7 +1022,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						(float) (50 + 20 * tsize / 10.0),
 						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
 
-				String state_message = "";
+				String state_message;
 				switch (current_state) {
 				case CALIBRATION:
 					state_message = "Mode: "+current_state.toString() + " "
@@ -1134,7 +1103,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	}
 
 	private class ExposureBlockManager {
-		public static final String TAG = "ExposureBlockManager";
 
 		// This is where the current xb is kept. The DAQActivity must access
 		// the current exposure block through the public methods here.
@@ -1201,7 +1169,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		private void retireExposureBlock(ExposureBlock xb) {
 			// anything that's being committed must have already been frozen.
-			assert xb.frozen == true;
+			assert xb.frozen;
 			retired_blocks.add(xb);
 
 			// if this is a DATA block, add its age to the commited
@@ -1341,12 +1309,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				if (L2counter % L2prescale != 0) {
 					// prescaled! Drop the event.
 					xb.L2_skip++;
-					L2skip++;
-					
 					continue;
 				}
 				
-				L2proc++;
 				// FIXME: should we worry about setting currentLocation at L1 (acquisition) time? Or is it okay here?
 				frame.setLocation(new Location(currentLocation));
 				
@@ -1354,8 +1319,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				RecoEvent event = reco.buildEvent(frame);
 				
 				// If we got a bad frame, go straight to stabilization mode.
-				if (reco.good_quality == false
-						&& fixed_threshold == false) {
+				if (!reco.good_quality && !fixed_threshold) {
 					toStabilizationMode();
 					continue;
 				}
@@ -1401,7 +1365,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					// mark the time of the last event from the run.
 					calibration_stop = frame.getAcquiredTime();
 					toDataMode();
-					continue;
 				}
 			}
 			running = false;
