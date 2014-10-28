@@ -119,8 +119,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private int L2busy = 0;
 
 	// how many particles seen > thresh
-	private int totalPixels = 0;
-	private int totalEvents = 0;
 	private int totalXBs = 0;
 	private int committedXBs = 0;
 
@@ -129,9 +127,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private long L1counter = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-
-    // This gets set in the data state transition, false in the idle transition
-	private boolean fixed_threshold;
 
 	private long calibration_start;
 	private long calibration_stop;
@@ -155,7 +150,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private OutputManager outputThread;
 
 	// class to find particles in frames
-	private ParticleReco reco;
+	private ParticleReco mParticleReco;
 
 	// Object used for synchronizing output image
 	private final Object lockOutput = new Object();
@@ -287,7 +282,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			CFLog.i("DAQActivity FSM Transition: STABILIZATION -> CALIBRATION");
 
 			// clear histograms and counters before calibration
-			reco.reset();
+			mParticleReco.reset();
 
 			calibration_start = System.currentTimeMillis();
             CFApplication.setApplicationState(CFApplication.State.CALIBRATION);
@@ -309,7 +304,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		switch (CFApplication.getApplicationState()) {
 		case INIT:
 			CFLog.i("DAQActivity FSM Transition: INIT -> DATA");
-			fixed_threshold = true;
+            l2thread.setFixedThreshold(true);
 			CFApplication.setApplicationState(CFApplication.State.DATA);
 
 			// Start a new exposure block
@@ -325,21 +320,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			long calibration_time = calibration_stop - calibration_start;
 			int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time* 1e-3 / 60.0);
 
-			CFLog.i("Calibration: Processed " + reco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+			CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
 
 			// build the calibration result object
 			DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
 			// (ugh, why can't primitive arrays be Iterable??)
-			for (int v : reco.h_pixel.values) {
+			for (int v : mParticleReco.h_pixel.values) {
 				cal.addHistPixel(v);
 			}
-			for (int v : reco.h_l2pixel.values) {
+			for (int v : mParticleReco.h_l2pixel.values) {
 				cal.addHistL2Pixel(v);
 			}
-			for (int v : reco.h_maxpixel.values) {
+			for (int v : mParticleReco.h_maxpixel.values) {
 				cal.addHistMaxpixel(v);
 			}
-			for (int v : reco.h_numpixel.values) {
+			for (int v : mParticleReco.h_numpixel.values) {
 				cal.addHistNumpixel(v);
 			}
 			// and commit it to the output stream
@@ -347,7 +342,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			outputThread.commitCalibrationResult(cal.build());
 
 			// update the thresholds
-			new_thresh = reco.calculateThresholdByEvents(target_events);
+			new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
 			CFLog.i("DAQActivity Setting new L1 threshold: {"+ CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
             CONFIG.setL1Threshold(new_thresh);
 
@@ -384,7 +379,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		case IDLE:
 			// This is the first state transisiton of the app. Go straight into stabilization
 			// so the calibratoin will be clean.
-			fixed_threshold = false;
+            l2thread.setFixedThreshold(false);
 			CFApplication.setApplicationState(CFApplication.State.STABILIZATION);
 			L2Queue.clear();
 			stabilization_counter = 0;
@@ -604,10 +599,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
 
-		if (reco == null) {
+		if (mParticleReco == null) {
 			// if we don't already have a particleReco object setup,
 			// do that now that we know the camera size.
-			reco = new ParticleReco(previewSize, this);
+			mParticleReco = new ParticleReco(previewSize, this);
 		}
 
 		// once all the hardware is set up and the output manager is running,
@@ -933,16 +928,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						"Exposure: "
 								+ (int) (1.0e-3 * exposed_time)
 								+ "s", 200, yoffset + 4 * tsize, mypaint);
-				canvas.drawText("Frames : " + totalEvents, 200, yoffset + 6 * tsize,
+				canvas.drawText("Frames : " + l2thread.getTotalEvents(), 200, yoffset + 6 * tsize,
 						mypaint);
-				canvas.drawText("Candidates : " + totalPixels, 200, yoffset + 8 * tsize,
+				canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 8 * tsize,
 						mypaint);
 
 				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 10
 						* tsize, mypaint);
 
 				// /// Histogram
-				makeHistogram(reco.h_pixel.values, 0, histo_strings_all);
+				makeHistogram(mParticleReco.h_pixel.values, 0, histo_strings_all);
 				for (int j = 256; j > 0; j--)
 					canvas.drawText(histo_strings_all[j - 1], 50,
 							(float) (yoffset + (256 - j) * tsize / 10.0),
@@ -969,7 +964,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				switch (CFApplication.getApplicationState()) {
 				case CALIBRATION:
 					state_message = "Mode: "+ CFApplication.getApplicationState() + " "
-							+ (int)(( 100.0 * (float) reco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
+							+ (int)(( 100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
 					break;
 				case DATA:
 					state_message = "Mode: "+CFApplication.getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
@@ -1184,6 +1179,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	 */
 	private class L2Processor extends Thread {
 
+        private int mTotalPixels = 0;
+        private int mTotalEvents = 0;
+        // This gets set in the data state transition, false in the idle transition
+        private boolean mFixedThreshold;
+
         private long L2counter = 0;
         private final CFConfig CONFIG = CFConfig.getInstance();
 
@@ -1262,10 +1262,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 frame.setLocation(CFApplication.getLastKnownLocation());
 
 				// First, build the event from the raw frame.
-				RecoEvent event = reco.buildEvent(frame);
+				RecoEvent event = mParticleReco.buildEvent(frame);
 				
 				// If we got a bad frame, go straight to stabilization mode.
-				if (!reco.good_quality && !fixed_threshold) {
+				if (!mParticleReco.good_quality && !mFixedThreshold) {
 					toStabilizationMode();
 					continue;
 				}
@@ -1275,12 +1275,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// Now do the L2 (pixel-level analysis)
 				ArrayList<RecoPixel> pixels;
 				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
-					pixels = reco.buildL2Pixels(frame, xb.L2_thresh);
+					pixels = mParticleReco.buildL2Pixels(frame, xb.L2_thresh);
 				}
 				else {
 					// Don't bother with full pixel reco and L2 threshold
 					// if we're not actually taking data.
-					pixels = reco.buildL2PixelsQuick(frame, 0);
+					pixels = mParticleReco.buildL2PixelsQuick(frame, 0);
 					
 					// later add here a check on the fraction of pixels hit
 					
@@ -1294,8 +1294,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
 					// keep track of the running totals for acquired
 					// events/pixels over the app lifetime.
-					totalEvents++;
-					totalPixels += pixels.size();
+					mTotalEvents++;
+					mTotalPixels += pixels.size();
 				}
 				
 				L2counter++;
@@ -1307,7 +1307,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
 				if (CFApplication.getApplicationState() == CFApplication.State.CALIBRATION
-						&& reco.event_count >= CONFIG.getCalibrationSampleFrames()) {
+						&& mParticleReco.event_count >= CONFIG.getCalibrationSampleFrames()) {
 					// mark the time of the last event from the run.
 					calibration_stop = frame.getAcquiredTime();
 					toDataMode();
@@ -1315,7 +1315,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			}
 			running = false;
 		}
-	}
+
+        public int getTotalPixels() {
+            return mTotalPixels;
+        }
+
+        public int getTotalEvents() {
+            return mTotalEvents;
+        }
+
+        public void setFixedThreshold(boolean fixedThreshold) {
+            mFixedThreshold = fixedThreshold;
+        }
+    }
 
 
 	@Override
