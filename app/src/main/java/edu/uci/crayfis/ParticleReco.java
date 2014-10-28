@@ -17,46 +17,23 @@ import java.util.ArrayList;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
-public class ParticleReco implements OnSharedPreferenceChangeListener{
+public class ParticleReco {
+
+    private static final CFConfig CONFIG = CFConfig.getInstance();
+
 	public boolean good_quality;
 	
 	public long time;
 	public Location location;
 	
-	public static float default_bg_avg_cut = 30;
-	public static float default_bg_var_cut = 5;
 	//public static float default_max_pix_frac = (float)0.15;
-	
-	private float bg_avg_cut;
-	private float bg_var_cut;
 	//private float max_pix_frac;
 	
-	private DAQActivity context;
-	
-	public ParticleReco(Camera.Size previewSize, DAQActivity context)
+	public ParticleReco(Camera.Size previewSize)
 	{
 		this.previewSize = previewSize;
 		good_quality=false;
 		clearHistograms();
-		
-		this.context = context;
-		
-		context.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(this);
-		updateSettings();
-	}
-	
-	public void updateSettings() {
-        // FIXME This needs to move to CFConfig
-		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
-		bg_avg_cut = localPrefs.getFloat("qual_bg_avg", default_bg_avg_cut);
-		bg_var_cut = localPrefs.getFloat("qual_bg_var", default_bg_var_cut);
-		//max_pix_frac = localPrefs.getFloat("qual_pix_frac", default_max_pix_frac);
-	}
-	
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-		// someone changed the settings. update the local variables.
-		updateSettings();
 	}
 	
 	public class RecoEvent {
@@ -294,7 +271,8 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		*/
 		// is the data good?
 		// TODO: investigate what makes sense here!
-		good_quality = (background < bg_avg_cut && variance < bg_var_cut); // && percent_hit < max_pix_frac);
+		good_quality = (background < CONFIG.getQualityBgAverage() &&
+                variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 				
 		//CFLog.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 

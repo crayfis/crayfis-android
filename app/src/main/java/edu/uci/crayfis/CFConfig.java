@@ -14,6 +14,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
     private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
+    private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
+    private static final String KEY_QUAL_BG_VAR = "qual_bg_var";
 
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
@@ -21,6 +23,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final int DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
+    private static final int DEFAULT_BG_AVG_CUT = 30;
+    private static final int DEFAULT_BG_VAR_CUT = 5;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -28,6 +32,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
     private int mExposureBlockPeriod;
+    private int mQualityBgAverage;
+    private int mQualityBgVariance;
 
     private CFConfig() {
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -36,6 +42,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
+        mQualityBgAverage = DEFAULT_BG_AVG_CUT;
+        mQualityBgVariance = DEFAULT_BG_VAR_CUT;
     }
 
     /**
@@ -112,6 +120,24 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     /**
+     * FIXME I'm not 100% sure what this is.
+     *
+     * @return int
+     */
+    public int getQualityBgAverage() {
+        return mQualityBgAverage;
+    }
+
+    /**
+     * FIXME I'm not 100% sure what this is.
+     *
+     * @return int
+     */
+    public int getQualityBgVariance() {
+        return mQualityBgVariance;
+    }
+
+    /**
      * Get the instance of the configuration.
      *
      * @return {@link edu.uci.crayfis.CFConfig}
@@ -127,5 +153,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
         mTargetEventsPerMinute = sharedPreferences.getInt(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
+        mQualityBgAverage = sharedPreferences.getInt(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
+        mQualityBgVariance = sharedPreferences.getInt(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
     }
 }

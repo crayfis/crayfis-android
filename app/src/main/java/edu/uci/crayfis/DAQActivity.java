@@ -602,7 +602,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		if (mParticleReco == null) {
 			// if we don't already have a particleReco object setup,
 			// do that now that we know the camera size.
-			mParticleReco = new ParticleReco(previewSize, this);
+			mParticleReco = new ParticleReco(previewSize);
 		}
 
 		// once all the hardware is set up and the output manager is running,
