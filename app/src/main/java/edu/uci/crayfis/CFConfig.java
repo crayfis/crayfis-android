@@ -1,6 +1,9 @@
 package edu.uci.crayfis;
 
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
+
+import edu.uci.crayfis.server.ServerCommand;
 
 /**
  * Global configuration class.
@@ -21,19 +24,19 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
-    private static final int DEFAULT_TARGET_EPM = 60;
+    private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final int DEFAULT_BG_AVG_CUT = 30;
-    private static final int DEFAULT_BG_VAR_CUT = 5;
+    private static final float DEFAULT_BG_AVG_CUT = 30;
+    private static final float DEFAULT_BG_VAR_CUT = 5;
 
     private int mL1Threshold;
     private int mL2Threshold;
     private int mCalibrationSampleFrames;
-    private int mTargetEventsPerMinute;
+    private float mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
     private int mExposureBlockPeriod;
-    private int mQualityBgAverage;
-    private int mQualityBgVariance;
+    private float mQualityBgAverage;
+    private float mQualityBgVariance;
 
     private CFConfig() {
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -104,9 +107,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     /**
      * Targeted max. number of events per minute to allow.  Lower rate => higher threshold.
      *
-     * @return int
+     * @return float
      */
-    public int getTargetEventsPerMinute() {
+    public float getTargetEventsPerMinute() {
         return mTargetEventsPerMinute;
     }
 
@@ -124,7 +127,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @return int
      */
-    public int getQualityBgAverage() {
+    public float getQualityBgAverage() {
         return mQualityBgAverage;
     }
 
@@ -133,7 +136,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @return int
      */
-    public int getQualityBgVariance() {
+    public float getQualityBgVariance() {
         return mQualityBgVariance;
     }
 
@@ -151,9 +154,40 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
         mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
-        mTargetEventsPerMinute = sharedPreferences.getInt(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
+        mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
-        mQualityBgAverage = sharedPreferences.getInt(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
-        mQualityBgVariance = sharedPreferences.getInt(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
+        mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
+        mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
+    }
+
+    /**
+     * Update configuration based on commands from the server.
+     *
+     * FIXME This is not saving to the shared preferences yet.
+     *
+     * @param serverCommand {@link edu.uci.crayfis.server.ServerCommand}
+     */
+    public void updateFromServer(@NonNull final ServerCommand serverCommand) {
+        if (serverCommand.getL1Threshold() != null) {
+            mL1Threshold = serverCommand.getL1Threshold();
+        }
+        if (serverCommand.getL2Threshold() != null) {
+            mL2Threshold = serverCommand.getL2Threshold();
+        }
+        if (serverCommand.getEventsPerMinute() != null) {
+            mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
+        }
+        if (serverCommand.getCalibrationSampleFrames() != null) {
+            mCalibrationSampleFrames = serverCommand.getCalibrationSampleFrames();
+        }
+        if (serverCommand.getTargetExposureBlockPeriod() != null) {
+            mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
+        }
+        if (serverCommand.getQualityBgAverage() != null) {
+            mQualityBgAverage = serverCommand.getQualityBgAverage();
+        }
+        if (serverCommand.getQualityBgVariance() != null) {
+            mQualityBgVariance = serverCommand.getQualityBgVariance();
+        }
     }
 }

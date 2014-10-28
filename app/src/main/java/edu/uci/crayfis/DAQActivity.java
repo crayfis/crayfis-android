@@ -48,6 +48,9 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -63,6 +66,7 @@ import edu.uci.crayfis.ParticleReco.RecoEvent;
 import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -181,70 +185,26 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	}
 
+    // FIXME This is coupled with OutputManager, might not be needed now that it's going through CFConfig, investigate later.
  	public void updateSettings(JSONObject json) {
  		if (json == null) {
  			return;
  		}
-		SharedPreferences localPrefs = getPreferences(Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = localPrefs.edit();
-		boolean restart_xb = false;
- 		try {
- 			if (json.has("set_L1_thresh")) {
- 				editor.putInt("L1_thresh", json.getInt("set_L1_thresh"));
- 				CFLog.i("DAQActivity GOT L1 from SERVER" + json.getInt("set_L1_thresh"));
- 				restart_xb = true;
- 			}
- 			if (json.has("set_L2_thresh")) {
- 				editor.putInt("L2_thresh", json.getInt("set_L2_thresh"));
- 				restart_xb = true;
- 			}
- 			if (json.has("set_target_L2_rate")) {
- 				editor.putFloat("target_events_per_minute", (float)json.getDouble("set_target_L2_rate"));
- 			}
- 			if (json.has("set_calib_len")) {
- 				editor.putInt("calibration_sample_frames", json.getInt("set_calib_len"));
- 			}
- 			if (json.has("set_xb_period")) {
- 				editor.putInt("xb_period", json.getInt("set_xb_period"));
- 			}
- 			if (json.has("set_max_upload_interval")) {
- 				editor.putInt("max_upload_interval", json.getInt("set_max_upload_interval"));
- 			}
- 			if (json.has("set_upload_size_max")) {
- 				editor.putInt("max_chunk_size", json.getInt("set_upload_size_max"));
- 			}
- 			if (json.has("set_cache_upload_interval")) {
- 				editor.putInt("min_cache_upload_interval", json.getInt("set_cache_upload_interval"));
- 			}
- 			if (json.has("set_qual_pix_frac")) {
- 				editor.putFloat("qual_pix_frac", (float)json.getDouble("set_qual_pix_frac"));
- 				restart_xb = true;
- 			}
- 			if (json.has("set_qual_bg_avg")) {
- 				editor.putFloat("qual_bg_avg", (float)json.getDouble("set_qual_bg_avg"));
- 				restart_xb = true;
- 			}
- 			if (json.has("set_qual_bg_var")) {
- 				editor.putFloat("qual_bg_var", (float)json.getDouble("set_qual_bg_var"));
- 				restart_xb = true;
- 			}
- 		} catch (JSONException ex) {
- 			CFLog.e("DAQActivity Malformed JSON from server!");
- 			return;
- 		}
- 		// save the changes.
- 		editor.apply();
 
- 		// restart the XB if we changed some setting that should invalidate it:
- 		if (restart_xb) {
- 			xbManager.newExposureBlock();
- 		}
+        try {
+            final ServerCommand serverCommand = new Gson().fromJson(json.toString(), ServerCommand.class);
+            CONFIG.updateFromServer(serverCommand);
+            if (serverCommand.shouldRestartEBManager()) {
+                xbManager.newExposureBlock();
+            }
 
- 		// finally, if the server commanded us to enter calibration mode, do so now.
- 		if (json.has("cmd_recalibrate")) {
- 			CFLog.i("DAQActivity SERVER commands us to recalibrate.");
- 			toStabilizationMode();
- 		}
+            if (serverCommand.shouldRecalibrate()) {
+                CFLog.i("DAQActivity SERVER commands us to recalibrate.");
+                toStabilizationMode();
+            }
+        } catch (JsonSyntaxException e) {
+            CFLog.e("Failed to parse server response: " + e.getMessage());
+        }
 	}
 
 	public void clickedAbout(View view) {
