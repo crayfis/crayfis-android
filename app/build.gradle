@@ -1,0 +1,41 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url 'http://download.crashlytics.com/maven' }
+    }
+    dependencies {
+        classpath 'com.crashlytics.tools.gradle:crashlytics-gradle:1.+'
+    }
+}
+
+apply plugin: 'com.android.application'
+
+repositories {
+    maven { url 'http://download.crashlytics.com/maven' }
+}
+
+apply plugin: 'crashlytics'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        applicationId "edu.uci.crayfis"
+        minSdkVersion 10
+        targetSdkVersion 19
+    }
+
+    buildTypes {
+        release {
+            runProguard false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.android.support:support-v4:19.0.0'
+    compile 'com.google.protobuf:protobuf-java:2.5.0'
+    compile 'com.crashlytics.android:crashlytics:1.1.13'
+}
