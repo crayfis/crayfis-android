@@ -314,91 +314,92 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	
 	public ArrayList<RecoPixel> buildL2Pixels(RawCameraFrame frame, int thresh, boolean quick) {
 		ArrayList<RecoPixel> pixels = null;
-		
-		if (! quick) {
-			pixels = new ArrayList<RecoPixel>();
-		}
-		
-		int width = previewSize.width;
-		int height = previewSize.height;
-		int max_val = 0;
-		int num_pix = 0;
-		
-		byte[] bytes = frame.bytes;
-		
-		for (int ix=0; ix < width; ix++) {
-			for (int iy=0; iy < height; iy++) {
-				// NB: cast (signed) byte to integer for meaningful comparisons!
-				int val = bytes[ix+width*iy] & 0xFF; 		
-				
-				h_pixel.fill(val);
-				
-				if (val > max_val) {
-					max_val = val;
-				}
-				
-				if (val > thresh)
-				{
-					h_l2pixel.fill(val);
-					num_pix++;
-					
-					if (quick) {
-						// okay, bail out without any further reco
-						continue;
-					}
-					
-					// okay, found a pixel above threshold!
-					RecoPixel p = new RecoPixel();
-					p.x = ix;
-					p.y = iy;
-					p.val = val;
-					
-					// look at the 8 adjacent pixels to measure max and ave values
-					int sum3 = 0, sum5 = 0;
-					int norm3 = 0, norm5 = 0;
-					int nearMax = 0, nearMax5 = 0;
-					for (int dx = -2; dx <= 2; ++dx) {
-						for (int dy = -2; dy <= 2; ++dy) {
-							if (dx == 0 && dy == 0) {
-								// exclude center from average
-								continue;
-							}
-							
-							int idx = ix + dx;
-							int idy = iy + dy;
-							if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
-								// we're off the sensor plane.
-								continue;
-							}
-							
-							int dval = bytes[idx + width*idy] & 0xFF;
-							sum5 += dval;
-							norm5++;
-							nearMax5 = Math.max(nearMax5, dval);
-							if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-								// we're in the 3x3 part
-								sum3 += dval;
-								norm3++;
-								nearMax = Math.max(nearMax, dval);
-							}
-						}
-					}
-					
-					p.avg_3 = ((float) sum3) / norm3;
-					p.avg_5 = ((float) sum5) / norm5;
-					p.near_max = nearMax;
-					
-					pixels.add(p);
-				}
-			}
-		}
-		
-		// update the event-level histograms.
-		h_maxpixel.fill(max_val);
-		h_numpixel.fill(num_pix);
-		
-		pixel_count += num_pix;
-		
+
+        try {
+
+            if (!quick) {
+                pixels = new ArrayList<RecoPixel>();
+            }
+
+            int width = previewSize.width;
+            int height = previewSize.height;
+            int max_val = 0;
+            int num_pix = 0;
+
+            byte[] bytes = frame.bytes;
+
+            for (int ix = 0; ix < width; ix++) {
+                for (int iy = 0; iy < height; iy++) {
+                    // NB: cast (signed) byte to integer for meaningful comparisons!
+                    int val = bytes[ix + width * iy] & 0xFF;
+
+                    h_pixel.fill(val);
+
+                    if (val > max_val) {
+                        max_val = val;
+                    }
+
+                    if (val > thresh) {
+                        h_l2pixel.fill(val);
+                        num_pix++;
+
+                        if (quick) {
+                            // okay, bail out without any further reco
+                            continue;
+                        }
+
+                        // okay, found a pixel above threshold!
+                        RecoPixel p = new RecoPixel();
+                        p.x = ix;
+                        p.y = iy;
+                        p.val = val;
+
+                        // look at the 8 adjacent pixels to measure max and ave values
+                        int sum3 = 0, sum5 = 0;
+                        int norm3 = 0, norm5 = 0;
+                        int nearMax = 0, nearMax5 = 0;
+                        for (int dx = -2; dx <= 2; ++dx) {
+                            for (int dy = -2; dy <= 2; ++dy) {
+                                if (dx == 0 && dy == 0) {
+                                    // exclude center from average
+                                    continue;
+                                }
+
+                                int idx = ix + dx;
+                                int idy = iy + dy;
+                                if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
+                                    // we're off the sensor plane.
+                                    continue;
+                                }
+
+                                int dval = bytes[idx + width * idy] & 0xFF;
+                                sum5 += dval;
+                                norm5++;
+                                nearMax5 = Math.max(nearMax5, dval);
+                                if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+                                    // we're in the 3x3 part
+                                    sum3 += dval;
+                                    norm3++;
+                                    nearMax = Math.max(nearMax, dval);
+                                }
+                            }
+                        }
+
+                        p.avg_3 = ((float) sum3) / norm3;
+                        p.avg_5 = ((float) sum5) / norm5;
+                        p.near_max = nearMax;
+
+                        pixels.add(p);
+                    }
+                }
+            }
+
+            // update the event-level histograms.
+            h_maxpixel.fill(max_val);
+            h_numpixel.fill(num_pix);
+
+            pixel_count += num_pix;
+        } catch (OutOfMemoryError e) { }
 		return pixels;
 	}
 	

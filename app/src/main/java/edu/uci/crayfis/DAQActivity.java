@@ -348,7 +348,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			xb_period = prefs.getInt(key, default_xb_period);
 		}
 	}
- 	
+
+
+
 	public void clickedAbout(View view) {
 
 		final SpannableString s = new SpannableString(
@@ -838,8 +840,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	public void onPreviewFrame(byte[] bytes, Camera camera) {
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
-		
-		
+
+        // in case we get a null frame
+		if (bytes==null) return;
+
+
 		// get a reference to the current xb, so it doesn't change from underneath us
 		ExposureBlock xb = xbManager.getCurrentExposureBlock();
 		
@@ -1221,8 +1226,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		private void retireExposureBlock(ExposureBlock xb) {
 			// anything that's being committed must have already been frozen.
 			assert xb.frozen == true;
-			retired_blocks.add(xb);
-			
+            synchronized(this) {
+                retired_blocks.add(xb);
+            }
 			// if this is a DATA block, add its age to the commited
 			// exposure time.
 			if (xb.daq_state == DAQActivity.state.DATA) {
@@ -1239,19 +1245,22 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		public void flushCommittedBlocks() {
 			// Try to flush out any committed exposure blocks that
 			// have no new events coming.
-			if (retired_blocks.size() == 0) {
-				// nothing to be done.
-				return;
-			}
-			
-			for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
-				ExposureBlock xb = it.next();
-				if (xb.end_time < safe_time) {
-					// okay, it's safe to commit this block now.
-					it.remove();
-					commitExposureBlock(xb);
-				}
-			}
+            synchronized(this) {
+
+                if (retired_blocks.size() == 0) {
+                    // nothing to be done.
+                    return;
+                }
+
+                for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
+                    ExposureBlock xb = it.next();
+                    if (xb.end_time < safe_time) {
+                        // okay, it's safe to commit this block now.
+                        it.remove();
+                        commitExposureBlock(xb);
+                    }
+                }
+            }
 		}
 		
 		public void flushCommittedBlocks(boolean force) {
