@@ -170,7 +170,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		INIT, CALIBRATION, DATA, STABILIZATION, IDLE,
 	};
 
+    public enum display_mode {
+        HIST, TIME
+    };
+
 	private state current_state;
+    private display_mode current_mode;
 	private boolean fixed_threshold;
 	
 	private long calibration_start;
@@ -242,8 +247,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	}
 	
 	public void clickedMode(View view) {
+        Log.e(TAG," clicked MODE current="+current_mode.toString());
+        // toggle modes
+        if (current_mode == DAQActivity.display_mode.HIST) { current_mode = DAQActivity.display_mode.TIME; }
+        else
+        if (current_mode == DAQActivity.display_mode.TIME) { current_mode = DAQActivity.display_mode.HIST; }
+        Log.e(TAG," clicked MODE new="+current_mode.toString());
 
-		// do nothing for now. Later toggle the mode.
 	}
 
 	// received message when power is disconnected -- should end run
@@ -356,6 +366,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				"crayfis.ps.uci.edu/about");
 
 		final TextView tx1 = new TextView(this);
+
+        if (current_mode==DAQActivity.display_mode.HIST)
 		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                 "This frame shows:\n\t Exposure: seconds of data-taking\n" +
                 "\t Frames: number with a hot pixel\n" +
@@ -365,6 +377,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 "\t Scan rate: rate, frames-per-second\n" +
                 "On the left is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nFor more details:  "
 				+ s);
+        if (current_mode==DAQActivity.display_mode.TIME)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This frame shows:\n\t Exposure: seconds of data-taking\n" +
+                    "\t Frames: number with a hot pixel\n" +
+                    "\t Candidates: number of pixels saved\n" +
+                    "\t Data blocks: groups of frames\n" +
+                    "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
+                    "\t Scan rate: rate, frames-per-second\n" +
+                    "On the left is a time series showing the mean pixel value (white) and the max pixel value (red)" +
+                    "\nFor more details:  "
+                    + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
@@ -663,7 +686,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		
 		// Set the initial state
 		current_state = DAQActivity.state.INIT;
-		
+		current_mode = DAQActivity.display_mode.HIST;
 		// Spin up the output and image processing threads:
 		outputThread = new OutputManager(this);
 		outputThread.start();
@@ -952,12 +975,26 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		Paint mypaint;
 		Paint mypaint2;
 		//Paint mypaint2_thresh;
-		Paint mypaint3;
+		Paint mypaint3,mypaint4;
 		Paint mypaint_warning;
 		Paint mypaint_info;
 
 		private String[] histo_strings_all = new String[256];
 		private String[] histo_strings_thresh = new String[256];
+
+        void makeHistory(int data[], int nbins,String[] histo_strings) {
+            for (int j = 255; j >= 0; j--) {
+                // width loop
+                for (int i = 0; i < nbins; i++) {
+                    if (j == data[i])
+                        histo_chars[j][i] = '*';
+                    else
+                        histo_chars[j][i] = ' ';
+                }
+                histo_strings[j] = new String(histo_chars[j]);
+            }
+
+        }
 
 		void makeHistogram(int data[], int min, String[] histo_strings) {
 			int max = 1;
@@ -993,8 +1030,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			//mypaint2_thresh = new Paint();
 
 			mypaint3 = new Paint();
-			
-			mypaint_warning = new Paint();
+            mypaint4 = new Paint();
+
+            mypaint_warning = new Paint();
 			mypaint_info = new Paint();
 
 			// This call is necessary, or else the
@@ -1014,7 +1052,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				int tsize = (int)(h/50);
 				int yoffset = 2*tsize;
 				mypaint.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint.setColor(android.graphics.Color.RED);
+				mypaint.setColor(android.graphics.Color.BLUE);
 				mypaint.setTextSize((int) (tsize * 1.5));
 				
 				mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
@@ -1035,6 +1073,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
 				mypaint2.setTypeface(tf);
 
+                mypaint4.setStyle(android.graphics.Paint.Style.FILL);
+                mypaint4.setColor(android.graphics.Color.RED);
+                mypaint4.setTextSize(tsize / (float) 10.0);
+                mypaint4.setTypeface(tf);
 
 
 
@@ -1052,30 +1094,54 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
 						* tsize, mypaint);
 
-				// /// Histogram
-				makeHistogram(reco.h_pixel.values, 0, histo_strings_all);
-				for (int j = 256; j > 0; j--)
-					canvas.drawText(histo_strings_all[j - 1], 50,
-							(float) (yoffset + (256 - j) * tsize / 10.0),
-							mypaint2);
-				
-				for (int i = 0; i < 256; i++)
-					if (i % 10 == 0)
-						labels[i] = '|';
-					else
-						labels[i] = ' ';
 
-				String slabels = new String(labels);
-				String slabelsnum = new String(
-						"0              100               200");
-				canvas.drawText(slabels, (float) (50),
-						(float) (yoffset + (256 + 5) * tsize / 10.0), mypaint2);
-				canvas.drawText(slabelsnum, (float) (42),
-						(float) (yoffset + (256 + 14) * tsize / 10.0), mypaint3);
+                if (current_mode == DAQActivity.display_mode.HIST) {
+                    // /// Histogram
+                    makeHistogram(reco.h_pixel.values, 0, histo_strings_all);
+                    for (int j = 256; j > 0; j--)
+                        canvas.drawText(histo_strings_all[j - 1], 50,
+                                (float) (yoffset + (256 - j) * tsize / 10.0),
+                                mypaint2);
 
-				canvas.drawText("Pixel value",
-						(float) (50 + 20 * tsize / 10.0),
-						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
+                    for (int i = 0; i < 256; i++)
+                        if (i % 10 == 0)
+                            labels[i] = '|';
+                        else
+                            labels[i] = ' ';
+
+                    String slabels = new String(labels);
+                    String slabelsnum = new String(
+                            "0              100               200");
+                    canvas.drawText(slabels, (float) (50),
+                            (float) (yoffset + (256 + 5) * tsize / 10.0), mypaint2);
+                    canvas.drawText(slabelsnum, (float) (42),
+                            (float) (yoffset + (256 + 14) * tsize / 10.0), mypaint3);
+
+                    canvas.drawText("Pixel value",
+                            (float) (50 + 20 * tsize / 10.0),
+                            (float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
+                }
+
+                if (current_mode == DAQActivity.display_mode.TIME) {
+                    // /// Histogram
+                    makeHistory(reco.hist_mean.values,reco.hist_mean.nbins, histo_strings_all);
+                    for (int j = 256; j > 0; j--)
+                        canvas.drawText(histo_strings_all[j - 1], 50,
+                                (float) (yoffset + (256 - j) * tsize / 10.0),
+                                mypaint2);
+
+
+                    makeHistory(reco.hist_max.values,reco.hist_max.nbins, histo_strings_all);
+                    for (int j = 256; j > 0; j--)
+                        canvas.drawText(histo_strings_all[j - 1], 50,
+                                (float) (yoffset + (256 - j) * tsize / 10.0),
+                                mypaint4);
+
+                    canvas.drawText("Time",
+                            (float) (50 + 20 * tsize / 10.0),
+                            (float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
+                }
+
 
 				String state_message = "";
 				switch (current_state) {
@@ -1095,6 +1161,20 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					state_message = current_state.toString();
 				}
 				canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
+
+                String dstate_message = "";
+                switch (current_mode) {
+                    case HIST:
+                        dstate_message = "Display mode: HIST";
+
+                        break;
+                    case TIME:
+                        dstate_message = "Display mode: TIME";
+                        break;
+                    default:
+                        dstate_message = current_state.toString();
+                }
+                canvas.drawText(dstate_message, 200, yoffset + 13 * tsize, mypaint);
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {
@@ -1147,9 +1227,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				canvas.save();
 				canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
 						(float) (yoffset + (256 - 50) * tsize / 10.0));
-				canvas.drawText(String.format("Number of pixels"),
-						(float) (50 + -7 * tsize / 10.0),
-						(float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
+
+                if (current_mode == DAQActivity.display_mode.HIST) {
+
+                    canvas.drawText(String.format("Number of pixels"),
+                            (float) (50 + -7 * tsize / 10.0),
+                            (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
+                }
+                if (current_mode == DAQActivity.display_mode.TIME) {
+
+                    canvas.drawText(String.format("Pixel value"),
+                            (float) (50 + -7 * tsize / 10.0),
+                            (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
+                }
 				canvas.restore();
 
 			}

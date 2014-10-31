@@ -82,11 +82,11 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	
 	public OutputManager(DAQActivity context) {
 		this.context = context;
-		
-		server_address = context.getString(R.string.server_address);
-		server_port = context.getString(R.string.server_port);
-		upload_uri = context.getString(R.string.upload_uri);
-		force_https = context.getResources().getBoolean(R.bool.force_https);
+
+        server_address = context.getString(R.string.server_address);
+        server_port = context.getString(R.string.server_port);
+        upload_uri = context.getString(R.string.upload_uri);
+        force_https = context.getResources().getBoolean(R.bool.force_https);
 
 		String upload_proto;
 		if (force_https) {

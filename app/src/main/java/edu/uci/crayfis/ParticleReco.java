@@ -112,7 +112,42 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 			return buf.build();
 		}
 	}
-	
+
+    public class History {
+        public int[] values;
+        final int nbins;
+        int current_time = 0;
+
+        public History(int nbins) {
+            if (nbins <= 0) {
+                throw new RuntimeException("Hey dumbo a histogram should have at least one bin.");
+
+            }
+            this.nbins = nbins;
+
+            values = new int[nbins];
+
+        }
+
+        public void clear() {
+            for (int i = 0; i < values.length; ++i) {
+                values[i] = 0;
+            }
+            current_time=0;
+        }
+
+        public void new_data(int data)
+        {
+            current_time++;
+            if (current_time>=nbins) current_time=0;
+            values[current_time] = data;
+
+            // clear out old data ahead of us so we can see the update point
+            for (int ix=current_time+1;ix<current_time+10 && ix<nbins;ix++)
+                values[ix]=0;
+        }
+
+    }
 	public class Histogram {
 		public int[] values;
 		private boolean mean_valid = false;
@@ -191,7 +226,10 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	public Histogram h_l2pixel = new Histogram(256);
 	public Histogram h_maxpixel = new Histogram(256);
 	public Histogram h_numpixel = new Histogram(200);
-	
+
+    public History hist_mean = new History(200);
+    public History hist_max = new History(200);
+
 	// counters to keep track of how many events and pixels
 	// have been built since the last reset.
 	public int event_count = 0;
@@ -210,6 +248,8 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		h_l2pixel.clear();
 		h_maxpixel.clear();
 		h_numpixel.clear();
+        hist_mean.clear();
+        hist_max.clear();
 	}
 	
 	// When measuring bg and variance, we only look at some pixels
@@ -235,7 +275,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		// get mean background level 
 		float background = 0;
 		float variance = 0;
-		
+
 		float percent_hit = 0;
 		
 		int width = previewSize.width;
@@ -300,7 +340,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		event.background = background;
 		event.variance = variance;
 		event.quality = good_quality;
-		
+
 		return event;
 	}
 	
@@ -325,6 +365,8 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
             int height = previewSize.height;
             int max_val = 0;
             int num_pix = 0;
+            int tot_pix=0;
+            int num_tot_pix=0;
 
             byte[] bytes = frame.bytes;
 
@@ -338,6 +380,9 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
                     if (val > max_val) {
                         max_val = val;
                     }
+
+                    tot_pix += val;
+                    num_tot_pix++;
 
                     if (val > thresh) {
                         h_l2pixel.fill(val);
@@ -397,6 +442,9 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
             // update the event-level histograms.
             h_maxpixel.fill(max_val);
             h_numpixel.fill(num_pix);
+
+            hist_max.new_data(max_val);
+            hist_mean.new_data((int)(tot_pix/(1.0*num_tot_pix)));
 
             pixel_count += num_pix;
         } catch (OutOfMemoryError e) { }
