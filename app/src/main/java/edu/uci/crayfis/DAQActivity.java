@@ -40,6 +40,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -56,6 +57,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -482,6 +484,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		outputThread.start();
 
 		l2thread = new L2Processor(this);
+        l2thread.setView(mDraw);
 		l2thread.start();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
@@ -1130,7 +1133,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		volatile boolean running = true;
 
         private final CFApplication APPLICATION;
-
+        
         /**
          * Create a new instance.
          *
@@ -1151,6 +1154,23 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			}
 		}
 
+        // FIXME This is just to be able to move the class out, this should instead be a listener.
+        private WeakReference<View> mViewWeakReference;
+
+        /**
+         * Set the view that should be invalidated when data has been processed.
+         *
+         * @param view The view.
+         */
+        public void setView(@Nullable final View view) {
+            if (mViewWeakReference !=  null) {
+                mViewWeakReference.clear();
+            }
+            if (view != null) {
+                mViewWeakReference = new WeakReference<View>(view);
+            }
+        }
+
 		@Override
 		public void run() {
 
@@ -1168,10 +1188,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					CFLog.d("DAQActivity L2 processing interrupted while waiting on queue.");
 					interrupted = true;
 				}
-				
-				// update the GUI (does it make sense to do handle this somewhere else?)
-				mDraw.postInvalidate();
-				
+
+                if (mViewWeakReference != null) {
+                    final View view = mViewWeakReference.get();
+                    if (view != null) {
+                        view.postInvalidate();
+                    }
+                }
+
 				// also try to clear out any old committed XB's that are sitting around.
 				xbManager.flushCommittedBlocks();
 				
