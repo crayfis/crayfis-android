@@ -241,10 +241,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		startActivity(i);
 	}
 	
-	public void clickedClose(View view) {
+	public void clickedMode(View view) {
 
-		onPause();
-		DAQActivity.this.finish();
+		// do nothing for now. Later toggle the mode.
 	}
 
 	// received message when power is disconnected -- should end run
@@ -357,7 +356,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				"crayfis.ps.uci.edu/about");
 
 		final TextView tx1 = new TextView(this);
-		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles. More details:  "
+		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                "This frame shows:\n\t Exposure: seconds of data-taking\n" +
+                "\t Frames: number with a hot pixel\n" +
+                "\t Candidates: number of pixels saved\n" +
+                "\t Data blocks: groups of frames\n" +
+                "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
+                "\t Scan rate: rate, frames-per-second\n" +
+                "On the left is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nFor more details:  "
 				+ s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
@@ -1003,20 +1009,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				int w = canvas.getWidth();
 				int h = canvas.getHeight();
 
-				// fill the window and center it
-				double scaleX = w / (double) 640.0;
-				double scaleY = h / (double) 480.0;
-
-				double scale = Math.min(scaleX, scaleY);
-				double tranX = (w - scale * 640.0) / 2;
-				double tranY = (h - scale * 480.0) / 2;
-
-				canvas.translate((float) tranX, (float) tranY);
-				canvas.scale((float) scale, (float) scale);
 
 				// draw some data text for debugging
-				int tsize = 25;
-				int yoffset = -300;
+				int tsize = (int)(h/50);
+				int yoffset = 2*tsize;
 				mypaint.setStyle(android.graphics.Paint.Style.FILL);
 				mypaint.setColor(android.graphics.Color.RED);
 				mypaint.setTextSize((int) (tsize * 1.5));
@@ -1038,18 +1034,22 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				mypaint2.setTextSize(tsize / (float) 10.0);
 				Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
 				mypaint2.setTypeface(tf);
-				
+
+
+
+
+
 				long exposed_time = xbManager.getExposureTime();
 				canvas.drawText(
 						"Exposure: "
 								+ (int) (1.0e-3 * exposed_time)
-								+ "s", 200, yoffset + 4 * tsize, mypaint);
-				canvas.drawText("Frames : " + totalEvents, 200, yoffset + 6 * tsize,
+								+ "s", 200, yoffset + 1 * tsize, mypaint);
+				canvas.drawText("Frames : " + totalEvents, 200, yoffset + 3 * tsize,
 						mypaint);
-				canvas.drawText("Candidates : " + totalPixels, 200, yoffset + 8 * tsize,
+				canvas.drawText("Candidates : " + totalPixels, 200, yoffset + 5 * tsize,
 						mypaint);
 
-				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 10
+				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
 						* tsize, mypaint);
 
 				// /// Histogram
@@ -1094,21 +1094,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				default:
 					state_message = current_state.toString();
 				}
-				canvas.drawText(state_message, 200, yoffset + 12 * tsize, mypaint);
+				canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {
 					fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
 				}
 				canvas.drawText(fps + " fps",
-						200, yoffset + 14 * tsize, mypaint);
+						200, yoffset + 11 * tsize, mypaint);
 				
-				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
+				canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 0
 						* tsize, mypaint);
 				
 				if (! outputThread.canUpload()) {
 					if (outputThread.permit_upload) {
-						canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
+						canvas.drawText("Warning! Network unavailable.", 250, yoffset+20 * tsize, mypaint_warning);
 					} else {
 						String reason;
 						if (outputThread.valid_id){
@@ -1116,15 +1116,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						} else {
 							reason="Invalid invite code.";
 						}
-						canvas.drawText(reason, 240, yoffset+15 * tsize, mypaint_warning);
-						canvas.drawText("Saving data locally.", 240, yoffset+16 * tsize, mypaint_warning);
+						canvas.drawText(reason, 240, yoffset+19 * tsize, mypaint_warning);
+						canvas.drawText("Saving data locally.", 240, yoffset+20 * tsize, mypaint_warning);
 					}
 				}
 				
 				if (L2busy > 0) {
 					// print a message indicating that we've been dropping frames
 					// due to L2queue overflow.
-					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_warning);
+					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 20 * tsize, mypaint_warning);
 				}
 				
 				String device_msg = "dev: ";
@@ -1136,12 +1136,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				}
 				String run_msg = "run: " + run_id.toString().substring(19);
 
-				canvas.drawText(build_version, 175, yoffset + 18 * tsize, mypaint_info);
-				canvas.drawText(device_msg, 175, yoffset + 19*tsize, mypaint_info);
-				canvas.drawText(run_msg, 175, yoffset+20*tsize, mypaint_info);
+				canvas.drawText(build_version, 175, yoffset + 15 * tsize, mypaint_info);
+				canvas.drawText(device_msg, 175, yoffset + 16*tsize, mypaint_info);
+				canvas.drawText(run_msg, 175, yoffset+17*tsize, mypaint_info);
 				if (outputThread.current_experiment != null) {
 					String exp_msg = "exp: " + outputThread.current_experiment;
-					canvas.drawText(exp_msg, 175, yoffset+21*tsize, mypaint_info);
+					canvas.drawText(exp_msg, 175, yoffset+18*tsize, mypaint_info);
 				}
 				
 				canvas.save();

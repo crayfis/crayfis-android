@@ -18,34 +18,53 @@
         android:layout_height="wrap_content"
         android:layout_weight="1" />
 
- 	<Button
-        android:id="@+id/button_registerv"
-        android:onClick="clickedSettings"
-
-        android:layout_width="fill_parent"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-		android:layout_marginTop="7dip"
-        android:background="@drawable/buttonshape"
-
-        android:text="Registration/Settings"
-        android:textSize="18sp"
-        android:textColor="#242424" />
-
-	<Button
+        android:orientation="horizontal"
+        android:background="#FFFFFF"
+        android:layout_weight="0.01"
+        >
+    <Button
         android:id="@+id/button_about"
         android:onClick="clickedAbout"
 
-        android:layout_width="fill_parent"
+        android:layout_width="100dp"
         android:layout_height="wrap_content"
  	    android:layout_marginTop="7dip"
-        android:background="@drawable/buttonshape"
 
-        android:text="About"
-        android:textSize="18sp"
-        android:textColor="#242424" />
+        android:text="Help"
+        android:textSize="12sp"
+        android:textColor="#242424"
+        android:layout_gravity="center_vertical"
+        />
 
+    <Button
+android:id="@+id/button_registerv"
+android:onClick="clickedSettings"
 
+android:layout_width="100dp"
+android:layout_height="wrap_content"
+       android:layout_marginTop="7dip"
 
+android:text="Reg. and Settings"
+android:textSize="12sp"
+android:textColor="#242424"
+android:layout_gravity="center_vertical" />
+
+        <Button
+            android:id="@+id/button_mode"
+            android:onClick="clickedMode"
+
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="7dip"
+
+            android:text="Mode"
+            android:textSize="12sp"
+            android:textColor="#242424"
+            android:layout_gravity="center_vertical" />
+</LinearLayout>
 
 </LinearLayout>
 
