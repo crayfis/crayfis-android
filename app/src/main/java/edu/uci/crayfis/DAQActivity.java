@@ -23,7 +23,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -39,6 +39,8 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.Settings.Secure;
+import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -48,10 +50,10 @@ import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -200,7 +202,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
             if (serverCommand.shouldRecalibrate()) {
                 CFLog.i("DAQActivity SERVER commands us to recalibrate.");
-                toStabilizationMode();
+                ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
             }
         } catch (JsonSyntaxException e) {
             CFLog.e("Failed to parse server response: " + e.getMessage());
@@ -234,172 +236,141 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         CFApplication.setLastKnownLocation(location);
 	}
 
-	private void toCalibrationMode() {
+	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalStateException {
 		// The *only* valid way to get into calibration mode
 		// is after stabilizaton.
-		switch (CFApplication.getApplicationState()) {
-		case STABILIZATION:
-			CFLog.i("DAQActivity FSM Transition: STABILIZATION -> CALIBRATION");
-
-			// clear histograms and counters before calibration
-			mParticleReco.reset();
-
-			calibration_start = System.currentTimeMillis();
-            CFApplication.setApplicationState(CFApplication.State.CALIBRATION);
-
-			// Start a new exposure block
-			xbManager.newExposureBlock();
-
-			break;
-
-		default:
-            final CFApplication.State state = CFApplication.getApplicationState();
-			throw new RuntimeException("Bad FSM transition: "
-                    + ((state == null) ? "NULL" : state)
-                    + " -> CALIBRATION");
-		}
+		switch (((CFApplication) getApplication()).getApplicationState()) {
+            case STABILIZATION:
+                mParticleReco.reset();
+                calibration_start = System.currentTimeMillis();
+                xbManager.newExposureBlock();
+                break;
+            default:
+                throw new IllegalStateException();
+        }
 	}
 
-	private void toDataMode() {
-		switch (CFApplication.getApplicationState()) {
-		case INIT:
-			CFLog.i("DAQActivity FSM Transition: INIT -> DATA");
-            l2thread.setFixedThreshold(true);
-			CFApplication.setApplicationState(CFApplication.State.DATA);
+    /**
+     * Set up for the transition to {@link edu.uci.crayfis.CFApplication.State#DATA}
+     *
+     * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
+     * @throws IllegalStateException
+     */
+	private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+		switch (previousState) {
+            case INIT:
+                l2thread.setFixedThreshold(true);
+                xbManager.newExposureBlock();
 
-			// Start a new exposure block
-			xbManager.newExposureBlock();
+                break;
+            case CALIBRATION:
+                int new_thresh;
+                long calibration_time = calibration_stop - calibration_start;
+                int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time * 1e-3 / 60.0);
 
-			break;
-		case CALIBRATION:
-			// Okay, we're just finished calibrating!
+                CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int) (calibration_time * 1e-3) + " s; target events = " + target_events);
 
-			CFLog.i("DAQActivity FSM Transition: CALIBRATION -> DATA");
+                // build the calibration result object
+                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
+                // (ugh, why can't primitive arrays be Iterable??)
+                for (int v : mParticleReco.h_pixel.values) {
+                    cal.addHistPixel(v);
+                }
+                for (int v : mParticleReco.h_l2pixel.values) {
+                    cal.addHistL2Pixel(v);
+                }
+                for (int v : mParticleReco.h_maxpixel.values) {
+                    cal.addHistMaxpixel(v);
+                }
+                for (int v : mParticleReco.h_numpixel.values) {
+                    cal.addHistNumpixel(v);
+                }
+                // and commit it to the output stream
+                CFLog.i("DAQActivity Committing new calibration result.");
+                outputThread.commitCalibrationResult(cal.build());
 
-			int new_thresh;
-			long calibration_time = calibration_stop - calibration_start;
-			int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time* 1e-3 / 60.0);
+                // update the thresholds
+                new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
+                CFLog.i("DAQActivity Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
+                CONFIG.setL1Threshold(new_thresh);
 
-			CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int)(calibration_time*1e-3) + " s; target events = " + target_events);
+                // FIXME: we should have a better calibration for L2 threshold.
+                // For now, we choose it to be just below L1thresh.
+                final int l1Threshold = CONFIG.getL1Threshold();
+                if (l1Threshold > 2) {
+                    CONFIG.setL2Threshold(l1Threshold - 1);
+                } else {
+                    // Okay, if we're getting this low, we shouldn't try to
+                    // set the L2thresh any lower, else event frames will be huge.
+                    CONFIG.setL2Threshold(l1Threshold);
+                }
 
-			// build the calibration result object
-			DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
-			// (ugh, why can't primitive arrays be Iterable??)
-			for (int v : mParticleReco.h_pixel.values) {
-				cal.addHistPixel(v);
-			}
-			for (int v : mParticleReco.h_l2pixel.values) {
-				cal.addHistL2Pixel(v);
-			}
-			for (int v : mParticleReco.h_maxpixel.values) {
-				cal.addHistMaxpixel(v);
-			}
-			for (int v : mParticleReco.h_numpixel.values) {
-				cal.addHistNumpixel(v);
-			}
-			// and commit it to the output stream
-			CFLog.i("DAQActivity Committing new calibration result.");
-			outputThread.commitCalibrationResult(cal.build());
+                // Finally, set the state and start a new xb
+                xbManager.newExposureBlock();
 
-			// update the thresholds
-			new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
-			CFLog.i("DAQActivity Setting new L1 threshold: {"+ CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
-            CONFIG.setL1Threshold(new_thresh);
+                break;
+            default:
+                throw new IllegalStateException();
+        }
 
-			// FIXME: we should have a better calibration for L2 threshold.
-			// For now, we choose it to be just below L1thresh.
-            final int l1Threshold = CONFIG.getL1Threshold();
-			if (l1Threshold > 2) {
-                CONFIG.setL2Threshold(l1Threshold - 1);
-			}
-			else {
-				// Okay, if we're getting this low, we shouldn't try to
-				// set the L2thresh any lower, else event frames will be huge.
-                CONFIG.setL2Threshold(l1Threshold);
-			}
-
-			// Finally, set the state and start a new xb
-            CFApplication.setApplicationState(CFApplication.State.DATA);
-			xbManager.newExposureBlock();
-
-			break;
-		default:
-            final CFApplication.State state = CFApplication.getApplicationState();
-            throw new RuntimeException("Bad FSM transition: "
-                    + ((state == null) ? "NULL" : state)
-                    + " -> CALIBRATION");
-		}
 	}
 
-	// we go to stabilization mode in order to wait for the camera to settle down
-	// after a period of bad data.
-	private void toStabilizationMode() {
-		switch(CFApplication.getApplicationState()) {
-		case INIT:
-		case IDLE:
-			// This is the first state transisiton of the app. Go straight into stabilization
-			// so the calibratoin will be clean.
-            l2thread.setFixedThreshold(false);
-			CFApplication.setApplicationState(CFApplication.State.STABILIZATION);
-			L2Queue.clear();
-			stabilization_counter = 0;
-			xbManager.newExposureBlock();
-			break;
+    /**
+     * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
+     *
+     * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
+     * @throws IllegalStateException
+     */
+	private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+		switch(((CFApplication) getApplication()).getApplicationState()) {
+            case INIT:
+            case IDLE:
+                // This is the first state transisiton of the app. Go straight into stabilization
+                // so the calibratoin will be clean.
+                l2thread.setFixedThreshold(false);
+                L2Queue.clear();
+                stabilization_counter = 0;
+                xbManager.newExposureBlock();
+                break;
 
-		// coming out of calibration and data should be the same.
-		case CALIBRATION:
-		case DATA:
-			CFLog.i("DAQActivity FSM transition " + CFApplication.getApplicationState() + " -> STABILIZATION");
+            // coming out of calibration and data should be the same.
+            case CALIBRATION:
+            case DATA:
+                L2Queue.clear();
+                stabilization_counter = 0;
+                xbManager.abortExposureBlock();
+                break;
+            case STABILIZATION:
+                // just reset the counter.
+                stabilization_counter = 0;
 
-			// transition immediately
-			CFApplication.setApplicationState(CFApplication.State.STABILIZATION);
-
-			// clear the L2Queue.
-			L2Queue.clear();
-
-			// reset the stabilization counter
-			stabilization_counter = 0;
-
-			// mark the current XB as aborted and start a new one
-			xbManager.abortExposureBlock();
-
-			break;
-		case STABILIZATION:
-			// just reset the counter.
-			stabilization_counter = 0;
-
-			break;
-		default:
-            final CFApplication.State state = CFApplication.getApplicationState();
-            throw new RuntimeException("Bad FSM transition: "
-                    + ((state == null) ? "NULL" : state)
-                    + " -> STABILIZATION");		}
+                break;
+            default:
+                throw new IllegalStateException();
+        }
 	}
 
-	public void toIdleMode() {
-		// This mode is basically just used to cleanly close out any
-		// current exposure blocks. For example, we transition here when
-		// the phone is locked or the app is suspended.
-		switch(CFApplication.getApplicationState()) {
-		case IDLE:
-			// nothing to do here...
-			break;
-		case CALIBRATION:
-		case STABILIZATION:
-			// for calibration or stabilization, mark the block as aborted
-            CFApplication.setApplicationState(CFApplication.State.IDLE);
-			xbManager.abortExposureBlock();
-			break;
-		case DATA:
-			// for data, just close out the current XB
-            CFApplication.setApplicationState(CFApplication.State.IDLE);
-			xbManager.newExposureBlock();
-			break;
-		default:
-            final CFApplication.State state = CFApplication.getApplicationState();
-            throw new RuntimeException("Bad FSM transition: "
-                    + ((state == null) ? "NULL" : state)
-                    + " -> IDLE");		}
+    /**
+     * This mode is basically just used to cleanly close out any current exposure blocks.
+     * For example, we transition here when the phone is locked or the app is suspended.
+     *
+     * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
+     * @throws IllegalStateException
+     */
+	private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+		switch(previousState) {
+            case CALIBRATION:
+            case STABILIZATION:
+                // for calibration or stabilization, mark the block as aborted
+                xbManager.abortExposureBlock();
+                break;
+            case DATA:
+                // for data, just close out the current XB
+                xbManager.newExposureBlock();
+                break;
+            default:
+                throw new IllegalStateException();
+        }
 	}
 
 	public void generateRunConfig() {
@@ -511,8 +482,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		outputThread = new OutputManager(this);
 		outputThread.start();
 
-		l2thread = new L2Processor();
+		l2thread = new L2Processor(this);
 		l2thread.start();
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
+                new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 	}
 
 	@Override
@@ -521,7 +495,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		// make sure we're in IDLE state, to make sure
 		// everything's closed.
-		toIdleMode();
+        // FIXME This might not be valid if things are running in the background.
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
 		// flush all the closed exposure blocks immediately.
 		xbManager.flushCommittedBlocks(true);
@@ -534,6 +509,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// try to upload any remaining data before dying.
 		outputThread.stopThread();
 		outputThread = null;
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
 	@Override
@@ -553,8 +530,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			throw new RuntimeException(
 					"Bug, camera should not be initialized already");
 
-		// Transition to stabilization mode as we resume data-taking
-		toStabilizationMode();
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
 		// configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
@@ -598,7 +574,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			// If the app is being paused, we don't want that
 			// counting towards the current exposure block.
 			// So close it out cleaning by moving to the IDLE state.
-			toIdleMode();
+            // FIXME This may not be valid if things are running in the background.
+            ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 		}
 	}
 
@@ -705,7 +682,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			L1_fps_stop = acq_time;
 		}
 
-		if (CFApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
+        final CFApplication application = (CFApplication) getApplication();
+		if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
 			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
 
@@ -718,18 +696,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			return;
 		}
 
-		if (CFApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
+		if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
 			// If we're in stabilization mode, just drop frames until we've skipped enough
 			stabilization_counter++;
 			if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
-				// We're done! Go to calibration.
-				toCalibrationMode();
+                application.setApplicationState(CFApplication.State.CALIBRATION);
 			}
-
 			return;
 		}
 
-		if (CFApplication.getApplicationState() == CFApplication.State.IDLE) {
+		if (application.getApplicationState() == CFApplication.State.IDLE) {
 			// Not sure why we're still acquiring frames in IDLE mode...
 			CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
 			return;
@@ -921,21 +897,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
 
 				String state_message;
-				switch (CFApplication.getApplicationState()) {
+				switch (((CFApplication) getApplication()).getApplicationState()) {
 				case CALIBRATION:
-					state_message = "Mode: "+ CFApplication.getApplicationState() + " "
+					state_message = "Mode: "+ ((CFApplication) getApplication()).getApplicationState() + " "
 							+ (int)(( 100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
 					break;
 				case DATA:
-					state_message = "Mode: "+CFApplication.getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
+					state_message = "Mode: "+((CFApplication) getApplication()).getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
 						+ ",L2=" + CONFIG.getL2Threshold() + ")";
 					break;
 				case STABILIZATION:
-					state_message = "Mode: "+CFApplication.getApplicationState() + " "
+					state_message = "Mode: "+((CFApplication) getApplication()).getApplicationState() + " "
 							+ (int)(( 100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
 					break;
 				default:
-					state_message = CFApplication.getApplicationState().toString();
+					state_message = ((CFApplication) getApplication()).getApplicationState().toString();
 				}
 				canvas.drawText(state_message, 200, yoffset + 12 * tsize, mypaint);
 
@@ -1019,8 +995,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// create a new one. Then return the current block in either case.
 		public synchronized ExposureBlock getCurrentExposureBlock() {
 			if (current_xb == null) {
-				// not sure what to do here?
-				return null;
+                // FIXME Had to add this call after creating the state broadcast, timing error?
+                newExposureBlock();
 			}
 
 			// check and see whether this XB is too old
@@ -1034,7 +1010,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Return an estimate of the exposure time in committed + current
 		// exposure blocks.
 		public synchronized long getExposureTime() {
-			if (current_xb.daq_state == CFApplication.State.DATA) {
+            // FIXME Had to add this null check after creating the state broadcast, timing error?
+			if (current_xb != null && current_xb.daq_state == CFApplication.State.DATA) {
 				return committed_exposure + current_xb.age();
 			}
 			else {
@@ -1056,7 +1033,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			current_xb.L1_thresh = CONFIG.getL1Threshold();
 			current_xb.L2_thresh = CONFIG.getL2Threshold();
 			current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
-			current_xb.daq_state = CFApplication.getApplicationState();
+			current_xb.daq_state = ((CFApplication) getApplication()).getApplicationState();
 			current_xb.run_id = run_id;
 		}
 
@@ -1152,6 +1129,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// true if the thread is running and can process more data
 		volatile boolean running = true;
 
+        private final CFApplication APPLICATION;
+
+        /**
+         * Create a new instance.
+         *
+         * @param context Any {@link Context}, only a reference to {@link edu.uci.crayfis.CFApplication} will be kept.
+         */
+        public L2Processor(@NonNull final Context context) {
+            APPLICATION = (CFApplication) context.getApplicationContext();
+        }
+
 		/**
 		 * Blocks until the thread has stopped
 		 */
@@ -1226,7 +1214,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				
 				// If we got a bad frame, go straight to stabilization mode.
 				if (!mParticleReco.good_quality && !mFixedThreshold) {
-					toStabilizationMode();
+                    APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
 					continue;
 				}
 				
@@ -1234,7 +1222,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				
 				// Now do the L2 (pixel-level analysis)
 				ArrayList<RecoPixel> pixels;
-				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
+				if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
 					pixels = mParticleReco.buildL2Pixels(frame, xb.L2_thresh);
 				}
 				else {
@@ -1251,7 +1239,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// Now add them to the event.
 				event.pixels = pixels;
 				
-				if (CFApplication.getApplicationState() == CFApplication.State.DATA) {
+				if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
 					// keep track of the running totals for acquired
 					// events/pixels over the app lifetime.
 					mTotalEvents++;
@@ -1266,11 +1254,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// If we're calibrating, check if we've processed enough
 				// frames to decide on the threshold(s) and go back to
 				// data-taking mode.
-				if (CFApplication.getApplicationState() == CFApplication.State.CALIBRATION
+				if (APPLICATION.getApplicationState() == CFApplication.State.CALIBRATION
 						&& mParticleReco.event_count >= CONFIG.getCalibrationSampleFrames()) {
 					// mark the time of the last event from the run.
 					calibration_stop = frame.getAcquiredTime();
-					toDataMode();
+                    APPLICATION.setApplicationState(CFApplication.State.DATA);
 				}
 			}
 			running = false;
@@ -1321,5 +1309,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			orientation[2] = 0;
 		}
 	}
-	
+
+    private final BroadcastReceiver STATE_CHANGE_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(final Context context, final Intent intent) {
+            final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
+            final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
+            CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
+
+            try {
+                if (current == CFApplication.State.DATA) {
+                    doStateTransitionData(previous);
+                } else if (current == CFApplication.State.STABILIZATION) {
+                    doStateTransitionStabilization(previous);
+                } else if (current == CFApplication.State.IDLE) {
+                    doStateTransitionIdle(previous);
+                } else if (current == CFApplication.State.CALIBRATION) {
+                    doStateTransitionCalibration(previous);
+                }
+            } catch (IllegalStateException e) {
+                Crashlytics.logException(e);
+                // FIXME Need a standard dialog to let the user know and exit the activity.
+            }
+        }
+    };
 }
