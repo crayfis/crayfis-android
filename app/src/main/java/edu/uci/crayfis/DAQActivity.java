@@ -135,7 +135,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
     private final CFConfig CONFIG = CFConfig.getInstance();
 
 	private long calibration_start;
-	private long calibration_stop;
 
 	// counter for stabilization mode
 	private int stabilization_counter;
@@ -265,7 +264,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 break;
             case CALIBRATION:
                 int new_thresh;
-                long calibration_time = calibration_stop - calibration_start;
+                long calibration_time = l2thread.getCalibrationStop() - calibration_start;
                 int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time * 1e-3 / 60.0);
 
                 CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int) (calibration_time * 1e-3) + " s; target events = " + target_events);
@@ -1121,8 +1120,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         // This gets set in the data state transition, false in the idle transition
         private boolean mFixedThreshold;
 
-        private long L2counter = 0;
         private final CFConfig CONFIG = CFConfig.getInstance();
+        private long L2counter = 0;
+        private long mCalibrationStop;
 
 		// true if a request has been made to stop the thread
 		volatile boolean stopRequested = false;
@@ -1257,7 +1257,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				if (APPLICATION.getApplicationState() == CFApplication.State.CALIBRATION
 						&& mParticleReco.event_count >= CONFIG.getCalibrationSampleFrames()) {
 					// mark the time of the last event from the run.
-					calibration_stop = frame.getAcquiredTime();
+					mCalibrationStop = frame.getAcquiredTime();
                     APPLICATION.setApplicationState(CFApplication.State.DATA);
 				}
 			}
@@ -1270,6 +1270,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
         public int getTotalEvents() {
             return mTotalEvents;
+        }
+
+        public long getCalibrationStop() {
+            return mCalibrationStop;
         }
 
         public void setFixedThreshold(boolean fixedThreshold) {
