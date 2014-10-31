@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<bool name="force_https">true</bool>
+	<string name="force_https">true</string>
 	<string name="server_address">daq.crayfis.io</string>
 	<string name="server_port">443</string>
 	<string name="upload_uri">/submit</string>
