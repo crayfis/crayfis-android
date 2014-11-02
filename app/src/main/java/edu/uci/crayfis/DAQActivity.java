@@ -140,9 +140,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	// class to find particles in frames
 	private ParticleReco mParticleReco;
 
-	// Object used for synchronizing output image
-	private final Object lockOutput = new Object();
-
 	Context context;
 
 	public void clickedSettings(View view) {
@@ -789,7 +786,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		@Override
 		protected void onDraw(Canvas canvas) {
 
-			synchronized (lockOutput) {
 				int w = canvas.getWidth();
 				int h = canvas.getHeight();
 
@@ -942,9 +938,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						(float) (50 + -7 * tsize / 10.0),
 						(float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
 				canvas.restore();
-
-			}
-
 		}
 	}
 
