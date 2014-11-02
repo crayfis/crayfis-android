@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
@@ -38,7 +37,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.provider.Settings.Secure;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
@@ -80,10 +78,17 @@ import edu.uci.crayfis.util.CFLog;
  */
 public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
 
-	// camera and display objects
+    private final CFConfig CONFIG = CFConfig.getInstance();
+    private CFApplication.AppBuild mAppBuild;
+
+    // camera and display objects
 	private Camera mCamera;
 	private Visualization mDraw;
 	private CameraPreviewView mPreview;
+
+
+    // ----8<--------------
+
 
 	// WakeLock to prevent the phone from sleeping during DAQ
 	PowerManager.WakeLock wl;
@@ -101,10 +106,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	// Queue for frames to be processed by the L2 thread
 	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(L2Queue_maxFrames);
 
-	public String device_id;
-	public String build_version;
-	public int build_version_code;
-	public UUID run_id;
 	DataProtos.RunConfig run_config = null;
 
 	// max amount of time to wait on L2Queue (seconds)
@@ -129,8 +130,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
-
-    private final CFConfig CONFIG = CFConfig.getInstance();
 
 	private long calibration_start;
 
@@ -373,9 +372,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	public void generateRunConfig() {
 		DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
 
-		b.setIdHi(run_id.getMostSignificantBits());
-		b.setIdLo(run_id.getLeastSignificantBits());
-		b.setCrayfisBuild(build_version);
+        final UUID runId = mAppBuild.getRunId();
+		b.setIdHi(runId.getMostSignificantBits());
+		b.setIdLo(runId.getLeastSignificantBits());
+		b.setCrayfisBuild(mAppBuild.getBuildVersion());
 		b.setStartTime(System.currentTimeMillis());
 		b.setCameraParams(mCamera.getParameters().flatten());
 
@@ -385,6 +385,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+        mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
 		// FIXME: for debugging only!!! We need to figure out how
 		// to keep DAQ going without taking over the phone.
@@ -398,28 +400,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
-		// Generate a UUID to represent this run
-		run_id = UUID.randomUUID();
-
-		device_id = Secure.getString(getContentResolver(), Secure.ANDROID_ID);
-
 		/*
 		// clear saved settings (for debug purposes)
 		SharedPreferences.Editor editor = localPrefs.edit();
 		editor.clear();
 		editor.commit();
 		*/
-
-		build_version = "unknown";
-		build_version_code = 0;
-		try {
-			build_version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-			build_version_code = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
-		}
-		catch (NameNotFoundException ex) {
-			// don't know why we'd get here...
-			CFLog.e("DAQActivity Failed to resolve build version!");
-		}
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.video);
@@ -476,7 +462,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		xbManager = new ExposureBlockManager();
 
 		// Spin up the output and image processing threads:
-		outputThread = new OutputManager(this);
+		outputThread = OutputManager.getInstance(this);
 		outputThread.start();
 
 		l2thread = new L2Processor(this);
@@ -945,15 +931,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				}
 
 				String device_msg = "dev: ";
+                final String deviceId = mAppBuild.getDeviceId();
 				if (outputThread.device_nickname != null) {
-					device_msg += outputThread.device_nickname + " (" + device_id + ")";
+					device_msg += outputThread.device_nickname + " (" + deviceId + ")";
 				}
 				else {
-					device_msg += device_id;
+					device_msg += deviceId;
 				}
-				String run_msg = "run: " + run_id.toString().substring(19);
 
-				canvas.drawText(build_version, 175, yoffset + 18 * tsize, mypaint_info);
+				String run_msg = "run: " + mAppBuild.getRunId().toString().substring(19);
+
+				canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
 				canvas.drawText(device_msg, 175, yoffset + 19*tsize, mypaint_info);
 				canvas.drawText(run_msg, 175, yoffset+20*tsize, mypaint_info);
 				if (outputThread.current_experiment != null) {
@@ -1037,7 +1025,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			current_xb.L2_thresh = CONFIG.getL2Threshold();
 			current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
 			current_xb.daq_state = ((CFApplication) getApplication()).getApplicationState();
-			current_xb.run_id = run_id;
+			current_xb.run_id = mAppBuild.getRunId();
 		}
 
 		public synchronized void abortExposureBlock() {

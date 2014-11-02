@@ -2,7 +2,6 @@ package edu.uci.crayfis;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
@@ -32,7 +31,10 @@ import edu.uci.crayfis.util.CFLog;
 public class OutputManager extends Thread {
 
     private static final CFConfig CONFIG = CFConfig.getInstance();
-	
+    private CFApplication.AppBuild mAppBuild;
+
+    // -----8<-----------
+
 	public static final int connect_timeout = 2 * 1000; // ms
 	public static final int read_timeout = 5 * 1000; // ms
 
@@ -56,11 +58,6 @@ public class OutputManager extends Thread {
 	
 	public boolean debug_stream;
 	
-	public String device_id;
-	public String run_id_string;
-	public String build_version;
-	public int build_version_code;
-	
 	public String upload_url;
 	
 	private boolean start_uploading = false;
@@ -81,7 +78,8 @@ public class OutputManager extends Thread {
 
 	private OutputManager(Context context) {
 		this.context = context;
-		
+        mAppBuild = ((CFApplication) context.getApplicationContext()).getBuildInformation();
+
 		server_address = context.getString(R.string.server_address);
 		server_port = context.getString(R.string.server_port);
 		upload_uri = context.getString(R.string.upload_uri);
@@ -96,12 +94,6 @@ public class OutputManager extends Thread {
 		upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 		
 		debug_stream = context.getResources().getBoolean(R.bool.debug_stream);
-		
-		build_version = context.build_version;
-		build_version_code = context.build_version_code;
-		device_id = context.device_id;
-		
-		run_id_string = context.run_id.toString();
 	}
 	
 	public boolean useWifiOnly() {
@@ -258,7 +250,7 @@ public class OutputManager extends Thread {
 		boolean uploaded = false;
 		if (canUpload()) {
 			// Upload to network:
-			uploaded = directUpload(toWrite, run_id_string);
+			uploaded = directUpload(toWrite, mAppBuild.getRunId().toString());
 		}
 
 		if (uploaded) {
@@ -271,7 +263,7 @@ public class OutputManager extends Thread {
 		// TODO: write out to a file.
 		CFLog.i("DAQActivity Unable to upload to network! Falling back to local storage.");
 		int timestamp = (int) (System.currentTimeMillis()/1e3);
-		String filename = run_id_string + "_" + timestamp + ".bin";
+		String filename = mAppBuild.getRunId().toString() + "_" + timestamp + ".bin";
 		//File outfile = new File(context.getFilesDir(), filename);
 		FileOutputStream outputStream;
 		try {
@@ -355,10 +347,10 @@ public class OutputManager extends Thread {
 			c.setRequestMethod("POST");
 			c.setRequestProperty("Content-type", "application/octet-stream");
 			c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
-			c.setRequestProperty("Device-id", device_id);
+			c.setRequestProperty("Device-id", mAppBuild.getDeviceId());
 			c.setRequestProperty("Run-id", run_id);
-			c.setRequestProperty("Crayfis-version", "a " + build_version);
-			c.setRequestProperty("Crayfis-version-code", Integer.toString(build_version_code));
+			c.setRequestProperty("Crayfis-version", "a " + mAppBuild.getBuildVersion());
+			c.setRequestProperty("Crayfis-version-code", Integer.toString(mAppBuild.getVersionCode()));
 
 			String app_code = sharedprefs.getString("prefUserID", "");
 			if (app_code != "") {
