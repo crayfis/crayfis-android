@@ -1,10 +1,12 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.exposure;
 
 import android.location.Location;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ParticleReco.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
 

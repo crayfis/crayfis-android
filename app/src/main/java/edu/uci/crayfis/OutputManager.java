@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
 public class OutputManager extends Thread {

@@ -57,8 +57,6 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -68,6 +66,8 @@ import edu.uci.crayfis.ParticleReco.RecoEvent;
 import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 
@@ -459,7 +459,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
         CFApplication.setLastKnownLocation(location);
 
-		xbManager = new ExposureBlockManager();
+		xbManager = ExposureBlockManager.getInstance(this);
 
 		// Spin up the output and image processing threads:
 		outputThread = OutputManager.getInstance(this);
@@ -962,155 +962,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 	}
 
-	private class ExposureBlockManager {
-
-        private final CFConfig CONFIG = CFConfig.getInstance();
-
-        private int mTotalXBs = 0;
-        private int mCommittedXBs = 0;
-
-        // This is where the current xb is kept. The DAQActivity must access
-		// the current exposure block through the public methods here.
-		private ExposureBlock current_xb;
-
-		// We keep a list of retired blocks, which have been closed but
-		// may not be ready to commit yet (e.g. events belonging to this block
-		// might be sequested in a queue somewhere, still)
-		private LinkedList<ExposureBlock> retired_blocks = new LinkedList<ExposureBlock>();
-
-		private long safe_time = 0;
-
-		private long committed_exposure;
-
-		// Atomically check whether the current XB is to old, and if so,
-		// create a new one. Then return the current block in either case.
-		public synchronized ExposureBlock getCurrentExposureBlock() {
-			if (current_xb == null) {
-                // FIXME Had to add this call after creating the state broadcast, timing error?
-                newExposureBlock();
-			}
-
-			// check and see whether this XB is too old
-			if (current_xb.age() > CONFIG.getExposureBlockPeriod() * 1000) {
-				newExposureBlock();
-			}
-
-			return current_xb;
-		}
-
-		// Return an estimate of the exposure time in committed + current
-		// exposure blocks.
-		public synchronized long getExposureTime() {
-            // FIXME Had to add this null check after creating the state broadcast, timing error?
-			if (current_xb != null && current_xb.daq_state == CFApplication.State.DATA) {
-				return committed_exposure + current_xb.age();
-			}
-			else {
-				return committed_exposure;
-			}
-		}
-
-		public synchronized void newExposureBlock() {
-			if (current_xb != null) {
-				current_xb.freeze();
-				retireExposureBlock(current_xb);
-			}
-
-			CFLog.i("DAQActivity Starting new exposure block!");
-			current_xb = new ExposureBlock();
-			mTotalXBs++;
-
-			current_xb.xbn = mTotalXBs;
-			current_xb.L1_thresh = CONFIG.getL1Threshold();
-			current_xb.L2_thresh = CONFIG.getL2Threshold();
-			current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
-			current_xb.daq_state = ((CFApplication) getApplication()).getApplicationState();
-			current_xb.run_id = mAppBuild.getRunId();
-		}
-
-		public synchronized void abortExposureBlock() {
-			current_xb.aborted = true;
-			newExposureBlock();
-		}
-
-		private void retireExposureBlock(ExposureBlock xb) {
-			// anything that's being committed must have already been frozen.
-			assert xb.frozen;
-			retired_blocks.add(xb);
-
-			// if this is a DATA block, add its age to the commited
-			// exposure time.
-			if (xb.daq_state == CFApplication.State.DATA) {
-				committed_exposure += xb.age();
-			}
-		}
-
-		public void updateSafeTime(long time) {
-			// this time should be monotonically increasing
-			assert time >= safe_time;
-			safe_time = time;
-		}
-
-		public void flushCommittedBlocks() {
-			// Try to flush out any committed exposure blocks that
-			// have no new events coming.
-			if (retired_blocks.size() == 0) {
-				// nothing to be done.
-				return;
-			}
-
-			for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
-				ExposureBlock xb = it.next();
-				if (xb.end_time < safe_time) {
-					// okay, it's safe to commit this block now.
-					it.remove();
-					commitExposureBlock(xb);
-				}
-			}
-		}
-
-		public void flushCommittedBlocks(boolean force) {
-			// If force == true, immediately flush all blocks.
-			if (force) {
-				updateSafeTime(System.currentTimeMillis());
-			}
-			flushCommittedBlocks();
-		}
-
-		private void commitExposureBlock(ExposureBlock xb) {
-			if (xb.daq_state == CFApplication.State.STABILIZATION
-					|| xb.daq_state == CFApplication.State.IDLE) {
-				// don't commit stabilization/idle blocks! they're just deadtime.
-				return;
-			}
-			if (xb.daq_state == CFApplication.State.CALIBRATION
-				&& xb.aborted) {
-				// also, don't commit *aborted* calibration blocks
-				return;
-			}
-
-			CFLog.i("DAQActivity Commiting old exposure block!");
-
-			boolean success = outputThread.commitExposureBlock(xb);
-
-			if (! success) {
-				// Oops! The output manager's queue must be full!
-				throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
-			}
-
-			mCommittedXBs++;
-		}
-
-        public int getTotalXBs() {
-            return mTotalXBs;
-        }
-
-        public int getCommittedXBs() {
-            return mCommittedXBs;
-        }
-    }
-
-	/**
+    /**
 	 * External thread used to do more time consuming image processing
 	 */
 	private class L2Processor extends Thread {
@@ -1121,6 +973,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         private boolean mFixedThreshold;
 
         private final CFConfig CONFIG = CFConfig.getInstance();
+        private final ExposureBlockManager XB_MANAGER;
+
         private long L2counter = 0;
         private long mCalibrationStop;
 
@@ -1138,6 +992,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
          */
         public L2Processor(@NonNull final Context context) {
             APPLICATION = (CFApplication) context.getApplicationContext();
+            XB_MANAGER = ExposureBlockManager.getInstance(context);
         }
 
 		/**
@@ -1194,7 +1049,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 }
 
 				// also try to clear out any old committed XB's that are sitting around.
-				xbManager.flushCommittedBlocks();
+				XB_MANAGER.flushCommittedBlocks();
 				
 				if (interrupted) {
 					// Somebody is trying to wake us. Bail out of this loop iteration
@@ -1208,14 +1063,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					// If no new exposure blocks are coming, we can update the last known
 					// safe time to commit XB's (with a small fudge factor just incase there's
 					// something making its way onto the L2 queue now)
-					xbManager.updateSafeTime(System.currentTimeMillis() - 1000);
+					XB_MANAGER.updateSafeTime(System.currentTimeMillis() - 1000);
 					continue;
 				}
 				
 				// If we made it this far, we have a real data frame ready to go.
 				// First update the XB manager's safe time (so it knows which old XB
 				// it can commit. 
-				xbManager.updateSafeTime(frame.getAcquiredTime());
+				XB_MANAGER.updateSafeTime(frame.getAcquiredTime());
 				
 				ExposureBlock xb = frame.getExposureBlock();
 				

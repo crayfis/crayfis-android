@@ -2,7 +2,7 @@ package edu.uci.crayfis.camera;
 
 import android.location.Location;
 
-import edu.uci.crayfis.ExposureBlock;
+import edu.uci.crayfis.exposure.ExposureBlock;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -24,7 +24,7 @@ public class RawCameraFrame {
      *
      * @param bytes Raw bytes from the camera.
      * @param t The time.
-     * @param exposureBlock The {@link edu.uci.crayfis.ExposureBlock}
+     * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}
      * @param orient The orientation of the device.
      */
     public RawCameraFrame(byte[] bytes, long t, ExposureBlock exposureBlock, float[] orient) {
@@ -53,9 +53,9 @@ public class RawCameraFrame {
     }
 
     /**
-     * Get the {@link edu.uci.crayfis.ExposureBlock}
+     * Get the {@link edu.uci.crayfis.exposure.ExposureBlock}
      *
-     * @return {@link edu.uci.crayfis.ExposureBlock}
+     * @return {@link edu.uci.crayfis.exposure.ExposureBlock}
      */
     public ExposureBlock getExposureBlock() {
         return mExposureBlock;
