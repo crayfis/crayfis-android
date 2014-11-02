@@ -38,7 +38,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -55,19 +54,14 @@ import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONObject;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
-import edu.uci.crayfis.ParticleReco.RecoEvent;
-import edu.uci.crayfis.ParticleReco.RecoPixel;
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
+import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 
@@ -101,15 +95,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	public static final int targetPreviewWidth = 320;
 	public static final int targetPreviewHeight = 240;
 
-    // Maximum number of raw camera frames to allow on the L2Queue
-	private static final int L2Queue_maxFrames = 2;
-	// Queue for frames to be processed by the L2 thread
-	ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(L2Queue_maxFrames);
-
 	DataProtos.RunConfig run_config = null;
-
-	// max amount of time to wait on L2Queue (seconds)
-	int L2Timeout = 1;
 
 	// to keep track of height/width
 	private Camera.Size previewSize;
@@ -324,7 +310,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 // This is the first state transisiton of the app. Go straight into stabilization
                 // so the calibratoin will be clean.
                 l2thread.setFixedThreshold(false);
-                L2Queue.clear();
+                l2thread.clearQueue();
                 stabilization_counter = 0;
                 xbManager.newExposureBlock();
                 break;
@@ -332,7 +318,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
             // coming out of calibration and data should be the same.
             case CALIBRATION:
             case DATA:
-                L2Queue.clear();
+                l2thread.clearQueue();
                 stabilization_counter = 0;
                 xbManager.abortExposureBlock();
                 break;
@@ -465,7 +451,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		outputThread = OutputManager.getInstance(this);
 		outputThread.start();
 
-		l2thread = new L2Processor(this);
+		l2thread = new L2Processor(this, previewSize);
         l2thread.setView(mDraw);
 		l2thread.start();
 
@@ -522,7 +508,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		if (mParticleReco == null) {
 			// if we don't already have a particleReco object setup,
 			// do that now that we know the camera size.
-			mParticleReco = new ParticleReco(previewSize);
+			mParticleReco = ParticleReco.getInstance(previewSize);
 		}
 
 		// once all the hardware is set up and the output manager is running,
@@ -553,7 +539,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			mCamera = null;
 
 			// clear out any (old) buffers
-			L2Queue.clear();
+			l2thread.clearQueue();
 
 			// If the app is being paused, we don't want that
 			// counting towards the current exposure block.
@@ -669,7 +655,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         final CFApplication application = (CFApplication) getApplication();
 		if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
-			boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
+			boolean queue_accept = l2thread.submitToQueue(new RawCameraFrame(bytes, acq_time, xb, orientation));
 
 			if (! queue_accept) {
 				// oops! the queue is full... this frame will be dropped.
@@ -699,7 +685,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Jodi - removed L1prescale as it never changed.
 		if (L1counter % 1 == 0) {
 			// make sure there's room on the queue
-			if (L2Queue.remainingCapacity() > 0) {
+			if (l2thread.getRemainingCapacity() > 0) {
 				// check if we pass the L1 threshold
 				boolean pass = false;
 				int length = previewSize.width * previewSize.height;
@@ -717,7 +703,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = L2Queue.offer(new RawCameraFrame(bytes, acq_time, xb, orientation));
+					boolean queue_accept = l2thread.submitToQueue(new RawCameraFrame(bytes, acq_time, xb, orientation));
 
 					if (! queue_accept) {
 						// oops! the queue is full... this frame will be dropped.
@@ -962,203 +948,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 	}
 
-    /**
-	 * External thread used to do more time consuming image processing
-	 */
-	private class L2Processor extends Thread {
 
-        private int mTotalPixels = 0;
-        private int mTotalEvents = 0;
-        // This gets set in the data state transition, false in the idle transition
-        private boolean mFixedThreshold;
-
-        private final CFConfig CONFIG = CFConfig.getInstance();
-        private final ExposureBlockManager XB_MANAGER;
-
-        private long L2counter = 0;
-        private long mCalibrationStop;
-
-		// true if a request has been made to stop the thread
-		volatile boolean stopRequested = false;
-		// true if the thread is running and can process more data
-		volatile boolean running = true;
-
-        private final CFApplication APPLICATION;
-        
-        /**
-         * Create a new instance.
-         *
-         * @param context Any {@link Context}, only a reference to {@link edu.uci.crayfis.CFApplication} will be kept.
-         */
-        public L2Processor(@NonNull final Context context) {
-            APPLICATION = (CFApplication) context.getApplicationContext();
-            XB_MANAGER = ExposureBlockManager.getInstance(context);
-        }
-
-		/**
-		 * Blocks until the thread has stopped
-		 */
-		public void stopThread() {
-			stopRequested = true;
-			while (running) {
-				l2thread.interrupt();
-				Thread.yield();
-			}
-		}
-
-        // FIXME This is just to be able to move the class out, this should instead be a listener.
-        private WeakReference<View> mViewWeakReference;
-
-        /**
-         * Set the view that should be invalidated when data has been processed.
-         *
-         * @param view The view.
-         */
-        public void setView(@Nullable final View view) {
-            if (mViewWeakReference !=  null) {
-                mViewWeakReference.clear();
-            }
-            if (view != null) {
-                mViewWeakReference = new WeakReference<View>(view);
-            }
-        }
-
-		@Override
-		public void run() {
-
-			while (!stopRequested) {
-				boolean interrupted = false;
-
-				RawCameraFrame frame = null;
-				try {
-					// Grab a frame buffer from the queue, blocking if none
-					// is available.
-					frame = L2Queue.poll(L2Timeout, TimeUnit.SECONDS);
-				}
-				catch (InterruptedException ex) {
-					// Interrupted, possibly by app shutdown?
-					CFLog.d("DAQActivity L2 processing interrupted while waiting on queue.");
-					interrupted = true;
-				}
-
-                if (mViewWeakReference != null) {
-                    final View view = mViewWeakReference.get();
-                    if (view != null) {
-                        view.postInvalidate();
-                    }
-                }
-
-				// also try to clear out any old committed XB's that are sitting around.
-				XB_MANAGER.flushCommittedBlocks();
-				
-				if (interrupted) {
-					// Somebody is trying to wake us. Bail out of this loop iteration
-					// so we can check stopRequested.
-					// Note that frame is null, so we're not loosing any data.
-					continue;
-				}
-				
-				if (frame == null) {
-					// We must have timed out on an empty queue (or been interrupted).
-					// If no new exposure blocks are coming, we can update the last known
-					// safe time to commit XB's (with a small fudge factor just incase there's
-					// something making its way onto the L2 queue now)
-					XB_MANAGER.updateSafeTime(System.currentTimeMillis() - 1000);
-					continue;
-				}
-				
-				// If we made it this far, we have a real data frame ready to go.
-				// First update the XB manager's safe time (so it knows which old XB
-				// it can commit. 
-				XB_MANAGER.updateSafeTime(frame.getAcquiredTime());
-				
-				ExposureBlock xb = frame.getExposureBlock();
-				
-				xb.L2_processed++;
-
-                // Jodi - Removed L2prescale as it was never changed.
-				if (L2counter % 1 != 0) {
-					// prescaled! Drop the event.
-					xb.L2_skip++;
-					continue;
-				}
-
-                frame.setLocation(CFApplication.getLastKnownLocation());
-
-				// First, build the event from the raw frame.
-				RecoEvent event = mParticleReco.buildEvent(frame);
-				
-				// If we got a bad frame, go straight to stabilization mode.
-				if (!mParticleReco.good_quality && !mFixedThreshold) {
-                    APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
-					continue;
-				}
-				
-				
-				
-				// Now do the L2 (pixel-level analysis)
-				ArrayList<RecoPixel> pixels;
-				if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
-					pixels = mParticleReco.buildL2Pixels(frame, xb.L2_thresh);
-				}
-				else {
-					// Don't bother with full pixel reco and L2 threshold
-					// if we're not actually taking data.
-					pixels = mParticleReco.buildL2PixelsQuick(frame, 0);
-					
-					// later add here a check on the fraction of pixels hit
-					
-				}
-				
-				xb.L2_pass++;
-				
-				// Now add them to the event.
-				event.pixels = pixels;
-				
-				if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
-					// keep track of the running totals for acquired
-					// events/pixels over the app lifetime.
-					mTotalEvents++;
-					mTotalPixels += pixels.size();
-				}
-				
-				L2counter++;
-				
-				// Finally, add the event to the proper exposure block.
-				xb.addEvent(event);
-				
-				// If we're calibrating, check if we've processed enough
-				// frames to decide on the threshold(s) and go back to
-				// data-taking mode.
-				if (APPLICATION.getApplicationState() == CFApplication.State.CALIBRATION
-						&& mParticleReco.event_count >= CONFIG.getCalibrationSampleFrames()) {
-					// mark the time of the last event from the run.
-					mCalibrationStop = frame.getAcquiredTime();
-                    APPLICATION.setApplicationState(CFApplication.State.DATA);
-				}
-			}
-			running = false;
-		}
-
-        public int getTotalPixels() {
-            return mTotalPixels;
-        }
-
-        public int getTotalEvents() {
-            return mTotalEvents;
-        }
-
-        public long getCalibrationStop() {
-            return mCalibrationStop;
-        }
-
-        public void setFixedThreshold(boolean fixedThreshold) {
-            mFixedThreshold = fixedThreshold;
-        }
-    }
-
-
-	@Override
+    @Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
 		// TODO Auto-generated method stub
 		

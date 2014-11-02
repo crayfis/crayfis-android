@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
-import edu.uci.crayfis.ParticleReco.RecoEvent;
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
 
 public class ExposureBlock {
