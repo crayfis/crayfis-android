@@ -126,10 +126,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	// because the L2 queue was full.
 	private int L2busy = 0;
 
-	// how many particles seen > thresh
-	private int totalXBs = 0;
-	private int committedXBs = 0;
-
 	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
@@ -871,7 +867,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 8 * tsize,
 						mypaint);
 
-				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 10
+				canvas.drawText("Data blocks: " + xbManager.getCommittedXBs(), 200, yoffset + 10
 						* tsize, mypaint);
 
 				// /// Histogram
@@ -980,7 +976,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	private class ExposureBlockManager {
 
-		// This is where the current xb is kept. The DAQActivity must access
+        private final CFConfig CONFIG = CFConfig.getInstance();
+
+        private int mTotalXBs = 0;
+        private int mCommittedXBs = 0;
+
+        // This is where the current xb is kept. The DAQActivity must access
 		// the current exposure block through the public methods here.
 		private ExposureBlock current_xb;
 
@@ -1029,9 +1030,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 			CFLog.i("DAQActivity Starting new exposure block!");
 			current_xb = new ExposureBlock();
-			totalXBs++;
+			mTotalXBs++;
 
-			current_xb.xbn = totalXBs;
+			current_xb.xbn = mTotalXBs;
 			current_xb.L1_thresh = CONFIG.getL1Threshold();
 			current_xb.L2_thresh = CONFIG.getL2Threshold();
 			current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
@@ -1109,9 +1110,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
 			}
 
-			committedXBs++;
+			mCommittedXBs++;
 		}
-	}
+
+        public int getTotalXBs() {
+            return mTotalXBs;
+        }
+
+        public int getCommittedXBs() {
+            return mCommittedXBs;
+        }
+    }
 
 	/**
 	 * External thread used to do more time consuming image processing
