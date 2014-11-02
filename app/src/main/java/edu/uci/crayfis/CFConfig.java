@@ -19,6 +19,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
     private static final String KEY_QUAL_BG_VAR = "qual_bg_var";
+    private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
+    private static final String KEY_MAX_CHUNK_SIZE = "max_chunk_size";
+    private static final String KEY_CACHE_UPLOAD_INTERVAL = "min_cache_upload_interval";
 
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
@@ -28,6 +31,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final float DEFAULT_BG_AVG_CUT = 30;
     private static final float DEFAULT_BG_VAR_CUT = 5;
+    private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
+    private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
+    private static final int DEFAULT_CACHE_UPLOAD_INTERVAL = 30;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -37,6 +43,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mExposureBlockPeriod;
     private float mQualityBgAverage;
     private float mQualityBgVariance;
+    private int mMaxUploadInterval;
+    private int mMaxChunkSize;
+    private int mCacheUploadInterval;
 
     private CFConfig() {
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -47,6 +56,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mQualityBgAverage = DEFAULT_BG_AVG_CUT;
         mQualityBgVariance = DEFAULT_BG_VAR_CUT;
+        mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
+        mMaxChunkSize = DEFAULT_MAX_CHUNK_SIZE;
+        mCacheUploadInterval = DEFAULT_CACHE_UPLOAD_INTERVAL;
     }
 
     /**
@@ -149,6 +161,33 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return INSTANCE;
     }
 
+    /**
+     * Get the maximum upload interval.
+     *
+     * @return int
+     */
+    public int getMaxUploadInterval() {
+        return mMaxUploadInterval;
+    }
+
+    /**
+     * Get the maximum chunk size.
+     *
+     * @return int
+     */
+    public int getMaxChunkSize() {
+        return mMaxChunkSize;
+    }
+
+    /**
+     * Get the cache upload interval.
+     *
+     * @return int
+     */
+    public int getCacheUploadInterval() {
+        return mCacheUploadInterval;
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
@@ -158,6 +197,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
         mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
+        mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
+        mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
+        mCacheUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
     }
 
     /**

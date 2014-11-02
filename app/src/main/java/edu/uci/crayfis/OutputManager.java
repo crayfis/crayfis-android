@@ -6,6 +6,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.ByteString;
@@ -28,22 +29,13 @@ import java.util.concurrent.TimeUnit;
 
 import edu.uci.crayfis.util.CFLog;
 
-public class OutputManager extends Thread implements OnSharedPreferenceChangeListener {
-	public static final String TAG = "OutputManager";
+public class OutputManager extends Thread {
+
+    private static final CFConfig CONFIG = CFConfig.getInstance();
 	
 	public static final int connect_timeout = 2 * 1000; // ms
 	public static final int read_timeout = 5 * 1000; // ms
-	
-	// maximum time and size to allow between upload attempts.
-	public static final int default_max_upload_interval = 180; // s
-	public int max_upload_interval;
-		
-	public static final int default_max_chunk_size = 250000; // bytes
-	public int max_chunk_size; // bytes
-	
-	public static final int default_min_cache_upload_interval = 30; //s
-	public int min_cache_upload_interval;
-	
+
 	private long last_cache_upload = 0;
 	
 	// true if a request has been made to stop the thread
@@ -76,10 +68,18 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 	public boolean valid_id = true;
 	
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
+    private static OutputManager sInstance;
+	Context context;
 
-	DAQActivity context;
-	
-	public OutputManager(DAQActivity context) {
+    public static synchronized OutputManager getInstance(@NonNull final Context context) {
+        if (sInstance == null) {
+            sInstance = new OutputManager(context.getApplicationContext());
+        }
+        return sInstance;
+    }
+
+
+	private OutputManager(Context context) {
 		this.context = context;
 		
 		server_address = context.getString(R.string.server_address);
@@ -102,23 +102,6 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 		device_id = context.device_id;
 		
 		run_id_string = context.run_id.toString();
-		
-		context.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(this);
-		updateSettings();
-	}
-	
-	public void updateSettings() {
-		SharedPreferences localPrefs = context.getPreferences(Context.MODE_PRIVATE);
-		max_upload_interval = localPrefs.getInt("max_upload_interval", default_max_upload_interval);
-		max_chunk_size = localPrefs.getInt("max_chunk_size", default_max_chunk_size);
-		min_cache_upload_interval = localPrefs.getInt("min_cache_upload_interval", default_min_cache_upload_interval);
-	}
-	
-	@Override
-	public void onSharedPreferenceChanged(SharedPreferences prefs,
-			String key) {
-		updateSettings();
-		
 	}
 	
 	public boolean useWifiOnly() {
@@ -201,7 +184,7 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 		// until we've emptied the queue.
 		while (! (stopRequested && outputQueue.isEmpty())) {
 			// first, check to see if there's any local file(s) to be uploaded:
-			if (canUpload() && ((System.currentTimeMillis() - last_cache_upload) > min_cache_upload_interval)) {
+			if (canUpload() && ((System.currentTimeMillis() - last_cache_upload) > CONFIG.getCacheUploadInterval())) {
 				uploadFile();
 			}
 
@@ -246,7 +229,9 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 				continue;
 			}
 
-			if (chunkSize > max_chunk_size || (System.currentTimeMillis() - lastUpload) > max_upload_interval*1e3) {
+            final int maxChunkSize = CONFIG.getMaxChunkSize();
+            final int maxUploadInterval = CONFIG.getMaxUploadInterval();
+			if (chunkSize > maxChunkSize || (System.currentTimeMillis() - lastUpload) > maxUploadInterval * 1e3) {
 				// time to upload! (or commit to file if that fails)
 				outputChunk(chunk.build());
 				chunk = null;
@@ -424,16 +409,15 @@ public class OutputManager extends Thread implements OnSharedPreferenceChangeLis
 			JSONObject jObject;
 			try {
 				jObject = new JSONObject(sb.toString());
-				context.updateSettings(jObject);
-
-				if (jObject.has("experiment")) {
-					current_experiment = jObject.getString("experiment");
-				}
-				if (jObject.has("nickname")) {
-					device_nickname = jObject.getString("nickname");
-				}
-
-
+                // FIXME I think this involves creating ServerCommand object and upating the preferences, but this has 2 new values.
+//				context.updateSettings(jObject);
+//
+//				if (jObject.has("experiment")) {
+//					current_experiment = jObject.getString("experiment");
+//				}
+//				if (jObject.has("nickname")) {
+//					device_nickname = jObject.getString("nickname");
+//				}
 			}
 			catch (JSONException ex) {
 				CFLog.w("DAQActivity Warning: malformed JSON response from server.");
