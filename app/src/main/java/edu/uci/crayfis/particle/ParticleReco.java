@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.particle;
 
 /******************************************
  * 
@@ -14,6 +14,8 @@ import android.location.Location;
 
 import java.util.ArrayList;
 
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
