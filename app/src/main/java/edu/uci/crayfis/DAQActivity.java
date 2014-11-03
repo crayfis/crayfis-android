@@ -19,6 +19,12 @@ package edu.uci.crayfis;
 
 import java.lang.Math;
 
+import com.jjoe64.graphview.GraphView;
+
+import com.jjoe64.graphview.BarGraphView;
+import com.jjoe64.graphview.GraphViewSeries;
+
+import android.graphics.PixelFormat;
 import android.location.LocationManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -81,6 +87,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private Camera mCamera;
 	private Visualization mDraw;
 	private CameraPreview mPreview;
+    private GraphView mGraph;
+    private GraphViewSeries mGraphSeries;
 
 	// WakeLock to prevent the phone from sleeping during DAQ
 	PowerManager.WakeLock wl;
@@ -255,6 +263,24 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         Log.e(TAG," clicked MODE new="+current_mode.toString());
 
 	}
+
+    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log)
+    {
+        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[values.length];
+        for (int i=0;i<values.length;i++)
+        {
+            if (do_log) {
+                if (values[i] > 0)
+                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
+                else
+                    gd[i] = new GraphView.GraphViewData(i, 0);
+            } else
+                gd[i] = new GraphView.GraphViewData(i, values[i]);
+
+
+        }
+        return gd;
+    }
 
 	// received message when power is disconnected -- should end run
 	public class MyDisconnectReceiver extends BroadcastReceiver {
@@ -630,6 +656,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		// Used to visualize the results
 		mDraw = new Visualization(this);
+        mDraw.setZOrderOnTop(true);
+        mDraw.getHolder().setFormat(PixelFormat.TRANSPARENT);
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreview(this, this, true);
@@ -638,9 +666,31 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
-		preview.addView(mDraw);
-		
-		L1counter = L1proc = L1skip = 0;
+
+        /// test graphing
+        mGraph = new BarGraphView( this, "");
+
+        int novals[] = new int[256];
+        for (int i=0;i<256;i++) novals[i]=1;
+        mGraphSeries = new GraphViewSeries(make_graph_data(novals,true));
+        /*
+        GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
+                new GraphView.GraphViewData(1, 2.0d)
+                , new GraphView.GraphViewData(2, 1.5d)
+                , new GraphView.GraphViewData(3, 2.5d)
+                , new GraphView.GraphViewData(4, 1.0d)
+        });
+
+        mGraph.addSeries(exampleSeries);
+        */
+        mGraph.addSeries(mGraphSeries);
+        preview.addView(mGraph);
+
+        preview.addView(mDraw);
+
+
+
+        L1counter = L1proc = L1skip = 0;
 		starttime = System.currentTimeMillis();
 
 		LocationListener locationListener = new LocationListener() {
@@ -881,8 +931,20 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		xb.L1_processed++;
 		
 		long acq_time = System.currentTimeMillis();
-		
-		// for calculating fps
+
+        if (current_mode == DAQActivity.display_mode.HIST) {
+            mGraphSeries.resetData(make_graph_data(reco.h_pixel.values, true));
+            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
+            mGraph.setManualYAxisBounds(20., 0.);
+
+        }
+        if (current_mode == DAQActivity.display_mode.TIME) {
+            mGraphSeries.resetData(make_graph_data(reco.hist_max.values, false));
+            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
+            mGraph.setManualYAxisBounds(50., 0.);
+        }
+
+        // for calculating fps
 		if (L1counter % fps_update_interval == 0) {
 			L1_fps_start = L1_fps_stop;
 			L1_fps_stop = acq_time;
@@ -957,7 +1019,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		}
 
-		// Can only do trivial amounts of image processing inside this function
+
+
+        // Can only do trivial amounts of image processing inside this function
 		// or else bad stuff happens.
 		// To work around this issue most of the processing has been pushed onto
 		// a thread and the call below
@@ -979,48 +1043,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		Paint mypaint_warning;
 		Paint mypaint_info;
 
-		private String[] histo_strings_all = new String[256];
-		private String[] histo_strings_thresh = new String[256];
 
-        void makeHistory(int data[], int nbins,String[] histo_strings) {
-            for (int j = 255; j >= 0; j--) {
-                // width loop
-                for (int i = 0; i < nbins; i++) {
-                    if (j == data[i])
-                        histo_chars[j][i] = '*';
-                    else
-                        histo_chars[j][i] = ' ';
-                }
-                histo_strings[j] = new String(histo_chars[j]);
-            }
-
-        }
-
-		void makeHistogram(int data[], int min, String[] histo_strings) {
-			int max = 1;
-			for (int i = 0; i < 256; i++)
-				if (data[i] > max)
-					max = data[i];
-			// make 256 vertical devisions
-			// each one is at log(data)/log(max) * i /256
-
-			// height loop
-
-			for (int j = 256; j > 0; j--) {
-				// width loop
-				for (int i = 0; i < 256; i++) {
-					if (i < min
-							|| data[i] == 0
-							|| java.lang.Math.log(data[i]) < java.lang.Math
-									.log(max) * (j / 256.0))
-						// if ( data[i] < max*j/256.0 )
-						histo_chars[j - 1][i] = ' ';
-					else
-						histo_chars[j - 1][i] = '*';
-				}
-				histo_strings[j - 1] = new String(histo_chars[j - 1]);
-			}
-		}
 
 		public Visualization(Activity context) {
 			super(context);
@@ -1052,7 +1075,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				int tsize = (int)(h/50);
 				int yoffset = 2*tsize;
 				mypaint.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint.setColor(android.graphics.Color.BLUE);
+				mypaint.setColor(android.graphics.Color.WHITE);
 				mypaint.setTextSize((int) (tsize * 1.5));
 				
 				mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
@@ -1095,52 +1118,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						* tsize, mypaint);
 
 
-                if (current_mode == DAQActivity.display_mode.HIST) {
-                    // /// Histogram
-                    makeHistogram(reco.h_pixel.values, 0, histo_strings_all);
-                    for (int j = 256; j > 0; j--)
-                        canvas.drawText(histo_strings_all[j - 1], 50,
-                                (float) (yoffset + (256 - j) * tsize / 10.0),
-                                mypaint2);
-
-                    for (int i = 0; i < 256; i++)
-                        if (i % 10 == 0)
-                            labels[i] = '|';
-                        else
-                            labels[i] = ' ';
-
-                    String slabels = new String(labels);
-                    String slabelsnum = new String(
-                            "0              100               200");
-                    canvas.drawText(slabels, (float) (50),
-                            (float) (yoffset + (256 + 5) * tsize / 10.0), mypaint2);
-                    canvas.drawText(slabelsnum, (float) (42),
-                            (float) (yoffset + (256 + 14) * tsize / 10.0), mypaint3);
-
-                    canvas.drawText("Pixel value",
-                            (float) (50 + 20 * tsize / 10.0),
-                            (float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
-                }
-
-                if (current_mode == DAQActivity.display_mode.TIME) {
-                    // /// Histogram
-                    makeHistory(reco.hist_mean.values,reco.hist_mean.nbins, histo_strings_all);
-                    for (int j = 256; j > 0; j--)
-                        canvas.drawText(histo_strings_all[j - 1], 50,
-                                (float) (yoffset + (256 - j) * tsize / 10.0),
-                                mypaint2);
-
-
-                    makeHistory(reco.hist_max.values,reco.hist_max.nbins, histo_strings_all);
-                    for (int j = 256; j > 0; j--)
-                        canvas.drawText(histo_strings_all[j - 1], 50,
-                                (float) (yoffset + (256 - j) * tsize / 10.0),
-                                mypaint4);
-
-                    canvas.drawText("Time",
-                            (float) (50 + 20 * tsize / 10.0),
-                            (float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
-                }
 
 
 				String state_message = "";
@@ -1224,23 +1201,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					canvas.drawText(exp_msg, 175, yoffset+18*tsize, mypaint_info);
 				}
 				
-				canvas.save();
-				canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
-						(float) (yoffset + (256 - 50) * tsize / 10.0));
 
-                if (current_mode == DAQActivity.display_mode.HIST) {
 
-                    canvas.drawText(String.format("Number of pixels"),
-                            (float) (50 + -7 * tsize / 10.0),
-                            (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
-                }
-                if (current_mode == DAQActivity.display_mode.TIME) {
-
-                    canvas.drawText(String.format("Pixel value"),
-                            (float) (50 + -7 * tsize / 10.0),
-                            (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
-                }
-				canvas.restore();
 
 			}
 
@@ -1427,8 +1389,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				
 				// update the GUI (does it make sense to do handle this somewhere else?)
 				mDraw.postInvalidate();
-				
-				// also try to clear out any old committed XB's that are sitting around.
+
+
+
+
+
+
+
+
+                // also try to clear out any old committed XB's that are sitting around.
 				xbManager.flushCommittedBlocks();
 				
 				if (interrupted) {
@@ -1479,7 +1448,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 					continue;
 				}
 				
-				
+
 				
 				// Now do the L2 (pixel-level analysis)
 				ArrayList<RecoPixel> pixels;

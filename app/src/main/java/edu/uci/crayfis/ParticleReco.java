@@ -6,6 +6,9 @@ package edu.uci.crayfis;
  * 
  */
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphViewSeries;
+
 import android.location.Location;
 import android.util.Log;
 
@@ -32,15 +35,18 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	//private float max_pix_frac;
 	
 	private DAQActivity context;
-	
-	public ParticleReco(Camera.Size previewSize, DAQActivity context)
+
+
+
+    public ParticleReco(Camera.Size previewSize, DAQActivity context)
 	{
 		this.previewSize = previewSize;
 		good_quality=false;
 		clearHistograms();
 		
 		this.context = context;
-		
+
+
 		context.getPreferences(Context.MODE_PRIVATE).registerOnSharedPreferenceChangeListener(this);
 		updateSettings();
 	}
@@ -227,6 +233,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	public Histogram h_maxpixel = new Histogram(256);
 	public Histogram h_numpixel = new Histogram(200);
 
+
     public History hist_mean = new History(200);
     public History hist_max = new History(200);
 
@@ -244,6 +251,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 	}
 	
 	public void clearHistograms() {
+
 		h_pixel.clear();
 		h_l2pixel.clear();
 		h_maxpixel.clear();
@@ -361,6 +369,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
                 pixels = new ArrayList<RecoPixel>();
             }
 
+
             int width = previewSize.width;
             int height = previewSize.height;
             int max_val = 0;
@@ -440,6 +449,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
             }
 
             // update the event-level histograms.
+
             h_maxpixel.fill(max_val);
             h_numpixel.fill(num_pix);
 
