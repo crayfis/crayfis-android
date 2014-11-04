@@ -416,7 +416,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                     "\t Data blocks: groups of frames\n" +
                     "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
                     "\t Scan rate: rate, frames-per-second\n" +
-                    "On the left is a time series showing the mean pixel value (white) and the max pixel value (red)" +
+                    "On the left is a time series showing the max pixel value found in each frame." +
                     "\nFor more details:  "
                     + s);
 
