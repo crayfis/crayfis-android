@@ -22,6 +22,8 @@ import java.lang.Math;
 import com.jjoe64.graphview.GraphView;
 
 import com.jjoe64.graphview.BarGraphView;
+import com.jjoe64.graphview.LineGraphView;
+
 import com.jjoe64.graphview.GraphViewSeries;
 
 import android.graphics.PixelFormat;
@@ -264,18 +266,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	}
 
-    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log)
+    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start)
     {
         GraphView.GraphViewData gd[] = new GraphView.GraphViewData[values.length];
+        int which=start+1;
         for (int i=0;i<values.length;i++)
         {
+            if (which>=values.length){ which=0;}
             if (do_log) {
-                if (values[i] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
+                if (values[which] > 0)
+                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
                 else
                     gd[i] = new GraphView.GraphViewData(i, 0);
             } else
-                gd[i] = new GraphView.GraphViewData(i, values[i]);
+                gd[i] = new GraphView.GraphViewData(i, values[which]);
+            which++;
 
 
         }
@@ -672,7 +677,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
         int novals[] = new int[256];
         for (int i=0;i<256;i++) novals[i]=1;
-        mGraphSeries = new GraphViewSeries(make_graph_data(novals,true));
+        mGraphSeries = new GraphViewSeries(make_graph_data(novals,true,0));
         /*
         GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
                 new GraphView.GraphViewData(1, 2.0d)
@@ -683,7 +688,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
         mGraph.addSeries(exampleSeries);
         */
+        mGraph.setScalable(true);
         mGraph.addSeries(mGraphSeries);
+
         preview.addView(mGraph);
 
         preview.addView(mDraw);
@@ -933,13 +940,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		long acq_time = System.currentTimeMillis();
 
         if (current_mode == DAQActivity.display_mode.HIST) {
-            mGraphSeries.resetData(make_graph_data(reco.h_pixel.values, true));
+            mGraphSeries.resetData(make_graph_data(reco.h_pixel.values, true,-1));
             //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
             mGraph.setManualYAxisBounds(20., 0.);
 
         }
         if (current_mode == DAQActivity.display_mode.TIME) {
-            mGraphSeries.resetData(make_graph_data(reco.hist_max.values, false));
+            mGraphSeries.resetData(make_graph_data(reco.hist_max.values, false,reco.hist_max.current_time));
             //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
             mGraph.setManualYAxisBounds(50., 0.);
         }
@@ -987,8 +994,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// check if we pass the L1 threshold
 				boolean pass = false;
 				int length = previewSize.width * previewSize.height;
+                int max=-1;
 				for (int i = 0; i < length; i++) {
 					// make sure we promote the (signed) byte to int for comparison!
+                    if ( (bytes[i] & 0xFF) > max) { max = (bytes[i] & 0xFF); }
 					if ( (bytes[i] & 0xFF) > L1thresh) {
 						// Okay, found a pixel above threshold. No need to continue
 						// looping.
@@ -996,6 +1005,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 						break;
 					}
 				}
+                reco.hist_max.new_data(max);
 				if (pass) {
 					xb.L1_pass++;
 
@@ -1139,19 +1149,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				}
 				canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
 
-                String dstate_message = "";
-                switch (current_mode) {
-                    case HIST:
-                        dstate_message = "Display mode: HIST";
 
-                        break;
-                    case TIME:
-                        dstate_message = "Display mode: TIME";
-                        break;
-                    default:
-                        dstate_message = current_state.toString();
-                }
-                canvas.drawText(dstate_message, 200, yoffset + 13 * tsize, mypaint);
 				
 				String fps = "---";
 				if (L1_fps_start > 0 && L1_fps_stop > 0) {

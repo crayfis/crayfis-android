@@ -147,10 +147,6 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
             current_time++;
             if (current_time>=nbins) current_time=0;
             values[current_time] = data;
-
-            // clear out old data ahead of us so we can see the update point
-            for (int ix=current_time+1;ix<current_time+10 && ix<nbins;ix++)
-                values[ix]=0;
         }
 
     }
