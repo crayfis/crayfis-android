@@ -33,8 +33,8 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 	    if (hour > startAfter || hour < startBefore)
 	    {
 	    	while (System.currentTimeMillis()-plugged_in < startWait*1000)
-	    	{	
-	    		// wait
+	    	{
+                // FIXME This is better served with AlarmManager
 	    	}	
 	    
 	    	// now launch
