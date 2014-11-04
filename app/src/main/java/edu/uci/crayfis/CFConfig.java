@@ -2,6 +2,7 @@ package edu.uci.crayfis;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import edu.uci.crayfis.server.ServerCommand;
 
@@ -22,6 +23,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
     private static final String KEY_MAX_CHUNK_SIZE = "max_chunk_size";
     private static final String KEY_CACHE_UPLOAD_INTERVAL = "min_cache_upload_interval";
+    private static final String KEY_CURRENT_EXPERIMENT = "current_experiment";
+    private static final String KEY_DEVICE_NICKNAME = "device_nickname";
+
 
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
@@ -34,6 +38,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
     private static final int DEFAULT_CACHE_UPLOAD_INTERVAL = 30;
+    private static final String DEFAULT_CURRENT_EXPERIMENT = null;
+    private static final String DEFAULT_DEVICE_NICKNAME = null;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -46,6 +52,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mMaxUploadInterval;
     private int mMaxChunkSize;
     private int mCacheUploadInterval;
+    private String mCurrentExperiment;
+    private String mDeviceNickname;
 
     private CFConfig() {
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -59,6 +67,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
         mMaxChunkSize = DEFAULT_MAX_CHUNK_SIZE;
         mCacheUploadInterval = DEFAULT_CACHE_UPLOAD_INTERVAL;
+        mCurrentExperiment = DEFAULT_CURRENT_EXPERIMENT;
+        mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
     }
 
     /**
@@ -188,6 +198,26 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mCacheUploadInterval;
     }
 
+    /**
+     * Get the current experiment.
+     *
+     * @return String or {@code null} if not set.
+     */
+    @Nullable
+    public String getCurrentExperiment() {
+        return mCurrentExperiment;
+    }
+
+    /**
+     * Get the device nickname.
+     *
+     * @return String or {@code null} if not set.
+     */
+    @Nullable
+    public String getDeviceNickname() {
+        return mDeviceNickname;
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
@@ -199,7 +229,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
         mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
-        mCacheUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
+        mCacheUploadInterval = sharedPreferences.getInt(KEY_CACHE_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
+        mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
+        mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
     }
 
     /**
@@ -230,6 +262,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getQualityBgVariance() != null) {
             mQualityBgVariance = serverCommand.getQualityBgVariance();
+        }
+        if (serverCommand.getCurrentExperiment() != null) {
+            mCurrentExperiment = serverCommand.getCurrentExperiment();
+        }
+        if (serverCommand.getDeviceNickname() != null) {
+            mDeviceNickname = serverCommand.getDeviceNickname();
         }
     }
 }

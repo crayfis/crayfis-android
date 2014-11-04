@@ -7,11 +7,9 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
+import com.google.gson.Gson;
 import com.google.protobuf.AbstractMessage;
 import com.google.protobuf.ByteString;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +25,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 
 public class OutputManager extends Thread {
@@ -52,10 +51,6 @@ public class OutputManager extends Thread {
 	public String server_port;
 	public String upload_uri;
 	public boolean force_https;
-	
-	// Some interesting stuff from the server response
-	public String current_experiment = null;
-	public String device_nickname = null;
 	
 	public boolean debug_stream;
 	
@@ -396,25 +391,11 @@ public class OutputManager extends Thread {
 			String line;
 			StringBuilder sb = new StringBuilder();
 			while ((line = reader.readLine()) != null) {
-				sb.append(line + "\n");
+				sb.append(line).append("\n");
 			}
 
-			JSONObject jObject;
-			try {
-				jObject = new JSONObject(sb.toString());
-                // FIXME I think this involves creating ServerCommand object and upating the preferences, but this has 2 new values.
-//				context.updateSettings(jObject);
-//
-//				if (jObject.has("experiment")) {
-//					current_experiment = jObject.getString("experiment");
-//				}
-//				if (jObject.has("nickname")) {
-//					device_nickname = jObject.getString("nickname");
-//				}
-			}
-			catch (JSONException ex) {
-				CFLog.w("DAQActivity Warning: malformed JSON response from server.");
-			}
+            final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
+            CFConfig.getInstance().updateFromServer(serverCommand);
 
 			CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
 

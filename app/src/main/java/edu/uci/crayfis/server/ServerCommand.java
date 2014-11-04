@@ -25,6 +25,8 @@ public class ServerCommand {
     @SerializedName("set_qual_bg_avg") private Float mQualityBgAverage;
     @SerializedName("set_qual_bg_var") private Float mQualityBgVariance;
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
+    @SerializedName("experiment") private String mCurrentExperiment;
+    @SerializedName("nickname") private String mDeviceNickname;
 
     /**
      * Get the L1 threshold.
@@ -137,7 +139,7 @@ public class ServerCommand {
     }
 
     /**
-     * Check if the {@link edu.uci.crayfis.DAQActivity.ExposureBlockManager} should be restarted or not.
+     * Check if the {@link edu.uci.crayfis.exposure.ExposureBlockManager} should be restarted or not.
      *
      * @return {@code true} if it should be restarted, {@code false} if not.
      */
@@ -156,5 +158,25 @@ public class ServerCommand {
      */
     public boolean shouldRecalibrate() {
         return (mShouldRecalibrate == null) ? false : mShouldRecalibrate;
+    }
+
+    /**
+     * Get the current experiment.
+     *
+     * @return String or {@code null}
+     */
+    @Nullable
+    public String getCurrentExperiment() {
+        return (mCurrentExperiment == null || mCurrentExperiment.isEmpty()) ? null : mCurrentExperiment;
+    }
+
+    /**
+     * Get the device nick name.
+     *
+     * @return String or {@code null}
+     */
+    @Nullable
+    public String getDeviceNickname() {
+        return (mDeviceNickname == null || mDeviceNickname.isEmpty()) ? null : mDeviceNickname;
     }
 }

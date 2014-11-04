@@ -914,8 +914,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 				String device_msg = "dev: ";
                 final String deviceId = mAppBuild.getDeviceId();
-				if (outputThread.device_nickname != null) {
-					device_msg += outputThread.device_nickname + " (" + deviceId + ")";
+                final String deviceNickname = CONFIG.getDeviceNickname();
+				if (deviceNickname != null) {
+					device_msg += deviceNickname + " (" + deviceId + ")";
 				}
 				else {
 					device_msg += deviceId;
@@ -926,8 +927,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
 				canvas.drawText(device_msg, 175, yoffset + 19*tsize, mypaint_info);
 				canvas.drawText(run_msg, 175, yoffset+20*tsize, mypaint_info);
-				if (outputThread.current_experiment != null) {
-					String exp_msg = "exp: " + outputThread.current_experiment;
+                final String currentExperiment = CONFIG.getCurrentExperiment();
+				if (currentExperiment != null) {
+					String exp_msg = "exp: " + currentExperiment;
 					canvas.drawText(exp_msg, 175, yoffset+21*tsize, mypaint_info);
 				}
 
