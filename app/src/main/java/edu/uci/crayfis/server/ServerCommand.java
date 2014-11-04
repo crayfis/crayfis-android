@@ -18,9 +18,9 @@ public class ServerCommand {
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
-    @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval; // TODO This does not exist in CFConfig
-    @SerializedName("set_upload_size_max") private Integer mMaxChunkSize; // TODO This does not exist in CFConfig
-    @SerializedName("set_cache_upload_interval") private Integer mMinCacheUploadInterval; // TODO This does not exist in CFConfig
+    @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
+    @SerializedName("set_upload_size_max") private Integer mMaxChunkSize;
+    @SerializedName("set_cache_upload_interval") private Integer mMinCacheUploadInterval;
     @SerializedName("set_qual_pix_frac") private Float mQualPixFrac; // TODO This is all commented out in ParticleReco
     @SerializedName("set_qual_bg_avg") private Float mQualityBgAverage;
     @SerializedName("set_qual_bg_var") private Float mQualityBgVariance;
