@@ -237,8 +237,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     /**
      * Update configuration based on commands from the server.
      *
-     * FIXME This is not saving to the shared preferences yet.
-     *
      * @param serverCommand {@link edu.uci.crayfis.server.ServerCommand}
      */
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
@@ -269,5 +267,21 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getDeviceNickname() != null) {
             mDeviceNickname = serverCommand.getDeviceNickname();
         }
+    }
+
+    public void save(@NonNull final SharedPreferences sharedPreferences) {
+        sharedPreferences.edit()
+                .putInt(KEY_L1_THRESHOLD, mL1Threshold)
+                .putInt(KEY_L2_THRESHOLD, mL2Threshold)
+                .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
+                .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
+                .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
+                .putFloat(KEY_QUAL_BG_AVG, mQualityBgAverage)
+                .putFloat(KEY_QUAL_BG_VAR, mQualityBgVariance)
+                .putInt(KEY_MAX_UPLOAD_INTERVAL, mMaxUploadInterval)
+                .putInt(KEY_MAX_CHUNK_SIZE, mMaxChunkSize)
+                .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
+                .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
+                .apply();
     }
 }

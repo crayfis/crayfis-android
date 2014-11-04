@@ -47,6 +47,14 @@ public class CFApplication extends Application {
     }
 
     /**
+     * Save the current preferences.
+     */
+    public void savePreferences() {
+        final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        CFConfig.getInstance().save(localPrefs);
+    }
+
+    /**
      * Get the current application state.
      *
      * @return {@link edu.uci.crayfis.CFApplication.State}

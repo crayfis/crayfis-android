@@ -396,6 +396,7 @@ public class OutputManager extends Thread {
 
             final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
             CFConfig.getInstance().updateFromServer(serverCommand);
+            ((CFApplication) context.getApplicationContext()).savePreferences();
 
 			CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
 

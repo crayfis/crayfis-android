@@ -175,6 +175,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         try {
             final ServerCommand serverCommand = new Gson().fromJson(json.toString(), ServerCommand.class);
             CONFIG.updateFromServer(serverCommand);
+            ((CFApplication) getApplication()).savePreferences();
+
             if (serverCommand.shouldRestartEBManager()) {
                 xbManager.newExposureBlock();
             }
