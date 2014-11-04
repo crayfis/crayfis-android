@@ -164,14 +164,12 @@ public final class ExposureBlockManager {
         }
 
         CFLog.i("DAQActivity Commiting old exposure block!");
+        final boolean success = OUTPUT_MANAGER.commitExposureBlock(xb);
 
-        // FIXME Cyclical dependency, moved this out so L2Processor can be moved, but this needs L2Processor.
-//        boolean success = outputThread.commitExposureBlock(xb);
-//
-//        if (!success) {
-//            // Oops! The output manager's queue must be full!
-//            throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
-//        }
+        if (!success) {
+            // Oops! The output manager's queue must be full!
+            throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
+        }
 
         mCommittedXBs++;
     }
