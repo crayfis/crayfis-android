@@ -20,11 +20,16 @@ package edu.uci.crayfis;
 import java.lang.Math;
 
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphViewDataInterface;
 
 import com.jjoe64.graphview.BarGraphView;
 import com.jjoe64.graphview.LineGraphView;
 
 import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.ValueDependentColor;
+
+import android.graphics.Color;
 
 import android.graphics.PixelFormat;
 import android.location.LocationManager;
@@ -91,6 +96,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private CameraPreview mPreview;
     private GraphView mGraph;
     private GraphViewSeries mGraphSeries;
+    private GraphViewSeriesStyle mGraphSeriesStyle;
+
 
 	// WakeLock to prevent the phone from sleeping during DAQ
 	PowerManager.WakeLock wl;
@@ -266,13 +273,17 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	}
 
-    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start)
+    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
     {
-        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[values.length];
+        // show some empty bins
+        if (max_bin<values.length)
+            max_bin += 2;
+
+        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
         int which=start+1;
-        for (int i=0;i<values.length;i++)
+        for (int i=0;i<max_bin;i++)
         {
-            if (which>=values.length){ which=0;}
+            if (which>=max_bin){ which=0;}
             if (do_log) {
                 if (values[which] > 0)
                     gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
@@ -610,6 +621,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		run_config = b.build();
 	}
 
+    private class ValueDependentColorX implements ValueDependentColor
+    {
+        @Override
+        public int get (GraphViewDataInterface data){
+        if (data.getY() == 0) return Color.BLACK;
+        if (data.getX() < L2thresh)
+            return Color.BLUE;
+        return Color.RED;
+        }
+    }
+
+    private class ValueDependentColorY implements ValueDependentColor
+    {
+        @Override
+        public int get (GraphViewDataInterface data){
+            if (data.getY() == 0) return Color.BLACK;
+            if (data.getY() < L2thresh)
+                return Color.BLUE;
+            return Color.RED;
+        }
+    }
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -677,7 +710,11 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
         int novals[] = new int[256];
         for (int i=0;i<256;i++) novals[i]=1;
-        mGraphSeries = new GraphViewSeries(make_graph_data(novals,true,0));
+
+        GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
+        mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
+
+        mGraphSeries = new GraphViewSeries("aaa",mGraphSeriesStyle,make_graph_data(novals, true, 0, 20));
         /*
         GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
                 new GraphView.GraphViewData(1, 2.0d)
@@ -940,15 +977,21 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		long acq_time = System.currentTimeMillis();
 
         if (current_mode == DAQActivity.display_mode.HIST) {
-            mGraphSeries.resetData(make_graph_data(reco.h_pixel.values, true,-1));
+            mGraphSeries.resetData(make_graph_data(reco.h_pixel.values, true,-1,reco.h_pixel.max_bin));
             //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
             mGraph.setManualYAxisBounds(20., 0.);
+            mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
+            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorX());
+
+
 
         }
         if (current_mode == DAQActivity.display_mode.TIME) {
-            mGraphSeries.resetData(make_graph_data(reco.hist_max.values, false,reco.hist_max.current_time));
+            mGraphSeries.resetData(make_graph_data(reco.hist_max.values, false,reco.hist_max.current_time,reco.hist_max.values.length));
             //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
-            mGraph.setManualYAxisBounds(50., 0.);
+            mGraph.setManualYAxisBounds(30., 0.);
+            mGraph.setHorizontalLabels(new String[] {"","Time"," "," "});
+            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorY());
         }
 
         // for calculating fps

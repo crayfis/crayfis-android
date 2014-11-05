@@ -157,6 +157,7 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 		double mean = 0;
 		double variance = 0;
 		int integral = 0;
+        int max_bin=0;
 		final int nbins;
 		
 		public Histogram(int nbins) {
@@ -176,12 +177,14 @@ public class ParticleReco implements OnSharedPreferenceChangeListener{
 			integral = 0;
 			mean_valid = false;
 			variance_valid = false;
+            max_bin=0;
 		}
 		
 		public void fill(int val) {
 			fill(val, 1);
 		}
 		public void fill(int x, int weight) {
+            if (x>max_bin && x < nbins) { max_bin=x;}
 			if (x < 0) {
 				// underflow
 				values[nbins] += weight;
