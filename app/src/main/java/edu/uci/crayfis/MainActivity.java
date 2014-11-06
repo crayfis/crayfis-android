@@ -72,6 +72,8 @@ public class MainActivity extends Activity  {
 			editor.apply();
 		}
 
+        // disable this for now
+        firstRun=false;
 		if (firstRun) {
 
 			setContentView(R.layout.main);

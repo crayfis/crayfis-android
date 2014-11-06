@@ -25,7 +25,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -51,6 +53,12 @@ import android.widget.TextView;
 import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.jjoe64.graphview.BarGraphView;
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GraphViewDataInterface;
+import com.jjoe64.graphview.GraphViewSeries;
+import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.ValueDependentColor;
 
 import org.json.JSONObject;
 
@@ -82,6 +90,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 
     // ----8<--------------
+    private GraphView mGraph;
+    private GraphViewSeries mGraphSeries;
+    private GraphViewSeriesStyle mGraphSeriesStyle;
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
@@ -117,6 +128,12 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	private long L1counter = 0;
 
+    public enum display_mode {
+        HIST, TIME
+    }
+
+    private display_mode current_mode;
+
 	private long calibration_start;
 
 	// counter for stabilization mode
@@ -148,11 +165,40 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		startActivity(i);
 	}
 
-	public void clickedClose(View view) {
+	public void clickedMode(View view) {
+        CFLog.d(" clicked MODE current=" + current_mode.toString());
+        // toggle modes
+        if (current_mode == DAQActivity.display_mode.HIST) { current_mode = DAQActivity.display_mode.TIME; }
+        else
+        if (current_mode == DAQActivity.display_mode.TIME) { current_mode = DAQActivity.display_mode.HIST; }
+        CFLog.d(" clicked MODE new="+current_mode.toString());
 
-		onPause();
-		DAQActivity.this.finish();
 	}
+
+    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
+    {
+        // show some empty bins
+        if (max_bin<values.length)
+            max_bin += 2;
+
+        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
+        int which=start+1;
+        for (int i=0;i<max_bin;i++)
+        {
+            if (which>=max_bin){ which=0;}
+            if (do_log) {
+                if (values[which] > 0)
+                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
+                else
+                    gd[i] = new GraphView.GraphViewData(i, 0);
+            } else
+                gd[i] = new GraphView.GraphViewData(i, values[which]);
+            which++;
+
+
+        }
+        return gd;
+    }
 
 	// received message when power is disconnected -- should end run
 	public class MyDisconnectReceiver extends BroadcastReceiver {
@@ -196,8 +242,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				"crayfis.ps.uci.edu/about");
 
 		final TextView tx1 = new TextView(this);
-		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles. More details:  "
+
+        if (current_mode==DAQActivity.display_mode.HIST)
+		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                "This frame shows:\n\t Exposure: seconds of data-taking\n" +
+                "\t Frames: number with a hot pixel\n" +
+                "\t Candidates: number of pixels saved\n" +
+                "\t Data blocks: groups of frames\n" +
+                "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
+                "\t Scan rate: rate, frames-per-second\n" +
+                "On the left is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nFor more details:  "
 				+ s);
+        if (current_mode==DAQActivity.display_mode.TIME)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This frame shows:\n\t Exposure: seconds of data-taking\n" +
+                    "\t Frames: number with a hot pixel\n" +
+                    "\t Candidates: number of pixels saved\n" +
+                    "\t Data blocks: groups of frames\n" +
+                    "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
+                    "\t Scan rate: rate, frames-per-second\n" +
+                    "On the left is a time series showing the max pixel value found in each frame." +
+                    "\nFor more details:  "
+                    + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
@@ -367,6 +433,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		run_config = b.build();
 	}
 
+    private class ValueDependentColorX implements ValueDependentColor
+    {
+        @Override
+        public int get (GraphViewDataInterface data){
+        if (data.getY() == 0) return Color.BLACK;
+        if (data.getX() < CONFIG.getL2Threshold())
+            return Color.BLUE;
+        return Color.RED;
+        }
+    }
+
+    private class ValueDependentColorY implements ValueDependentColor
+    {
+        @Override
+        public int get (GraphViewDataInterface data){
+            if (data.getY() == 0) return Color.BLACK;
+            if (data.getY() < CONFIG.getL2Threshold())
+                return Color.BLUE;
+            return Color.RED;
+        }
+    }
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -397,6 +485,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		// Used to visualize the results
 		mDraw = new Visualization(this);
+        mDraw.setZOrderOnTop(true);
+        mDraw.getHolder().setFormat(PixelFormat.TRANSPARENT);
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
@@ -405,9 +495,38 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
-		preview.addView(mDraw);
 
-		L1counter = 0;
+        /// test graphing
+        mGraph = new BarGraphView( this, "");
+
+        int novals[] = new int[256];
+        for (int i=0;i<256;i++) novals[i]=1;
+
+        GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
+        mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
+
+        mGraphSeries = new GraphViewSeries("aaa",mGraphSeriesStyle,make_graph_data(novals, true, 0, 20));
+        /*
+        GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
+                new GraphView.GraphViewData(1, 2.0d)
+                , new GraphView.GraphViewData(2, 1.5d)
+                , new GraphView.GraphViewData(3, 2.5d)
+                , new GraphView.GraphViewData(4, 1.0d)
+        });
+
+        mGraph.addSeries(exampleSeries);
+        */
+        mGraph.setScalable(true);
+        mGraph.addSeries(mGraphSeries);
+
+        preview.addView(mGraph);
+
+        preview.addView(mDraw);
+
+
+
+        L1counter = 0;
+
 		starttime = System.currentTimeMillis();
 
 		LocationListener locationListener = new LocationListener() {
@@ -449,10 +568,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Spin up the output and image processing threads:
 		outputThread = OutputManager.getInstance(this);
 		outputThread.start();
-
-		l2thread = new L2Processor(this, previewSize);
-        l2thread.setView(mDraw);
-		l2thread.start();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
@@ -503,12 +618,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		// configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
-
-		if (mParticleReco == null) {
-			// if we don't already have a particleReco object setup,
-			// do that now that we know the camera size.
-			mParticleReco = ParticleReco.getInstance(previewSize);
-		}
 
 		// once all the hardware is set up and the output manager is running,
 		// we can generate and commit the runconfig
@@ -567,7 +676,16 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
 		// Camera.Size previewSize = sizes.get(closest(sizes,176,144));
 
-		CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
+        if (mParticleReco == null) {
+            // if we don't already have a particleReco object setup,
+            // do that now that we know the camera size.
+            mParticleReco = ParticleReco.getInstance(previewSize);
+            l2thread = new L2Processor(this, previewSize);
+            l2thread.setView(mDraw);
+            l2thread.start();
+        }
+
+        CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
 		param.setPreviewSize(previewSize.width, previewSize.height);
 		// param.setFocusMode("FIXED");
 		param.setExposureCompensation(0);
@@ -636,7 +754,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 
-
 		// get a reference to the current xb, so it doesn't change from underneath us
 		ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
@@ -645,7 +762,25 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		long acq_time = System.currentTimeMillis();
 
-		// for calculating fps
+        if (current_mode == DAQActivity.display_mode.HIST) {
+            mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
+            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
+            mGraph.setManualYAxisBounds(20., 0.);
+            mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
+            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorX());
+
+
+
+        }
+        if (current_mode == DAQActivity.display_mode.TIME) {
+            mGraphSeries.resetData(make_graph_data(mParticleReco.hist_max.values, false,mParticleReco.hist_max.current_time,mParticleReco.hist_max.values.length));
+            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
+            mGraph.setManualYAxisBounds(30., 0.);
+            mGraph.setHorizontalLabels(new String[] {"","Time"," "," "});
+            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorY());
+        }
+
+        // for calculating fps
 		if (L1counter % fps_update_interval == 0) {
 			L1_fps_start = L1_fps_stop;
 			L1_fps_stop = acq_time;
@@ -688,15 +823,18 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 				// check if we pass the L1 threshold
 				boolean pass = false;
 				int length = previewSize.width * previewSize.height;
+                int max=-1;
 				for (int i = 0; i < length; i++) {
 					// make sure we promote the (signed) byte to int for comparison!
-					if ( (bytes[i] & 0xFF) > CONFIG.getL1Threshold()) {
+                    if ( (bytes[i] & 0xFF) > max) { max = (bytes[i] & 0xFF); }
+                    if ( (bytes[i] & 0xFF) > CONFIG.getL1Threshold()) {
 						// Okay, found a pixel above threshold. No need to continue
 						// looping.
 						pass = true;
 						break;
 					}
 				}
+                mParticleReco.hist_max.new_data(max);
 				if (pass) {
 					xb.L1_pass++;
 
@@ -718,7 +856,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		}
 
-		// Can only do trivial amounts of image processing inside this function
+
+
+        // Can only do trivial amounts of image processing inside this function
 		// or else bad stuff happens.
 		// To work around this issue most of the processing has been pushed onto
 		// a thread and the call below
@@ -733,218 +873,160 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	 */
 	private class Visualization extends SurfaceView {
 
-		Paint mypaint;
-		Paint mypaint2;
-		//Paint mypaint2_thresh;
-		Paint mypaint3;
-		Paint mypaint_warning;
-		Paint mypaint_info;
+        Paint mypaint;
+        Paint mypaint2;
+        //Paint mypaint2_thresh;
+        Paint mypaint3, mypaint4;
+        Paint mypaint_warning;
+        Paint mypaint_info;
 
-		private String[] histo_strings_all = new String[256];
+        public Visualization(Activity context) {
+            super(context);
 
-		void makeHistogram(int data[], int min, String[] histo_strings) {
-			int max = 1;
-			for (int i = 0; i < 256; i++)
-				if (data[i] > max)
-					max = data[i];
-			// make 256 vertical devisions
-			// each one is at log(data)/log(max) * i /256
+            mypaint = new Paint();
+            mypaint2 = new Paint();
+            //mypaint2_thresh = new Paint();
 
-			// height loop
+            mypaint3 = new Paint();
+            mypaint4 = new Paint();
 
-			for (int j = 256; j > 0; j--) {
-				// width loop
-				for (int i = 0; i < 256; i++) {
-					if (i < min
-							|| data[i] == 0
-							|| java.lang.Math.log(data[i]) < java.lang.Math
-									.log(max) * (j / 256.0))
-						// if ( data[i] < max*j/256.0 )
-						histo_chars[j - 1][i] = ' ';
-					else
-						histo_chars[j - 1][i] = '*';
-				}
-				histo_strings[j - 1] = new String(histo_chars[j - 1]);
-			}
-		}
+            mypaint_warning = new Paint();
+            mypaint_info = new Paint();
 
-		public Visualization(Activity context) {
-			super(context);
+            // This call is necessary, or else the
+            // draw method will not be called.
+            setWillNotDraw(false);
+        }
 
-			mypaint = new Paint();
-			mypaint2 = new Paint();
-			//mypaint2_thresh = new Paint();
+        @Override
+        protected void onDraw(Canvas canvas) {
 
-			mypaint3 = new Paint();
+            int w = canvas.getWidth();
+            int h = canvas.getHeight();
 
-			mypaint_warning = new Paint();
-			mypaint_info = new Paint();
+            // draw some data text for debugging
+            int tsize = (int) (h / 50);
+            int yoffset = 2 * tsize;
+            mypaint.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint.setColor(android.graphics.Color.WHITE);
+            mypaint.setTextSize((int) (tsize * 1.5));
 
-			// This call is necessary, or else the
-			// draw method will not be called.
-			setWillNotDraw(false);
-		}
+            mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint_warning.setColor(android.graphics.Color.YELLOW);
+            mypaint_warning.setTextSize((int) (tsize * 1.1));
 
-		@Override
-		protected void onDraw(Canvas canvas) {
+            mypaint_info.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint_info.setColor(android.graphics.Color.MAGENTA);
+            mypaint_info.setTextSize((int) (tsize * 1.1));
 
-				int w = canvas.getWidth();
-				int h = canvas.getHeight();
+            mypaint3.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint3.setColor(android.graphics.Color.GRAY);
+            mypaint3.setTextSize(tsize);
 
-				// fill the window and center it
-				double scaleX = w / 640.0;
-				double scaleY = h / 480.0;
+            mypaint2.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint2.setColor(android.graphics.Color.WHITE);
+            mypaint2.setTextSize(tsize / (float) 10.0);
+            Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
+            mypaint2.setTypeface(tf);
 
-				double scale = Math.min(scaleX, scaleY);
-				double tranX = (w - scale * 640.0) / 2;
-				double tranY = (h - scale * 480.0) / 2;
+            mypaint4.setStyle(android.graphics.Paint.Style.FILL);
+            mypaint4.setColor(android.graphics.Color.RED);
+            mypaint4.setTextSize(tsize / (float) 10.0);
+            mypaint4.setTypeface(tf);
 
-				canvas.translate((float) tranX, (float) tranY);
-				canvas.scale((float) scale, (float) scale);
+            long exposed_time = xbManager.getExposureTime();
+            canvas.drawText(
+                    "Exposure: "
+                            + (int) (1.0e-3 * exposed_time)
+                            + "s", 200, yoffset + 1 * tsize, mypaint);
+            canvas.drawText("Frames : " + l2thread.getTotalEvents(), 200, yoffset + 3 * tsize,
+                    mypaint);
+            canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 5 * tsize,
+                    mypaint);
 
-				// draw some data text for debugging
-				int tsize = 25;
-				int yoffset = -300;
-				mypaint.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint.setColor(android.graphics.Color.RED);
-				mypaint.setTextSize((int) (tsize * 1.5));
+            // FIXME Jodi - committedXBs is not in L2Processor
+//				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
+//						* tsize, mypaint);
 
-				mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint_warning.setColor(android.graphics.Color.YELLOW);
-				mypaint_warning.setTextSize((int) (tsize * 1.1));
+            String state_message;
+            switch (((CFApplication) getApplication()).getApplicationState()) {
+                case CALIBRATION:
+                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
+                            + (int) ((100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
+                    break;
+                case DATA:
+                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
+                            + ",L2=" + CONFIG.getL2Threshold() + ")";
+                    break;
+                case STABILIZATION:
+                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
+                            + (int) ((100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
+                    break;
+                default:
+                    state_message = ((CFApplication) getApplication()).getApplicationState().toString();
+            }
+            canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
 
-				mypaint_info.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint_info.setColor(android.graphics.Color.MAGENTA);
-				mypaint_info.setTextSize((int) (tsize * 1.1));
+            String fps = "---";
+            if (L1_fps_start > 0 && L1_fps_stop > 0) {
+                fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
+            }
+            canvas.drawText(fps + " fps",
+                    200, yoffset + 11 * tsize, mypaint);
 
-				mypaint3.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint3.setColor(android.graphics.Color.GRAY);
-				mypaint3.setTextSize(tsize);
+            canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 0
+                    * tsize, mypaint);
 
-				mypaint2.setStyle(android.graphics.Paint.Style.FILL);
-				mypaint2.setColor(android.graphics.Color.WHITE);
-				mypaint2.setTextSize(tsize / (float) 10.0);
-				Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
-				mypaint2.setTypeface(tf);
+            if (!outputThread.canUpload()) {
+                if (outputThread.permit_upload) {
+                    canvas.drawText("Warning! Network unavailable.", 250, yoffset + 20 * tsize, mypaint_warning);
+                } else {
+                    String reason;
+                    if (outputThread.valid_id) {
+                        reason = "Server is overloaded.";
+                    } else {
+                        reason = "Invalid invite code.";
+                    }
+                    canvas.drawText(reason, 240, yoffset + 19 * tsize, mypaint_warning);
+                    canvas.drawText("Saving data locally.", 240, yoffset + 20 * tsize, mypaint_warning);
+                }
+            }
 
-				long exposed_time = xbManager.getExposureTime();
-				canvas.drawText(
-						"Exposure: "
-								+ (int) (1.0e-3 * exposed_time)
-								+ "s", 200, yoffset + 4 * tsize, mypaint);
-				canvas.drawText("Frames : " + l2thread.getTotalEvents(), 200, yoffset + 6 * tsize,
-						mypaint);
-				canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 8 * tsize,
-						mypaint);
+            if (L2busy > 0) {
+                // print a message indicating that we've been dropping frames
+                // due to L2queue overflow.
+                canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset + 20 * tsize, mypaint_warning);
+            }
 
-				canvas.drawText("Data blocks: " + xbManager.getCommittedXBs(), 200, yoffset + 10
-						* tsize, mypaint);
+            String device_msg = "dev: ";
+            final String deviceId = mAppBuild.getDeviceId();
+            final String deviceNickname = CONFIG.getDeviceNickname();
+            if (deviceNickname != null) {
+                device_msg += deviceNickname + " (" + deviceId + ")";
+            } else {
+                device_msg += deviceId;
+            }
 
-				// /// Histogram
-				makeHistogram(mParticleReco.h_pixel.values, 0, histo_strings_all);
-				for (int j = 256; j > 0; j--)
-					canvas.drawText(histo_strings_all[j - 1], 50,
-							(float) (yoffset + (256 - j) * tsize / 10.0),
-							mypaint2);
+            String run_msg = "run: " + mAppBuild.getRunId().toString().substring(19);
 
-				for (int i = 0; i < 256; i++)
-					if (i % 10 == 0)
-						labels[i] = '|';
-					else
-						labels[i] = ' ';
+            canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
+            canvas.drawText(device_msg, 175, yoffset + 19 * tsize, mypaint_info);
+            canvas.drawText(run_msg, 175, yoffset + 20 * tsize, mypaint_info);
+            final String currentExperiment = CONFIG.getCurrentExperiment();
+            if (currentExperiment != null) {
+                String exp_msg = "exp: " + currentExperiment;
+                canvas.drawText(exp_msg, 175, yoffset + 21 * tsize, mypaint_info);
+            }
 
-				String slabels = new String(labels);
-				String slabelsnum = "0              100               200";
-				canvas.drawText(slabels, (float) (50),
-						(float) (yoffset + (256 + 5) * tsize / 10.0), mypaint2);
-				canvas.drawText(slabelsnum, (float) (42),
-						(float) (yoffset + (256 + 14) * tsize / 10.0), mypaint3);
-
-				canvas.drawText("Pixel value",
-						(float) (50 + 20 * tsize / 10.0),
-						(float) (yoffset + (256 + 25) * tsize / 10.0), mypaint3);
-
-				String state_message;
-				switch (((CFApplication) getApplication()).getApplicationState()) {
-				case CALIBRATION:
-					state_message = "Mode: "+ ((CFApplication) getApplication()).getApplicationState() + " "
-							+ (int)(( 100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
-					break;
-				case DATA:
-					state_message = "Mode: "+((CFApplication) getApplication()).getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
-						+ ",L2=" + CONFIG.getL2Threshold() + ")";
-					break;
-				case STABILIZATION:
-					state_message = "Mode: "+((CFApplication) getApplication()).getApplicationState() + " "
-							+ (int)(( 100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
-					break;
-				default:
-					state_message = ((CFApplication) getApplication()).getApplicationState().toString();
-				}
-				canvas.drawText(state_message, 200, yoffset + 12 * tsize, mypaint);
-
-				String fps = "---";
-				if (L1_fps_start > 0 && L1_fps_stop > 0) {
-					fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
-				}
-				canvas.drawText(fps + " fps",
-						200, yoffset + 14 * tsize, mypaint);
-
-				canvas.drawLine(195, yoffset + 14 * tsize, 195, yoffset + 3
-						* tsize, mypaint);
-
-				if (! outputThread.canUpload()) {
-					if (outputThread.permit_upload) {
-						canvas.drawText("Warning! Network unavailable.", 250, yoffset+15 * tsize, mypaint_warning);
-					} else {
-						String reason;
-						if (outputThread.valid_id){
-							reason="Server is overloaded.";
-						} else {
-							reason="Invalid invite code.";
-						}
-						canvas.drawText(reason, 240, yoffset+15 * tsize, mypaint_warning);
-						canvas.drawText("Saving data locally.", 240, yoffset+16 * tsize, mypaint_warning);
-					}
-				}
-
-				if (L2busy > 0) {
-					// print a message indicating that we've been dropping frames
-					// due to L2queue overflow.
-					canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset+ 16 * tsize, mypaint_warning);
-				}
-
-				String device_msg = "dev: ";
-                final String deviceId = mAppBuild.getDeviceId();
-                final String deviceNickname = CONFIG.getDeviceNickname();
-				if (deviceNickname != null) {
-					device_msg += deviceNickname + " (" + deviceId + ")";
-				}
-				else {
-					device_msg += deviceId;
-				}
-
-				String run_msg = "run: " + mAppBuild.getRunId().toString().substring(19);
-
-				canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
-				canvas.drawText(device_msg, 175, yoffset + 19*tsize, mypaint_info);
-				canvas.drawText(run_msg, 175, yoffset+20*tsize, mypaint_info);
-                final String currentExperiment = CONFIG.getCurrentExperiment();
-				if (currentExperiment != null) {
-					String exp_msg = "exp: " + currentExperiment;
-					canvas.drawText(exp_msg, 175, yoffset+21*tsize, mypaint_info);
-				}
-
-				canvas.save();
-				canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
-						(float) (yoffset + (256 - 50) * tsize / 10.0));
-				canvas.drawText(String.format("Number of pixels"),
-						(float) (50 + -7 * tsize / 10.0),
-						(float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
-				canvas.restore();
-		}
-	}
-
+            canvas.save();
+            canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
+                    (float) (yoffset + (256 - 50) * tsize / 10.0));
+            canvas.drawText(String.format("Number of pixels"),
+                    (float) (50 + -7 * tsize / 10.0),
+                    (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
+            canvas.restore();
+        }
+    }
 
     @Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {

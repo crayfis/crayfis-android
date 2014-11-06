@@ -74,12 +74,13 @@ public class OutputManager extends Thread {
 
 	private OutputManager(Context context) {
 		this.context = context;
+
         mAppBuild = ((CFApplication) context.getApplicationContext()).getBuildInformation();
 
 		server_address = context.getString(R.string.server_address);
 		server_port = context.getString(R.string.server_port);
 		upload_uri = context.getString(R.string.upload_uri);
-		force_https = (context.getString(R.string.force_https) != "false");
+        force_https = context.getResources().getBoolean(R.bool.force_https);
 		
 		String upload_proto;
 		if (force_https) {
@@ -419,7 +420,7 @@ public class OutputManager extends Thread {
 		catch (IOException ex) {
 			CFLog.e("DAQActivity Oh noes! An IOException occured.", ex);
 		}
-		
+		catch (java.lang.OutOfMemoryError ex) { CFLog.e("Oh noes! An OutofMemory occured.", ex);}
 		return success;
 	}
 }

@@ -9,17 +9,15 @@ package edu.uci.crayfis.particle;
 import android.hardware.Camera;
 import android.location.Location;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.util.ArrayList;
 
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.RawCameraFrame;
-import edu.uci.crayfis.util.CFLog;
 
-// TODO Jodi - Reco is a little ambiguous, what is it short for?
-public final class ParticleReco {
-
+public class ParticleReco {
     private static final CFConfig CONFIG = CFConfig.getInstance();
 
     public boolean good_quality;
@@ -106,6 +104,37 @@ public final class ParticleReco {
         }
     }
 
+    public class History {
+        public int[] values;
+        final int nbins;
+        public int current_time = 0;
+
+        public History(int nbins) {
+            if (nbins <= 0) {
+                throw new RuntimeException("Hey dumbo a histogram should have at least one bin.");
+
+            }
+            this.nbins = nbins;
+
+            values = new int[nbins];
+
+        }
+
+        public void clear() {
+            for (int i = 0; i < values.length; ++i) {
+                values[i] = 0;
+            }
+            current_time=0;
+        }
+
+        public void new_data(int data)
+        {
+            current_time++;
+            if (current_time>=nbins) current_time=0;
+            values[current_time] = data;
+        }
+
+    }
     public class Histogram {
         public int[] values;
         private boolean mean_valid = false;
@@ -113,7 +142,8 @@ public final class ParticleReco {
         double mean = 0;
         double variance = 0;
         int integral = 0;
-        final int nbins;
+        public int max_bin=0;
+        public final int nbins;
 
         public Histogram(int nbins) {
             if (nbins <= 0) {
@@ -123,9 +153,8 @@ public final class ParticleReco {
             this.nbins = nbins;
 
             // make two additional bins for under/overflow
-            values = new int[nbins + 2];
+            values = new int[nbins+2];
         }
-
         public void clear() {
             for (int i = 0; i < values.length; ++i) {
                 values[i] = 0;
@@ -133,20 +162,23 @@ public final class ParticleReco {
             integral = 0;
             mean_valid = false;
             variance_valid = false;
+            max_bin=0;
         }
 
         public void fill(int val) {
             fill(val, 1);
         }
-
         public void fill(int x, int weight) {
+            if (x>max_bin && x < nbins) { max_bin=x;}
             if (x < 0) {
                 // underflow
                 values[nbins] += weight;
-            } else if (x >= nbins) {
+            }
+            else if (x >= nbins) {
                 // overflow
-                values[nbins + 1] += weight;
-            } else {
+                values[nbins+1] += weight;
+            }
+            else {
                 values[x] += weight;
                 integral += weight;
                 mean_valid = false;
@@ -172,7 +204,7 @@ public final class ParticleReco {
             int sum = 0;
             for (int i = 0; i < nbins; ++i) {
                 int val = values[i];
-                sum += (val - mean) * (val - mean);
+                sum += (val-mean)*(val-mean);
             }
             variance = ((double) sum) / integral;
             variance_valid = true;
@@ -184,6 +216,10 @@ public final class ParticleReco {
     public Histogram h_l2pixel = new Histogram(256);
     public Histogram h_maxpixel = new Histogram(256);
     public Histogram h_numpixel = new Histogram(200);
+
+
+    public History hist_mean = new History(200);
+    public History hist_max = new History(200);
 
     // counters to keep track of how many events and pixels
     // have been built since the last reset.
@@ -199,10 +235,13 @@ public final class ParticleReco {
     }
 
     public void clearHistograms() {
+
         h_pixel.clear();
         h_l2pixel.clear();
         h_maxpixel.clear();
         h_numpixel.clear();
+        hist_mean.clear();
+        hist_max.clear();
     }
 
     // When measuring bg and variance, we only look at some pixels
@@ -217,7 +256,7 @@ public final class ParticleReco {
         event_count++;
 
         RecoEvent event = new RecoEvent();
-        // XXX RecoEvent could use RawCameraFrame in the constructor?
+
         event.time = frame.getAcquiredTime();
         event.location = frame.getLocation();
         event.orientation = frame.getOrientation();
@@ -244,24 +283,25 @@ public final class ParticleReco {
 
         // calculate mean background value
         for (int ix = 0; ix < width; ix += stepW) {
-            for (int iy = 0; iy < height; iy += stepH) {
-                int val = bytes[ix + width * iy] & 0xFF;
-                background += (float) val;
+            for (int iy = 0; iy < height; iy+=stepH) {
+                int val = bytes[ix+width*iy]&0xFF;
+                background += (float)val;
                 npixels++;
             }
         }
         if (npixels > 0) {
-            background = (float) background / ((float) 1.0 * npixels);
+            background = (float)background/((float)1.0*npixels);
         }
 
         // calculate variance
-        for (int ix = 0; ix < width; ix += stepW)
-            for (int iy = 0; iy < height; iy += stepH) {
-                int val = bytes[ix + width * iy] & 0xFF;
-                variance += (val - background) * (val - background);
+        for (int ix=0;ix < width;ix+= stepW)
+            for (int iy=0;iy<height;iy+=stepH)
+            {
+                int val = bytes[ix+width*iy]&0xFF;
+                variance += (val-background)*(val - background);
             }
-        if (npixels > 0)
-            variance = (float) Math.sqrt((float) variance / ((float) 1.0 * npixels));
+        if (npixels>0)
+            variance = (float)Math.sqrt((float)variance/((float)1.0*npixels));
 
         /** this is not really an image quality check, do this in DAQActivity
          // Reject an image if too many pixels were hit
@@ -285,10 +325,9 @@ public final class ParticleReco {
          */
         // is the data good?
         // TODO: investigate what makes sense here!
-        good_quality = (background < CONFIG.getQualityBgAverage() &&
-                variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
+        good_quality = (background < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
-        //CFLog.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+        //Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 
         event.background = background;
         event.variance = variance;
@@ -308,89 +347,101 @@ public final class ParticleReco {
     public ArrayList<RecoPixel> buildL2Pixels(RawCameraFrame frame, int thresh, boolean quick) {
         ArrayList<RecoPixel> pixels = null;
 
-        if (!quick) {
-            pixels = new ArrayList<RecoPixel>();
-        }
+        try {
 
-        int width = previewSize.width;
-        int height = previewSize.height;
-        int max_val = 0;
-        int num_pix = 0;
+            if (!quick) {
+                pixels = new ArrayList<RecoPixel>();
+            }
 
-        byte[] bytes = frame.getBytes();
 
-        for (int ix = 0; ix < width; ix++) {
-            for (int iy = 0; iy < height; iy++) {
-                // NB: cast (signed) byte to integer for meaningful comparisons!
-                int val = bytes[ix + width * iy] & 0xFF;
+            int width = previewSize.width;
+            int height = previewSize.height;
+            int max_val = 0;
+            int num_pix = 0;
+            int tot_pix=0;
+            int num_tot_pix=0;
 
-                h_pixel.fill(val);
+            byte[] bytes = frame.getBytes();
 
-                if (val > max_val) {
-                    max_val = val;
-                }
+            for (int ix = 0; ix < width; ix++) {
+                for (int iy = 0; iy < height; iy++) {
+                    // NB: cast (signed) byte to integer for meaningful comparisons!
+                    int val = bytes[ix + width * iy] & 0xFF;
 
-                if (val > thresh) {
-                    h_l2pixel.fill(val);
-                    num_pix++;
+                    h_pixel.fill(val);
 
-                    if (quick) {
-                        // okay, bail out without any further reco
-                        continue;
+                    if (val > max_val) {
+                        max_val = val;
                     }
 
-                    // okay, found a pixel above threshold!
-                    RecoPixel p = new RecoPixel();
-                    p.x = ix;
-                    p.y = iy;
-                    p.val = val;
+                    tot_pix += val;
+                    num_tot_pix++;
 
-                    // look at the 8 adjacent pixels to measure max and ave values
-                    int sum3 = 0, sum5 = 0;
-                    int norm3 = 0, norm5 = 0;
-                    int nearMax = 0, nearMax5 = 0;
-                    for (int dx = -2; dx <= 2; ++dx) {
-                        for (int dy = -2; dy <= 2; ++dy) {
-                            if (dx == 0 && dy == 0) {
-                                // exclude center from average
-                                continue;
-                            }
+                    if (val > thresh) {
+                        h_l2pixel.fill(val);
+                        num_pix++;
 
-                            int idx = ix + dx;
-                            int idy = iy + dy;
-                            if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
-                                // we're off the sensor plane.
-                                continue;
-                            }
+                        if (quick) {
+                            // okay, bail out without any further reco
+                            continue;
+                        }
 
-                            int dval = bytes[idx + width * idy] & 0xFF;
-                            sum5 += dval;
-                            norm5++;
-                            nearMax5 = Math.max(nearMax5, dval);
-                            if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                                // we're in the 3x3 part
-                                sum3 += dval;
-                                norm3++;
-                                nearMax = Math.max(nearMax, dval);
+                        // okay, found a pixel above threshold!
+                        RecoPixel p = new RecoPixel();
+                        p.x = ix;
+                        p.y = iy;
+                        p.val = val;
+
+                        // look at the 8 adjacent pixels to measure max and ave values
+                        int sum3 = 0, sum5 = 0;
+                        int norm3 = 0, norm5 = 0;
+                        int nearMax = 0, nearMax5 = 0;
+                        for (int dx = -2; dx <= 2; ++dx) {
+                            for (int dy = -2; dy <= 2; ++dy) {
+                                if (dx == 0 && dy == 0) {
+                                    // exclude center from average
+                                    continue;
+                                }
+
+                                int idx = ix + dx;
+                                int idy = iy + dy;
+                                if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
+                                    // we're off the sensor plane.
+                                    continue;
+                                }
+
+                                int dval = bytes[idx + width * idy] & 0xFF;
+                                sum5 += dval;
+                                norm5++;
+                                nearMax5 = Math.max(nearMax5, dval);
+                                if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+                                    // we're in the 3x3 part
+                                    sum3 += dval;
+                                    norm3++;
+                                    nearMax = Math.max(nearMax, dval);
+                                }
                             }
                         }
+
+                        p.avg_3 = ((float) sum3) / norm3;
+                        p.avg_5 = ((float) sum5) / norm5;
+                        p.near_max = nearMax;
+
+                        pixels.add(p);
                     }
-
-                    p.avg_3 = ((float) sum3) / norm3;
-                    p.avg_5 = ((float) sum5) / norm5;
-                    p.near_max = nearMax;
-
-                    pixels.add(p);
                 }
             }
-        }
 
-        // update the event-level histograms.
-        h_maxpixel.fill(max_val);
-        h_numpixel.fill(num_pix);
+            // update the event-level histograms.
 
-        pixel_count += num_pix;
+            h_maxpixel.fill(max_val);
+            h_numpixel.fill(num_pix);
 
+            hist_max.new_data(max_val);
+            hist_mean.new_data((int)(tot_pix/(1.0*num_tot_pix)));
+
+            pixel_count += num_pix;
+        } catch (OutOfMemoryError e) { }
         return pixels;
     }
 
@@ -399,7 +450,7 @@ public final class ParticleReco {
         // max_count events over the integrated period contained
         // in the histograms.
 
-        CFLog.i("calculate: Cacluating threshold! Event histo:"
+        Log.i("calculate", "Cacluating threshold! Event histo:"
                         + " 0 - " + h_maxpixel.values[0] + "\n"
                         + " 1 - " + h_maxpixel.values[1] + "\n"
                         + " 2 - " + h_maxpixel.values[2] + "\n"
@@ -434,7 +485,7 @@ public final class ParticleReco {
         int above_thresh = 0;
         do {
             above_thresh += h_pixel.values[new_thresh];
-            CFLog.d("calibration: threshold " + new_thresh
+            Log.d("calibration", "threshold " + new_thresh
                     + " obs= " + above_thresh + "/" + stat_factor);
             new_thresh--;
         } while (new_thresh > 0 && above_thresh < stat_factor);
