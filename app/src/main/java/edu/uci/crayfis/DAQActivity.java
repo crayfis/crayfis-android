@@ -73,6 +73,7 @@ import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.widget.StatusView;
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -89,6 +90,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	private Visualization mDraw;
 	private CameraPreviewView mPreview;
 
+    // Widgets for giving feedback to the user.
+    private StatusView mStatusView;
 
     // ----8<--------------
     private GraphView mGraph;
@@ -144,7 +147,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	long starttime;
 
     // number of frames to wait between fps updates
-	public static final int fps_update_interval = 30;
+	public static final float fps_update_interval = 30;
 
 	private long L1_fps_start = 0;
 	private long L1_fps_stop = 0;
@@ -484,6 +487,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		*/
 
 		setContentView(R.layout.video);
+
+        mStatusView = (StatusView) findViewById(R.id.status_view);
 
 		// Used to visualize the results
 		mDraw = new Visualization(this);
@@ -959,48 +964,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             mypaint4.setTextSize(tsize / (float) 10.0);
             mypaint4.setTypeface(tf);
 
-            long exposed_time = xbManager.getExposureTime();
-            canvas.drawText(
-                    "Exposure: "
-                            + (int) (1.0e-3 * exposed_time)
-                            + "s", 200, yoffset + 1 * tsize, mypaint);
-            canvas.drawText("Frames : " + l2thread.getTotalEvents(), 200, yoffset + 3 * tsize,
-                    mypaint);
-            canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 5 * tsize,
-                    mypaint);
 
             // FIXME Jodi - committedXBs is not in L2Processor
 //				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
 //						* tsize, mypaint);
 
-            String state_message;
-            switch (((CFApplication) getApplication()).getApplicationState()) {
-                case CALIBRATION:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
-                            + (int) ((100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
-                    break;
-                case DATA:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
-                            + ",L2=" + CONFIG.getL2Threshold() + ")";
-                    break;
-                case STABILIZATION:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
-                            + (int) ((100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
-                    break;
-                default:
-                    state_message = ((CFApplication) getApplication()).getApplicationState().toString();
-            }
-            canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
-
-            String fps = "---";
-            if (L1_fps_start > 0 && L1_fps_stop > 0) {
-                fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
-            }
-            canvas.drawText(fps + " fps",
-                    200, yoffset + 11 * tsize, mypaint);
-
-            canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 0
-                    * tsize, mypaint);
 
             if (!outputThread.canUpload()) {
                 if (outputThread.permit_upload) {
@@ -1050,6 +1018,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     (float) (50 + -7 * tsize / 10.0),
                     (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
             canvas.restore();
+
+
+
+            final StatusView.Status status = new StatusView.Status.Builder()
+                    .setEventCount(mParticleReco.event_count)
+                    .setFps((int) (fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3))
+                    .setStabilizationCounter(stabilization_counter)
+                    .setTotalEvents(l2thread.getTotalEvents())
+                    .setTotalPixels(l2thread.getTotalPixels())
+                    .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
+                    .build();
+
+            mStatusView.setStatus(status);
         }
     }
 
