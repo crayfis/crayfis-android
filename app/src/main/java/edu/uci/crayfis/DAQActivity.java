@@ -459,6 +459,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        current_mode = DAQActivity.display_mode.HIST;
+
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
 		// FIXME: for debugging only!!! We need to figure out how
