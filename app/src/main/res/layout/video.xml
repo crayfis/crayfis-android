@@ -23,5 +23,12 @@
         android:textColor="@android:color/white"
         tools:text="1h2m3s @ 23fps"/>
 
+    <edu.uci.crayfis.widget.AppBuildView
+        android:id="@+id/app_build_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:textSize="8sp"
+        android:textColor="@android:color/darker_gray"/>
 </LinearLayout>
 

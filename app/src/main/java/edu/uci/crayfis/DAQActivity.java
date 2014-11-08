@@ -73,6 +73,7 @@ import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.widget.AppBuildView;
 import edu.uci.crayfis.widget.StatusView;
 
 /**
@@ -92,6 +93,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     // Widgets for giving feedback to the user.
     private StatusView mStatusView;
+    private AppBuildView mAppBuildView;
 
     // ----8<--------------
     private GraphView mGraph;
@@ -489,6 +491,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		setContentView(R.layout.video);
 
         mStatusView = (StatusView) findViewById(R.id.status_view);
+        mAppBuildView = (AppBuildView) findViewById(R.id.app_build_view);
 
 		// Used to visualize the results
 		mDraw = new Visualization(this);
@@ -991,26 +994,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset + 20 * tsize, mypaint_warning);
             }
 
-            String device_msg = "dev: ";
-            final String deviceId = mAppBuild.getDeviceId();
-            final String deviceNickname = CONFIG.getDeviceNickname();
-            if (deviceNickname != null) {
-                device_msg += deviceNickname + " (" + deviceId + ")";
-            } else {
-                device_msg += deviceId;
-            }
-
-            String run_msg = "run: " + mAppBuild.getRunId().toString().substring(19);
-
-            canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
-            canvas.drawText(device_msg, 175, yoffset + 19 * tsize, mypaint_info);
-            canvas.drawText(run_msg, 175, yoffset + 20 * tsize, mypaint_info);
-            final String currentExperiment = CONFIG.getCurrentExperiment();
-            if (currentExperiment != null) {
-                String exp_msg = "exp: " + currentExperiment;
-                canvas.drawText(exp_msg, 175, yoffset + 21 * tsize, mypaint_info);
-            }
-
             canvas.save();
             canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
                     (float) (yoffset + (256 - 50) * tsize / 10.0));
@@ -1029,8 +1012,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     .setTotalPixels(l2thread.getTotalPixels())
                     .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
                     .build();
-
             mStatusView.setStatus(status);
+            mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
         }
     }
 
