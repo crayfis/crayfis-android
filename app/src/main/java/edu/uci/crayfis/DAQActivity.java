@@ -41,12 +41,13 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v7.app.ActionBarActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
-import android.view.View;
-import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
@@ -78,7 +79,7 @@ import edu.uci.crayfis.util.CFLog;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
+public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication.AppBuild mAppBuild;
@@ -159,13 +160,13 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	Context context;
 
-	public void clickedSettings(View view) {
+	public void clickedSettings() {
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
 
-	public void clickedMode(View view) {
+	public void clickedMode() {
         CFLog.d(" clicked MODE current=" + current_mode.toString());
         // toggle modes
         if (current_mode == DAQActivity.display_mode.HIST) { current_mode = DAQActivity.display_mode.TIME; }
@@ -236,7 +237,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         }
 	}
 
-	public void clickedAbout(View view) {
+	public void clickedAbout() {
 
 		final SpannableString s = new SpannableString(
 				"crayfis.ps.uci.edu/about");
@@ -482,7 +483,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		editor.commit();
 		*/
 
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.video);
 
 		// Used to visualize the results
@@ -658,7 +658,30 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 	}
 
-	/**
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.daq_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menu_settings:
+                clickedSettings();
+                return true;
+            case R.id.menu_about:
+                clickedAbout();
+                return true;
+            case R.id.menu_view_mode:
+                clickedMode();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
 	 * Sets up the camera if it is not already setup.
 	 */
 	private void setUpAndConfigureCamera() {

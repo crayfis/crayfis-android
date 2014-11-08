@@ -45,7 +45,8 @@
 
         <activity
             android:name="edu.uci.crayfis.DAQActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/ActionBar"/>
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"
             android:screenOrientation="portrait"/>
