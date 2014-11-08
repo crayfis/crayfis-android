@@ -586,9 +586,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-        mUiUpdateTimer = new Timer();
-        mUiUpdateTimer.schedule(UI_UPDATE_TASK, 1000l, 1000l);
 	}
 
 	@Override
@@ -643,7 +640,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 			generateRunConfig();
 			outputThread.commitRunConfig(run_config);
 		}
-	}
+
+        if (mUiUpdateTimer != null) {
+            mUiUpdateTimer.cancel();
+        }
+        mUiUpdateTimer = new Timer();
+        mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000l, 1000l);
+    }
 
 	@Override
 	protected void onPause() {
@@ -1002,7 +1005,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     /**
      * Task that gets called during the UI update tick.
      */
-    private final TimerTask UI_UPDATE_TASK = new TimerTask() {
+    private final class UiUpdateTimerTask extends TimerTask {
 
         private final Runnable RUNNABLE = new Runnable() {
             @Override
