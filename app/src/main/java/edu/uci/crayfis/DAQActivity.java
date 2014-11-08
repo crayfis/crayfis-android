@@ -74,6 +74,7 @@ import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.AppBuildView;
+import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
 
 /**
@@ -93,6 +94,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     // Widgets for giving feedback to the user.
     private StatusView mStatusView;
+    private MessageView mMessageView;
     private AppBuildView mAppBuildView;
 
     // ----8<--------------
@@ -491,6 +493,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		setContentView(R.layout.video);
 
         mStatusView = (StatusView) findViewById(R.id.status_view);
+        mMessageView = (MessageView) findViewById(R.id.message_view);
         mAppBuildView = (AppBuildView) findViewById(R.id.app_build_view);
 
 		// Used to visualize the results
@@ -975,7 +978,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
             if (!outputThread.canUpload()) {
                 if (outputThread.permit_upload) {
-                    canvas.drawText("Warning! Network unavailable.", 250, yoffset + 20 * tsize, mypaint_warning);
+                    mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
                 } else {
                     String reason;
                     if (outputThread.valid_id) {
@@ -983,15 +986,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     } else {
                         reason = "Invalid invite code.";
                     }
-                    canvas.drawText(reason, 240, yoffset + 19 * tsize, mypaint_warning);
-                    canvas.drawText("Saving data locally.", 240, yoffset + 20 * tsize, mypaint_warning);
+                    mMessageView.setMessage(MessageView.Level.WARNING, reason);
                 }
-            }
-
-            if (L2busy > 0) {
-                // print a message indicating that we've been dropping frames
-                // due to L2queue overflow.
-                canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset + 20 * tsize, mypaint_warning);
+            } else if (L2busy > 0) {
+                mMessageView.setMessage(MessageView.Level.WARNING, L2busy + "(" + L2busy + ")");
+            } else {
+                mMessageView.setMessage(null, null);
             }
 
             canvas.save();
