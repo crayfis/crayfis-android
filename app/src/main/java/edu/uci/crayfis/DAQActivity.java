@@ -1023,7 +1023,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         mMessageView.setMessage(MessageView.Level.WARNING, reason);
                     }
                 } else if (L2busy > 0) {
-                    mMessageView.setMessage(MessageView.Level.WARNING, L2busy + "(" + L2busy + ")");
+                    final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
+                    mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
                 } else {
                     mMessageView.setMessage(null, null);
                 }
