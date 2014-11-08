@@ -786,6 +786,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		long acq_time = System.currentTimeMillis();
 
+        // FIXME This is being called very time a frame is received, instead it should only be called when the mode changes.
         if (current_mode == DAQActivity.display_mode.HIST) {
             mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
             //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
