@@ -62,6 +62,8 @@ import com.jjoe64.graphview.ValueDependentColor;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import edu.uci.crayfis.camera.CameraPreviewView;
@@ -95,6 +97,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private StatusView mStatusView;
     private MessageView mMessageView;
     private AppBuildView mAppBuildView;
+
+    private Timer mUiUpdateTimer;
 
     // ----8<--------------
     private GraphView mGraph;
@@ -582,6 +586,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+
+        mUiUpdateTimer = new Timer();
+        mUiUpdateTimer.schedule(UI_UPDATE_TASK, 1000l, 1000l);
 	}
 
 	@Override
@@ -641,6 +648,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+        mUiUpdateTimer.cancel();
 
 		if (wl.isHeld())
 			wl.release();
@@ -929,24 +938,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mypaint3.setTextSize(tsize);
             }
 
-            if (!outputThread.canUpload()) {
-                if (outputThread.permit_upload) {
-                    mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
-                } else {
-                    String reason;
-                    if (outputThread.valid_id) {
-                        reason = "Server is overloaded.";
-                    } else {
-                        reason = "Invalid invite code.";
-                    }
-                    mMessageView.setMessage(MessageView.Level.WARNING, reason);
-                }
-            } else if (L2busy > 0) {
-                mMessageView.setMessage(MessageView.Level.WARNING, L2busy + "(" + L2busy + ")");
-            } else {
-                mMessageView.setMessage(null, null);
-            }
-
             canvas.save();
             canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
                     (float) (yoffset + (256 - 50) * tsize / 10.0));
@@ -954,17 +945,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     (float) (50 + -7 * tsize / 10.0),
                     (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
             canvas.restore();
-
-            final StatusView.Status status = new StatusView.Status.Builder()
-                    .setEventCount(mParticleReco.event_count)
-                    .setFps((int) (fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3))
-                    .setStabilizationCounter(stabilization_counter)
-                    .setTotalEvents(l2thread.getTotalEvents())
-                    .setTotalPixels(l2thread.getTotalPixels())
-                    .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
-                    .build();
-            mStatusView.setStatus(status);
-            mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
         }
     }
 
@@ -1016,6 +996,51 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             } else if (current == CFApplication.State.CALIBRATION) {
                 doStateTransitionCalibration(previous);
             }
+        }
+    };
+
+    /**
+     * Task that gets called during the UI update tick.
+     */
+    private final TimerTask UI_UPDATE_TASK = new TimerTask() {
+
+        private final Runnable RUNNABLE = new Runnable() {
+            @Override
+            public void run() {
+                if (!outputThread.canUpload()) {
+                    if (outputThread.permit_upload) {
+                        mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                    } else {
+                        String reason;
+                        if (outputThread.valid_id) {
+                            reason = "Server is overloaded.";
+                        } else {
+                            reason = "Invalid invite code.";
+                        }
+                        mMessageView.setMessage(MessageView.Level.WARNING, reason);
+                    }
+                } else if (L2busy > 0) {
+                    mMessageView.setMessage(MessageView.Level.WARNING, L2busy + "(" + L2busy + ")");
+                } else {
+                    mMessageView.setMessage(null, null);
+                }
+
+                final StatusView.Status status = new StatusView.Status.Builder()
+                        .setEventCount(mParticleReco.event_count)
+                        .setFps((int) (fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3))
+                        .setStabilizationCounter(stabilization_counter)
+                        .setTotalEvents(l2thread.getTotalEvents())
+                        .setTotalPixels(l2thread.getTotalPixels())
+                        .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
+                        .build();
+                mStatusView.setStatus(status);
+                mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+            }
+        };
+
+        @Override
+        public void run() {
+            runOnUiThread(RUNNABLE);
         }
     };
 }
