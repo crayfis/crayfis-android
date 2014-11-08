@@ -110,6 +110,12 @@ public final class ExposureBlockManager {
     private void retireExposureBlock(ExposureBlock xb) {
         // anything that's being committed must have already been frozen.
         assert xb.frozen;
+
+        if (xb.daq_state != CFApplication.State.INIT && xb.daq_state != CFApplication.State.CALIBRATION && xb.daq_state != CFApplication.State.DATA) {
+            CFLog.e("Received ExposureBlock with a state of " + xb.daq_state + ", ignoring.");
+            return;
+        }
+
         retired_blocks.add(xb);
 
         // if this is a DATA block, add its age to the commited
