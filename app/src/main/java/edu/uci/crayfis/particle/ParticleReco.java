@@ -476,7 +476,8 @@ public class ParticleReco {
             }
         }
 
-        return new_thresh;
+        // FIXME Jodi - added Math.Max because was getting -1 returned here.
+        return Math.max(new_thresh, 1);
     }
 
     public int calculateThresholdByPixels(int stat_factor) {
