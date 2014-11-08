@@ -28,7 +28,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -909,72 +908,26 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	 */
 	private class Visualization extends SurfaceView {
 
-        Paint mypaint;
-        Paint mypaint2;
-        //Paint mypaint2_thresh;
-        Paint mypaint3, mypaint4;
-        Paint mypaint_warning;
-        Paint mypaint_info;
+        Paint mypaint3;
 
         public Visualization(Activity context) {
             super(context);
 
-            mypaint = new Paint();
-            mypaint2 = new Paint();
-            //mypaint2_thresh = new Paint();
-
-            mypaint3 = new Paint();
-            mypaint4 = new Paint();
-
-            mypaint_warning = new Paint();
-            mypaint_info = new Paint();
-
-            // This call is necessary, or else the
-            // draw method will not be called.
             setWillNotDraw(false);
         }
 
         @Override
         protected void onDraw(Canvas canvas) {
-
-            int w = canvas.getWidth();
             int h = canvas.getHeight();
-
-            // draw some data text for debugging
-            int tsize = (int) (h / 50);
+            int tsize = (h / 50);
             int yoffset = 2 * tsize;
-            mypaint.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint.setColor(android.graphics.Color.WHITE);
-            mypaint.setTextSize((int) (tsize * 1.5));
 
-            mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint_warning.setColor(android.graphics.Color.YELLOW);
-            mypaint_warning.setTextSize((int) (tsize * 1.1));
-
-            mypaint_info.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint_info.setColor(android.graphics.Color.MAGENTA);
-            mypaint_info.setTextSize((int) (tsize * 1.1));
-
-            mypaint3.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint3.setColor(android.graphics.Color.GRAY);
-            mypaint3.setTextSize(tsize);
-
-            mypaint2.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint2.setColor(android.graphics.Color.WHITE);
-            mypaint2.setTextSize(tsize / (float) 10.0);
-            Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
-            mypaint2.setTypeface(tf);
-
-            mypaint4.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint4.setColor(android.graphics.Color.RED);
-            mypaint4.setTextSize(tsize / (float) 10.0);
-            mypaint4.setTypeface(tf);
-
-
-            // FIXME Jodi - committedXBs is not in L2Processor
-//				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
-//						* tsize, mypaint);
-
+            if (mypaint3 == null) {
+                mypaint3 = new Paint();
+                mypaint3.setStyle(android.graphics.Paint.Style.FILL);
+                mypaint3.setColor(android.graphics.Color.GRAY);
+                mypaint3.setTextSize(tsize);
+            }
 
             if (!outputThread.canUpload()) {
                 if (outputThread.permit_upload) {
@@ -1001,8 +954,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     (float) (50 + -7 * tsize / 10.0),
                     (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
             canvas.restore();
-
-
 
             final StatusView.Status status = new StatusView.Status.Builder()
                     .setEventCount(mParticleReco.event_count)
