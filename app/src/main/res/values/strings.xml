@@ -17,6 +17,9 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_view_mode">View Mode</string>
 
+    <string name="fatal_error_title">Internal Error</string>
+    <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
+
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>
