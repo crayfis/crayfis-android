@@ -584,6 +584,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// Spin up the output and image processing threads:
 		outputThread = OutputManager.getInstance(this);
 
+        //Prevents thread from thread duplication if it's already initialized
+		if (outputThread.getState() == Thread.State.NEW) {
+            outputThread.start();
+        }
+
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 	}
