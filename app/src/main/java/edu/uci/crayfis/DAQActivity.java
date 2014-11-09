@@ -572,7 +572,6 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		// Spin up the output and image processing threads:
 		outputThread = OutputManager.getInstance(this);
-		outputThread.start();
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));

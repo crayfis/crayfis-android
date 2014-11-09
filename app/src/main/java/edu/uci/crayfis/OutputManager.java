@@ -67,6 +67,7 @@ public class OutputManager extends Thread {
     public static synchronized OutputManager getInstance(@NonNull final Context context) {
         if (sInstance == null) {
             sInstance = new OutputManager(context.getApplicationContext());
+            sInstance.start();
         }
         return sInstance;
     }
