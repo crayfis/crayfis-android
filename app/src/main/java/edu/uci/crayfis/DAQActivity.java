@@ -44,6 +44,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -286,13 +287,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalStateException {
 		// The *only* valid way to get into calibration mode
 		// is after stabilizaton.
-		switch (((CFApplication) getApplication()).getApplicationState()) {
+		switch (previousState) {
             case STABILIZATION:
                 mParticleReco.reset();
                 calibration_start = System.currentTimeMillis();
                 xbManager.newExposureBlock();
                 break;
             default:
+                // FIXME: This error was being thrown but was not disrupting the application
+                // in any way!! Is it being silently caught somewhere?
                 throw new IllegalStateException();
         }
 	}
@@ -1080,6 +1083,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                     doStateTransitionCalibration(previous);
                 }
             } catch (IllegalStateException e) {
+                // Make some noise, instead of silently catching errors for now.
+                Log.e("STATE", "Illegal state transition! " + previous + " -> " + current);
                 Crashlytics.logException(e);
                 // FIXME Need a standard dialog to let the user know and exit the activity.
             }
