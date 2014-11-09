@@ -21,7 +21,7 @@ public class ServerCommand {
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
     @SerializedName("set_upload_size_max") private Integer mMaxChunkSize;
     @SerializedName("set_cache_upload_interval") private Integer mMinCacheUploadInterval;
-    @SerializedName("set_qual_pix_frac") private Float mQualPixFrac; // TODO This is all commented out in ParticleReco
+    @SerializedName("set_qual_pix_frac") private Float mQualityPixFrac;
     @SerializedName("set_qual_bg_avg") private Float mQualityBgAverage;
     @SerializedName("set_qual_bg_var") private Float mQualityBgVariance;
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
@@ -114,8 +114,8 @@ public class ServerCommand {
      * @return Float or {@code null}.
      */
     @Nullable
-    public Float getQualPixFrac() {
-        return mQualPixFrac;
+    public Float getQualityPixFrac() {
+        return mQualityPixFrac;
     }
 
     /**
@@ -146,7 +146,7 @@ public class ServerCommand {
     public boolean shouldRestartEBManager() {
         return mL1Threshold != null ||
                 mL2Threshold != null ||
-                mQualPixFrac != null ||
+                mQualityPixFrac != null ||
                 mQualityBgAverage != null ||
                 mQualityBgVariance != null;
     }

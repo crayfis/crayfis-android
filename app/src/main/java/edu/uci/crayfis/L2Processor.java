@@ -168,6 +168,14 @@ class L2Processor extends Thread {
             ArrayList<ParticleReco.RecoPixel> pixels;
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 pixels = PARTICLE_RECO.buildL2Pixels(frame, xb.L2_thresh);
+
+                // check whether there are too many L2 pixels in this event
+                if (pixels.size() > CONFIG.getQualityPixFraction() * PARTICLE_RECO.getTotalPixels()) {
+                    // oops! too many pixels in this frame. trigger recalibration.
+                    // TODO: consider: should we be recalibrating or just dropping the frame here?
+                    APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
+                    continue;
+                }
             }
             else {
                 // Don't bother with full pixel reco and L2 threshold

@@ -20,6 +20,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
     private static final String KEY_QUAL_BG_VAR = "qual_bg_var";
+    private static final String KEY_QUAL_PIX_FRAC = "qual_pix_frac";
     private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
     private static final String KEY_MAX_CHUNK_SIZE = "max_chunk_size";
     private static final String KEY_CACHE_UPLOAD_INTERVAL = "min_cache_upload_interval";
@@ -27,6 +28,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
 
 
+    // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
+    // either determined via calibration, or are set by the server (until the next calibration).
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
@@ -35,6 +38,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final float DEFAULT_BG_AVG_CUT = 30;
     private static final float DEFAULT_BG_VAR_CUT = 5;
+    private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
     private static final int DEFAULT_CACHE_UPLOAD_INTERVAL = 30;
@@ -49,6 +53,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mExposureBlockPeriod;
     private float mQualityBgAverage;
     private float mQualityBgVariance;
+    private float mQualityPixFraction;
     private int mMaxUploadInterval;
     private int mMaxChunkSize;
     private int mCacheUploadInterval;
@@ -56,6 +61,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
 
     private CFConfig() {
+        // FIXME: shouldn't we initialize based on the persistent config values?
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
@@ -64,6 +70,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mQualityBgAverage = DEFAULT_BG_AVG_CUT;
         mQualityBgVariance = DEFAULT_BG_VAR_CUT;
+        mQualityPixFraction = DEFAULT_PIX_FRAC_CUT;
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
         mMaxChunkSize = DEFAULT_MAX_CHUNK_SIZE;
         mCacheUploadInterval = DEFAULT_CACHE_UPLOAD_INTERVAL;
@@ -145,7 +152,16 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     /**
-     * FIXME I'm not 100% sure what this is.
+     * Get the maximum fraction of sensor pixels which can be accepted as L2
+     * before the event is flagged as "bad".
+     *
+     * @return float
+     */
+    public float getQualityPixFraction() { return mQualityPixFraction; }
+
+    /**
+     * Get the maximum average pixel value (before any cuts) allowed before the
+     * event is flagged as "bad".
      *
      * @return int
      */
@@ -154,7 +170,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     /**
-     * FIXME I'm not 100% sure what this is.
+     * The the maximum variance in pixel values (before any cuts) allowed before the
+     * event is flagged as "bad".
      *
      * @return int
      */
@@ -227,6 +244,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
         mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
+        mQualityPixFraction = sharedPreferences.getFloat(KEY_QUAL_PIX_FRAC, DEFAULT_PIX_FRAC_CUT);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
         mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
         mCacheUploadInterval = sharedPreferences.getInt(KEY_CACHE_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
@@ -261,11 +279,20 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getQualityBgVariance() != null) {
             mQualityBgVariance = serverCommand.getQualityBgVariance();
         }
+        if (serverCommand.getQualityPixFrac() != null) {
+            mQualityPixFraction = serverCommand.getQualityPixFrac();
+        }
         if (serverCommand.getCurrentExperiment() != null) {
             mCurrentExperiment = serverCommand.getCurrentExperiment();
         }
         if (serverCommand.getDeviceNickname() != null) {
             mDeviceNickname = serverCommand.getDeviceNickname();
+        }
+        if (serverCommand.getMaxUploadInterval() != null) {
+            mMaxUploadInterval = serverCommand.getMaxUploadInterval();
+        }
+        if (serverCommand.getMaxChunkSize() != null) {
+            mMaxChunkSize = serverCommand.getMaxChunkSize();
         }
     }
 
@@ -278,6 +305,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
                 .putFloat(KEY_QUAL_BG_AVG, mQualityBgAverage)
                 .putFloat(KEY_QUAL_BG_VAR, mQualityBgVariance)
+                .putFloat(KEY_QUAL_PIX_FRAC, mQualityPixFraction)
                 .putInt(KEY_MAX_UPLOAD_INTERVAL, mMaxUploadInterval)
                 .putInt(KEY_MAX_CHUNK_SIZE, mMaxChunkSize)
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)

@@ -49,6 +49,10 @@ public class ParticleReco {
         clearHistograms();
     }
 
+    public int getTotalPixels() {
+        return previewSize.height * previewSize.width;
+    }
+
     public class RecoEvent {
         public long time;
         public Location location;
