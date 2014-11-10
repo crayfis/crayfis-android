@@ -372,7 +372,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
      * @throws IllegalStateException
      */
 	private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalStateException {
-		switch(((CFApplication) getApplication()).getApplicationState()) {
+		switch(previousState) {
             case INIT:
             case IDLE:
                 // This is the first state transisiton of the app. Go straight into stabilization
