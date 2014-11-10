@@ -51,7 +51,7 @@
 
         <meta-data
             android:name="com.crashlytics.ApiKey"
-            android:value="499d5d44e25cb905b962f6e75fd709d2c76a49fc"/>
+            android:value="2e730bea6fb33d746b55551b0fa2338ef7dfac5b"/>
 
     </application>
 </manifest>
