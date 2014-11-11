@@ -52,7 +52,6 @@ import android.view.SurfaceView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -860,24 +859,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
-            try {
-                if (current == CFApplication.State.DATA) {
-                    doStateTransitionData(previous);
-                } else if (current == CFApplication.State.STABILIZATION) {
-                    doStateTransitionStabilization(previous);
-                } else if (current == CFApplication.State.IDLE) {
-                    doStateTransitionIdle(previous);
-                } else if (current == CFApplication.State.CALIBRATION) {
-                    doStateTransitionCalibration(previous);
-                }
-            } catch (IllegalStateException e) {
-                // Make some noise, instead of silently catching errors for now.
-                CFLog.e("Illegal state transition! " + previous + " -> " + current);
-                Crashlytics.logException(e);
-                final AlertDialog dialog = CFUtil.newFatalErrorDialog(DAQActivity.this);
-                if (dialog != null) {
-                    dialog.show();
-                }
+            if (current == CFApplication.State.DATA) {
+                doStateTransitionData(previous);
+            } else if (current == CFApplication.State.STABILIZATION) {
+                doStateTransitionStabilization(previous);
+            } else if (current == CFApplication.State.IDLE) {
+                doStateTransitionIdle(previous);
+            } else if (current == CFApplication.State.CALIBRATION) {
+                doStateTransitionCalibration(previous);
             }
         }
     };
