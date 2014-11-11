@@ -44,14 +44,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.jjoe64.graphview.BarGraphView;
@@ -68,6 +66,7 @@ import java.util.UUID;
 
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
@@ -284,7 +283,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         CFApplication.setLastKnownLocation(location);
 	}
 
-	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		// The *only* valid way to get into calibration mode
 		// is after stabilizaton.
 		switch (previousState) {
@@ -294,9 +293,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 xbManager.newExposureBlock();
                 break;
             default:
-                // FIXME: This error was being thrown but was not disrupting the application
-                // in any way!! Is it being silently caught somewhere?
-                throw new IllegalStateException();
+                throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
         }
 	}
 
@@ -304,9 +301,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
      * Set up for the transition to {@link edu.uci.crayfis.CFApplication.State#DATA}
      *
      * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
-     * @throws IllegalStateException
+     * @throws IllegalFsmStateException
      */
-	private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+	private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		switch (previousState) {
             case INIT:
                 l2thread.setFixedThreshold(true);
@@ -360,7 +357,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
                 break;
             default:
-                throw new IllegalStateException();
+                throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
         }
 
 	}
@@ -369,9 +366,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
      * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
      *
      * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
-     * @throws IllegalStateException
+     * @throws IllegalFsmStateException
      */
-	private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+	private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		switch(previousState) {
             case INIT:
             case IDLE:
@@ -396,7 +393,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
                 break;
             default:
-                throw new IllegalStateException();
+                throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
         }
 	}
 
@@ -405,9 +402,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
      * For example, we transition here when the phone is locked or the app is suspended.
      *
      * @param previousState Previous {@link edu.uci.crayfis.CFApplication.State}
-     * @throws IllegalStateException
+     * @throws IllegalFsmStateException
      */
-	private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalStateException {
+	private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		switch(previousState) {
             case CALIBRATION:
             case STABILIZATION:
@@ -419,7 +416,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
                 xbManager.newExposureBlock();
                 break;
             default:
-                throw new IllegalStateException();
+                throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
         }
 	}
 
@@ -1071,21 +1068,14 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
-            try {
-                if (current == CFApplication.State.DATA) {
-                    doStateTransitionData(previous);
-                } else if (current == CFApplication.State.STABILIZATION) {
-                    doStateTransitionStabilization(previous);
-                } else if (current == CFApplication.State.IDLE) {
-                    doStateTransitionIdle(previous);
-                } else if (current == CFApplication.State.CALIBRATION) {
-                    doStateTransitionCalibration(previous);
-                }
-            } catch (IllegalStateException e) {
-                // Make some noise, instead of silently catching errors for now.
-                Log.e("STATE", "Illegal state transition! " + previous + " -> " + current);
-                Crashlytics.logException(e);
-                // FIXME Need a standard dialog to let the user know and exit the activity.
+            if (current == CFApplication.State.DATA) {
+                doStateTransitionData(previous);
+            } else if (current == CFApplication.State.STABILIZATION) {
+                doStateTransitionStabilization(previous);
+            } else if (current == CFApplication.State.IDLE) {
+                doStateTransitionIdle(previous);
+            } else if (current == CFApplication.State.CALIBRATION) {
+                doStateTransitionCalibration(previous);
             }
         }
     };
