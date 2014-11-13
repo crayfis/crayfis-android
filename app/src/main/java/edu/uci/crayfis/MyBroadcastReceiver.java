@@ -1,22 +1,22 @@
 package edu.uci.crayfis;
 
-import java.util.Calendar;
-
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
+
+import java.util.Calendar;
+
+import edu.uci.crayfis.util.CFLog;
 
 public class MyBroadcastReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
-		Log.d("receiver","got action="+intent.getAction());
+		CFLog.d("receiver: got action=" + intent.getAction());
 		
 		long plugged_in= System.currentTimeMillis();
 
@@ -33,8 +33,8 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 	    if (hour > startAfter || hour < startBefore)
 	    {
 	    	while (System.currentTimeMillis()-plugged_in < startWait*1000)
-	    	{	
-	    		// wait
+	    	{
+                // FIXME This is better served with AlarmManager
 	    	}	
 	    
 	    	// now launch

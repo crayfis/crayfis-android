@@ -20,7 +20,8 @@
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:allowBackup="false">
+        android:allowBackup="false"
+        android:name=".CFApplication">
         <activity
             android:name="edu.uci.crayfis.MainActivity"
             android:configChanges="orientation|keyboardHidden"

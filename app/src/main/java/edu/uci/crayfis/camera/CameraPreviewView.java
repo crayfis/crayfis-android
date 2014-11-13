@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import android.content.Context;
 import android.hardware.Camera;
@@ -28,13 +28,15 @@ import android.view.ViewGroup;
 
 import java.io.IOException;
 
+import edu.uci.crayfis.util.CFLog;
+
 /**
  * Displays (or hides) the camera preview.  Adjusts the camera preview so that the displayed ratio is the same
  * as the input image ratio.
  *
  * @author Peter Abeles
  */
-public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
+public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callback {
 	private final String TAG = "CameraPreview";
 
 	SurfaceView mSurfaceView;
@@ -43,7 +45,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 	Camera.PreviewCallback previewCallback;
 	boolean hidden;
 
-	CameraPreview(Context context, Camera.PreviewCallback previewCallback, boolean hidden ) {
+	public CameraPreviewView(Context context, Camera.PreviewCallback previewCallback, boolean hidden) {
 		super(context);
 		this.previewCallback = previewCallback;
 		this.hidden = hidden;
@@ -132,7 +134,7 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 				mCamera.setPreviewDisplay(holder);
 			}
 		} catch (IOException exception) {
-			Log.e(TAG, "IOException caused by setPreviewDisplay()", exception);
+			CFLog.e("DAQActivity IOException caused by setPreviewDisplay()", exception);
 		}
 	}
 
@@ -172,9 +174,9 @@ public class CameraPreview extends ViewGroup implements SurfaceHolder.Callback {
 			mCamera.setPreviewDisplay(mHolder);
 			mCamera.setPreviewCallback(previewCallback);
 			mCamera.startPreview();
-			Log.d(TAG, "No error starting camera preview! ");
+			CFLog.d("DAQActivity No error starting camera preview! ");
 		} catch (Exception e){
-			Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+			CFLog.d("DAQActivity Error starting camera preview: " + e.getMessage());
 		}
 	}
 }
