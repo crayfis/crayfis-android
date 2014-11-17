@@ -53,6 +53,8 @@ import android.widget.TextView;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.jjoe64.graphview.BarGraphView;
+import com.jjoe64.graphview.LineGraphView;
+
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.GraphViewSeries;
@@ -102,8 +104,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     // ----8<--------------
     private GraphView mGraph;
+    private GraphView mGraphTime;
+
     private GraphViewSeries mGraphSeries;
+    private GraphViewSeries mGraphSeriesTime;
+
     private GraphViewSeriesStyle mGraphSeriesStyle;
+    private GraphViewSeriesStyle mGraphSeriesStyleTime;
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
@@ -179,9 +186,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void clickedMode() {
         CFLog.d(" clicked MODE current=" + current_mode.toString());
         // toggle modes
-        if (current_mode == DAQActivity.display_mode.HIST) { current_mode = DAQActivity.display_mode.TIME; }
+        if (current_mode == DAQActivity.display_mode.HIST) {
+            current_mode = DAQActivity.display_mode.TIME;
+            mGraph.setVisibility    (android.view.View.GONE);
+            mGraphTime.setVisibility(android.view.View.VISIBLE);
+
+        }
         else
-        if (current_mode == DAQActivity.display_mode.TIME) { current_mode = DAQActivity.display_mode.HIST; }
+        if (current_mode == DAQActivity.display_mode.TIME)
+            {
+                    current_mode = DAQActivity.display_mode.HIST;
+                    mGraphTime.setVisibility(android.view.View.GONE);
+                    mGraph.setVisibility    (android.view.View.VISIBLE);
+            }
         CFLog.d(" clicked MODE new="+current_mode.toString());
 
 	}
@@ -512,30 +529,37 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 
-        /// test graphing
-        mGraph = new BarGraphView( this, "");
 
         int novals[] = new int[256];
         for (int i=0;i<256;i++) novals[i]=1;
 
+        /// test graphing
+        mGraph = new BarGraphView( this, "");
+        mGraph.setManualYAxisBounds(20., 0.);
+        mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
         GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
         mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
-
-        mGraphSeries = new GraphViewSeries("aaa",mGraphSeriesStyle,make_graph_data(novals, true, 0, 20));
-        /*
-        GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
-                new GraphView.GraphViewData(1, 2.0d)
-                , new GraphView.GraphViewData(2, 1.5d)
-                , new GraphView.GraphViewData(3, 2.5d)
-                , new GraphView.GraphViewData(4, 1.0d)
-        });
-
-        mGraph.addSeries(exampleSeries);
-        */
+        mGraphSeries =     new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(novals, true, 0, 20));
         mGraph.setScalable(true);
         mGraph.addSeries(mGraphSeries);
 
+
+        mGraphTime = new LineGraphView (this, "");
+        mGraphTime.setManualYAxisBounds(30., 0.);
+        mGraphTime.setHorizontalLabels(new String[] {"","Time"," "," "});
+        GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
+        mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());
+        mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals, true, 0, 20));
+        mGraphTime.setScalable(true);
+        mGraphTime.addSeries(mGraphSeriesTime);
+
+
         preview.addView(mGraph);
+        preview.addView(mGraphTime);
+
+        mGraph.setVisibility(android.view.View.VISIBLE);
+        mGraphTime.setVisibility(android.view.View.GONE);
+
 
         preview.addView(mDraw);
 
@@ -816,20 +840,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         // FIXME This is being called very time a frame is received, instead it should only be called when the mode changes.
         if (current_mode == DAQActivity.display_mode.HIST) {
             mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
-            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
-            mGraph.setManualYAxisBounds(20., 0.);
-            mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
-            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorX());
-
 
 
         }
         if (current_mode == DAQActivity.display_mode.TIME) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.hist_max.values, false,mParticleReco.hist_max.current_time,mParticleReco.hist_max.values.length));
-            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
-            mGraph.setManualYAxisBounds(30., 0.);
-            mGraph.setHorizontalLabels(new String[] {"","Time"," "," "});
-            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorY());
+            mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false,mParticleReco.hist_max.current_time,mParticleReco.hist_max.values.length));
         }
 
         // for calculating fps
