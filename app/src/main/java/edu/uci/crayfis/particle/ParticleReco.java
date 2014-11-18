@@ -33,18 +33,20 @@ public class ParticleReco {
     /**
      * Get the instance of {@link edu.uci.crayfis.particle.ParticleReco}.
      *
-     * @param previewSize Instance of {@link android.hardware.Camera.Size}
      * @return {@link edu.uci.crayfis.particle.ParticleReco}
      */
-    public static synchronized ParticleReco getInstance(@NonNull final Camera.Size previewSize) {
+    public static synchronized ParticleReco getInstance() {
         if (sInstance == null) {
-            sInstance = new ParticleReco(previewSize);
+            sInstance = new ParticleReco();
         }
         return sInstance;
     }
 
-    private ParticleReco(Camera.Size previewSize) {
-        this.previewSize = previewSize;
+    public static synchronized void setPreviewSize(@NonNull final Camera.Size inPreviewSize) {
+        ParticleReco.previewSize = inPreviewSize;
+    }
+
+    private ParticleReco() {
         good_quality = false;
         clearHistograms();
     }
@@ -254,7 +256,7 @@ public class ParticleReco {
     public static final int stepW = 10;
     public static final int stepH = 10;
 
-    public Camera.Size previewSize = null;
+    public static Camera.Size previewSize = null;
 
     public RecoEvent buildEvent(RawCameraFrame frame) {
         event_count++;

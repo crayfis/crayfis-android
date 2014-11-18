@@ -60,7 +60,8 @@ class L2Processor extends Thread {
     public L2Processor(@NonNull final Context context, @NonNull final Camera.Size cameraSize) {
         APPLICATION = (CFApplication) context.getApplicationContext();
         XB_MANAGER = ExposureBlockManager.getInstance(context);
-        PARTICLE_RECO = ParticleReco.getInstance(cameraSize);
+        PARTICLE_RECO = ParticleReco.getInstance();
+        PARTICLE_RECO.setPreviewSize(cameraSize);
     }
 
     /**

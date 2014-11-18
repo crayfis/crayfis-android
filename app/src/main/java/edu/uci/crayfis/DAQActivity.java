@@ -17,6 +17,8 @@
 
 package edu.uci.crayfis;
 
+import android.support.v4.view.ViewPager;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -52,14 +54,7 @@ import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.jjoe64.graphview.BarGraphView;
-import com.jjoe64.graphview.LineGraphView;
 
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GraphViewDataInterface;
-import com.jjoe64.graphview.GraphViewSeries;
-import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
-import com.jjoe64.graphview.ValueDependentColor;
 
 import org.json.JSONObject;
 
@@ -79,6 +74,8 @@ import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.AppBuildView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
+import edu.uci.crayfis.widget.DataView;
+
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -87,30 +84,26 @@ import edu.uci.crayfis.widget.StatusView;
  */
 public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener {
 
+    private ViewPager _mViewPager;
+    private ViewPagerAdapter _adapter;
+
+
+    private static LayoutData mLayoutData;
+    private static LayoutHist mLayoutHist;
+    private static LayoutTime mLayoutTime;
+
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication.AppBuild mAppBuild;
 
     // camera and display objects
 	private Camera mCamera;
-	private Visualization mDraw;
 	private CameraPreviewView mPreview;
 
-    // Widgets for giving feedback to the user.
-    private StatusView mStatusView;
-    private MessageView mMessageView;
-    private AppBuildView mAppBuildView;
 
     private Timer mUiUpdateTimer;
 
     // ----8<--------------
-    private GraphView mGraph;
-    private GraphView mGraphTime;
 
-    private GraphViewSeries mGraphSeries;
-    private GraphViewSeries mGraphSeriesTime;
-
-    private GraphViewSeriesStyle mGraphSeriesStyle;
-    private GraphViewSeriesStyle mGraphSeriesStyleTime;
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
@@ -183,50 +176,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		startActivity(i);
 	}
 
-	public void clickedMode() {
-        CFLog.d(" clicked MODE current=" + current_mode.toString());
-        // toggle modes
-        if (current_mode == DAQActivity.display_mode.HIST) {
-            current_mode = DAQActivity.display_mode.TIME;
-            mGraph.setVisibility    (android.view.View.GONE);
-            mGraphTime.setVisibility(android.view.View.VISIBLE);
-
-        }
-        else
-        if (current_mode == DAQActivity.display_mode.TIME)
-            {
-                    current_mode = DAQActivity.display_mode.HIST;
-                    mGraphTime.setVisibility(android.view.View.GONE);
-                    mGraph.setVisibility    (android.view.View.VISIBLE);
-            }
-        CFLog.d(" clicked MODE new="+current_mode.toString());
-
-	}
-
-    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
-    {
-        // show some empty bins
-        if (max_bin<values.length)
-            max_bin += 2;
-
-        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
-        int which=start+1;
-        for (int i=0;i<max_bin;i++)
-        {
-            if (which>=max_bin){ which=0;}
-            if (do_log) {
-                if (values[which] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
-                else
-                    gd[i] = new GraphView.GraphViewData(i, 0);
-            } else
-                gd[i] = new GraphView.GraphViewData(i, values[which]);
-            which++;
 
 
-        }
-        return gd;
-    }
+
 
 	// received message when power is disconnected -- should end run
 	public class MyDisconnectReceiver extends BroadcastReceiver {
@@ -461,27 +413,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		run_config = b.build();
 	}
 
-    private class ValueDependentColorX implements ValueDependentColor
-    {
-        @Override
-        public int get (GraphViewDataInterface data){
-        if (data.getY() == 0) return Color.BLACK;
-        if (data.getX() < CONFIG.getL2Threshold())
-            return Color.BLUE;
-        return Color.RED;
-        }
-    }
 
-    private class ValueDependentColorY implements ValueDependentColor
-    {
-        @Override
-        public int get (GraphViewDataInterface data){
-            if (data.getY() == 0) return Color.BLACK;
-            if (data.getY() < CONFIG.getL2Threshold())
-                return Color.BLUE;
-            return Color.RED;
-        }
-    }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -512,56 +444,22 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		setContentView(R.layout.video);
 
-        mStatusView = (StatusView) findViewById(R.id.status_view);
-        mMessageView = (MessageView) findViewById(R.id.message_view);
-        mAppBuildView = (AppBuildView) findViewById(R.id.app_build_view);
+        _mViewPager = (ViewPager) findViewById(R.id.viewPager);
+        _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
+        _mViewPager.setAdapter(_adapter);
+        _mViewPager.setCurrentItem(0);
 
-		// Used to visualize the results
-		mDraw = new Visualization(this);
-        mDraw.setZOrderOnTop(true);
-        mDraw.getHolder().setFormat(PixelFormat.TRANSPARENT);
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
+
+        CFLog.d("DAQActivity: Camera preview view is "+mPreview);
 
 		context = getApplicationContext();
 
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 
-
-        int novals[] = new int[256];
-        for (int i=0;i<256;i++) novals[i]=1;
-
-        /// test graphing
-        mGraph = new BarGraphView( this, "");
-        mGraph.setManualYAxisBounds(20., 0.);
-        mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
-        GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
-        mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
-        mGraphSeries =     new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(novals, true, 0, 20));
-        mGraph.setScalable(true);
-        mGraph.addSeries(mGraphSeries);
-
-
-        mGraphTime = new LineGraphView (this, "");
-        mGraphTime.setManualYAxisBounds(30., 0.);
-        mGraphTime.setHorizontalLabels(new String[] {"","Time"," "," "});
-        GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
-        mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());
-        mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals, true, 0, 20));
-        mGraphTime.setScalable(true);
-        mGraphTime.addSeries(mGraphSeriesTime);
-
-
-        preview.addView(mGraph);
-        preview.addView(mGraphTime);
-
-        mGraph.setVisibility(android.view.View.VISIBLE);
-        mGraphTime.setVisibility(android.view.View.GONE);
-
-
-        preview.addView(mDraw);
 
 
 
@@ -725,7 +623,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 clickedAbout();
                 return true;
             case R.id.menu_view_mode:
-                clickedMode();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -754,9 +651,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         if (mParticleReco == null) {
             // if we don't already have a particleReco object setup,
             // do that now that we know the camera size.
-            mParticleReco = ParticleReco.getInstance(previewSize);
+            mParticleReco = ParticleReco.getInstance();
+            mParticleReco.setPreviewSize(previewSize);
             l2thread = new L2Processor(this, previewSize);
-            l2thread.setView(mDraw);
             l2thread.start();
         }
 
@@ -793,7 +690,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		}
 
 		// Create an instance of Camera
-		mPreview.setCamera(mCamera);
+        CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
+
+        mPreview.setCamera(mCamera);
+        CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
 	/**
@@ -839,12 +739,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // FIXME This is being called very time a frame is received, instead it should only be called when the mode changes.
         if (current_mode == DAQActivity.display_mode.HIST) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
 
 
         }
         if (current_mode == DAQActivity.display_mode.TIME) {
-            mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false,mParticleReco.hist_max.current_time,mParticleReco.hist_max.values.length));
         }
 
         // for calculating fps
@@ -1042,7 +940,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
                 if (!outputThread.canUpload()) {
                     if (outputThread.permit_upload) {
-                        mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                        mLayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
                     } else {
                         String reason;
                         if (outputThread.valid_id) {
@@ -1050,13 +948,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         } else {
                             reason = "Invalid invite code.";
                         }
-                        mMessageView.setMessage(MessageView.Level.WARNING, reason);
+                        mLayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
                     }
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                    mLayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
                 } else {
-                    mMessageView.setMessage(null, null);
+                    mLayoutData.mMessageView.setMessage(null, null);
                 }
 
                 final StatusView.Status status = new StatusView.Status.Builder()
@@ -1067,8 +965,22 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         .setTotalPixels(l2thread.getTotalPixels())
                         .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
                         .build();
-                mStatusView.setStatus(status);
-                mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+
+                final DataView.Status dstatus = new DataView.Status.Builder()
+                        .setTotalEvents(l2thread.getTotalEvents())
+                        .setTotalPixels(l2thread.getTotalPixels())
+                        .build();
+
+                mLayoutData.mStatusView.setStatus(status);
+                mLayoutHist.mDataView.setStatus(dstatus);
+
+                mLayoutData.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+
+
+                mLayoutHist.updateData();
+                mLayoutTime.updateData();
+
+
             }
         };
 

@@ -2,7 +2,6 @@
 <LinearLayout
     android:id="@+id/camera_preview_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -11,30 +10,13 @@
     <FrameLayout
         android:id="@+id/camera_preview"
         android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="50dp"
         android:background="@android:color/transparent"/>
 
-    <edu.uci.crayfis.widget.StatusView
-        android:id="@+id/status_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:textColor="@android:color/white"
-        tools:text="1h2m3s @ 23fps"/>
+    <android.support.v4.view.ViewPager
+        android:layout_width="fill_parent" android:layout_height="fill_parent"
+        android:id="@+id/viewPager" />
 
-    <edu.uci.crayfis.widget.MessageView
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:gravity="center"
-        android:id="@+id/message_view"/>
 
-    <edu.uci.crayfis.widget.AppBuildView
-        android:id="@+id/app_build_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="right"
-        android:textSize="8sp"
-        android:textColor="@android:color/darker_gray"/>
 </LinearLayout>
 

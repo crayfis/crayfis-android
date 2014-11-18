@@ -65,11 +65,10 @@ public final class StatusView extends TextView {
                         totalCandidates,
                         totalCandidates);
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                final String text = String.format("%s %ds@%dfps, %s, %s", currentState.toString(),
+                final String text = String.format("Mode: %s\nTime: %ds\nRate: %dfps", currentState.toString(),
                         status.getTime(),
-                        status.getFps(),
-                        frames,
-                        candidates);
+                        status.getFps()
+                        );
                 setText(text);
                 break;
             }
@@ -86,7 +85,7 @@ public final class StatusView extends TextView {
             CFLog.e("Passing a 0 to StatusView.getPercentageValue(): max=" + max + ", value=" + value);
             rtn = state.toString();
         } else {
-            rtn = String.format("%s %2d%%@%dfps",
+            rtn = String.format("Mode: %s %2d%%\nRate: %dfps",
                     state.toString(),
                     (int) (value / max * 100),
                     fps);
