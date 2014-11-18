@@ -9,9 +9,10 @@
         android:id="@+id/status_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textSize="40sp"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
-        tools:text="1h2m3s @ 23fps"/>
+        tools:text="Time: 1h2m3s \nRate: 23fps"/>
 
     <edu.uci.crayfis.widget.MessageView
         android:layout_width="match_parent"
