@@ -6,8 +6,7 @@
 
     <edu.uci.crayfis.SpeedometerView
         android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:padding="8dp"
+        android:layout_width="fill_parent"
         android:id="@+id/needle_view" />
 
     <LinearLayout

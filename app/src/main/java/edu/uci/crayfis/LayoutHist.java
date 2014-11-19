@@ -116,7 +116,7 @@ public class LayoutHist extends Fragment{
         /// test graphing
         mGraph = new BarGraphView(_context," ");
         mGraph.setManualYAxisBounds(20., 0.);
-        mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
+        mGraph.setHorizontalLabels(new String[] {"Pixel values"});
         mGraph.setVerticalLabels(new String[] {""});
 
         GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();

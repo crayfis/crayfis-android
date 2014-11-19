@@ -23,6 +23,8 @@ public class LayoutData extends Fragment{
     public static MessageView mMessageView;
     public static AppBuildView mAppBuildView;
 
+    public static ProgressWheel mProgressWheel;
+
     private static LayoutData mInstance =null;
 
     public LayoutData()
@@ -42,7 +44,8 @@ public class LayoutData extends Fragment{
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.data, null);
 
 
-
+        mProgressWheel = (ProgressWheel) root.findViewById(R.id.pw_spinner);
+        mProgressWheel.spin();
         mStatusView = (StatusView) root.findViewById(R.id.status_view);
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
         mAppBuildView = (AppBuildView) root.findViewById(R.id.app_build_view);

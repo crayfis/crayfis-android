@@ -922,6 +922,40 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         .setTotalPixels(l2thread.getTotalPixels())
                         .build();
 
+                final CFApplication application = (CFApplication) getApplication();
+
+                if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+                {
+                    mLayoutData.mProgressWheel.setText("Stabilizing");
+                    mLayoutData.mProgressWheel.setTextColor(Color.RED);
+                    mLayoutData.mProgressWheel.setBarColor(Color.RED);
+
+                    mLayoutData.mProgressWheel.spin();
+                }
+
+
+                if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                    mLayoutData.mProgressWheel.setText("Calibrating");
+                    mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                    mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+
+                    int events = mParticleReco.event_count;
+                    int needev = CONFIG.getCalibrationSampleFrames();
+                    float frac = events/((float)1.0*needev);
+                    int progress = (int)(360*frac);
+                    CFLog.d("Calibration: l2="+events+" need="+needev+" frac="+frac+" prog="+progress);
+                    mLayoutData.mProgressWheel.setProgress( progress );
+                     }
+                if (application.getApplicationState() == CFApplication.State.DATA) {
+                    mLayoutData.mProgressWheel.setText("Data");
+                    mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                    mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+
+                    // solid circle
+                    mLayoutData.mProgressWheel.setProgress( 360);
+
+                }
+
                 mLayoutData.mStatusView.setStatus(status);
                 mLayoutHist.mDataView.setStatus(dstatus);
 

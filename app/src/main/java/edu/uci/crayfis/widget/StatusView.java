@@ -48,7 +48,7 @@ public final class StatusView extends TextView {
                 break;
             }
             case STABILIZATION: {
-                setText("STABILIZING");
+                setText("");
                 break;
             }
             case DATA: {
@@ -62,7 +62,7 @@ public final class StatusView extends TextView {
                         totalCandidates,
                         totalCandidates);
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                final String text = String.format("%s\nTime: %ds\nRate: %dfps", currentState.toString(),
+                final String text = String.format("Time: %ds\nRate: %d fps",
                         status.getTime(),
                         status.getFps()
                         );
@@ -82,9 +82,7 @@ public final class StatusView extends TextView {
             CFLog.e("Passing a 0 to StatusView.getPercentageValue(): max=" + max + ", value=" + value);
             rtn = state.toString();
         } else {
-            rtn = String.format("%s %2d%%\nRate: %dfps",
-                    state.toString(),
-                    (int) (value / max * 100),
+            rtn = String.format("Rate: %d fps",
                     fps);
         }
 

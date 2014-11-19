@@ -91,6 +91,12 @@ public class LayoutTime extends Fragment {
 
         if (mParticleReco !=null) {
             mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false, mParticleReco.hist_max.current_time, mParticleReco.hist_max.values.length));
+
+            // time average
+            float mean = 0;
+            for (int i=0;i<mParticleReco.hist_max.values.length;i++)
+                mean += mParticleReco.hist_max.values[i];
+            mean /= (1.0*mParticleReco.hist_max.values.length);
             mSpeedometerView.setSpeed(mParticleReco.hist_max.values[mParticleReco.hist_max.current_time]);
         }
     }
@@ -122,7 +128,7 @@ public class LayoutTime extends Fragment {
 
         mGraphTime = new LineGraphView (_context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
-        mGraphTime.setHorizontalLabels(new String[] {"","Time"," "," "});
+        mGraphTime.setHorizontalLabels(new String[] {"Time series"});
         mGraphTime.setVerticalLabels(new String[] {""});
 
         GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
