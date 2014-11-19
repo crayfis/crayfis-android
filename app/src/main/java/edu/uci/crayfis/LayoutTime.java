@@ -1,5 +1,7 @@
 package edu.uci.crayfis;
 
+import edu.uci.crayfis.SpeedometerView;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -77,6 +79,7 @@ public class LayoutTime extends Fragment {
 
     private static LayoutTime mInstance =null;
 
+    private static SpeedometerView mSpeedometerView;
 
     private static Context _context;
 
@@ -86,8 +89,10 @@ public class LayoutTime extends Fragment {
 
     public static void updateData() {
 
-        if (mParticleReco !=null)
-           mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false, mParticleReco.hist_max.current_time, mParticleReco.hist_max.values.length));
+        if (mParticleReco !=null) {
+            mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false, mParticleReco.hist_max.current_time, mParticleReco.hist_max.values.length));
+            mSpeedometerView.setSpeed(mParticleReco.hist_max.values[mParticleReco.hist_max.current_time]);
+        }
     }
 
 
@@ -118,11 +123,32 @@ public class LayoutTime extends Fragment {
         mGraphTime = new LineGraphView (_context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
         mGraphTime.setHorizontalLabels(new String[] {"","Time"," "," "});
+        mGraphTime.setVerticalLabels(new String[] {""});
+
         GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
         mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());
         mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals, true, 0, 20));
         mGraphTime.setScalable(true);
         mGraphTime.addSeries(mGraphSeriesTime);
+
+        mSpeedometerView = (SpeedometerView) root.findViewById(R.id.needle_view);
+
+        mSpeedometerView.setLabelConverter(new SpeedometerView.LabelConverter() {
+            @Override
+            public String getLabelFor(double progress, double maxProgress) {
+                return String.valueOf((int) Math.round(progress));
+            }
+        });
+
+        // configure value range and ticks
+        mSpeedometerView.setMaxSpeed(30);
+        mSpeedometerView.setMajorTickStep(5);
+        mSpeedometerView.setMinorTicks(1);
+
+        // Configure value range colors
+        mSpeedometerView.addColoredRange(0, 5, Color.GREEN);
+        mSpeedometerView.addColoredRange(5, 20, Color.YELLOW);
+        mSpeedometerView.addColoredRange(20, 30, Color.RED);
 
         root.addView(mGraphTime);
 

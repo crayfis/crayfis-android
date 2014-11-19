@@ -9,7 +9,7 @@
         android:id="@+id/data_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="50sp"
+        android:textSize="30sp"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
         tools:text=" Frames:0\n Candidates:0 "/>
@@ -17,6 +17,6 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="fill_parent"
-        android:layout_height="250dp"
+        android:layout_height="wrap_content"
         android:id="@+id/hist_graph_view" />
 </LinearLayout>

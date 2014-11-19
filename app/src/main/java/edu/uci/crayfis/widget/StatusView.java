@@ -48,10 +48,7 @@ public final class StatusView extends TextView {
                 break;
             }
             case STABILIZATION: {
-                setText(getPercentageValue(currentState,
-                        CONFIG.getStabilizationSampleFrames(),
-                        status.getStabilizationCount(),
-                        status.getFps()));
+                setText("STABILIZING");
                 break;
             }
             case DATA: {
@@ -65,7 +62,7 @@ public final class StatusView extends TextView {
                         totalCandidates,
                         totalCandidates);
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                final String text = String.format("Mode: %s\nTime: %ds\nRate: %dfps", currentState.toString(),
+                final String text = String.format("%s\nTime: %ds\nRate: %dfps", currentState.toString(),
                         status.getTime(),
                         status.getFps()
                         );
@@ -85,7 +82,7 @@ public final class StatusView extends TextView {
             CFLog.e("Passing a 0 to StatusView.getPercentageValue(): max=" + max + ", value=" + value);
             rtn = state.toString();
         } else {
-            rtn = String.format("Mode: %s %2d%%\nRate: %dfps",
+            rtn = String.format("%s %2d%%\nRate: %dfps",
                     state.toString(),
                     (int) (value / max * 100),
                     fps);
@@ -205,6 +202,8 @@ public final class StatusView extends TextView {
              * @return This instance for chaining.
              */
             public Builder setFps(final int fps) {
+                // protect against garbage values in initial moments
+
                 mFps = fps;
                 return this;
             }

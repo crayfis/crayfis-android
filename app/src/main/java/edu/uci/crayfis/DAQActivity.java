@@ -139,11 +139,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	private long L1counter = 0;
 
-    public enum display_mode {
-        HIST, TIME
-    }
-
-    private display_mode current_mode;
 
 	private long calibration_start;
 
@@ -223,31 +218,29 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		final TextView tx1 = new TextView(this);
 
-        if (current_mode==DAQActivity.display_mode.HIST)
-		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                "This frame shows:\n\t Exposure: seconds of data-taking\n" +
-                "\t Frames: number with a hot pixel\n" +
-                "\t Candidates: number of pixels saved\n" +
-                "\t Data blocks: groups of frames\n" +
+        if (_mViewPager.getCurrentItem()==0)
+  		  tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                "This view shows:\n\t Time: seconds of data-taking\n" +
                 "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
-                "\t Scan rate: rate, frames-per-second\n" +
-                "On the left is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nFor more details:  "
+                "\t Rate: scan rate, frames-per-second\n" +
+                  " Swipe right for more views.\n For more details: "
 				+ s);
-        if (current_mode==DAQActivity.display_mode.TIME)
+        if (_mViewPager.getCurrentItem()==1)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                    "This frame shows:\n\t Exposure: seconds of data-taking\n" +
+                    "This view shows:\n" +
                     "\t Frames: number with a hot pixel\n" +
                     "\t Candidates: number of pixels saved\n" +
-                    "\t Data blocks: groups of frames\n" +
-                    "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
-                    "\t Scan rate: rate, frames-per-second\n" +
-                    "On the left is a time series showing the max pixel value found in each frame." +
-                    "\nFor more details:  "
+                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nSwipe left or right for different views\nFor more details:  "
+                            + s);
+        if (_mViewPager.getCurrentItem()==2)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This view shows a time series showing the max pixel value found in each frame." +
+                    "\nSwipe left for more views\nFor more details:  "
                     + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
-
+        tx1.setTextColor(Color.WHITE);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("About CRAYFIS").setCancelable(false)
@@ -419,7 +412,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        current_mode = DAQActivity.display_mode.HIST;
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
@@ -622,8 +614,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             case R.id.menu_about:
                 clickedAbout();
                 return true;
-            case R.id.menu_view_mode:
-                return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -737,13 +728,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		long acq_time = System.currentTimeMillis();
 
-        // FIXME This is being called very time a frame is received, instead it should only be called when the mode changes.
-        if (current_mode == DAQActivity.display_mode.HIST) {
 
-
-        }
-        if (current_mode == DAQActivity.display_mode.TIME) {
-        }
 
         // for calculating fps
 		if (L1counter % fps_update_interval == 0) {
@@ -833,41 +818,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	// ///////////////////////////////////////
 
-	/**
-	 * Draws on top of the video stream for visualizing computer vision results
-	 */
-	private class Visualization extends SurfaceView {
 
-        Paint mypaint3;
-
-        public Visualization(Activity context) {
-            super(context);
-
-            setWillNotDraw(false);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            int h = canvas.getHeight();
-            int tsize = (h / 50);
-            int yoffset = 2 * tsize;
-
-            if (mypaint3 == null) {
-                mypaint3 = new Paint();
-                mypaint3.setStyle(android.graphics.Paint.Style.FILL);
-                mypaint3.setColor(android.graphics.Color.GRAY);
-                mypaint3.setTextSize(tsize);
-            }
-
-            canvas.save();
-            canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
-                    (float) (yoffset + (256 - 50) * tsize / 10.0));
-            canvas.drawText(String.format("Number of pixels"),
-                    (float) (50 + -7 * tsize / 10.0),
-                    (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
-            canvas.restore();
-        }
-    }
 
     @Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {

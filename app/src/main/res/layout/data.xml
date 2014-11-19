@@ -9,7 +9,7 @@
         android:id="@+id/status_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="40sp"
+        android:textSize="30sp"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
         tools:text="Time: 1h2m3s \nRate: 23fps"/>
