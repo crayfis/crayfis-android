@@ -67,6 +67,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import edu.uci.crayfis.calibration.FrameHistory;
+import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
@@ -142,23 +144,28 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	private ExposureBlockManager xbManager;
 
+    private L1Calibrator L1cal;
 	private long L1counter = 0;
     private long L1counter_data = 0;
 
+    private FrameHistory<Long> frame_times;
 
 	private long calibration_start;
 
 	// counter for stabilization mode
 	private int stabilization_counter;
 
+    // counter for calibration mode
+    private int calibration_counter;
+
 	// L1 hit threshold
 	long starttime;
 
     // number of frames to wait between fps updates
-	public static final float fps_update_interval = 30;
+	public static final int fps_update_interval = 20;
 
-	private long L1_fps_start = 0;
-	private long L1_fps_stop = 0;
+    // store value of most recently calculated FPS
+    private double last_fps = 0;
 
 	// Thread where image data is processed for L2
 	private L2Processor l2thread;
@@ -275,6 +282,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		switch (previousState) {
             case STABILIZATION:
                 mParticleReco.reset();
+                L1cal.clear();
+                frame_times.clear();
                 calibration_start = System.currentTimeMillis();
                 xbManager.newExposureBlock();
                 break;
@@ -297,33 +306,38 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 break;
             case CALIBRATION:
-                int new_thresh;
-                long calibration_time = l2thread.getCalibrationStop() - calibration_start;
-                int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time * 1e-3 / 60.0);
+                //long calibration_time = l2thread.getCalibrationStop() - calibration_start;
+                //int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time * 1e-3 / 60.0);
 
-                CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int) (calibration_time * 1e-3) + " s; target events = " + target_events);
+                //CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int) (calibration_time * 1e-3) + " s; target events = " + target_events);
 
+
+                int new_thresh = calculateL1Threshold();
                 // build the calibration result object
                 DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
+                /*
                 // (ugh, why can't primitive arrays be Iterable??)
-                for (int v : mParticleReco.h_pixel.values) {
-                    cal.addHistPixel(v);
+                for (double v : mParticleReco.h_pixel) {
+                    cal.addHistPixel((int) v);
                 }
-                for (int v : mParticleReco.h_l2pixel.values) {
-                    cal.addHistL2Pixel(v);
+                for (double v : mParticleReco.h_l2pixel) {
+                    cal.addHistL2Pixel((int) v);
                 }
-                for (int v : mParticleReco.h_maxpixel.values) {
+                */
+                for (int v : L1cal.getHistogram()) {
                     cal.addHistMaxpixel(v);
                 }
-                for (int v : mParticleReco.h_numpixel.values) {
-                    cal.addHistNumpixel(v);
+                /*
+                for (double v : mParticleReco.h_numpixel) {
+                    cal.addHistNumpixel((int) v);
                 }
+                */
                 // and commit it to the output stream
                 CFLog.i("DAQActivity Committing new calibration result.");
                 outputThread.commitCalibrationResult(cal.build());
 
                 // update the thresholds
-                new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
+                //new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
                 CFLog.i("DAQActivity Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
                 CONFIG.setL1Threshold(new_thresh);
 
@@ -348,6 +362,15 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	}
 
+    public int calculateL1Threshold() {
+        double fps = updateFPS();
+        if (fps == 0) {
+            CFLog.w("Warning! Got 0 fps in threshold calculation.");
+        }
+        double target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
+        return L1cal.findL1Threshold(target_L1_eff);
+    }
+
     /**
      * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
      *
@@ -363,6 +386,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 l2thread.setFixedThreshold(false);
                 l2thread.clearQueue();
                 stabilization_counter = 0;
+                calibration_counter = 0;
                 xbManager.newExposureBlock();
                 break;
 
@@ -371,11 +395,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             case DATA:
                 l2thread.clearQueue();
                 stabilization_counter = 0;
+                calibration_counter = 0;
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
                 // just reset the counter.
                 stabilization_counter = 0;
+                calibration_counter = 0;
 
                 break;
             default:
@@ -478,6 +504,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         L1counter = 0;
         L1counter_data = 0;
+
+        if (L1cal == null) {
+            L1cal = new L1Calibrator(1000);
+        }
+        if (frame_times == null) {
+            frame_times = new FrameHistory<Long>(100);
+        }
 
 		starttime = System.currentTimeMillis();
 
@@ -758,23 +791,41 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// get a reference to the current xb, so it doesn't change from underneath us
 		ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
+        // next, bump the number of L1 events seen by this xb.
 		L1counter++;
 		xb.L1_processed++;
 
+        // record the (approximate) acquisition time
+        // FIXME: can we do better than this, perhaps at Camera API level?
 		long acq_time = System.currentTimeMillis();
 
+        // pack the image bytes along with other event info into a RawCameraFrame object
+        RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, xb, orientation, camera.getParameters().getPreviewSize());
 
+        // show the frame to the L1 calibrator
+        L1cal.AddFrame(frame);
+        // and track the acquisition times for FPS calculation
+        frame_times.add_value(acq_time);
 
-        // for calculating fps
-		if (L1counter % fps_update_interval == 0) {
-			L1_fps_start = L1_fps_stop;
-			L1_fps_stop = acq_time;
-		}
+        // update the FPS calculation periodically
+        if (L1counter % fps_update_interval == 0) {
+            updateFPS();
+        }
 
         final CFApplication application = (CFApplication) getApplication();
 		if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+            // if we are in (L1) calibration mode, there's no need to do anything else with this
+            // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
+            calibration_counter++;
+
+            if (calibration_counter > CONFIG.getCalibrationSampleFrames()) {
+                application.setApplicationState(CFApplication.State.DATA);
+            }
+            return;
+
+            /*
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
-			boolean queue_accept = l2thread.submitToQueue(new RawCameraFrame(bytes, acq_time, xb, orientation));
+			boolean queue_accept = l2thread.submitToQueue(frame);
 
 			if (! queue_accept) {
 				// oops! the queue is full... this frame will be dropped.
@@ -783,6 +834,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 			}
 
 			return;
+			*/
 		}
 
 		if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
@@ -803,13 +855,31 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         L1counter_data++;
 
 
-        // prescale
+        // periodically check if the L1 calibration has drifted
+        if (L1counter % fps_update_interval == 0) {
+            int new_l1 = calculateL1Threshold();
+            int new_l2 = new_l1-1;
+            if (new_l2 < 2) {
+                new_l2 = 2;
+            }
+            if (new_l1 != CONFIG.getL1Threshold()) {
+                // the L1 threshold is drifting! set the new threshold and trigger a new XB.
+                CONFIG.setL1Threshold(new_l1);
+                CONFIG.setL2Threshold(new_l2);
+                xbManager.newExposureBlock();
+                CFLog.i("Resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
+                CFLog.i("Triggering new XB.");
+            }
+        }
+
+		// prescale
 		// Jodi - removed L1prescale as it never changed.
 		if (L1counter % 1 == 0) {
 			// make sure there's room on the queue
 			if (l2thread.getRemainingCapacity() > 0) {
 				// check if we pass the L1 threshold
 				boolean pass = false;
+                /*
 				int length = previewSize.width * previewSize.height;
                 int max=-1;
 				for (int i = 0; i < length; i++) {
@@ -822,13 +892,20 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 						break;
 					}
 				}
+				*/
+                int max = frame.getPixMax();
+                if (max > xb.L1_thresh) {
+                    // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
+                    // have changed.
+                    pass = true;
+                }
                 mParticleReco.hist_max.new_data(max);
 				if (pass) {
 					xb.L1_pass++;
 
 					// this frame has passed the L1 threshold, put it on the
 					// L2 processing queue.
-					boolean queue_accept = l2thread.submitToQueue(new RawCameraFrame(bytes, acq_time, xb, orientation));
+					boolean queue_accept = l2thread.submitToQueue(frame);
 
 					if (! queue_accept) {
 						// oops! the queue is full... this frame will be dropped.
@@ -854,8 +931,18 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	}
 
-	// ///////////////////////////////////////
+    private double updateFPS() {
+        long now = System.currentTimeMillis();
+        int nframes = frame_times.size();
+        last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+        return last_fps;
+    }
 
+    public double getFPS() {
+        return last_fps;
+    }
+
+	// ///////////////////////////////////////
 
 
     @Override
@@ -940,7 +1027,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 final StatusView.Status status = new StatusView.Status.Builder()
                         .setEventCount(mParticleReco.event_count)
-                        .setFps((int) (fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3))
+                        .setFps((int) (getFPS()))
                         .setStabilizationCounter(stabilization_counter)
                         .setTotalEvents(l2thread.getTotalEvents())
                         .setTotalPixels(l2thread.getTotalPixels())
@@ -948,7 +1035,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         .build();
 
                 final DataView.Status dstatus = new DataView.Status.Builder()
-                        .setTotalEvents(mParticleReco.h_l2pixel.integral)
+                        .setTotalEvents((int)mParticleReco.h_l2pixel.getIntegral())
                         .setTotalPixels(L1counter_data*previewSize.height*previewSize.width)
                         .setTotalFrames(L1counter_data)
                         .build();

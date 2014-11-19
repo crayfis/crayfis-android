@@ -16,7 +16,9 @@ import java.util.ArrayList;
 
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
+import edu.uci.crayfis.calibration.Histogram;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.util.CFLog;
 
 public class ParticleReco {
     private static final CFConfig CONFIG = CFConfig.getInstance();
@@ -141,82 +143,6 @@ public class ParticleReco {
             values[current_time] = data;
         }
 
-    }
-    public class Histogram {
-        public int[] values;
-        private boolean mean_valid = false;
-        private boolean variance_valid = false;
-        double mean = 0;
-        double variance = 0;
-        public int integral = 0;
-        public int max_bin=0;
-        public final int nbins;
-
-        public Histogram(int nbins) {
-            if (nbins <= 0) {
-                throw new RuntimeException("Hey dumbo a histogram should have at least one bin.");
-            }
-
-            this.nbins = nbins;
-
-            // make two additional bins for under/overflow
-            values = new int[nbins+2];
-        }
-        public void clear() {
-            for (int i = 0; i < values.length; ++i) {
-                values[i] = 0;
-            }
-            integral = 0;
-            mean_valid = false;
-            variance_valid = false;
-            max_bin=0;
-        }
-
-        public void fill(int val) {
-            fill(val, 1);
-        }
-        public void fill(int x, int weight) {
-            if (x>max_bin && x < nbins) { max_bin=x;}
-            if (x < 0) {
-                // underflow
-                values[nbins] += weight;
-            }
-            else if (x >= nbins) {
-                // overflow
-                values[nbins+1] += weight;
-            }
-            else {
-                values[x] += weight;
-                integral += weight;
-                mean_valid = false;
-            }
-        }
-
-        public double getMean() {
-            if (mean_valid)
-                return mean;
-            int sum = 0;
-            for (int i = 0; i < nbins; ++i) {
-                sum += values[i];
-            }
-            mean = ((double) sum) / integral;
-            mean_valid = true;
-            return mean;
-        }
-
-        public double getVariance() {
-            if (variance_valid)
-                return variance;
-            mean = getMean();
-            int sum = 0;
-            for (int i = 0; i < nbins; ++i) {
-                int val = values[i];
-                sum += (val-mean)*(val-mean);
-            }
-            variance = ((double) sum) / integral;
-            variance_valid = true;
-            return variance;
-        }
     }
 
     public Histogram h_pixel = new Histogram(256);
@@ -448,7 +374,10 @@ public class ParticleReco {
             hist_mean.new_data((int)(tot_pix/(1.0*num_tot_pix)));
 
             pixel_count += num_pix;
-        } catch (OutOfMemoryError e) { }
+        } catch (OutOfMemoryError e) {
+            CFLog.e("Cannot allocate L2 pixels: out of memory!!!");
+            return null;
+        }
         return pixels;
     }
 
@@ -457,15 +386,15 @@ public class ParticleReco {
         // max_count events over the integrated period contained
         // in the histograms.
 
-        CFLog.i("calculate: Calculating threshold! Event histo:"
-                        + " 0 - " + h_maxpixel.values[0] + "\n"
-                        + " 1 - " + h_maxpixel.values[1] + "\n"
-                        + " 2 - " + h_maxpixel.values[2] + "\n"
-                        + " 3 - " + h_maxpixel.values[3] + "\n"
-                        + " 4 - " + h_maxpixel.values[4] + "\n"
+        CFLog.i("Cacluating threshold! Event histo:"
+                        + " 0 - " + h_maxpixel.getBinValue(0) + "\n"
+                        + " 1 - " + h_maxpixel.getBinValue(1) + "\n"
+                        + " 2 - " + h_maxpixel.getBinValue(2) + "\n"
+                        + " 3 - " + h_maxpixel.getBinValue(3) + "\n"
+                        + " 4 - " + h_maxpixel.getBinValue(4) + "\n"
         );
 
-        if (h_maxpixel.integral == 0) {
+        if (h_maxpixel.getIntegral() == 0) {
             // wow! no data, either we didn't expose long enough, or
             // the background is super low. Return 0 threshold.
             return 0;
@@ -474,7 +403,7 @@ public class ParticleReco {
         int integral = 0;
         int new_thresh;
         for (new_thresh = 255; new_thresh >= 0; --new_thresh) {
-            integral += h_maxpixel.values[new_thresh];
+            integral += h_maxpixel.getBinValue(new_thresh);
             if (integral > max_count) {
                 // oops! we've gone over the limit.
                 // bump the threshold back up and break out.
@@ -492,8 +421,8 @@ public class ParticleReco {
         // number of photons above this threshold
         int above_thresh = 0;
         do {
-            above_thresh += h_pixel.values[new_thresh];
-            CFLog.d("calibration: threshold " + new_thresh
+            above_thresh += h_pixel.getBinValue(new_thresh);
+            CFLog.d("threshold " + new_thresh
                     + " obs= " + above_thresh + "/" + stat_factor);
             new_thresh--;
         } while (new_thresh > 0 && above_thresh < stat_factor);
