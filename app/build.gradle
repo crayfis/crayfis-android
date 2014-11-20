@@ -37,11 +37,19 @@ def getVersionName = { ->
             commandLine 'git', 'describe', '--tags', '--dirty'
             standardOutput = stdout
         }
-        return stdout.toString().trim()
+        def stdout2 = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'rev-parse', '--abbrev-ref', 'HEAD'
+            standardOutput = stdout2
+        }
+        if (stdout2.toString().trim() == 'master') {
+            return stdout.toString().trim()
+        } else {
+            return stdout.toString().trim() + '(' + stdout2.toString().trim() + ')'
+        }
     }
     catch (ignored) {
-        //return null;
-	return 'pooba';
+	return 'invalid';
     }
 }
 
