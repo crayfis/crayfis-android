@@ -943,11 +943,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     int needev = CONFIG.getCalibrationSampleFrames();
                     float frac = events/((float)1.0*needev);
                     int progress = (int)(360*frac);
-                    CFLog.d("Calibration: l2="+events+" need="+needev+" frac="+frac+" prog="+progress);
                     mLayoutData.mProgressWheel.setProgress( progress );
                      }
                 if (application.getApplicationState() == CFApplication.State.DATA) {
-                    mLayoutData.mProgressWheel.setText("Data");
+                    mLayoutData.mProgressWheel.setText("Taking Data!");
                     mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
                     mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
 

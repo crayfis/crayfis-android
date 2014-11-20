@@ -5,11 +5,21 @@ import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.os.Environment;
+
+import android.graphics.YuvImage;
+import android.graphics.Rect;
+import android.graphics.ImageFormat;
+import java.io.ByteArrayOutputStream;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
 
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -203,6 +213,39 @@ class L2Processor extends Thread {
 
             // Finally, add the event to the proper exposure block.
             xb.addEvent(event);
+
+            if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
+                if (event.pixels.size() >= 1) {
+                    File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+                    File myDir = new File(sdCard.getAbsolutePath()+"/crayfis");
+                    myDir.mkdirs();
+                    String fname = "Event_" + L2counter + ".jpg";
+                    File file = new File(myDir, fname);
+                    try {
+                        FileOutputStream out = new FileOutputStream(file);
+                        byte[] bytearray = frame.getBytes();
+
+
+                        CFLog.d(" byte array="+bytearray+" length="+bytearray.length);
+
+                        YuvImage yuvimage=new YuvImage(bytearray, ImageFormat.NV21,
+                                   PARTICLE_RECO.previewSize.width, PARTICLE_RECO.previewSize.height, null);
+                        CFLog.d(" yuvimage="+yuvimage);
+
+                        yuvimage.compressToJpeg(new Rect(0, 0, PARTICLE_RECO.previewSize.width, PARTICLE_RECO.previewSize.height), 80, out);
+
+
+
+
+                        CFLog.d(" compression done.");
+                        out.flush();
+                        out.close();
+                        CFLog.d(" File created: "+fname);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
 
             // If we're calibrating, check if we've processed enough
             // frames to decide on the threshold(s) and go back to

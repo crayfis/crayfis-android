@@ -30,12 +30,15 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
             case 2:
                 f=LayoutTime.getInstance(_context);
                 break;
+            case 3:
+                f=LayoutGallery.getInstance(_context);
+                break;
         }
         return f;
     }
     @Override
     public int getCount() {
-        return 3;
+        return 4;
     }
 
 }
