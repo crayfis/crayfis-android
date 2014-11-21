@@ -7,6 +7,8 @@ package edu.uci.crayfis.gallery;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import android.util.Log;
 
@@ -19,6 +21,19 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 public class Utils {
+    // Number of columns of Grid View
+    public static final int NUM_OF_COLUMNS = 3;
+
+    // Gridview image padding
+    public static final int GRID_PADDING = 8; // in dp
+
+    // SD card image directory
+    public static final String DIRNAME = "/crayfis";
+
+    // supported file formats
+    public static final List<String> FILE_EXTN = Arrays.asList("jpg", "jpeg",
+            "png");
+
     private Context _context;
 
     // constructor
@@ -31,7 +46,7 @@ public class Utils {
         ArrayList<String> filePaths = new ArrayList<String>();
 
         File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File directory = new File(sdCard.getAbsolutePath()+"/crayfis");
+        File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
 
 
         // check for directory
@@ -61,7 +76,7 @@ public class Utils {
                 // image directory is empty
                 Toast.makeText(
                         _context,
-                        AppConstant.PHOTO_ALBUM
+                        DIRNAME
                                 + " is empty. Please load some images in it !",
                         Toast.LENGTH_LONG).show();
             }
@@ -75,7 +90,7 @@ public class Utils {
         String ext = filePath.substring((filePath.lastIndexOf(".") + 1),
                 filePath.length());
 
-        if (AppConstant.FILE_EXTN
+        if (FILE_EXTN
                 .contains(ext.toLowerCase(Locale.getDefault())))
             return true;
         else

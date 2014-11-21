@@ -10,7 +10,7 @@
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="userIDlogin">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n Please enter your user ID below. If you do not have one yet, register at http://crayfis.io/.</string>
+	<string name="userIDlogin">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n to look for cosmic ray particles.\n\n For more info: http://crayfis.io/.\n\n\n\n\n What you need to do:\n Plug your phone in and\n put it camera down (face up) on a surface.\n\n When it starts it will take 30-60s to calibrate\n and then will start taking data!</string>
 	<string name="run_without_user_ID">\n\n\nNo CRAYFIS ID?  \n No problem! Your data will not be uploaded to the server, but you can still run the app, and enter your ID later in the settings pane.</string>
 
     <string name="menu_about">About</string>

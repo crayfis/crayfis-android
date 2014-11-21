@@ -8,6 +8,8 @@ package edu.uci.crayfis.gallery;
     import java.io.FileInputStream;
     import java.io.FileNotFoundException;
     import java.util.ArrayList;
+    import android.widget.RelativeLayout;
+    import android.widget.TextView;
 
     import android.app.Activity;
     import android.content.Intent;
@@ -52,6 +54,8 @@ package edu.uci.crayfis.gallery;
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+
+
             ImageView imageView;
             if (convertView == null) {
                 imageView = new ImageView(_activity._context);
@@ -71,6 +75,16 @@ package edu.uci.crayfis.gallery;
             // image view click listener
             imageView.setOnClickListener(new OnImageClickListener(position));
 
+            /*
+            RelativeLayout rl = new RelativeLayout(_activity._context);
+
+            TextView tv = new TextView(_activity._context);
+            tv.setText(_filePaths.get(position));
+
+            rl.addView(tv);
+            rl.addView(imageView);
+
+            return rl;*/
             return imageView;
         }
 

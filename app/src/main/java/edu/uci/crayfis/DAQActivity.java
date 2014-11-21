@@ -19,6 +19,7 @@ package edu.uci.crayfis;
 
 import android.support.v4.view.ViewPager;
 
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -414,7 +415,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		super.onCreate(savedInstanceState);
 
 
+
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
+
+
+
+
+
 
 		// FIXME: for debugging only!!! We need to figure out how
 		// to keep DAQ going without taking over the phone.
@@ -441,6 +448,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
         _mViewPager.setAdapter(_adapter);
         _mViewPager.setCurrentItem(0);
+
+
 
 
 		// Create our Preview view and set it as the content of our activity.
@@ -927,7 +936,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 if (application.getApplicationState() == CFApplication.State.STABILIZATION)
                 {
-                    mLayoutData.mProgressWheel.setText("Stabilizing");
+                    mLayoutData.mProgressWheel.setText("Checking camera is covered");
+                    mLayoutData.mProgressWheel.setTextSize(22);
+
                     mLayoutData.mProgressWheel.setTextColor(Color.RED);
                     mLayoutData.mProgressWheel.setBarColor(Color.RED);
 
@@ -936,7 +947,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
                 if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                    mLayoutData.mProgressWheel.setText("Calibrating");
+                    mLayoutData.mProgressWheel.setText("Measuring backgrounds");
+                    mLayoutData.mProgressWheel.setTextSize(27);
+
                     mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
                     mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
@@ -947,6 +960,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     mLayoutData.mProgressWheel.setProgress( progress );
                      }
                 if (application.getApplicationState() == CFApplication.State.DATA) {
+                    mLayoutData.mProgressWheel.setTextSize(30);
+
                     mLayoutData.mProgressWheel.setText("Taking Data!");
                     mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
                     mLayoutData.mProgressWheel.setBarColor(Color.GREEN);

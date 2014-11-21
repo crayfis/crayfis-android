@@ -22,36 +22,9 @@
 		android:textSize="15sp"
 		android:gravity="center" />
 	     	            
-	<EditText 
-	    android:id="@+id/userIDlogin"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:hint="Enter your CRAYFIS ID here"
-	    android:singleLine="true"
-	    android:textSize="14dip"
-	    android:layout_gravity="center" 
-	    android:layout_marginTop="7dip"
-	    android:gravity="center"/>
-	
- 	<Button
-        android:id="@+id/sign_in"
-		android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
- 		android:layout_marginTop="7dip"
-        android:background="@drawable/buttonshape"        
-        android:text="Sign in and begin running!"
-        android:textSize="18sp"        
-        android:textColor="#242424" /> 
+
          
-    <TextView 
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="bottom"
-		android:layout_marginTop="5dip"
-		android:text="@string/run_without_user_ID"
-		android:textColor="#000000"
-		android:textSize="15sp"
-		android:gravity="center" />  
+
 		
  	<Button
         android:id="@+id/run_without_user_id"
@@ -59,9 +32,9 @@
         android:layout_height="wrap_content"
  		android:layout_marginTop="7dip"
  		android:layout_gravity="bottom"
-        android:background="@drawable/buttonshape"   
-        android:text="Run without user ID!"
-        android:textSize="18sp"        
-        android:textColor="#242424" /> 
+        android:text="I am ready!"
+        android:textSize="18sp"
+        android:background="#000000"
+        android:textColor="#FFFFFF" />
         
 </LinearLayout>

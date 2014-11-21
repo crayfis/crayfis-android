@@ -13,11 +13,14 @@ import android.widget.GridView;
 import android.util.TypedValue;
 import android.content.res.Resources;
 
+import android.util.Log;
+import android.widget.Toast;
 import android.view.ViewGroup;
 import java.util.ArrayList;
 import edu.uci.crayfis.gallery.Utils;
-import edu.uci.crayfis.gallery.AppConstant;
 
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import edu.uci.crayfis.gallery.GridViewImageAdapter;
 
 
@@ -49,11 +52,11 @@ public class LayoutGallery extends Fragment {
     private void InitilizeGridLayout() {
         Resources r = getResources();
         float padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                AppConstant.GRID_PADDING, r.getDisplayMetrics());
+                Utils.GRID_PADDING, r.getDisplayMetrics());
 
-        columnWidth = (int) ((utils.getScreenWidth() - ((AppConstant.NUM_OF_COLUMNS + 1) * padding)) / AppConstant.NUM_OF_COLUMNS);
+        columnWidth = (int) ((utils.getScreenWidth() - ((Utils.NUM_OF_COLUMNS + 1) * padding)) / Utils.NUM_OF_COLUMNS);
 
-        gridView.setNumColumns(AppConstant.NUM_OF_COLUMNS);
+        gridView.setNumColumns(Utils.NUM_OF_COLUMNS);
         gridView.setColumnWidth(columnWidth);
         gridView.setStretchMode(GridView.NO_STRETCH);
         gridView.setPadding((int) padding, (int) padding, (int) padding,
@@ -81,6 +84,13 @@ public class LayoutGallery extends Fragment {
 
         // setting grid view adapter
         gridView.setAdapter(adapter);
+
+        gridView.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Log.d("GridView"," clicked"+position+id);
+                Toast.makeText(_context, "img" + position, Toast.LENGTH_SHORT).show();
+            }
+        });
 
         return root;
 

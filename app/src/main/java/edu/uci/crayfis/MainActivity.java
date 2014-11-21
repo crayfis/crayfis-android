@@ -72,12 +72,11 @@ public class MainActivity extends Activity  {
 			editor.apply();
 		}
 
-        // disable this for now
-        firstRun=false;
 		if (firstRun) {
 
 			setContentView(R.layout.main);
 
+            /*
 			final Button button = (Button)findViewById(R.id.sign_in);
 			final EditText input = (EditText)findViewById(R.id.userIDlogin);
 
@@ -111,7 +110,7 @@ public class MainActivity extends Activity  {
 					}
 				}
 			});
-			
+			*/
 			//They want to run and save locally.
 			final Button button2 = (Button)findViewById(R.id.run_without_user_id);
 			button2.setOnClickListener(new View.OnClickListener() {
