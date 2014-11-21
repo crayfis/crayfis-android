@@ -75,6 +75,35 @@ public class Utils {
         this._context = context;
     }
 
+    public void deleteImages()
+    {
+
+        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
+
+
+        // check for directory
+        if (directory.isDirectory()) {
+            // getting list of file paths
+            File[] listFiles = directory.listFiles();
+            Log.d("Gallery", " Gallery files num=" + listFiles.length);
+            // Check for count
+            if (listFiles.length > 0) {
+
+                // loop through all files
+                for (int i = 0; i < listFiles.length; i++) {
+
+                    // get file path
+                    String filePath = listFiles[i].getAbsolutePath();
+                    File file = new File(filePath);
+                    boolean res = file.delete();
+                    Log.d("Gallery"," success? "+res+" deleting file "+filePath);
+                }
+            }
+        }
+    }
+
+
     // Reading file paths from SDCard
     public ArrayList<SavedImage> getSavedImages() {
         ArrayList<SavedImage> filePaths = new ArrayList<SavedImage>();

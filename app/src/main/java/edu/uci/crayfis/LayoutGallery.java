@@ -10,6 +10,9 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.Button;
+
 import android.util.TypedValue;
 import android.content.res.Resources;
 
@@ -32,6 +35,8 @@ public class LayoutGallery extends Fragment {
     private ArrayList<SavedImage> images = new ArrayList<SavedImage>();
     private GridViewImageAdapter adapter;
     private GridView gridView;
+    private TextView textView;
+
     private int columnWidth;
 
     private static LayoutGallery mInstance =null;
@@ -72,6 +77,7 @@ public class LayoutGallery extends Fragment {
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.gallery, null);
 
         gridView = (GridView) root.findViewById(R.id.grid_view);
+        textView = (TextView) root.findViewById(R.id.text_gallery);
 
         utils = new Utils(_context);
 
@@ -80,6 +86,20 @@ public class LayoutGallery extends Fragment {
 
         // loading all image paths from SD card
         images = utils.getSavedImages();
+
+        textView.setText("Gallery Images:"+images.size());
+
+        final Button button2 = (Button)root.findViewById(R.id.delete_gallery);
+        button2.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                Log.d("Layout Gallery",": deleting images!");
+                utils.deleteImages();
+                images = utils.getSavedImages();
+
+            }
+        });
 
         // Gridview adapter
         adapter = new GridViewImageAdapter(LayoutGallery.this, images,columnWidth);
