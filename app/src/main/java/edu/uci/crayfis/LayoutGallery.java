@@ -54,7 +54,7 @@ public class LayoutGallery extends Fragment {
         float padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 Utils.GRID_PADDING, r.getDisplayMetrics());
 
-        columnWidth = (int) ((utils.getScreenWidth() - ((Utils.NUM_OF_COLUMNS + 1) * padding)) / Utils.NUM_OF_COLUMNS);
+        columnWidth = (int) ((utils.getScreenWidth() - ((Utils.NUM_OF_COLUMNS + 1) * padding*2)) / Utils.NUM_OF_COLUMNS);
 
         gridView.setNumColumns(Utils.NUM_OF_COLUMNS);
         gridView.setColumnWidth(columnWidth);

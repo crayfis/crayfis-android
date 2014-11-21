@@ -19,8 +19,46 @@ import android.os.Environment;
 import android.view.Display;
 import android.view.WindowManager;
 import android.widget.Toast;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 
 public class Utils {
+
+    public class SavedImage {
+        String filename;
+        int max_pix;
+        int num_pix;
+        String date;
+        Bitmap bitmap;
+
+        public String makeFilename(int mp,int np, String d)
+        {
+            return new String("event_mp%d_np%d_date%d.jpg");
+        }
+
+        public SavedImage(Bitmap bm,int mp,int np, String d)
+        {
+            max_pix=mp;
+            num_pix=np;
+            date=d;
+            bitmap=bm;
+            filename=makeFilename(mp, np, d);
+        }
+
+        public SavedImage(String fname)
+        {
+            filename=fname;
+            bitmap = BitmapFactory.decodeFile(fname);
+            //FIXME: get the meta data from the filename
+            max_pix=10;
+            num_pix=1;
+            date="Today";
+        }
+
+
+    }
+
+
     // Number of columns of Grid View
     public static final int NUM_OF_COLUMNS = 3;
 
