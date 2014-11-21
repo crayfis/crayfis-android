@@ -221,17 +221,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         if (_mViewPager.getCurrentItem()==0)
   		  tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                "This view shows:\n\t Time: seconds of data-taking\n" +
-                "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
+                "This view shows the current state of the app as well as:\n\t Time: seconds of data-taking\n" +
                 "\t Rate: scan rate, frames-per-second\n" +
                   " Swipe right for more views.\n For more details: "
 				+ s);
         if (_mViewPager.getCurrentItem()==1)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                     "This view shows:\n" +
-                    "\t Frames: number with a hot pixel\n" +
+                    "\t Frames scanned: number of video frames examined\n" +
+                    "\t Frames selected: number with a hot pixel\n" +
                     "\t Candidates: number of pixels saved\n" +
-                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nSwipe left or right for different views\nFor more details:  "
+                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left (blue) is due to noise and light pollution. Candidate particles (red) are in the longer tail on the right. \nSwipe left or right for different views\nFor more details:  "
                             + s);
         if (_mViewPager.getCurrentItem()==2)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
@@ -239,9 +239,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     "\nSwipe left for more views\nFor more details:  "
                     + s);
 
+        if (_mViewPager.getCurrentItem()==3)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This view shows a gallery of the most interesting hits. Note that not every particle candidate hit is saved." +
+                    "\nSwipe left for more views\nFor more details:  "
+                    + s);
+
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
         tx1.setTextColor(Color.WHITE);
+        tx1.setBackgroundColor(Color.BLACK);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
 		builder.setTitle("About CRAYFIS").setCancelable(false)
@@ -868,14 +875,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
-            if (current == CFApplication.State.DATA) {
-                doStateTransitionData(previous);
-            } else if (current == CFApplication.State.STABILIZATION) {
-                doStateTransitionStabilization(previous);
-            } else if (current == CFApplication.State.IDLE) {
-                doStateTransitionIdle(previous);
-            } else if (current == CFApplication.State.CALIBRATION) {
-                doStateTransitionCalibration(previous);
+            if (current != previous) {
+                if (current == CFApplication.State.DATA) {
+                    doStateTransitionData(previous);
+                } else if (current == CFApplication.State.STABILIZATION) {
+                    doStateTransitionStabilization(previous);
+                } else if (current == CFApplication.State.IDLE) {
+                    doStateTransitionIdle(previous);
+                } else if (current == CFApplication.State.CALIBRATION) {
+                    doStateTransitionCalibration(previous);
+                }
             }
         }
     };
@@ -919,6 +928,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 final DataView.Status dstatus = new DataView.Status.Builder()
                         .setTotalEvents(l2thread.getTotalEvents())
                         .setTotalPixels(l2thread.getTotalPixels())
+                        .setTotalFrames(L1counter)
                         .build();
 
                 final CFApplication application = (CFApplication) getApplication();

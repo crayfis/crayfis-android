@@ -36,10 +36,13 @@ public final class DataView extends TextView {
      * @param status The status.
      */
     public void setStatus(@NonNull final Status status) {
-        final int totalFrames = status.getTotalEvents();
+        final long totalFrames = status.getTotalFrames();
+        final int totalEvents = status.getTotalEvents();
+
         final int totalCandidates = status.getTotalPixels();
-                final String text = String.format("Frames: %s\n Candidates: %s",
+                final String text = String.format("Frames scanned: %s\nFrames selected: %s\n Candidates: %s",
                         totalFrames,
+                        totalEvents,
                         totalCandidates);
                 setText(text);
 
@@ -53,12 +56,15 @@ public final class DataView extends TextView {
      */
     public static final class Status {
 
+        private final long mTotalFrames;
+
         private final int mTotalEvents;
         private final int mTotalPixels;
 
         private Status(
-                       final int totalEvents, final int totalPixels) {
+                       final int totalEvents, final int totalPixels, final long totalFrames) {
 
+            mTotalFrames = totalFrames;
             mTotalEvents = totalEvents;
             mTotalPixels = totalPixels;
         }
@@ -71,6 +77,9 @@ public final class DataView extends TextView {
          */
         public int getTotalEvents() {
             return mTotalEvents;
+        }
+        public long getTotalFrames() {
+            return mTotalFrames;
         }
 
         /**
@@ -89,6 +98,7 @@ public final class DataView extends TextView {
 
             private int mTotalEvents;
             private int mTotalPixels;
+            private long mTotalFrames;
 
 
 
@@ -100,6 +110,11 @@ public final class DataView extends TextView {
              */
             public Builder setTotalEvents(final int totalEvents) {
                 mTotalEvents = totalEvents;
+                return this;
+            }
+
+            public Builder setTotalFrames(final long totalFrames) {
+                mTotalFrames = totalFrames;
                 return this;
             }
 
@@ -122,7 +137,7 @@ public final class DataView extends TextView {
              */
             public Status build() {
                 return new Status(
-                        mTotalEvents, mTotalPixels);
+                        mTotalEvents, mTotalPixels,mTotalFrames);
             }
         }
     }

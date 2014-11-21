@@ -9,7 +9,7 @@
         android:id="@+id/data_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="30sp"
+        android:textSize="20sp"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
         tools:text=" Frames:0\n Candidates:0 "/>
