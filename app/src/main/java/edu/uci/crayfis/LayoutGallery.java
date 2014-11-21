@@ -87,7 +87,7 @@ public class LayoutGallery extends Fragment {
         // loading all image paths from SD card
         images = utils.getSavedImages();
 
-        textView.setText("Gallery Images:"+images.size());
+        textView.setText(images.size()+" Images");
 
         final Button button2 = (Button)root.findViewById(R.id.delete_gallery);
         button2.setOnClickListener(new View.OnClickListener() {

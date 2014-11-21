@@ -17,6 +17,15 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         _context=context;
 
     }
+
+    private static String[] Titles = {"Status","Data","Dosimeter","Gallery"};
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return Titles[position];
+    }
+
+
     @Override
     public Fragment getItem(int position) {
         Fragment f = new Fragment();

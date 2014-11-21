@@ -43,6 +43,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.PagerTabStrip;
 import android.support.v7.app.ActionBarActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
@@ -52,6 +53,7 @@ import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.util.TypedValue;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -521,6 +523,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+
+
+
+        final PagerTabStrip strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
+        strip.setDrawFullUnderline(false);
+        strip.setTabIndicatorColor(Color.RED);
+        strip.setBackgroundColor(Color.GRAY);
+        strip.setNonPrimaryAlpha(0.5f);
+        strip.setTextSpacing(25);
+        strip.setTextColor(Color.WHITE);
+        strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+
+
 	}
 
 	@Override

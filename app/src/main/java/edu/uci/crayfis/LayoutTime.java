@@ -128,7 +128,7 @@ public class LayoutTime extends Fragment {
 
         mGraphTime = new LineGraphView (_context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
-        mGraphTime.setHorizontalLabels(new String[] {"Time series"});
+        mGraphTime.setHorizontalLabels(new String[] {"Time"});
         mGraphTime.setVerticalLabels(new String[] {""});
 
         GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
