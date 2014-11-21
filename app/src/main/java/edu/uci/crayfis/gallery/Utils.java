@@ -6,6 +6,7 @@ package edu.uci.crayfis.gallery;
 
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,48 +23,43 @@ import android.widget.Toast;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.crashlytics.android.Crashlytics;
+
+import edu.uci.crayfis.util.CFLog;
+
+
+
 public class Utils {
 
-    public class SavedImage {
-        String filename;
-        int max_pix;
-        int num_pix;
-        String date;
-        Bitmap bitmap;
-
-        public String makeFilename(int mp,int np, String d)
-        {
-            return new String("event_mp%d_np%d_date%d.jpg");
+    public void saveImage(SavedImage si)
+    {
+        CFLog.d(" Utils::saveImage si="+si);
+        try {
+            File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+            File myDir = new File(sdCard.getAbsolutePath() + DIRNAME);
+            myDir.mkdirs();
+            File file = new File(myDir, si.filename);
+            FileOutputStream out = new FileOutputStream(file);
+            si.bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+            CFLog.d(" File created: " + si.filename);
         }
-
-        public SavedImage(Bitmap bm,int mp,int np, String d)
-        {
-            max_pix=mp;
-            num_pix=np;
-            date=d;
-            bitmap=bm;
-            filename=makeFilename(mp, np, d);
-        }
-
-        public SavedImage(String fname)
-        {
-            filename=fname;
-            bitmap = BitmapFactory.decodeFile(fname);
-            //FIXME: get the meta data from the filename
-            max_pix=10;
-            num_pix=1;
-            date="Today";
-        }
-
+            catch (Exception e) {
+                Crashlytics.logException(e);
+                e.printStackTrace();
+            }
 
     }
 
 
+
+
     // Number of columns of Grid View
-    public static final int NUM_OF_COLUMNS = 3;
+    public static final int NUM_OF_COLUMNS = 2;
 
     // Gridview image padding
-    public static final int GRID_PADDING = 8; // in dp
+    public static final int GRID_PADDING = 4; // in dp
 
     // SD card image directory
     public static final String DIRNAME = "/crayfis";
@@ -80,8 +76,8 @@ public class Utils {
     }
 
     // Reading file paths from SDCard
-    public ArrayList<String> getFilePaths() {
-        ArrayList<String> filePaths = new ArrayList<String>();
+    public ArrayList<SavedImage> getSavedImages() {
+        ArrayList<SavedImage> filePaths = new ArrayList<SavedImage>();
 
         File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
@@ -107,7 +103,7 @@ public class Utils {
                         // Add image path to array list
                         Log.d("Gallery"," Adding file "+i+" = "+filePath);
 
-                        filePaths.add(filePath);
+                        filePaths.add(new SavedImage(filePath));
                     }
                 }
             } else {

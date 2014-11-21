@@ -23,11 +23,13 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import edu.uci.crayfis.gallery.GridViewImageAdapter;
 
+import edu.uci.crayfis.gallery.SavedImage;
 
 public class LayoutGallery extends Fragment {
 
     private Utils utils;
-    private ArrayList<String> imagePaths = new ArrayList<String>();
+//    private ArrayList<String> imagePaths = new ArrayList<String>();
+    private ArrayList<SavedImage> images = new ArrayList<SavedImage>();
     private GridViewImageAdapter adapter;
     private GridView gridView;
     private int columnWidth;
@@ -77,10 +79,10 @@ public class LayoutGallery extends Fragment {
         InitilizeGridLayout();
 
         // loading all image paths from SD card
-        imagePaths = utils.getFilePaths();
+        images = utils.getSavedImages();
 
         // Gridview adapter
-        adapter = new GridViewImageAdapter(LayoutGallery.this, imagePaths,columnWidth);
+        adapter = new GridViewImageAdapter(LayoutGallery.this, images,columnWidth);
 
         // setting grid view adapter
         gridView.setAdapter(adapter);
@@ -88,7 +90,7 @@ public class LayoutGallery extends Fragment {
         gridView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Log.d("GridView"," clicked"+position+id);
-                Toast.makeText(_context, "img" + position, Toast.LENGTH_SHORT).show();
+                Toast.makeText(_context, "Pixel hits:" + images.get(position).num_pix+"  Max pixel:"+images.get(position).max_pix+"  Date:"+images.get(position).date, Toast.LENGTH_SHORT).show();
             }
         });
 

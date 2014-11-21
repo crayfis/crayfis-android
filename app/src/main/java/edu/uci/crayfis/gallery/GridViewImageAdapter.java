@@ -27,17 +27,18 @@ package edu.uci.crayfis.gallery;
     import android.widget.GridView;
     import android.widget.ImageView;
     import edu.uci.crayfis.LayoutGallery;
+    import edu.uci.crayfis.gallery.SavedImage;
 
 
     public class GridViewImageAdapter extends BaseAdapter {
 
         private LayoutGallery _activity;
-        private ArrayList<String> _filePaths = new ArrayList<String>();
+        private ArrayList<SavedImage> _filePaths = new ArrayList<SavedImage>();
         private int imageWidth;
         private Context mContext;
         private LayoutInflater mLayoutInflater;
 
-        public GridViewImageAdapter(LayoutGallery activity, ArrayList<String> filePaths,
+        public GridViewImageAdapter(LayoutGallery activity, ArrayList<SavedImage> filePaths,
                                     int imageWidth) {
             this._activity = activity;
             this._filePaths = filePaths;
@@ -65,32 +66,7 @@ package edu.uci.crayfis.gallery;
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
-            if (convertView == null) {
-                convertView = mLayoutInflater.inflate(R.layout.grid_single, parent, false);
-            }
 
-                TextView textView = (TextView) convertView.findViewById(R.id.grid_text);
-                ImageView imageView = (ImageView)convertView.findViewById(R.id.grid_image);
-                textView.setText(_filePaths.get(position));
-
-                // get screen dimensions
-                Bitmap image = decodeFile(_filePaths.get(position), imageWidth,
-                        imageWidth);
-
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-
-                //imageView.setLayoutParams(new ViewGroup.MarginLayoutParams(
-                  //      ViewGroup.MarginLayoutParams.MATCH_PARENT, ViewGroup.MarginLayoutParams.MATCH_PARENT));
-
-
-                imageView.setImageBitmap(image);
-
-
-
-            return convertView;
-
-
-            /*
 
             ImageView imageView;
             if (convertView == null) {
@@ -100,7 +76,7 @@ package edu.uci.crayfis.gallery;
             }
 
             // get screen dimensions
-            Bitmap image = decodeFile(_filePaths.get(position), imageWidth,
+            Bitmap image = decodeFile(_filePaths.get(position).filename, imageWidth,
                     imageWidth);
 
             imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -108,42 +84,12 @@ package edu.uci.crayfis.gallery;
                     imageWidth));
             imageView.setImageBitmap(image);
 
-            // image view click listener
-            imageView.setOnClickListener(new OnImageClickListener(position));
-
-
-
-
-
-
 
             return imageView;
-            */
-        }
-
-        class OnImageClickListener implements OnClickListener {
-
-            int _postion;
-
-            // constructor
-            public OnImageClickListener(int position) {
-                this._postion = position;
-            }
-
-
-            @Override
-            public void onClick(View v) {
-                // on selecting grid view image
-                // launch full screen activity
-                /*
-                Intent i = new Intent(_activity, FullScreenViewActivity.class);
-                i.putExtra("position", _postion);
-                _activity.startActivity(i);
-                */
-            }
-
 
         }
+
+
 
         /*
          * Resizing image size

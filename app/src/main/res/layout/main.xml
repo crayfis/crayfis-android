@@ -34,7 +34,7 @@
  		android:layout_gravity="bottom"
         android:text="I am ready!"
         android:textSize="18sp"
-        android:background="#000000"
+        android:background="#FF0000"
         android:textColor="#FFFFFF" />
         
 </LinearLayout>

@@ -16,6 +16,7 @@ import android.graphics.Rect;
 import android.graphics.ImageFormat;
 import java.io.ByteArrayOutputStream;
 
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -24,6 +25,10 @@ import java.util.concurrent.TimeUnit;
 import java.io.File;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
+
+import edu.uci.crayfis.gallery.Utils;
+import edu.uci.crayfis.gallery.SavedImage;
+
 
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -48,6 +53,8 @@ class L2Processor extends Thread {
 
     // ----8< --------
 
+
+    private Utils mUtils;
 
     private int mTotalPixels = 0;
     private int mTotalEvents = 0;
@@ -78,6 +85,7 @@ class L2Processor extends Thread {
         XB_MANAGER = ExposureBlockManager.getInstance(context);
         PARTICLE_RECO = ParticleReco.getInstance();
         PARTICLE_RECO.setPreviewSize(cameraSize);
+        mUtils = new Utils(context);
     }
 
     /**
@@ -227,66 +235,26 @@ class L2Processor extends Thread {
                     // find the max pixel
 
                     int max = 0;
-                    int maxx = 0;
-                    int maxy = 0;
-                    int minx = PARTICLE_RECO.previewSize.width - 1;
-                    int miny = PARTICLE_RECO.previewSize.height - 1;
+
                     for (int i = 0; i < event.pixels.size(); i++) {
                         RecoPixel pix = event.pixels.get(i);
-                        CFLog.d(" pixel at x,y=" + (pix.x) + "," + (pix.y) + " = " + pix.val);
-
                         if (pix.val > max) max = pix.val;
-
-                        if (pix.x < minx) minx = pix.x;
-                        if (pix.x > maxx) maxx = pix.x;
-
-                        if (pix.y < minx) miny = pix.y;
-                        if (pix.y > maxy) maxy = pix.y;
                     }
+                    try {
 
-                    //if (max > CONFIG.getL2Threshold() * 1.5)
-                    {
-                        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
-                        // add a buffer so we don't get super tiny images
-                        int delta = 50;
-                        maxx = java.lang.Math.min(maxx + delta, PARTICLE_RECO.previewSize.width);
-                        maxy = java.lang.Math.min(maxy + delta, PARTICLE_RECO.previewSize.height);
-                        minx = java.lang.Math.max(minx - delta, 0);
-                        miny = java.lang.Math.max(miny - delta, 0);
-                        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
-                        try {
+                        SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
+                                , PARTICLE_RECO.previewSize.height, frame.getAcquiredTime());
+                        CFLog.d(" image="+si+" utils = "+mUtils);
+                        mUtils.saveImage(si);
 
-                            Bitmap bm = Bitmap.createBitmap(maxx - minx, maxy - miny, Bitmap.Config.RGB_565);
-
-                            // put all pixels in the bitmap
-                            for (int i = 0; i < event.pixels.size(); i++) {
-                                RecoPixel pix = event.pixels.get(i);
-
-                                int val = (int) (255 * (pix.val / (1.0 * max)));
-                                int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
-                                CFLog.d(" pixel at x,y=" + (pix.x - minx) + "," + (pix.y - miny) + " = " + val + " argb=" + argb);
-
-                                bm.setPixel(pix.x - minx, pix.y - miny, Color.argb(255, val, val, val));
-
-                            }
-
-                            File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-                            File myDir = new File(sdCard.getAbsolutePath() + "/crayfis");
-                            myDir.mkdirs();
-                            String fname = "Event_" + L2counter + ".jpg";
-                            File file = new File(myDir, fname);
-                            FileOutputStream out = new FileOutputStream(file);
-                            bm.compress(Bitmap.CompressFormat.JPEG, 100, out);
-                            out.flush();
-                            out.close();
-                            CFLog.d(" File created: " + fname);
-                        } catch (Exception e) {
-                            Crashlytics.logException(e);
-                            e.printStackTrace();
-                        }
+                    } catch (Exception e) {
+                        Crashlytics.logException(e);
+                        e.printStackTrace();
                     }
                 }
             }
+
+
 
             // If we're calibrating, check if we've processed enough
             // frames to decide on the threshold(s) and go back to
