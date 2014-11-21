@@ -136,12 +136,15 @@ public class Utils {
                     }
                 }
             } else {
+                // Gallery now shows number of files, so Toast not needed
+                /*
                 // image directory is empty
                 Toast.makeText(
                         _context,
                         DIRNAME
                                 + " is empty. Please load some images in it !",
                         Toast.LENGTH_LONG).show();
+                        */
             }
 
         }
