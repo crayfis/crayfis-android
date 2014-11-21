@@ -229,7 +229,7 @@ class L2Processor extends Thread {
             xb.addEvent(event);
 
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
-                if (event.pixels.size() >= 1) {
+                if (event.pixels.size() > 1) {
 
 
                     // find the max pixel
@@ -240,6 +240,7 @@ class L2Processor extends Thread {
                         RecoPixel pix = event.pixels.get(i);
                         if (pix.val > max) max = pix.val;
                     }
+                    if (max > CONFIG.getL2Threshold()*1.2)
                     try {
 
                         SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
