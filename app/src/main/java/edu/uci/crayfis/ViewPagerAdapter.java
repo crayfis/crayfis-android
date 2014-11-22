@@ -12,13 +12,16 @@ import android.content.Context;
 public class ViewPagerAdapter extends FragmentPagerAdapter {
     private Context _context;
 
+    public boolean developerMode;
+
     public ViewPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
+        developerMode=true;
         _context=context;
 
     }
 
-    private static String[] Titles = {"Status","Data","Dosimeter","Gallery"};
+    private static String[] Titles = {"Status","Data","Dosimeter","Gallery","Developer"};
 
     @Override
     public CharSequence getPageTitle(int position) {
@@ -42,12 +45,18 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
             case 3:
                 f=LayoutGallery.getInstance(_context);
                 break;
-        }
+            case 4:
+                f=LayoutDeveloper.getInstance();
+                    break;
+               }
+
         return f;
     }
     @Override
     public int getCount() {
-        return 4;
+
+       return 5;
+
     }
 
 }

@@ -94,6 +94,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private static LayoutData mLayoutData;
     private static LayoutHist mLayoutHist;
     private static LayoutTime mLayoutTime;
+    private static LayoutDeveloper mLayoutDeveloper;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication.AppBuild mAppBuild;
@@ -994,6 +995,15 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mLayoutHist.updateData();
                 mLayoutTime.updateData();
 
+                if (mLayoutDeveloper==null)
+                    mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
+
+                if (mLayoutDeveloper != null) {
+                    if (mLayoutDeveloper.mTextView != null)
+                    mLayoutDeveloper.mTextView.setText("Developer View\n L1 Threshold:"
+                            + CONFIG.getL1Threshold() + "\n"
+                            + "Exposure Blocks:" + xbManager.getTotalXBs());
+                }
 
             }
         };
