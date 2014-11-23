@@ -41,14 +41,14 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
             case STATUS:
                 f=LayoutData.getInstance();
                 break;
-            case DATA;
-                f=LayoutHist.getInstance(_context);
+            case DATA:
+                f=LayoutHist.getInstance();
                 break;
             case DOSIMETER:
-                f=LayoutTime.getInstance(_context);
+                f=LayoutTime.getInstance();
                 break;
             case GALLERY:
-                f=LayoutGallery.getInstance(_context);
+                f=LayoutGallery.getInstance();
                 break;
             case DEVELOPER:
                 f=LayoutDeveloper.getInstance();

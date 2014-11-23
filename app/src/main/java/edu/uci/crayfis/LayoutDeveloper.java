@@ -25,7 +25,7 @@ public class LayoutDeveloper extends Fragment{
     {
     }
 
-    public static Fragment getInstance() {
+    public static LayoutDeveloper getInstance() {
         if (mInstance==null)
           mInstance = new LayoutDeveloper();
 

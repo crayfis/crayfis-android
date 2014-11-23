@@ -31,7 +31,6 @@ public class LayoutHist extends Fragment{
 
     public static DataView mDataView;
 
-    public LayoutHist() {}
 
     private class ValueDependentColorX implements ValueDependentColor
     {
@@ -88,17 +87,15 @@ public class LayoutHist extends Fragment{
 
     private static LayoutHist mInstance =null;
 
-    private static Context _context;
 
-    private LayoutHist(Context context)
+    public LayoutHist()
     {
-        _context = context;
         mParticleReco = ParticleReco.getInstance();
     }
 
-    public static Fragment getInstance(Context context) {
+    public static LayoutHist getInstance() {
         if (mInstance==null)
-            mInstance= new LayoutHist(context);
+            mInstance= new LayoutHist();
 
         return mInstance;
     }
@@ -114,7 +111,9 @@ public class LayoutHist extends Fragment{
         for (int i=0;i<256;i++) novals[i]=1;
 
         /// test graphing
-        mGraph = new BarGraphView(_context," ");
+        Context context = getActivity();
+
+        mGraph = new BarGraphView(context," ");
         mGraph.setManualYAxisBounds(20., 0.);
         mGraph.setHorizontalLabels(new String[] {"Pixel values"});
         mGraph.setVerticalLabels(new String[] {""});

@@ -31,7 +31,7 @@ public class LayoutData extends Fragment{
     {
     }
 
-    public static Fragment getInstance() {
+    public static LayoutData getInstance() {
         if (mInstance==null)
           mInstance = new LayoutData();
 

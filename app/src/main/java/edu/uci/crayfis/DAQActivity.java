@@ -91,10 +91,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private ViewPagerAdapter _adapter;
 
 
-    private static LayoutData mLayoutData;
-    private static LayoutHist mLayoutHist;
-    private static LayoutTime mLayoutTime;
-    private static LayoutDeveloper mLayoutDeveloper;
+    private static LayoutData mLayoutData = LayoutData.getInstance();
+    private static LayoutHist mLayoutHist = LayoutHist.getInstance();
+    private static LayoutTime mLayoutTime = LayoutTime.getInstance();
+    private static LayoutDeveloper mLayoutDeveloper = LayoutDeveloper.getInstance();
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication.AppBuild mAppBuild;
@@ -915,7 +915,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
                 if (!outputThread.canUpload()) {
                     if (outputThread.permit_upload) {
-                        mLayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
                     } else {
                         String reason;
                         if (outputThread.valid_id) {
@@ -923,13 +923,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         } else {
                             reason = "Invalid invite code.";
                         }
-                        mLayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
                     }
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    mLayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
                 } else {
-                    mLayoutData.mMessageView.setMessage(null, null);
+                    LayoutData.mMessageView.setMessage(null, null);
                 }
 
                 final StatusView.Status status = new StatusView.Status.Builder()

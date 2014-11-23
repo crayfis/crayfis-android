@@ -37,21 +37,20 @@ public class LayoutGallery extends Fragment {
     private GridView gridView;
     private TextView textView;
 
+    public static Context _context;
+
     private int columnWidth;
 
     private static LayoutGallery mInstance =null;
-    public static Context _context;
 
 
-    public LayoutGallery(Context context)
-    {
-        _context = context;
+    public LayoutGallery() {
+
     }
 
-    public static Fragment getInstance(Context context) {
+    public static LayoutGallery getInstance() {
         if (mInstance==null)
-            mInstance = new LayoutGallery(context);
-
+            mInstance = new LayoutGallery();
 
         return mInstance;
     }
@@ -79,7 +78,8 @@ public class LayoutGallery extends Fragment {
         gridView = (GridView) root.findViewById(R.id.grid_view);
         textView = (TextView) root.findViewById(R.id.text_gallery);
 
-        utils = new Utils(_context);
+        Context context = getActivity();
+        utils = new Utils(context);
 
         // Initilizing Grid View
         InitilizeGridLayout();
@@ -102,7 +102,7 @@ public class LayoutGallery extends Fragment {
         });
 
         // Gridview adapter
-        adapter = new GridViewImageAdapter(LayoutGallery.this, images,columnWidth);
+        adapter = new GridViewImageAdapter(getActivity(), images,columnWidth);
 
         // setting grid view adapter
         gridView.setAdapter(adapter);
@@ -110,7 +110,7 @@ public class LayoutGallery extends Fragment {
         gridView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 CFLog.d("GridView: clicked"+position+id);
-                Toast.makeText(_context, "Pixel hits:" + images.get(position).num_pix+"  Max pixel:"+images.get(position).max_pix+"  Date:"+images.get(position).date, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Pixel hits: " + images.get(position).num_pix+"  Max pixel: "+images.get(position).max_pix+"  Date: "+images.get(position).date, Toast.LENGTH_SHORT).show();
             }
         });
 

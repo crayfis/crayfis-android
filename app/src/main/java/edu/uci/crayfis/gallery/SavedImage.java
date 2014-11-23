@@ -27,7 +27,7 @@ public class SavedImage {
 
     public String makeFilename(int mp,int np, String d)
     {
-        return new String("event_mp_"+mp+"_np_"+np+"_date_"+d+".jpg");
+        return new String("event_mp_"+mp+"_np_"+np+"_date_"+d+".png");
     }
 
     private void decodeFilename(String filename)

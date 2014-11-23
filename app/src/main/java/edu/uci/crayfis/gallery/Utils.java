@@ -38,7 +38,7 @@ public class Utils {
             myDir.mkdirs();
             File file = new File(myDir, si.filename);
             FileOutputStream out = new FileOutputStream(file);
-            si.bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            si.bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
             CFLog.d(" File created: " + si.filename);

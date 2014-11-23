@@ -32,20 +32,16 @@ package edu.uci.crayfis.gallery;
 
     public class GridViewImageAdapter extends BaseAdapter {
 
+        private Context _context;
         private LayoutGallery _activity;
         private ArrayList<SavedImage> _filePaths = new ArrayList<SavedImage>();
         private int imageWidth;
-        private Context mContext;
-        private LayoutInflater mLayoutInflater;
 
-        public GridViewImageAdapter(LayoutGallery activity, ArrayList<SavedImage> filePaths,
+        public GridViewImageAdapter(Context context, ArrayList<SavedImage> filePaths,
                                     int imageWidth) {
-            this._activity = activity;
             this._filePaths = filePaths;
             this.imageWidth = imageWidth;
-            this.mContext = activity._context;
-            this.mLayoutInflater = LayoutInflater.from(this.mContext);
-
+            this._context = context;
         }
 
         @Override
@@ -70,7 +66,7 @@ package edu.uci.crayfis.gallery;
 
             ImageView imageView;
             if (convertView == null) {
-                imageView = new ImageView(_activity._context);
+                imageView = new ImageView(_context);
             } else {
                 imageView = (ImageView) convertView;
             }

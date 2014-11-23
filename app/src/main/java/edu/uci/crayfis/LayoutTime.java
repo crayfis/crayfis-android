@@ -83,7 +83,6 @@ public class LayoutTime extends Fragment {
 
     private static SpeedometerView mSpeedometerView;
 
-    private static Context _context;
 
     private static GraphView mGraphTime;
     private static GraphViewSeries mGraphSeriesTime;
@@ -91,7 +90,7 @@ public class LayoutTime extends Fragment {
 
     public static void updateData() {
 
-        if (mParticleReco !=null) {
+        if (mParticleReco !=null && mGraphSeriesTime !=null) {
             mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false, mParticleReco.hist_max.current_time, mParticleReco.hist_max.values.length));
 
             // time average
@@ -103,19 +102,14 @@ public class LayoutTime extends Fragment {
         }
     }
 
-
-
-
-
-    private LayoutTime(Context context)
+    public LayoutTime()
     {
-        _context = context;
         mParticleReco = ParticleReco.getInstance();
     }
 
-    public static Fragment getInstance(Context context) {
+    public static LayoutTime getInstance() {
         if (mInstance==null)
-            mInstance= new LayoutTime(context);
+            mInstance= new LayoutTime();
 
         return mInstance;
     }
@@ -130,7 +124,8 @@ public class LayoutTime extends Fragment {
         int novals[] = new int[256];
         for (int i=0;i<256;i++) novals[i]=1;
 
-        mGraphTime = new LineGraphView (_context, "");
+        Context context = getActivity();
+        mGraphTime = new LineGraphView (context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
         mGraphTime.setHorizontalLabels(new String[] {"Time"});
         mGraphTime.setVerticalLabels(new String[] {""});
