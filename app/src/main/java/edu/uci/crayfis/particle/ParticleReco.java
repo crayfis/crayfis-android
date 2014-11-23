@@ -9,7 +9,8 @@ package edu.uci.crayfis.particle;
 import android.hardware.Camera;
 import android.location.Location;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
+
 
 import java.util.ArrayList;
 
@@ -333,7 +334,7 @@ public class ParticleReco {
         // TODO: investigate what makes sense here!
         good_quality = (background < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
-        //Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+        //CFLog.d("reco: background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 
         event.background = background;
         event.variance = variance;
@@ -456,7 +457,7 @@ public class ParticleReco {
         // max_count events over the integrated period contained
         // in the histograms.
 
-        Log.i("calculate", "Cacluating threshold! Event histo:"
+        CFLog.i("calculate: Calculating threshold! Event histo:"
                         + " 0 - " + h_maxpixel.values[0] + "\n"
                         + " 1 - " + h_maxpixel.values[1] + "\n"
                         + " 2 - " + h_maxpixel.values[2] + "\n"
@@ -492,7 +493,7 @@ public class ParticleReco {
         int above_thresh = 0;
         do {
             above_thresh += h_pixel.values[new_thresh];
-            Log.d("calibration", "threshold " + new_thresh
+            CFLog.d("calibration: threshold " + new_thresh
                     + " obs= " + above_thresh + "/" + stat_factor);
             new_thresh--;
         } while (new_thresh > 0 && above_thresh < stat_factor);

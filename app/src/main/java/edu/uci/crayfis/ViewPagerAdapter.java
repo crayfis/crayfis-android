@@ -22,6 +22,11 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     }
 
     private static String[] Titles = {"Status","Data","Dosimeter","Gallery","Developer"};
+    public static final int STATUS = 0;
+    public static final int DATA = 1;
+    public static final int DOSIMETER = 2;
+    public static final int GALLERY = 3;
+    public static final int DEVELOPER = 4;
 
     @Override
     public CharSequence getPageTitle(int position) {
@@ -33,19 +38,19 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         Fragment f = new Fragment();
         switch(position){
-            case 0:
+            case STATUS:
                 f=LayoutData.getInstance();
                 break;
-            case 1:
+            case DATA;
                 f=LayoutHist.getInstance(_context);
                 break;
-            case 2:
+            case DOSIMETER:
                 f=LayoutTime.getInstance(_context);
                 break;
-            case 3:
+            case GALLERY:
                 f=LayoutGallery.getInstance(_context);
                 break;
-            case 4:
+            case DEVELOPER:
                 f=LayoutDeveloper.getInstance();
                     break;
                }
@@ -55,7 +60,7 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
 
-       return 5;
+       return DEVELOPER+1;
 
     }
 

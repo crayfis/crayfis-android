@@ -222,30 +222,30 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		final TextView tx1 = new TextView(this);
 
-        if (_mViewPager.getCurrentItem()==0)
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
   		  tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                 "This view shows the current state of the app as well as:\n\t Time: seconds of data-taking\n" +
                 "\t Rate: scan rate, frames-per-second\n" +
                   " Swipe right for more views.\n For more details: "
 				+ s);
-        if (_mViewPager.getCurrentItem()==1)
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                     "This view shows:\n" +
                     "\t Frames scanned: number of video frames examined\n" +
                     "\t Frames selected: number with a hot pixel\n" +
                     "\t Candidates: number of pixels saved\n" +
-                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left (blue) is due to noise and light pollution. Candidate particles (red) are in the longer tail on the right. \nSwipe left or right for different views\nFor more details:  "
+                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left (blue) is due to noise and light pollution. Candidate particles (red) are in the longer tail on the right. \nSwipe sideways for different views\nFor more details:  "
                             + s);
-        if (_mViewPager.getCurrentItem()==2)
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                     "This view shows a time series showing the max pixel value found in each frame." +
-                    "\nSwipe left for more views\nFor more details:  "
+                    "\nSwipe sideways for more views\nFor more details:  "
                     + s);
 
-        if (_mViewPager.getCurrentItem()==3)
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                     "This view shows a gallery of the most interesting hits. Note that not every particle candidate hit is saved." +
-                    "\nSwipe left for more views\nFor more details:  "
+                    "\nSwipe sideways for more views\nFor more details:  "
                     + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
@@ -456,7 +456,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
         _mViewPager.setAdapter(_adapter);
-        _mViewPager.setCurrentItem(0);
+        _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
 
 
 

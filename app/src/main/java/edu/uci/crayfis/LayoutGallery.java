@@ -16,7 +16,7 @@ import android.widget.Button;
 import android.util.TypedValue;
 import android.content.res.Resources;
 
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
 import android.widget.Toast;
 import android.view.ViewGroup;
 import java.util.ArrayList;
@@ -94,7 +94,7 @@ public class LayoutGallery extends Fragment {
 
             @Override
             public void onClick(View v) {
-                Log.d("Layout Gallery",": deleting images!");
+                CFLog.d("Layout Gallery: deleting images!");
                 utils.deleteImages();
                 images = utils.getSavedImages();
 
@@ -109,7 +109,7 @@ public class LayoutGallery extends Fragment {
 
         gridView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Log.d("GridView"," clicked"+position+id);
+                CFLog.d("GridView: clicked"+position+id);
                 Toast.makeText(_context, "Pixel hits:" + images.get(position).num_pix+"  Max pixel:"+images.get(position).max_pix+"  Date:"+images.get(position).date, Toast.LENGTH_SHORT).show();
             }
         });

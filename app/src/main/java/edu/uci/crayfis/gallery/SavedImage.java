@@ -3,7 +3,8 @@ package edu.uci.crayfis.gallery;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
+
 
 import com.crashlytics.android.Crashlytics;
 
@@ -13,7 +14,6 @@ import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import edu.uci.crayfis.util.CFLog;
 
 /**
  * Created by danielwhiteson on 11/20/14.
@@ -44,7 +44,7 @@ public class SavedImage {
                 max_pix = Integer.valueOf(tokens[2]);
                 num_pix = Integer.valueOf(tokens[4]);
                 date = tokens[6];
-                Log.d("SavedImage", " input name=" + filename + " mp = " + max_pix + " np = " + num_pix + " date= [" + date + "]");
+                CFLog.d("SavedImage: input name=" + filename + " mp = " + max_pix + " np = " + num_pix + " date= [" + date + "]");
             }
         }
     }

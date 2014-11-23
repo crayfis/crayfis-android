@@ -11,9 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.graphics.Point;
 import android.os.Environment;
@@ -25,7 +24,6 @@ import android.graphics.BitmapFactory;
 
 import com.crashlytics.android.Crashlytics;
 
-import edu.uci.crayfis.util.CFLog;
 
 
 
@@ -86,7 +84,7 @@ public class Utils {
         if (directory.isDirectory()) {
             // getting list of file paths
             File[] listFiles = directory.listFiles();
-            Log.d("Gallery", " Gallery files num=" + listFiles.length);
+            CFLog.d("Gallery: Gallery files num=" + listFiles.length);
             // Check for count
             if (listFiles.length > 0) {
 
@@ -97,7 +95,7 @@ public class Utils {
                     String filePath = listFiles[i].getAbsolutePath();
                     File file = new File(filePath);
                     boolean res = file.delete();
-                    Log.d("Gallery"," success? "+res+" deleting file "+filePath);
+                    CFLog.d("Gallery: success? "+res+" deleting file "+filePath);
                 }
             }
         }
@@ -116,7 +114,7 @@ public class Utils {
         if (directory.isDirectory()) {
             // getting list of file paths
             File[] listFiles = directory.listFiles();
-            Log.d("Gallery"," Gallery files num="+listFiles.length);
+            CFLog.d("Gallery: Gallery files num="+listFiles.length);
             // Check for count
             if (listFiles.length > 0) {
 
@@ -125,12 +123,12 @@ public class Utils {
 
                     // get file path
                     String filePath = listFiles[i].getAbsolutePath();
-                    Log.d("Gallery"," Gallery file "+i+" = "+filePath);
+                    CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
 
                     // check for supported file extension
                     if (IsSupportedFile(filePath)) {
                         // Add image path to array list
-                        Log.d("Gallery"," Adding file "+i+" = "+filePath);
+                        CFLog.d("Gallery: Adding file "+i+" = "+filePath);
 
                         filePaths.add(new SavedImage(filePath));
                     }
