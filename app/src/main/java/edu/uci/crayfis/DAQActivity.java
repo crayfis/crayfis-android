@@ -17,6 +17,7 @@
 
 package edu.uci.crayfis;
 
+import android.text.Html;
 import android.support.v4.view.ViewPager;
 
 
@@ -254,7 +255,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         tx1.setBackgroundColor(Color.BLACK);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("About CRAYFIS").setCancelable(false)
+		builder.setTitle( Html.fromHtml("<font color='#FFFFFF'>About CRAYFIS</font>")).setCancelable(false)
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 					}
