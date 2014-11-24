@@ -27,7 +27,6 @@ import edu.uci.crayfis.widget.DataView;
 
 public class LayoutHist extends Fragment{
 
-    private final CFConfig CONFIG = CFConfig.getInstance();
 
     public static DataView mDataView;
 
@@ -37,33 +36,41 @@ public class LayoutHist extends Fragment{
         @Override
         public int get (GraphViewDataInterface data){
             if (data.getY() == 0) return Color.BLACK;
-            if (data.getX() < CONFIG.getL2Threshold())
-                return Color.BLUE;
+
+            if (data.getX() == 0)
+                return Color.GREEN;
+            if (data.getX() == 1)
+            return Color.BLUE;
             return Color.RED;
+
         }
     }
 
-    public static GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
+    public static GraphView.GraphViewData[] make_graph_data(int values[])
     {
-        // show some empty bins
-        if (max_bin<values.length)
-            max_bin += 2;
 
-        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
-        int which=start+1;
-        for (int i=0;i<max_bin;i++)
+        final CFConfig CONFIG = CFConfig.getInstance();
+        int bins[] = {0,0,0};
+        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[3];
+
+        // divide into 3 bins
+        for (int i=0;i<values.length;i++) {
+            if (i < CONFIG.getL2Threshold())
+                bins[0] += values[i];
+            else if (i < 2 * CONFIG.getL2Threshold()) {
+                bins[1] += values[i];
+            } else {
+                bins[2] += values[i];
+            }
+        }
+
+        // initialize GV data
+        for (int i=0;i<3;i++)
         {
-            if (which>=max_bin){ which=0;}
-            if (do_log) {
-                if (values[which] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
-                else
-                    gd[i] = new GraphView.GraphViewData(i, 0);
-            } else
-                gd[i] = new GraphView.GraphViewData(i, values[which]);
-            which++;
-
-
+            if (bins[i]>0)
+                gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(bins[i]));
+            else
+                gd[i] = new GraphView.GraphViewData(i, 0);
         }
         return gd;
     }
@@ -81,7 +88,7 @@ public class LayoutHist extends Fragment{
     public static void updateData() {
 
         if (mParticleReco !=null)
-            mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
+            mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values));
 
     }
 
@@ -108,20 +115,23 @@ public class LayoutHist extends Fragment{
 
 
         int novals[] = new int[256];
-        for (int i=0;i<256;i++) novals[i]=1;
+        for (int i=0;i<256;i++) novals[i]=0;
 
         /// test graphing
         Context context = getActivity();
 
         mGraph = new BarGraphView(context," ");
         mGraph.setManualYAxisBounds(20., 0.);
-        mGraph.setHorizontalLabels(new String[] {"Pixel values"});
-        mGraph.setVerticalLabels(new String[] {""});
+        mGraph.setHorizontalLabels(new String[] {"Noise","Candidates","Good Cand."});
+        mGraph.setVerticalLabels(new String[] {"100k","10k","1k","100","10","1"});
+        mGraph.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
+        mGraph.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
+
 
         GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
         mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
-        mGraphSeries =     new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(novals, true, 0, 20));
-        mGraph.setScalable(true);
+        mGraphSeries =     new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(novals));
+        mGraph.setScalable(false);
         mGraph.addSeries(mGraphSeries);
 
         root.addView(mGraph);

@@ -40,10 +40,13 @@ public final class DataView extends TextView {
         final int totalEvents = status.getTotalEvents();
 
         final int totalCandidates = status.getTotalPixels();
+        /*
                 final String text = String.format("Frames scanned: %s\nFrames selected: %s\n Candidates: %s",
                         totalFrames,
                         totalEvents,
                         totalCandidates);
+                        */
+                final String text = String.format("Frames scanned: %s",totalFrames);
                 setText(text);
 
         }

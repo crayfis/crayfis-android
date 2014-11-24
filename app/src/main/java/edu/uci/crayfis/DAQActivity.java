@@ -982,6 +982,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
                     mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
+                    mLayoutHist.updateData();
+
                     // solid circle
                     mLayoutData.mProgressWheel.setProgress( 360);
 
@@ -993,7 +995,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mLayoutData.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
 
 
-                mLayoutHist.updateData();
                 mLayoutTime.updateData();
 
                 if (mLayoutDeveloper==null)
