@@ -122,7 +122,7 @@ public class LayoutHist extends Fragment{
 
         mGraph = new BarGraphView(context," ");
         mGraph.setManualYAxisBounds(20., 0.);
-        mGraph.setHorizontalLabels(new String[] {"Noise","Candidates","Good Cand."});
+        mGraph.setHorizontalLabels(new String[] {"Noise Pix.","Cand. Pix","Good Cand."});
         mGraph.setVerticalLabels(new String[] {"100k","10k","1k","100","10","1"});
         mGraph.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
         mGraph.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
