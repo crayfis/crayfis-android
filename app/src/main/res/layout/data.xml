@@ -35,12 +35,6 @@
         android:gravity="center"
         android:id="@+id/message_view"/>
 
-    <edu.uci.crayfis.widget.AppBuildView
-        android:id="@+id/app_build_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="bottom"
-        android:textSize="8sp"
-        android:textColor="@android:color/darker_gray"/>
+
 
 </LinearLayout>

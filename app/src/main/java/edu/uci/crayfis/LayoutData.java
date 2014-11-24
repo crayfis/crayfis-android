@@ -21,7 +21,6 @@ public class LayoutData extends Fragment{
     // Widgets for giving feedback to the user.
     public static StatusView mStatusView;
     public static MessageView mMessageView;
-    public static AppBuildView mAppBuildView;
 
     public static ProgressWheel mProgressWheel;
 
@@ -48,7 +47,6 @@ public class LayoutData extends Fragment{
         mProgressWheel.spin();
         mStatusView = (StatusView) root.findViewById(R.id.status_view);
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
-        mAppBuildView = (AppBuildView) root.findViewById(R.id.app_build_view);
 
         return root;
     }

@@ -992,7 +992,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mLayoutData.mStatusView.setStatus(status);
                 mLayoutHist.mDataView.setStatus(dstatus);
 
-                mLayoutData.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
 
 
                 mLayoutTime.updateData();
@@ -1001,6 +1000,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
 
                 if (mLayoutDeveloper != null) {
+                    if (mLayoutDeveloper.mAppBuildView != null)
+                    mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
                     if (mLayoutDeveloper.mTextView != null)
                     mLayoutDeveloper.mTextView.setText("Developer View\n L1 Threshold:"
                             + CONFIG.getL1Threshold() + "\n"
