@@ -143,6 +143,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
+    private long L1counter_data = 0;
 
 
 	private long calibration_start;
@@ -476,6 +477,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
         L1counter = 0;
+        L1counter_data = 0;
 
 		starttime = System.currentTimeMillis();
 
@@ -798,7 +800,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 			return;
 		}
 
-		// prescale
+        L1counter_data++;
+
+
+        // prescale
 		// Jodi - removed L1prescale as it never changed.
 		if (L1counter % 1 == 0) {
 			// make sure there's room on the queue
@@ -943,9 +948,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         .build();
 
                 final DataView.Status dstatus = new DataView.Status.Builder()
-                        .setTotalEvents(l2thread.getTotalEvents())
-                        .setTotalPixels(l2thread.getTotalPixels())
-                        .setTotalFrames(L1counter)
+                        .setTotalEvents(mParticleReco.h_l2pixel.integral)
+                        .setTotalPixels(L1counter_data*previewSize.height*previewSize.width)
+                        .setTotalFrames(L1counter_data)
                         .build();
 
                 final CFApplication application = (CFApplication) getApplication();

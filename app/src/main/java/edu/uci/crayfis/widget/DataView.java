@@ -37,16 +37,17 @@ public final class DataView extends TextView {
      */
     public void setStatus(@NonNull final Status status) {
         final long totalFrames = status.getTotalFrames();
-        final int totalEvents = status.getTotalEvents();
+        final long totalPixels = status.getTotalPixels();
 
-        final int totalCandidates = status.getTotalPixels();
+        final int totalCandidates = status.getTotalEvents();
         /*
                 final String text = String.format("Frames scanned: %s\nFrames selected: %s\n Candidates: %s",
                         totalFrames,
                         totalEvents,
                         totalCandidates);
                         */
-                final String text = String.format("Frames scanned: %s",totalFrames);
+                final String text = String.format("Frames scanned: %s\nPixels scanned: %s\nCandidates: %s",
+                        totalFrames,totalPixels,totalCandidates);
                 setText(text);
 
         }
@@ -62,10 +63,10 @@ public final class DataView extends TextView {
         private final long mTotalFrames;
 
         private final int mTotalEvents;
-        private final int mTotalPixels;
+        private final long mTotalPixels;
 
         private Status(
-                       final int totalEvents, final int totalPixels, final long totalFrames) {
+                       final int totalEvents, final long totalPixels, final long totalFrames) {
 
             mTotalFrames = totalFrames;
             mTotalEvents = totalEvents;
@@ -90,7 +91,7 @@ public final class DataView extends TextView {
          *
          * @return The total candidate pixels.
          */
-        public int getTotalPixels() {
+        public long getTotalPixels() {
             return mTotalPixels;
         }
 
@@ -100,7 +101,7 @@ public final class DataView extends TextView {
         public static final class Builder {
 
             private int mTotalEvents;
-            private int mTotalPixels;
+            private long mTotalPixels;
             private long mTotalFrames;
 
 
@@ -127,7 +128,7 @@ public final class DataView extends TextView {
              * @param totalPixels The total candidate pixels.
              * @return This instance for chaining.
              */
-            public Builder setTotalPixels(final int totalPixels) {
+            public Builder setTotalPixels(final long totalPixels) {
                 mTotalPixels = totalPixels;
                 return this;
             }

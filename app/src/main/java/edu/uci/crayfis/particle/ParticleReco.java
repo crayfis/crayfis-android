@@ -148,7 +148,7 @@ public class ParticleReco {
         private boolean variance_valid = false;
         double mean = 0;
         double variance = 0;
-        int integral = 0;
+        public int integral = 0;
         public int max_bin=0;
         public final int nbins;
 
@@ -385,7 +385,7 @@ public class ParticleReco {
                     num_tot_pix++;
 
                     if (val > thresh) {
-                        h_l2pixel.fill(val);
+                        if (!quick) h_l2pixel.fill(val);
                         num_pix++;
 
                         if (quick) {
