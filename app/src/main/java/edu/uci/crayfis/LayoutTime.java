@@ -127,8 +127,10 @@ public class LayoutTime extends Fragment {
         Context context = getActivity();
         mGraphTime = new LineGraphView (context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
-        mGraphTime.setHorizontalLabels(new String[] {"Time"});
-        mGraphTime.setVerticalLabels(new String[] {""});
+        mGraphTime.getGraphViewStyle().setNumVerticalLabels(4);
+        mGraphTime.setHorizontalLabels(new String[] {"","Frame samples",""});
+        mGraphTime.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
+        mGraphTime.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
 
         GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
         mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());

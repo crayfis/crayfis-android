@@ -92,7 +92,7 @@ public class LayoutHist extends Fragment{
 
         if (mParticleReco !=null) {
             mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.values));
-            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,2*mParticleReco.h_l2pixel.integral), 0.);
+            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.integral), 0.);
         }
 
     }
