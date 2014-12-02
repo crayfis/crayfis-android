@@ -234,9 +234,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
                     "This view shows:\n" +
                     "\t Frames scanned: number of video frames examined\n" +
-                    "\t Frames selected: number with a hot pixel\n" +
-                    "\t Candidates: number of pixels saved\n" +
-                    "On the bottom is a histogram showing the distribution of observed pixel values. The large peak on the left (blue) is due to noise and light pollution. Candidate particles (red) are in the longer tail on the right. \nSwipe sideways for different views\nFor more details:  "
+                    "\t Pixels scanned: number of pixels examined\n" +
+                    "\t Candidates: number of pixels above the noise threshold\n" +
+                    "On the bottom is a histogram showing the quality of the pixels above threshold. \nSwipe sideways for different views\nFor more details:  "
                             + s);
         if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+

@@ -11,7 +11,9 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.particle.ParticleReco;
 
 import com.jjoe64.graphview.BarGraphView;
@@ -111,6 +113,34 @@ public class LayoutHist extends Fragment{
 
         return mInstance;
     }
+
+    private static boolean shown_message=false;
+
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            if (mParticleReco != null)
+            {
+                if (mParticleReco.h_l2pixel.integral==0)
+                {
+                    Toast.makeText(getActivity(), "When the app has finished calibrating, this pane will show a histogram of the particle candidates.",Toast.LENGTH_SHORT).show();
+                } else {
+                    if (!shown_message)
+                    Toast.makeText(getActivity(), "This pane shows a histogram of the particle candidates.",Toast.LENGTH_SHORT).show();
+
+                }
+                shown_message=true;
+            }
+
+
+        }
+        else {  }
+        super.setUserVisibleHint(isVisibleToUser);
+    }
+
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {

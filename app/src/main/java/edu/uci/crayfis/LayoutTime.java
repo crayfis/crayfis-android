@@ -83,10 +83,29 @@ public class LayoutTime extends Fragment {
 
     private static SpeedometerView mSpeedometerView;
 
+    private static boolean shown_message=false;
 
     private static GraphView mGraphTime;
     private static GraphViewSeries mGraphSeriesTime;
     private GraphViewSeries.GraphViewSeriesStyle mGraphSeriesStyleTime;
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+            if (!shown_message)
+            {
+
+                Toast.makeText(getActivity(), "This pane shows a radiation dosimeter.",
+                        Toast.LENGTH_SHORT).show();
+            shown_message=true;
+            }
+
+
+        }
+        else {  }
+        super.setUserVisibleHint(isVisibleToUser);
+    }
 
     public static void updateData() {
 

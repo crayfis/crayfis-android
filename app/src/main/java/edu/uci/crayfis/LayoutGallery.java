@@ -71,6 +71,35 @@ public class LayoutGallery extends Fragment {
         gridView.setVerticalSpacing((int) padding);
     }
 
+    private static boolean shown_message=false;
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser) {
+
+            if (images.size()==0)
+            {
+
+            Toast.makeText(getActivity(), "When especially interested candidates are found, this pane will show you a gallery of images.",
+                    Toast.LENGTH_SHORT).show();
+                shown_message=true;
+
+            }
+            else {
+             if (!shown_message)
+             {
+                 Toast.makeText(getActivity(), "This pane shows you a gallery of images of interesting candidates.",
+                         Toast.LENGTH_SHORT).show();
+                 shown_message=true;
+             }
+            }
+
+        }
+        else {  }
+        super.setUserVisibleHint(isVisibleToUser);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.gallery, null);
