@@ -125,10 +125,10 @@ public class LayoutHist extends Fragment{
             {
                 if (mParticleReco.h_l2pixel.integral==0)
                 {
-                    Toast.makeText(getActivity(), "When the app has finished calibrating, this pane will show a histogram of the particle candidates.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "When the app has finished calibrating, this pane will show a histogram of the particle candidates.",Toast.LENGTH_LONG).show();
                 } else {
                     if (!shown_message)
-                    Toast.makeText(getActivity(), "This pane shows a histogram of the particle candidates.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "This pane shows a histogram of the particle candidates.",Toast.LENGTH_LONG).show();
 
                 }
                 shown_message=true;
@@ -161,6 +161,7 @@ public class LayoutHist extends Fragment{
         //mGraph.setVerticalLabels(new String[] {"100k","10k","1k","100","10","1"});
         mGraph.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
         mGraph.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
+        mGraph.getGraphViewStyle().setTextSize(15);
         //mGraph.getGraphViewStyle().setNumVerticalLabels(2);
         GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
         mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());

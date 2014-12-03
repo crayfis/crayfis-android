@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import edu.uci.crayfis.widget.AppBuildView;
 
@@ -45,6 +46,21 @@ public class LayoutDeveloper extends Fragment{
 
 
         return root;
+    }
+
+    private static boolean shown_message=false;
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser)
+        {
+            if (!shown_message) {
+                Toast.makeText(getActivity(), "This pane shows developer-level details.", Toast.LENGTH_LONG).show();
+                shown_message = true;
+            }
+        }
+        super.setUserVisibleHint(isVisibleToUser);
     }
 
 }

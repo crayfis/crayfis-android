@@ -96,7 +96,7 @@ public class LayoutTime extends Fragment {
             if (!shown_message)
             {
 
-                Toast.makeText(getActivity(), "This pane shows a radiation dosimeter.",
+                Toast.makeText(getActivity(), "This pane shows a radiation dosimeter. Still in development.",
                         Toast.LENGTH_SHORT).show();
             shown_message=true;
             }
@@ -158,6 +158,8 @@ public class LayoutTime extends Fragment {
         mGraphTime.addSeries(mGraphSeriesTime);
 
         mSpeedometerView = (SpeedometerView) root.findViewById(R.id.needle_view);
+
+
 
         mSpeedometerView.setLabelConverter(new SpeedometerView.LabelConverter() {
             @Override

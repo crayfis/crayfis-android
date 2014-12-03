@@ -58,6 +58,8 @@ public class SpeedometerView extends View {
     private int labelTextSize;
 
     private Bitmap mMask;
+    private Bitmap rMask;
+
 
     public SpeedometerView(Context context) {
         super(context);
@@ -365,6 +367,10 @@ public class SpeedometerView extends View {
 
         Bitmap mask = Bitmap.createScaledBitmap(mMask, (int)(oval.width()*1.1), (int)(oval.height()*1.1)/2, true);
         canvas.drawBitmap(mask, oval.centerX() - oval.width()*1.1f/2, oval.centerY()-oval.width()*1.1f/2, maskPaint);
+
+        Bitmap lmask = Bitmap.createScaledBitmap(rMask, (int)(oval.width()*0.2), (int)(oval.height()*0.2), true);
+        canvas.drawBitmap(lmask, oval.centerX() - oval.width()*1.0f/2, oval.centerY()-oval.width()*1.0f/2, maskPaint);
+        canvas.drawBitmap(lmask, oval.centerX() + oval.width()*0.6f/2, oval.centerY()-oval.width()*1.0f/2, maskPaint);
     }
 
     @SuppressWarnings("NewApi")
@@ -386,11 +392,17 @@ public class SpeedometerView extends View {
         txtPaint.setTextSize(labelTextSize);
         txtPaint.setTextAlign(Paint.Align.CENTER);
 
+        rMask = BitmapFactory.decodeResource(getResources(), R.drawable.rad_logo);
+        rMask = Bitmap.createBitmap(rMask, 0, 0, rMask.getWidth(), rMask.getHeight());
+
+
         mMask = BitmapFactory.decodeResource(getResources(), R.drawable.spot_mask);
         mMask = Bitmap.createBitmap(mMask, 0, 0, mMask.getWidth(), mMask.getHeight()/2);
 
         maskPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         maskPaint.setDither(true);
+
+
 
         ticksPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         ticksPaint.setStrokeWidth(3.0f);

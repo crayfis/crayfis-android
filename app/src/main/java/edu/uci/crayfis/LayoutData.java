@@ -10,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.widget.AppBuildView;
@@ -49,6 +50,21 @@ public class LayoutData extends Fragment{
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
 
         return root;
+    }
+
+    private static boolean shown_message=false;
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if (isVisibleToUser)
+        {
+            if (!shown_message) {
+             Toast.makeText(getActivity(), "This pane shows the status.\n Swipe for other views.", Toast.LENGTH_LONG).show();
+            shown_message = true;
+            }
+        }
+        super.setUserVisibleHint(isVisibleToUser);
     }
 
 }
