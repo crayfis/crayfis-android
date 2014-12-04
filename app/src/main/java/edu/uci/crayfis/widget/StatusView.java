@@ -62,8 +62,9 @@ public final class StatusView extends TextView {
                         totalCandidates,
                         totalCandidates);
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                final String text = String.format("Time: %ds\nRate: %d fps",
+                final String text = String.format("Time: %ds\nPoints: %1.1f\nFrame rate: %d fps",
                         status.getTime(),
+                        (float)(status.getTime()*status.getTime())/10000.0,
                         status.getFps()
                         );
                 setText(text);
@@ -82,7 +83,7 @@ public final class StatusView extends TextView {
             CFLog.e("Passing a 0 to StatusView.getPercentageValue(): max=" + max + ", value=" + value);
             rtn = state.toString();
         } else {
-            rtn = String.format("Rate: %d fps",
+            rtn = String.format("Frame rate: %d fps",
                     fps);
         }
 
