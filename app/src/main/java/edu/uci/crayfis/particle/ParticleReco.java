@@ -9,7 +9,8 @@ package edu.uci.crayfis.particle;
 import android.hardware.Camera;
 import android.location.Location;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import edu.uci.crayfis.util.CFLog;
+
 
 import java.util.ArrayList;
 
@@ -33,18 +34,20 @@ public class ParticleReco {
     /**
      * Get the instance of {@link edu.uci.crayfis.particle.ParticleReco}.
      *
-     * @param previewSize Instance of {@link android.hardware.Camera.Size}
      * @return {@link edu.uci.crayfis.particle.ParticleReco}
      */
-    public static synchronized ParticleReco getInstance(@NonNull final Camera.Size previewSize) {
+    public static synchronized ParticleReco getInstance() {
         if (sInstance == null) {
-            sInstance = new ParticleReco(previewSize);
+            sInstance = new ParticleReco();
         }
         return sInstance;
     }
 
-    private ParticleReco(Camera.Size previewSize) {
-        this.previewSize = previewSize;
+    public static synchronized void setPreviewSize(@NonNull final Camera.Size inPreviewSize) {
+        ParticleReco.previewSize = inPreviewSize;
+    }
+
+    private ParticleReco() {
         good_quality = false;
         clearHistograms();
     }
@@ -145,7 +148,7 @@ public class ParticleReco {
         private boolean variance_valid = false;
         double mean = 0;
         double variance = 0;
-        int integral = 0;
+        public int integral = 0;
         public int max_bin=0;
         public final int nbins;
 
@@ -254,7 +257,7 @@ public class ParticleReco {
     public static final int stepW = 10;
     public static final int stepH = 10;
 
-    public Camera.Size previewSize = null;
+    public static Camera.Size previewSize = null;
 
     public RecoEvent buildEvent(RawCameraFrame frame) {
         event_count++;
@@ -331,7 +334,7 @@ public class ParticleReco {
         // TODO: investigate what makes sense here!
         good_quality = (background < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
-        //Log.d("reco","background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
+        //CFLog.d("reco: background = "+background+" var = "+variance+" %hit = "+percent_hit+" qual = "+good_quality);
 
         event.background = background;
         event.variance = variance;
@@ -382,7 +385,7 @@ public class ParticleReco {
                     num_tot_pix++;
 
                     if (val > thresh) {
-                        h_l2pixel.fill(val);
+                        if (!quick) h_l2pixel.fill(val);
                         num_pix++;
 
                         if (quick) {
@@ -454,7 +457,7 @@ public class ParticleReco {
         // max_count events over the integrated period contained
         // in the histograms.
 
-        Log.i("calculate", "Cacluating threshold! Event histo:"
+        CFLog.i("calculate: Calculating threshold! Event histo:"
                         + " 0 - " + h_maxpixel.values[0] + "\n"
                         + " 1 - " + h_maxpixel.values[1] + "\n"
                         + " 2 - " + h_maxpixel.values[2] + "\n"
@@ -490,7 +493,7 @@ public class ParticleReco {
         int above_thresh = 0;
         do {
             above_thresh += h_pixel.values[new_thresh];
-            Log.d("calibration", "threshold " + new_thresh
+            CFLog.d("calibration: threshold " + new_thresh
                     + " obs= " + above_thresh + "/" + stat_factor);
             new_thresh--;
         } while (new_thresh > 0 && above_thresh < stat_factor);

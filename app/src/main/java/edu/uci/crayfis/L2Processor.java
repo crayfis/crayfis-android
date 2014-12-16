@@ -1,20 +1,41 @@
 package edu.uci.crayfis;
 
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Bitmap.Config;
 import android.content.Context;
 import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
+import android.os.Environment;
+import com.crashlytics.android.Crashlytics;
+
+import android.graphics.YuvImage;
+import android.graphics.Rect;
+import android.graphics.ImageFormat;
+import java.io.ByteArrayOutputStream;
+
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.FileOutputStream;
+
+import edu.uci.crayfis.gallery.Utils;
+import edu.uci.crayfis.gallery.SavedImage;
+
+
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
+
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -32,6 +53,8 @@ class L2Processor extends Thread {
 
     // ----8< --------
 
+
+    private Utils mUtils;
 
     private int mTotalPixels = 0;
     private int mTotalEvents = 0;
@@ -60,7 +83,9 @@ class L2Processor extends Thread {
     public L2Processor(@NonNull final Context context, @NonNull final Camera.Size cameraSize) {
         APPLICATION = (CFApplication) context.getApplicationContext();
         XB_MANAGER = ExposureBlockManager.getInstance(context);
-        PARTICLE_RECO = ParticleReco.getInstance(cameraSize);
+        PARTICLE_RECO = ParticleReco.getInstance();
+        PARTICLE_RECO.setPreviewSize(cameraSize);
+        mUtils = new Utils(context);
     }
 
     /**
@@ -202,6 +227,35 @@ class L2Processor extends Thread {
 
             // Finally, add the event to the proper exposure block.
             xb.addEvent(event);
+
+            if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
+                if (event.pixels.size() > 1) {
+
+
+                    // find the max pixel
+
+                    int max = 0;
+
+                    for (int i = 0; i < event.pixels.size(); i++) {
+                        RecoPixel pix = event.pixels.get(i);
+                        if (pix.val > max) max = pix.val;
+                    }
+                    if (max > CONFIG.getL2Threshold()*1.2)
+                    try {
+
+                        SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
+                                , PARTICLE_RECO.previewSize.height, frame.getAcquiredTime());
+                        CFLog.d(" image="+si+" utils = "+mUtils);
+                        mUtils.saveImage(si);
+
+                    } catch (Exception e) {
+                        Crashlytics.logException(e);
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+
 
             // If we're calibrating, check if we've processed enough
             // frames to decide on the threshold(s) and go back to

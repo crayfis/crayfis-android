@@ -10,7 +10,23 @@
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="userIDlogin">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n Please enter your user ID below. If you do not have one yet, register at http://crayfis.io/.</string>
+	<string name="userIDlogin">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.\n\n\n What you need to do:\n Plug your phone in and\n put it camera down (face up) on a surface.\n\n When it starts it will take 30-60s to calibrate\n and then will start taking data!</string>
 	<string name="run_without_user_ID">\n\n\nNo CRAYFIS ID?  \n No problem! Your data will not be uploaded to the server, but you can still run the app, and enter your ID later in the settings pane.</string>
-	    
+
+    <string name="menu_about">About</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_view_mode">View Mode</string>
+
+    <string name="fatal_error_title">Internal Error</string>
+    <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
+
+    <plurals name="total_frames">
+        <item quantity="one">%d frame</item>
+        <item quantity="other">%d frames</item>
+    </plurals>
+
+    <plurals name="total_candidates">
+        <item quantity="one">%d candidate</item>
+        <item quantity="other">%d candidates</item>
+    </plurals>
 </resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal" android:layout_width="match_parent"
+        android:layout_height="50dp">
+
+        <TextView
+            android:id="@+id/text_gallery"
+            android:layout_width="250dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="Gallery: 0 images"
+            android:textSize="25sp"
+            android:textColor="#FFFFFF"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/delete_gallery"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Clear"
+            android:textSize="20sp"
+            android:background="#FF0000"
+            android:textColor="#FFFFFF" />
+
+        </LinearLayout>
+
+    <GridView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/grid_view"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:numColumns="auto_fit"
+        android:gravity="center"
+        android:stretchMode="columnWidth"
+        android:background="#FFFFFF">
+    </GridView>
+
+</LinearLayout>

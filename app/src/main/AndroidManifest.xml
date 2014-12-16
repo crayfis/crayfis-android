@@ -4,7 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="10"
     android:versionName="0.4.2">
-
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -45,7 +45,8 @@
 
         <activity
             android:name="edu.uci.crayfis.DAQActivity"
-            android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"
+            android:theme="@style/ActionBar"/>
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"
             android:screenOrientation="portrait"/>

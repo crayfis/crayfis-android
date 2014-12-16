@@ -17,6 +17,10 @@
 
 package edu.uci.crayfis;
 
+import android.text.Html;
+import android.support.v4.view.ViewPager;
+
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -28,7 +32,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Typeface;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -41,27 +44,27 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.PagerTabStrip;
+import android.support.v7.app.ActionBarActivity;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
-import android.view.View;
-import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.util.TypedValue;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.jjoe64.graphview.BarGraphView;
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.GraphViewDataInterface;
-import com.jjoe64.graphview.GraphViewSeries;
-import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
-import com.jjoe64.graphview.ValueDependentColor;
+
 
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import edu.uci.crayfis.camera.CameraPreviewView;
@@ -72,27 +75,40 @@ import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.widget.AppBuildView;
+import edu.uci.crayfis.widget.MessageView;
+import edu.uci.crayfis.widget.StatusView;
+import edu.uci.crayfis.widget.DataView;
+
 
 /**
  * This is the main Activity of the app; this activity is started when the user
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends Activity implements Camera.PreviewCallback, SensorEventListener {
+public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener {
+
+    private ViewPager _mViewPager;
+    private ViewPagerAdapter _adapter;
+
+
+    private static LayoutData mLayoutData = LayoutData.getInstance();
+    private static LayoutHist mLayoutHist = LayoutHist.getInstance();
+    private static LayoutTime mLayoutTime = LayoutTime.getInstance();
+    private static LayoutDeveloper mLayoutDeveloper = LayoutDeveloper.getInstance();
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication.AppBuild mAppBuild;
 
     // camera and display objects
 	private Camera mCamera;
-	private Visualization mDraw;
 	private CameraPreviewView mPreview;
 
 
+    private Timer mUiUpdateTimer;
+
     // ----8<--------------
-    private GraphView mGraph;
-    private GraphViewSeries mGraphSeries;
-    private GraphViewSeriesStyle mGraphSeriesStyle;
+
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
@@ -127,12 +143,8 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	private ExposureBlockManager xbManager;
 
 	private long L1counter = 0;
+    private long L1counter_data = 0;
 
-    public enum display_mode {
-        HIST, TIME
-    }
-
-    private display_mode current_mode;
 
 	private long calibration_start;
 
@@ -143,7 +155,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 	long starttime;
 
     // number of frames to wait between fps updates
-	public static final int fps_update_interval = 30;
+	public static final float fps_update_interval = 30;
 
 	private long L1_fps_start = 0;
 	private long L1_fps_stop = 0;
@@ -159,46 +171,15 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	Context context;
 
-	public void clickedSettings(View view) {
+	public void clickedSettings() {
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
 
-	public void clickedMode(View view) {
-        CFLog.d(" clicked MODE current=" + current_mode.toString());
-        // toggle modes
-        if (current_mode == DAQActivity.display_mode.HIST) { current_mode = DAQActivity.display_mode.TIME; }
-        else
-        if (current_mode == DAQActivity.display_mode.TIME) { current_mode = DAQActivity.display_mode.HIST; }
-        CFLog.d(" clicked MODE new="+current_mode.toString());
-
-	}
-
-    public GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
-    {
-        // show some empty bins
-        if (max_bin<values.length)
-            max_bin += 2;
-
-        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
-        int which=start+1;
-        for (int i=0;i<max_bin;i++)
-        {
-            if (which>=max_bin){ which=0;}
-            if (do_log) {
-                if (values[which] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
-                else
-                    gd[i] = new GraphView.GraphViewData(i, 0);
-            } else
-                gd[i] = new GraphView.GraphViewData(i, values[which]);
-            which++;
 
 
-        }
-        return gd;
-    }
+
 
 	// received message when power is disconnected -- should end run
 	public class MyDisconnectReceiver extends BroadcastReceiver {
@@ -236,41 +217,46 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         }
 	}
 
-	public void clickedAbout(View view) {
+	public void clickedAbout() {
 
 		final SpannableString s = new SpannableString(
 				"crayfis.ps.uci.edu/about");
 
 		final TextView tx1 = new TextView(this);
 
-        if (current_mode==DAQActivity.display_mode.HIST)
-		tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                "This frame shows:\n\t Exposure: seconds of data-taking\n" +
-                "\t Frames: number with a hot pixel\n" +
-                "\t Candidates: number of pixels saved\n" +
-                "\t Data blocks: groups of frames\n" +
-                "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
-                "\t Scan rate: rate, frames-per-second\n" +
-                "On the left is a histogram showing the distribution of observed pixel values. The large peak on the left is due to noise and light pollution. Candidate particles are in the longer tail on the right. \nFor more details:  "
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
+  		  tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                "This view shows the current state of the app as well as:\n\t Time: seconds of data-taking\n" +
+                "\t Rate: scan rate, frames-per-second\n" +
+                  " Swipe right for more views.\n For more details: "
 				+ s);
-        if (current_mode==DAQActivity.display_mode.TIME)
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
             tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                    "This frame shows:\n\t Exposure: seconds of data-taking\n" +
-                    "\t Frames: number with a hot pixel\n" +
-                    "\t Candidates: number of pixels saved\n" +
-                    "\t Data blocks: groups of frames\n" +
-                    "\t Mode: STABILIZING, CALIBRATION or DATA\n" +
-                    "\t Scan rate: rate, frames-per-second\n" +
-                    "On the left is a time series showing the max pixel value found in each frame." +
-                    "\nFor more details:  "
+                    "This view shows:\n" +
+                    "\t Frames scanned: number of video frames examined\n" +
+                    "\t Pixels scanned: number of pixels examined\n" +
+                    "\t Candidates: number of pixels above the noise threshold\n" +
+                    "On the bottom is a histogram showing the quality of the pixels above threshold. \nSwipe sideways for different views\nFor more details:  "
+                            + s);
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This view shows a time series showing the max pixel value found in each frame." +
+                    "\nSwipe sideways for more views\nFor more details:  "
+                    + s);
+
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
+            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
+                    "This view shows a gallery of the most interesting hits. Note that not every particle candidate hit is saved." +
+                    "\nSwipe sideways for more views\nFor more details:  "
                     + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
-
+        tx1.setTextColor(Color.WHITE);
+        tx1.setBackgroundColor(Color.BLACK);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("About CRAYFIS").setCancelable(false)
+		builder.setTitle( Html.fromHtml("<font color='#FFFFFF'>About CRAYFIS</font>")).setCancelable(false)
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 					}
@@ -433,35 +419,20 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		run_config = b.build();
 	}
 
-    private class ValueDependentColorX implements ValueDependentColor
-    {
-        @Override
-        public int get (GraphViewDataInterface data){
-        if (data.getY() == 0) return Color.BLACK;
-        if (data.getX() < CONFIG.getL2Threshold())
-            return Color.BLUE;
-        return Color.RED;
-        }
-    }
 
-    private class ValueDependentColorY implements ValueDependentColor
-    {
-        @Override
-        public int get (GraphViewDataInterface data){
-            if (data.getY() == 0) return Color.BLACK;
-            if (data.getY() < CONFIG.getL2Threshold())
-                return Color.BLUE;
-            return Color.RED;
-        }
-    }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        current_mode = DAQActivity.display_mode.HIST;
+
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
+
+
+
+
+
 
 		// FIXME: for debugging only!!! We need to figure out how
 		// to keep DAQ going without taking over the phone.
@@ -482,52 +453,31 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		editor.commit();
 		*/
 
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.video);
 
-		// Used to visualize the results
-		mDraw = new Visualization(this);
-        mDraw.setZOrderOnTop(true);
-        mDraw.getHolder().setFormat(PixelFormat.TRANSPARENT);
+        _mViewPager = (ViewPager) findViewById(R.id.viewPager);
+        _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
+        _mViewPager.setAdapter(_adapter);
+        _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
+
+
+
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
+
+        CFLog.d("DAQActivity: Camera preview view is "+mPreview);
 
 		context = getApplicationContext();
 
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 
-        /// test graphing
-        mGraph = new BarGraphView( this, "");
-
-        int novals[] = new int[256];
-        for (int i=0;i<256;i++) novals[i]=1;
-
-        GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
-        mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
-
-        mGraphSeries = new GraphViewSeries("aaa",mGraphSeriesStyle,make_graph_data(novals, true, 0, 20));
-        /*
-        GraphViewSeries exampleSeries = new GraphViewSeries(new GraphView.GraphViewData[] {
-                new GraphView.GraphViewData(1, 2.0d)
-                , new GraphView.GraphViewData(2, 1.5d)
-                , new GraphView.GraphViewData(3, 2.5d)
-                , new GraphView.GraphViewData(4, 1.0d)
-        });
-
-        mGraph.addSeries(exampleSeries);
-        */
-        mGraph.setScalable(true);
-        mGraph.addSeries(mGraphSeries);
-
-        preview.addView(mGraph);
-
-        preview.addView(mDraw);
 
 
 
         L1counter = 0;
+        L1counter_data = 0;
 
 		starttime = System.currentTimeMillis();
 
@@ -570,8 +520,26 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		// Spin up the output and image processing threads:
 		outputThread = OutputManager.getInstance(this);
 
+        //Prevents thread from thread duplication if it's already initialized
+		if (outputThread.getState() == Thread.State.NEW) {
+            outputThread.start();
+        }
+
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+
+
+
+        final PagerTabStrip strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
+        strip.setDrawFullUnderline(false);
+        strip.setTabIndicatorColor(Color.RED);
+        strip.setBackgroundColor(Color.GRAY);
+        strip.setNonPrimaryAlpha(0.5f);
+        strip.setTextSpacing(25);
+        strip.setTextColor(Color.WHITE);
+        strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
+
+
 	}
 
 	@Override
@@ -626,11 +594,19 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			generateRunConfig();
 			outputThread.commitRunConfig(run_config);
 		}
-	}
+
+        if (mUiUpdateTimer != null) {
+            mUiUpdateTimer.cancel();
+        }
+        mUiUpdateTimer = new Timer();
+        mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000l, 1000l);
+    }
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+        mUiUpdateTimer.cancel();
 
 		if (wl.isHeld())
 			wl.release();
@@ -658,7 +634,28 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 	}
 
-	/**
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.daq_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        switch(item.getItemId()) {
+            case R.id.menu_settings:
+                clickedSettings();
+                return true;
+            case R.id.menu_about:
+                clickedAbout();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    /**
 	 * Sets up the camera if it is not already setup.
 	 */
 	private void setUpAndConfigureCamera() {
@@ -680,9 +677,9 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
         if (mParticleReco == null) {
             // if we don't already have a particleReco object setup,
             // do that now that we know the camera size.
-            mParticleReco = ParticleReco.getInstance(previewSize);
+            mParticleReco = ParticleReco.getInstance();
+            mParticleReco.setPreviewSize(previewSize);
             l2thread = new L2Processor(this, previewSize);
-            l2thread.setView(mDraw);
             l2thread.start();
         }
 
@@ -719,7 +716,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 		}
 
 		// Create an instance of Camera
-		mPreview.setCamera(mCamera);
+        CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
+
+        mPreview.setCamera(mCamera);
+        CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
 	/**
@@ -763,23 +763,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 		long acq_time = System.currentTimeMillis();
 
-        if (current_mode == DAQActivity.display_mode.HIST) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.h_pixel.values, true,-1,mParticleReco.h_pixel.max_bin));
-            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
-            mGraph.setManualYAxisBounds(20., 0.);
-            mGraph.setHorizontalLabels(new String[] {"","Pixel","values"});
-            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorX());
 
-
-
-        }
-        if (current_mode == DAQActivity.display_mode.TIME) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.hist_max.values, false,mParticleReco.hist_max.current_time,mParticleReco.hist_max.values.length));
-            //mGraph.getGraphViewStyle().setVerticalLabelsWidth(25);
-            mGraph.setManualYAxisBounds(30., 0.);
-            mGraph.setHorizontalLabels(new String[] {"","Time"," "," "});
-            mGraphSeries.getStyle().setValueDependentColor(new ValueDependentColorY());
-        }
 
         // for calculating fps
 		if (L1counter % fps_update_interval == 0) {
@@ -816,7 +800,10 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 			return;
 		}
 
-		// prescale
+        L1counter_data++;
+
+
+        // prescale
 		// Jodi - removed L1prescale as it never changed.
 		if (L1counter % 1 == 0) {
 			// make sure there's room on the queue
@@ -869,165 +856,7 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
 
 	// ///////////////////////////////////////
 
-	/**
-	 * Draws on top of the video stream for visualizing computer vision results
-	 */
-	private class Visualization extends SurfaceView {
 
-        Paint mypaint;
-        Paint mypaint2;
-        //Paint mypaint2_thresh;
-        Paint mypaint3, mypaint4;
-        Paint mypaint_warning;
-        Paint mypaint_info;
-
-        public Visualization(Activity context) {
-            super(context);
-
-            mypaint = new Paint();
-            mypaint2 = new Paint();
-            //mypaint2_thresh = new Paint();
-
-            mypaint3 = new Paint();
-            mypaint4 = new Paint();
-
-            mypaint_warning = new Paint();
-            mypaint_info = new Paint();
-
-            // This call is necessary, or else the
-            // draw method will not be called.
-            setWillNotDraw(false);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-
-            int w = canvas.getWidth();
-            int h = canvas.getHeight();
-
-            // draw some data text for debugging
-            int tsize = (int) (h / 50);
-            int yoffset = 2 * tsize;
-            mypaint.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint.setColor(android.graphics.Color.WHITE);
-            mypaint.setTextSize((int) (tsize * 1.5));
-
-            mypaint_warning.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint_warning.setColor(android.graphics.Color.YELLOW);
-            mypaint_warning.setTextSize((int) (tsize * 1.1));
-
-            mypaint_info.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint_info.setColor(android.graphics.Color.MAGENTA);
-            mypaint_info.setTextSize((int) (tsize * 1.1));
-
-            mypaint3.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint3.setColor(android.graphics.Color.GRAY);
-            mypaint3.setTextSize(tsize);
-
-            mypaint2.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint2.setColor(android.graphics.Color.WHITE);
-            mypaint2.setTextSize(tsize / (float) 10.0);
-            Typeface tf = Typeface.create("Courier", Typeface.NORMAL);
-            mypaint2.setTypeface(tf);
-
-            mypaint4.setStyle(android.graphics.Paint.Style.FILL);
-            mypaint4.setColor(android.graphics.Color.RED);
-            mypaint4.setTextSize(tsize / (float) 10.0);
-            mypaint4.setTypeface(tf);
-
-            long exposed_time = xbManager.getExposureTime();
-            canvas.drawText(
-                    "Exposure: "
-                            + (int) (1.0e-3 * exposed_time)
-                            + "s", 200, yoffset + 1 * tsize, mypaint);
-            canvas.drawText("Frames : " + l2thread.getTotalEvents(), 200, yoffset + 3 * tsize,
-                    mypaint);
-            canvas.drawText("Candidates : " + l2thread.getTotalPixels(), 200, yoffset + 5 * tsize,
-                    mypaint);
-
-            // FIXME Jodi - committedXBs is not in L2Processor
-//				canvas.drawText("Data blocks: " + committedXBs, 200, yoffset + 7
-//						* tsize, mypaint);
-
-            String state_message;
-            switch (((CFApplication) getApplication()).getApplicationState()) {
-                case CALIBRATION:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
-                            + (int) ((100.0 * (float) mParticleReco.event_count) / CONFIG.getCalibrationSampleFrames()) + "%";
-                    break;
-                case DATA:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " (L1=" + CONFIG.getL1Threshold()
-                            + ",L2=" + CONFIG.getL2Threshold() + ")";
-                    break;
-                case STABILIZATION:
-                    state_message = "Mode: " + ((CFApplication) getApplication()).getApplicationState() + " "
-                            + (int) ((100.0 * (float) stabilization_counter) / CONFIG.getStabilizationSampleFrames()) + "%";
-                    break;
-                default:
-                    state_message = ((CFApplication) getApplication()).getApplicationState().toString();
-            }
-            canvas.drawText(state_message, 200, yoffset + 9 * tsize, mypaint);
-
-            String fps = "---";
-            if (L1_fps_start > 0 && L1_fps_stop > 0) {
-                fps = String.format("Scan rate: %.1f", (float) fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3);
-            }
-            canvas.drawText(fps + " fps",
-                    200, yoffset + 11 * tsize, mypaint);
-
-            canvas.drawLine(195, yoffset + 12 * tsize, 195, yoffset + 0
-                    * tsize, mypaint);
-
-            if (!outputThread.canUpload()) {
-                if (outputThread.permit_upload) {
-                    canvas.drawText("Warning! Network unavailable.", 250, yoffset + 20 * tsize, mypaint_warning);
-                } else {
-                    String reason;
-                    if (outputThread.valid_id) {
-                        reason = "Server is overloaded.";
-                    } else {
-                        reason = "Invalid invite code.";
-                    }
-                    canvas.drawText(reason, 240, yoffset + 19 * tsize, mypaint_warning);
-                    canvas.drawText("Saving data locally.", 240, yoffset + 20 * tsize, mypaint_warning);
-                }
-            }
-
-            if (L2busy > 0) {
-                // print a message indicating that we've been dropping frames
-                // due to L2queue overflow.
-                canvas.drawText("Warning! L2busy (" + L2busy + ")", 250, yoffset + 20 * tsize, mypaint_warning);
-            }
-
-            String device_msg = "dev: ";
-            final String deviceId = mAppBuild.getDeviceId();
-            final String deviceNickname = CONFIG.getDeviceNickname();
-            if (deviceNickname != null) {
-                device_msg += deviceNickname + " (" + deviceId + ")";
-            } else {
-                device_msg += deviceId;
-            }
-
-            String run_msg = "run: " + mAppBuild.getRunId().toString().substring(19);
-
-            canvas.drawText(mAppBuild.getBuildVersion(), 175, yoffset + 18 * tsize, mypaint_info);
-            canvas.drawText(device_msg, 175, yoffset + 19 * tsize, mypaint_info);
-            canvas.drawText(run_msg, 175, yoffset + 20 * tsize, mypaint_info);
-            final String currentExperiment = CONFIG.getCurrentExperiment();
-            if (currentExperiment != null) {
-                String exp_msg = "exp: " + currentExperiment;
-                canvas.drawText(exp_msg, 175, yoffset + 21 * tsize, mypaint_info);
-            }
-
-            canvas.save();
-            canvas.rotate(-90, (float) (50 + -7 * tsize / 10.0),
-                    (float) (yoffset + (256 - 50) * tsize / 10.0));
-            canvas.drawText(String.format("Number of pixels"),
-                    (float) (50 + -7 * tsize / 10.0),
-                    (float) (yoffset + (256 - 50) * tsize / 10.0), mypaint3);
-            canvas.restore();
-        }
-    }
 
     @Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
@@ -1068,15 +897,128 @@ public class DAQActivity extends Activity implements Camera.PreviewCallback, Sen
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
-            if (current == CFApplication.State.DATA) {
-                doStateTransitionData(previous);
-            } else if (current == CFApplication.State.STABILIZATION) {
-                doStateTransitionStabilization(previous);
-            } else if (current == CFApplication.State.IDLE) {
-                doStateTransitionIdle(previous);
-            } else if (current == CFApplication.State.CALIBRATION) {
-                doStateTransitionCalibration(previous);
+            if (current != previous) {
+                if (current == CFApplication.State.DATA) {
+                    doStateTransitionData(previous);
+                } else if (current == CFApplication.State.STABILIZATION) {
+                    doStateTransitionStabilization(previous);
+                } else if (current == CFApplication.State.IDLE) {
+                    doStateTransitionIdle(previous);
+                } else if (current == CFApplication.State.CALIBRATION) {
+                    doStateTransitionCalibration(previous);
+                }
             }
+        }
+    };
+
+    /**
+     * Task that gets called during the UI update tick.
+     */
+    private final class UiUpdateTimerTask extends TimerTask {
+
+        private final Runnable RUNNABLE = new Runnable() {
+            @Override
+            public void run() {
+                if (!outputThread.canUpload()) {
+                    if (outputThread.permit_upload) {
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                    } else {
+                        String reason;
+                        if (outputThread.valid_id) {
+                            reason = "Server is overloaded.";
+                        } else {
+                            reason = "Invalid invite code.";
+                        }
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
+                    }
+                } else if (L2busy > 0) {
+                    final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                } else {
+                    LayoutData.mMessageView.setMessage(null, null);
+                }
+
+                final StatusView.Status status = new StatusView.Status.Builder()
+                        .setEventCount(mParticleReco.event_count)
+                        .setFps((int) (fps_update_interval / (L1_fps_stop - L1_fps_start) * 1e3))
+                        .setStabilizationCounter(stabilization_counter)
+                        .setTotalEvents(l2thread.getTotalEvents())
+                        .setTotalPixels(l2thread.getTotalPixels())
+                        .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
+                        .build();
+
+                final DataView.Status dstatus = new DataView.Status.Builder()
+                        .setTotalEvents(mParticleReco.h_l2pixel.integral)
+                        .setTotalPixels(L1counter_data*previewSize.height*previewSize.width)
+                        .setTotalFrames(L1counter_data)
+                        .build();
+
+                final CFApplication application = (CFApplication) getApplication();
+
+                if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+                {
+                    mLayoutData.mProgressWheel.setText("Checking camera is covered");
+                    mLayoutData.mProgressWheel.setTextSize(22);
+
+                    mLayoutData.mProgressWheel.setTextColor(Color.RED);
+                    mLayoutData.mProgressWheel.setBarColor(Color.RED);
+
+                    mLayoutData.mProgressWheel.spin();
+                }
+
+
+                if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                    mLayoutData.mProgressWheel.setText("Measuring backgrounds");
+                    mLayoutData.mProgressWheel.setTextSize(27);
+
+                    mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                    mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+
+                    int events = mParticleReco.event_count;
+                    int needev = CONFIG.getCalibrationSampleFrames();
+                    float frac = events/((float)1.0*needev);
+                    int progress = (int)(360*frac);
+                    mLayoutData.mProgressWheel.setProgress( progress );
+                     }
+                if (application.getApplicationState() == CFApplication.State.DATA) {
+                    mLayoutData.mProgressWheel.setTextSize(30);
+
+                    mLayoutData.mProgressWheel.setText("Taking Data!");
+                    mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                    mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+
+                    mLayoutHist.updateData();
+
+                    // solid circle
+                    mLayoutData.mProgressWheel.setProgress( 360);
+
+                }
+
+                mLayoutData.mStatusView.setStatus(status);
+                mLayoutHist.mDataView.setStatus(dstatus);
+
+
+
+                mLayoutTime.updateData();
+
+                if (mLayoutDeveloper==null)
+                    mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
+
+                if (mLayoutDeveloper != null) {
+                    if (mLayoutDeveloper.mAppBuildView != null)
+                    mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+                    if (mLayoutDeveloper.mTextView != null)
+                    mLayoutDeveloper.mTextView.setText("Developer View\n L1 Threshold:"
+                            + CONFIG.getL1Threshold() + "\n"
+                            + "Exposure Blocks:" + xbManager.getTotalXBs());
+                }
+
+            }
+        };
+
+        @Override
+        public void run() {
+            runOnUiThread(RUNNABLE);
         }
     };
 }

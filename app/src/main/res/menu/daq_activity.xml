@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:crayfis="http://schemas.android.com/apk/res-auto" >
+    <item android:id="@+id/menu_settings"
+          crayfis:showAsAction="always"
+          android:icon="@android:drawable/ic_menu_preferences"
+          android:title="@string/menu_settings"/>
+    <item android:id="@+id/menu_about"
+          crayfis:showAsAction="always"
+          android:icon="@android:drawable/ic_menu_help"
+          android:title="@string/menu_about"/>
+</menu>

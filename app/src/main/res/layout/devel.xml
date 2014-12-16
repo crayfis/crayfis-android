@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent">
+
+    <edu.uci.crayfis.widget.AppBuildView
+        android:id="@+id/app_build_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="top"
+        android:textSize="8sp"
+        android:text="Blah"
+        android:textColor="@android:color/darker_gray"/>
+
+    <TextView
+        android:id="@+id/devel_text"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:textColor="#000000"
+        android:text="Developer View"
+        android:textSize="15dp"/>
+
+
+
+</LinearLayout>
