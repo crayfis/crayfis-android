@@ -506,7 +506,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         L1counter_data = 0;
 
         if (L1cal == null) {
-            L1cal = new L1Calibrator(1000);
+            L1cal = L1Calibrator.getInstance();
         }
         if (frame_times == null) {
             frame_times = new FrameHistory<Long>(100);
@@ -899,7 +899,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     // have changed.
                     pass = true;
                 }
-                mParticleReco.hist_max.new_data(max);
 				if (pass) {
 					xb.L1_pass++;
 
@@ -1061,9 +1060,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
                     mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
-                    int events = mParticleReco.event_count;
                     int needev = CONFIG.getCalibrationSampleFrames();
-                    float frac = events/((float)1.0*needev);
+                    float frac = calibration_counter/((float)1.0*needev);
                     int progress = (int)(360*frac);
                     mLayoutData.mProgressWheel.setProgress( progress );
                      }

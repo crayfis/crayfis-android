@@ -152,7 +152,6 @@ public class ParticleReco {
 
 
     public History hist_mean = new History(200);
-    public History hist_max = new History(200);
 
     // counters to keep track of how many events and pixels
     // have been built since the last reset.
@@ -174,7 +173,6 @@ public class ParticleReco {
         h_maxpixel.clear();
         h_numpixel.clear();
         hist_mean.clear();
-        hist_max.clear();
     }
 
     // When measuring bg and variance, we only look at some pixels
@@ -370,7 +368,6 @@ public class ParticleReco {
             h_maxpixel.fill(max_val);
             h_numpixel.fill(num_pix);
 
-            hist_max.new_data(max_val);
             hist_mean.new_data((int)(tot_pix/(1.0*num_tot_pix)));
 
             pixel_count += num_pix;

@@ -5,9 +5,27 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 public class L1Calibrator {
     private FrameHistory<Integer> max_pixels;
 
-    public L1Calibrator(int n_frames) {
+    private final int n_frames = 1000;
+
+    private L1Calibrator() {
         max_pixels = new FrameHistory<Integer>(n_frames);
     }
+
+    private static L1Calibrator sInstance;
+
+    /**
+     * Get the instance of {@link edu.uci.crayfis.particle.ParticleReco}.
+     *
+     * @return {@link edu.uci.crayfis.particle.ParticleReco}
+     */
+    public static synchronized L1Calibrator getInstance() {
+        if (sInstance == null) {
+            sInstance = new L1Calibrator();
+        }
+        return sInstance;
+    }
+
+    public FrameHistory<Integer> getMaxPixels() { return max_pixels; }
 
     public void clear() {
         max_pixels.clear();
