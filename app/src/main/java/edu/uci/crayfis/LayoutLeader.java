@@ -11,13 +11,13 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.WebView;
 import android.view.View;
+import android.content.Context;
 
 import android.widget.Toast;
 
 
 public class LayoutLeader extends Fragment {
 
-    private final String leaderURL = "http://dev.crayfis.io:8081/map.html";
 
     private static LayoutLeader mInstance =null;
 
@@ -48,7 +48,8 @@ public class LayoutLeader extends Fragment {
     }
 
 
-
+    private String server_address;
+    private String server_port;
 
     WebView browserView;
     /** Called when the activity is first created. */
@@ -56,6 +57,10 @@ public class LayoutLeader extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        Context context = getActivity();
+        server_address = context.getString(R.string.server_address);
+        server_port = context.getString(R.string.server_port);
 
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.leader, null);
 
@@ -73,6 +78,8 @@ public class LayoutLeader extends Fragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
+        final String leaderURL = "http://"+server_address+":"+server_port+"/map.html";
+
         browserView.loadUrl(leaderURL);
 
         return root;

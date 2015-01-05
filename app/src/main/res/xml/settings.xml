@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
- 	 <EditTextPreference
-                android:title="Name"
-                android:summary="Your Name"
-                android:defaultValue="Citizen Scientist"
-                android:key="prefUserName"/>
+
      <EditTextPreference
-	     		android:title="Email"
-	     		android:summary="Your email address"
-	    		android:defaultValue="we@love.you"
-	    		android:key="prefUserEmail"/>
-     <EditTextPreference
-         		android:title="User ID"
-         		android:summary="Your CRAYFIS user ID"
+         		android:title="CRAYFIS User code"
+         		android:summary="Generated from the CRAYFIS website"
          		android:key="prefUserID" />
      
-     <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="prefAnon"
-            android:summary="Be anonymous"
-            android:title="Privacy" >
-     </CheckBoxPreference>
+
 
      <CheckBoxPreference
          	android:defaultValue="true"

@@ -2,8 +2,9 @@
 <resources>
 	<bool name="force_https">false</bool>
 	<string name="server_address">dev.crayfis.io</string>
-	<string name="server_port">80</string>
+	<string name="server_port">8080</string>
 	<string name="upload_uri">/submit</string>
-	
+	<string name="account_name">none</string>
+    <integer name="account_score">0</integer>
 	<bool name="debug_stream">false</bool>
 </resources>

@@ -41,10 +41,10 @@ public final class StatusView extends TextView {
 
         switch(currentState) {
             case CALIBRATION: {
-                setText(getPercentageValue(currentState,
-                        CONFIG.getCalibrationSampleFrames(),
-                        status.getEventCount(),
-                        status.getFps()));
+                final String text = String.format("Frame rate: %d fps",
+                        status.getFps());
+                setText(text);
+
                 break;
             }
             case STABILIZATION: {
@@ -52,19 +52,9 @@ public final class StatusView extends TextView {
                 break;
             }
             case DATA: {
-                final Resources resources = getResources();
-                final int totalFrames = status.getTotalEvents();
-                final int totalCandidates = status.getTotalPixels();
-                final String frames = resources.getQuantityString(R.plurals.total_frames,
-                        totalFrames,
-                        totalFrames);
-                final String candidates = resources.getQuantityString(R.plurals.total_candidates,
-                        totalCandidates,
-                        totalCandidates);
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                final String text = String.format("Time: %ds\nPoints: %1.1f\nFrame rate: %d fps",
+                final String text = String.format("Time: %ds\nFrame rate: %d fps",
                         status.getTime(),
-                        (float)(status.getTime()*status.getTime())/10000.0,
                         status.getFps()
                         );
                 setText(text);
