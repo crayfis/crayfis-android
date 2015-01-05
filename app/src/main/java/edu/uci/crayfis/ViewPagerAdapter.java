@@ -21,12 +21,13 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
     }
 
-    private static String[] Titles = {"Status","Data","Dosimeter","Gallery","Developer"};
+    private static String[] Titles = {"Status","Data","Leaderboard","Dosimeter","Gallery","Developer"};
     public static final int STATUS = 0;
     public static final int DATA = 1;
-    public static final int DOSIMETER = 2;
-    public static final int GALLERY = 3;
-    public static final int DEVELOPER = 4;
+    public static final int LEADER = 2;
+    public static final int DOSIMETER = 3;
+    public static final int GALLERY = 4;
+    public static final int DEVELOPER = 5;
 
     @Override
     public CharSequence getPageTitle(int position) {
@@ -53,6 +54,9 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
             case DEVELOPER:
                 f=LayoutDeveloper.getInstance();
                     break;
+            case LEADER:
+                f=LayoutLeader.getInstance();
+                break;
                }
 
         return f;

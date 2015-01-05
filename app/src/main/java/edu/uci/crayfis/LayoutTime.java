@@ -48,14 +48,14 @@ public class LayoutTime extends Fragment {
 
     public static GraphView.GraphViewData[] make_graph_data(Integer values[])
     {
-        CFLog.i(" Making graph data for nbins ="+values.length);
+        //CFLog.i(" Making graph data for nbins ="+values.length);
         int max_bin = values.length;
 
         boolean do_log=false;
         GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
         for (int i=0;i<max_bin;i++)
         {
-            CFLog.i(" make graph data: "+i);
+            //CFLog.i(" make graph data: "+i);
             if (do_log) {
                 if (values[i] > 0)
                     gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
