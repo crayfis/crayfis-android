@@ -1,5 +1,6 @@
 package edu.uci.crayfis.camera;
 
+import android.hardware.Camera;
 import android.location.Location;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -9,7 +10,6 @@ import edu.uci.crayfis.exposure.ExposureBlock;
  * location of the device and the time the frame was captured.
  *
  * TODO Jodi - Not really sure what ExposureBlock is yet.
- * TODO Jodi - Is epoch in seconds or milliseconds?
  */
 public class RawCameraFrame {
 
@@ -18,20 +18,25 @@ public class RawCameraFrame {
     private final ExposureBlock mExposureBlock;
     private Location mLocation;
     private float[] mOrientation;
+    private Camera.Size mSize;
+    private int mPixMax;
 
     /**
      * Create a new instance.
      *
      * @param bytes Raw bytes from the camera.
-     * @param t The time.
+     * @param t The time in milliseconds.
      * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}
      * @param orient The orientation of the device.
+     * @param size The pixel dimensions of the frame
      */
-    public RawCameraFrame(byte[] bytes, long t, ExposureBlock exposureBlock, float[] orient) {
+    public RawCameraFrame(byte[] bytes, long t, ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
         mBytes = bytes;
         mAcquiredTime = t;
         mExposureBlock = exposureBlock;
         mOrientation = orient.clone();
+        mSize = size;
+        mPixMax = -1;
     }
 
     /**
@@ -87,5 +92,24 @@ public class RawCameraFrame {
      */
     public float[] getOrientation() {
         return mOrientation;
+    }
+
+    public Camera.Size getSize() { return mSize; }
+
+    public int getPixMax() {
+        if (mPixMax >= 0) {
+            return mPixMax;
+        }
+
+        int length = mSize.height * mSize.width;
+        for (int i = 0; i < length; i++) {
+            // make sure we promote the (signed) byte to int for comparison!
+            int val = mBytes[i] & 0xFF;
+            if ( val > mPixMax) {
+                mPixMax = val;
+            }
+        }
+
+        return mPixMax;
     }
 }

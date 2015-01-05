@@ -2,27 +2,22 @@ package edu.uci.crayfis;
 
 import edu.uci.crayfis.SpeedometerView;
 
+import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.util.CFLog;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnLongClickListener;
 import android.view.ViewGroup;
-import android.util.Log;
+
 
 /**
  * Created by danielwhiteson on 11/18/14.
  */
 
 
-import android.content.Context;
-        import android.os.Bundle;
-        import android.support.v4.app.Fragment;
-        import android.view.LayoutInflater;
-        import android.view.View;
-        import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
@@ -34,7 +29,6 @@ import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.ValueDependentColor;
 
-import edu.uci.crayfis.particle.ParticleReco;
 
 public class LayoutTime extends Fragment {
 
@@ -52,33 +46,28 @@ public class LayoutTime extends Fragment {
         }
     }
 
-    public static GraphView.GraphViewData[] make_graph_data(int values[], boolean do_log, int start, int max_bin)
+    public static GraphView.GraphViewData[] make_graph_data(Integer values[])
     {
-        // show some empty bins
-        if (max_bin<values.length)
-            max_bin += 2;
+        CFLog.i(" Making graph data for nbins ="+values.length);
+        int max_bin = values.length;
 
+        boolean do_log=false;
         GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
-        int which=start+1;
         for (int i=0;i<max_bin;i++)
         {
-            if (which>=max_bin){ which=0;}
+            CFLog.i(" make graph data: "+i);
             if (do_log) {
-                if (values[which] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[which]));
+                if (values[i] > 0)
+                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
                 else
                     gd[i] = new GraphView.GraphViewData(i, 0);
             } else
-                gd[i] = new GraphView.GraphViewData(i, values[which]);
-            which++;
-
-
+                gd[i] = new GraphView.GraphViewData(i, values[i]);
         }
         return gd;
     }
 
-    private static ParticleReco mParticleReco;
-
+    private static L1Calibrator mL1Calibrator;
     private static LayoutTime mInstance =null;
 
     private static SpeedometerView mSpeedometerView;
@@ -109,21 +98,22 @@ public class LayoutTime extends Fragment {
 
     public static void updateData() {
 
-        if (mParticleReco !=null && mGraphSeriesTime !=null) {
-            mGraphSeriesTime.resetData(make_graph_data(mParticleReco.hist_max.values, false, mParticleReco.hist_max.current_time, mParticleReco.hist_max.values.length));
-
+        if (mL1Calibrator !=null && mGraphSeriesTime !=null) {
+            Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
+            values=mL1Calibrator.getMaxPixels().toArray(values);
+            mGraphSeriesTime.resetData(make_graph_data(values));
             // time average
             float mean = 0;
-            for (int i=0;i<mParticleReco.hist_max.values.length;i++)
-                mean += mParticleReco.hist_max.values[i];
-            mean /= (1.0*mParticleReco.hist_max.values.length);
-            mSpeedometerView.setSpeed(mParticleReco.hist_max.values[mParticleReco.hist_max.current_time]);
+            for (int i=0;i<values.length;i++)
+                mean += values[i];
+            mean /= (1.0*values.length);
+            mSpeedometerView.setSpeed(mean);
         }
     }
 
     public LayoutTime()
     {
-        mParticleReco = ParticleReco.getInstance();
+        mL1Calibrator = L1Calibrator.getInstance();
     }
 
     public static LayoutTime getInstance() {
@@ -140,7 +130,7 @@ public class LayoutTime extends Fragment {
 
 
 
-        int novals[] = new int[256];
+        Integer novals[] = new Integer[256];
         for (int i=0;i<256;i++) novals[i]=1;
 
         Context context = getActivity();
@@ -153,7 +143,7 @@ public class LayoutTime extends Fragment {
 
         GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
         mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());
-        mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals, true, 0, 20));
+        mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals));
         mGraphTime.setScalable(true);
         mGraphTime.addSeries(mGraphSeriesTime);
 

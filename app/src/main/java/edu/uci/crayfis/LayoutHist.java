@@ -93,8 +93,8 @@ public class LayoutHist extends Fragment{
     public static void updateData() {
 
         if (mParticleReco !=null) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.values));
-            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.integral), 0.);
+            mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.getValues()));
+            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.getIntegral()), 0.);
         }
 
     }
@@ -123,7 +123,7 @@ public class LayoutHist extends Fragment{
         if (isVisibleToUser) {
             if (mParticleReco != null)
             {
-                if (mParticleReco.h_l2pixel.integral==0)
+                if (mParticleReco.h_l2pixel.getIntegral()==0)
                 {
                     Toast.makeText(getActivity(), "When the app has finished calibrating, this pane will show a histogram of the particle candidates.",Toast.LENGTH_LONG).show();
                 } else {

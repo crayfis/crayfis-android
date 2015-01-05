@@ -66,7 +66,7 @@ class L2Processor extends Thread {
     private final ParticleReco PARTICLE_RECO;
 
     private long L2counter = 0;
-    private long mCalibrationStop;
+    //private long mCalibrationStop;
 
     // true if a request has been made to stop the thread
     volatile boolean stopRequested = false;
@@ -194,6 +194,12 @@ class L2Processor extends Thread {
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 pixels = PARTICLE_RECO.buildL2Pixels(frame, xb.L2_thresh);
 
+                if (pixels == null) {
+                    // oops! this probably means we are out of memory. what to do?
+                    CFLog.e("L2 reco failed: out of memory! Dropping frame.");
+                    continue;
+                }
+
                 // check whether there are too many L2 pixels in this event
                 if (pixels.size() > CONFIG.getQualityPixFraction() * PARTICLE_RECO.getTotalPixels()) {
                     // oops! too many pixels in this frame. trigger recalibration.
@@ -260,12 +266,14 @@ class L2Processor extends Thread {
             // If we're calibrating, check if we've processed enough
             // frames to decide on the threshold(s) and go back to
             // data-taking mode.
+            /*
             if (APPLICATION.getApplicationState() == CFApplication.State.CALIBRATION
                     && PARTICLE_RECO.event_count >= CONFIG.getCalibrationSampleFrames()) {
                 // mark the time of the last event from the run.
                 mCalibrationStop = frame.getAcquiredTime();
                 APPLICATION.setApplicationState(CFApplication.State.DATA);
             }
+            */
         }
         running = false;
     }
@@ -278,9 +286,11 @@ class L2Processor extends Thread {
         return mTotalEvents;
     }
 
+    /*
     public long getCalibrationStop() {
         return mCalibrationStop;
     }
+    */
 
     public void setFixedThreshold(boolean fixedThreshold) {
         mFixedThreshold = fixedThreshold;
