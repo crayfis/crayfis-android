@@ -26,6 +26,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_CACHE_UPLOAD_INTERVAL = "min_cache_upload_interval";
     private static final String KEY_CURRENT_EXPERIMENT = "current_experiment";
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
+    private static final String KEY_ACCOUNT_NAME = "account_name";
+    private static final String KEY_ACCOUNT_SCORE = "account_score";
+
 
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
@@ -44,6 +47,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_CACHE_UPLOAD_INTERVAL = 30;
     private static final String DEFAULT_CURRENT_EXPERIMENT = null;
     private static final String DEFAULT_DEVICE_NICKNAME = null;
+    private static final String DEFAULT_ACCOUNT_NAME = null;
+    private static final long DEFAULT_ACCOUNT_SCORE = 0;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -59,6 +64,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mCacheUploadInterval;
     private String mCurrentExperiment;
     private String mDeviceNickname;
+    private String mAccountName;
+    private long mAccountScore;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -76,6 +83,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCacheUploadInterval = DEFAULT_CACHE_UPLOAD_INTERVAL;
         mCurrentExperiment = DEFAULT_CURRENT_EXPERIMENT;
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
+        mAccountName = DEFAULT_ACCOUNT_NAME;
+        mAccountScore = DEFAULT_ACCOUNT_SCORE;
     }
 
     /**
@@ -235,6 +244,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mDeviceNickname;
     }
 
+
+    public String getAccountName() { return mAccountName; }
+    public long getAccountScore() { return mAccountScore; }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
@@ -250,6 +263,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCacheUploadInterval = sharedPreferences.getInt(KEY_CACHE_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
         mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
+        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME,DEFAULT_ACCOUNT_NAME);
+        mAccountScore = sharedPreferences.getLong(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
+
     }
 
     /**
@@ -294,6 +310,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getMaxChunkSize() != null) {
             mMaxChunkSize = serverCommand.getMaxChunkSize();
         }
+        if (serverCommand.getAccountName() != null) {
+            mAccountName = serverCommand.getAccountName();
+
+        }
+        if (serverCommand.getAccountScore() != null) {
+            mAccountScore = serverCommand.getAccountScore();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
@@ -310,6 +333,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt(KEY_MAX_CHUNK_SIZE, mMaxChunkSize)
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
+                .putString(KEY_ACCOUNT_NAME,mAccountName)
+                .putLong(KEY_ACCOUNT_SCORE,mAccountScore)
                 .apply();
     }
 }
