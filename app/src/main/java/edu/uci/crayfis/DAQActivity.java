@@ -445,7 +445,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		run_config = b.build();
 	}
 
-
+    // location manager
+    LocationManager mLocationManager;
+    LocationListener mLocationListener;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -514,7 +516,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		starttime = System.currentTimeMillis();
 
-		LocationListener locationListener = new LocationListener() {
+		mLocationListener = new LocationListener() {
 			public void onLocationChanged(Location location) {
 				// Called when a new location is found by the network location
 				// provider.
@@ -532,17 +534,15 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 			}
 		};
 		// get the manager
-        LocationManager locationManager = (LocationManager) this
+        mLocationManager = (LocationManager) this
                 .getSystemService(Context.LOCATION_SERVICE);
 
 		// ask for updates from network and GPS
-		// locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-		// 0, 0, locationListener);
-		// locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-		// 0, 0, locationListener);
+		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
 
 		// get the last known coordinates for an initial value
-        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 		if (null == location) {
 			location = new Location("BLANK");
 		}
@@ -633,6 +633,18 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
         mUiUpdateTimer = new Timer();
         mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000l, 1000l);
+
+        // ask for updates from network and GPS
+        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+
+        // get the last known coordinates for an initial value
+        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if (location != null)
+            CFApplication.setLastKnownLocation(location);
+
+
+
     }
 
 	@Override
