@@ -48,7 +48,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_CURRENT_EXPERIMENT = null;
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
-    private static final long DEFAULT_ACCOUNT_SCORE = 0;
+    private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -65,7 +65,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mCurrentExperiment;
     private String mDeviceNickname;
     private String mAccountName;
-    private long mAccountScore;
+    private float mAccountScore;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -246,7 +246,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
 
     public String getAccountName() { return mAccountName; }
-    public long getAccountScore() { return mAccountScore; }
+    public float getAccountScore() { return mAccountScore; }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
@@ -264,7 +264,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME,DEFAULT_ACCOUNT_NAME);
-        mAccountScore = sharedPreferences.getLong(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
+        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
 
     }
 
@@ -334,7 +334,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
-                .putLong(KEY_ACCOUNT_SCORE,mAccountScore)
+                .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .apply();
     }
 }

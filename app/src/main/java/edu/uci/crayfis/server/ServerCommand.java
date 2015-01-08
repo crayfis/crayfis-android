@@ -28,7 +28,7 @@ public class ServerCommand {
     @SerializedName("experiment") private String mCurrentExperiment;
     @SerializedName("nickname") private String mDeviceNickname;
     @SerializedName("account_name") private String mAccountName;
-    @SerializedName("account_score") private Long mAccountScore;
+    @SerializedName("account_score") private Float mAccountScore;
 
     /**
      * Get the Account Score
@@ -36,7 +36,7 @@ public class ServerCommand {
      * @return Long or {@code null}.
      */
     @Nullable
-    public Long getAccountScore() {
+    public Float getAccountScore() {
         return mAccountScore;
     }
 

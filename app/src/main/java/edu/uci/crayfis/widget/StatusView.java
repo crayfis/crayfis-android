@@ -53,12 +53,12 @@ public final class StatusView extends TextView {
             }
             case DATA: {
                 // TODO Format status.getTime() to represent hours, minutes and seconds.
-                 String text = String.format("Time: %ds\nFrame rate: %d fps",
+                 String text = String.format("Run Time: %ds\nFrame rate: %d fps",
                         status.getTime(),
                         status.getFps()
                         );
                 if (CONFIG.getAccountName() != null) {
-                 text += String.format("\n CRAYFIS account: %s\n Account Score: %d\n",CONFIG.getAccountName(),CONFIG.getAccountScore());
+                 text += String.format("\n\n Account: %s\n Score: %1.1f\n",CONFIG.getAccountName(),CONFIG.getAccountScore());
                 }
                 setText(text);
                 break;
