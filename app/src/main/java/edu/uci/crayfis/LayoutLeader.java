@@ -78,7 +78,7 @@ public class LayoutLeader extends Fragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+server_address+":"+server_port+"/map.html";
+        final String leaderURL = "http://"+server_address+":"+server_port+"/embed/android";
 
         browserView.loadUrl(leaderURL);
 
