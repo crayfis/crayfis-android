@@ -1101,13 +1101,29 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 if (mLayoutDeveloper==null)
                     mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
 
+                String server_address = context.getString(R.string.server_address);
+                String server_port = context.getString(R.string.server_port);
+                String upload_uri = context.getString(R.string.upload_uri);
+                boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+
+                String upload_proto;
+                if (force_https) {
+                    upload_proto = "https://";
+                } else {
+                    upload_proto = "http://";
+                }
+                String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
+
                 if (mLayoutDeveloper != null) {
                     if (mLayoutDeveloper.mAppBuildView != null)
                     mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
                     if (mLayoutDeveloper.mTextView != null)
-                    mLayoutDeveloper.mTextView.setText("Developer View\n L1 Threshold:"
+                    mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
                             + CONFIG.getL1Threshold() + "\n"
-                            + "Exposure Blocks:" + xbManager.getTotalXBs());
+                            + "Exposure Blocks:" + xbManager.getTotalXBs() + "\n"
+                            + "Upload server = "+upload_url+"\n"
+                            + "Current location: (long="+ CFApplication.getLastKnownLocation().getLongitude()+", lat="+CFApplication.getLastKnownLocation().getLatitude()+")" + "\n"
+                    );
                 }
 
             }

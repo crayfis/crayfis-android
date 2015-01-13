@@ -10,8 +10,11 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.WebView;
+import android.widget.ProgressBar;
+import android.webkit.WebChromeClient;
 import android.view.View;
 import android.content.Context;
+
 
 import android.widget.Toast;
 
@@ -33,6 +36,8 @@ public class LayoutLeader extends Fragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
+
+
             if (!shown_message)
             {
 
@@ -50,15 +55,19 @@ public class LayoutLeader extends Fragment {
 
     private String server_address;
     private String server_port;
+    private Context context;
+
 
     WebView browserView;
+    ProgressBar mProgressBar;
     /** Called when the activity is first created. */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
     {
+
         super.onCreate(savedInstanceState);
 
-        Context context = getActivity();
+         context = getActivity();
         server_address = context.getString(R.string.server_address);
         server_port = context.getString(R.string.server_port);
 
@@ -69,9 +78,19 @@ public class LayoutLeader extends Fragment {
 
         //Creation of the Webview found in the XML Layout file
         browserView = (WebView)root.findViewById(R.id.webkit);
+        mProgressBar = (ProgressBar)root.findViewById(R.id.webprogress);
+        mProgressBar.setVisibility(View.VISIBLE);
 
         //Enable Javascripts
         browserView.getSettings().setJavaScriptEnabled(true);
+
+        browserView.setWebChromeClient(new WebChromeClient() {
+            public void onProgressChanged(WebView view, int progress) {
+                mProgressBar.setProgress(progress);
+                if (progress==100){ mProgressBar.setVisibility(View.GONE);}
+
+            }
+        });
 
         //Removes both vertical and horizontal scroll bars
         browserView.setVerticalScrollBarEnabled(false);

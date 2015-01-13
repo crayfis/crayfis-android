@@ -31,6 +31,19 @@ public class Utils {
 
     public void saveImage(SavedImage si)
     {
+        ArrayList<String> imageList = getListOfImages();
+
+        CFLog.d("saveImage: current images: "+imageList.size());
+
+        if (imageList.size() > MAX_NUM_IMAGES)
+        {
+         // delete first image
+            CFLog.d("saveImage: deleting "+imageList.get(0));
+
+            File file = new File(imageList.get(0));
+            file.delete();
+        }
+
         CFLog.d(" Utils::saveImage si="+si);
         try {
             File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
@@ -51,7 +64,7 @@ public class Utils {
     }
 
 
-
+    public static final int MAX_NUM_IMAGES = 100;
 
     // Number of columns of Grid View
     public static final int NUM_OF_COLUMNS = 2;
@@ -100,6 +113,53 @@ public class Utils {
             }
         }
     }
+
+    public ArrayList<String> getListOfImages() {
+        ArrayList<String> filePaths = new ArrayList<String>();
+        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
+
+
+        // check for directory
+        if (directory.isDirectory()) {
+            // getting list of file paths
+            File[] listFiles = directory.listFiles();
+            CFLog.d("Gallery: Gallery files num="+listFiles.length);
+            // Check for count
+            if (listFiles.length > 0) {
+
+                // loop through all files
+                for (int i = 0; i < listFiles.length; i++) {
+
+                    // get file path
+                    String filePath = listFiles[i].getAbsolutePath();
+                    CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
+
+                    // check for supported file extension
+                    if (IsSupportedFile(filePath)) {
+                        // Add image path to array list
+                        CFLog.d("Gallery: Adding file "+i+" = "+filePath);
+
+                        filePaths.add(filePath);
+                    }
+                }
+            } else {
+                // Gallery now shows number of files, so Toast not needed
+                /*
+                // image directory is empty
+                Toast.makeText(
+                        _context,
+                        DIRNAME
+                                + " is empty. Please load some images in it !",
+                        Toast.LENGTH_LONG).show();
+                        */
+            }
+
+        }
+        return filePaths;
+    }
+
+
 
 
     // Reading file paths from SDCard

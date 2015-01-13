@@ -139,7 +139,9 @@ public class LayoutGallery extends Fragment {
         gridView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 CFLog.d("GridView: clicked"+position+id);
-                Toast.makeText(getActivity(), "Pixel hits: " + images.get(position).num_pix+"  Max pixel: "+images.get(position).max_pix+"  Date: "+images.get(position).date, Toast.LENGTH_SHORT).show();
+                try {
+                    Toast.makeText(getActivity(), "Pixel hits: " + images.get(position).num_pix + "  Max pixel: " + images.get(position).max_pix + "  Date: " + images.get(position).date, Toast.LENGTH_SHORT).show();
+                } catch (Exception e) { };
             }
         });
 

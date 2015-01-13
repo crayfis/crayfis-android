@@ -73,6 +73,8 @@ public class OutputManager extends Thread {
     }
 
 
+
+
 	private OutputManager(Context context) {
 		this.context = context;
 
