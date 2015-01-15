@@ -1238,8 +1238,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             + CONFIG.getL1Threshold() + "\n"
                             + "Exposure Blocks:" + xbManager.getTotalXBs() + "\n"
                             + "Upload server = "+upload_url+"\n"
-                            + "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+")" + "\n"
-                            + "Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+")" + "\n"
+                            + "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime()+ "\n"
+                            + "Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime()+"\n"
 
                     );
                 }
