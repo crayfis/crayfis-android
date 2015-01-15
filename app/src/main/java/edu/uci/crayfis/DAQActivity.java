@@ -37,8 +37,18 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.common.GooglePlayServicesUtil;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.location.LocationServices;
+
+
 import android.location.Location;
-import android.location.LocationListener;
+//import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -88,7 +98,8 @@ import edu.uci.crayfis.widget.DataView;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener {
+public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener,
+        ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private ViewPager _mViewPager;
     private ViewPagerAdapter _adapter;
@@ -223,6 +234,26 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             CFLog.e("Failed to parse server response: " + e.getMessage());
         }
 	}
+
+    private static boolean locationWarningGiven = false;
+
+    public void locationWarning() {
+        if (!locationWarningGiven) {
+            final TextView tx1 = new TextView(this);
+            tx1.setText("CRAYFIS is unable to determine the location of your device. Please check your Location settings.");
+            tx1.setTextColor(Color.WHITE);
+            tx1.setBackgroundColor(Color.BLACK);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(Html.fromHtml("<font color='#FFFFFF'>CRAYFIS Location Error</font>")).setCancelable(false)
+                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                        }
+                    })
+
+                    .setView(tx1).show();
+            locationWarningGiven = true;
+        }
+    }
 
 	public void clickedAbout() {
 
@@ -446,8 +477,109 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
     // location manager
-    LocationManager mLocationManager;
-    LocationListener mLocationListener;
+
+    GoogleApiClient mGoogleApiClient;
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        CFLog.d("Build API client:"+mGoogleApiClient);
+    }
+
+    Location mLastLocation;
+    LocationRequest mLocationRequest;
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+
+        // first get last known location
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        CFLog.d("onConnected: asking for location = "+mLastLocation);
+
+        // Google fails if the services app is not installed. In that case
+        // use the deprecated location services as backup
+        if (mLastLocation == null)
+           mLastLocation = mLastLocationDeprecated;
+
+        // set the location
+        newLocation(mLastLocation);
+
+        // request updates as well
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+
+
+    }
+
+    public void onLocationChanged(Location location)
+    {
+        CFLog.d("onLocationChanged: new  location = "+mLastLocation);
+
+        newLocation(location);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result)
+    {
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause)
+    {
+    }
+
+
+
+    // deprecated location stuff
+    android.location.LocationListener mLocationListener = null;
+    Location mLastLocationDeprecated;
+
+    public Location getLocationDeprecated()
+    {
+        if (mLocationListener==null) {
+            mLocationListener = new android.location.LocationListener() {
+                public void onLocationChanged(Location location) {
+                    // Called when a new location is found by the network location
+                    // provider.
+                    CFLog.d("onLocationChangedDeprecated: new  location = "+location);
+
+                    mLastLocationDeprecated = location;
+                }
+
+                public void onStatusChanged(String provider, int status,
+                                            Bundle extras) {
+                }
+
+                public void onProviderEnabled(String provider) {
+                }
+
+                public void onProviderDisabled(String provider) {
+                }
+            };
+        }
+        // get the manager
+        LocationManager locationManager = (LocationManager) this
+                .getSystemService(Context.LOCATION_SERVICE);
+
+        // ask for updates from network and GPS
+        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+
+        // get the last known coordinates for an initial value
+        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if (null == location) {
+            location = new Location("BLANK");
+        }
+        return location;
+    }
+
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -516,37 +648,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		starttime = System.currentTimeMillis();
 
-		mLocationListener = new LocationListener() {
-			public void onLocationChanged(Location location) {
-				// Called when a new location is found by the network location
-				// provider.
-				newLocation(location);
-			}
+        /////////
+        CFLog.d("  @@@@ LOCATION STUFF 2 @@@@ ");
+        newLocation(new Location("BLANK"));
+        buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
-			public void onStatusChanged(String provider, int status,
-					Bundle extras) {
-			}
-
-			public void onProviderEnabled(String provider) {
-			}
-
-			public void onProviderDisabled(String provider) {
-			}
-		};
-		// get the manager
-        mLocationManager = (LocationManager) this
-                .getSystemService(Context.LOCATION_SERVICE);
-
-		// ask for updates from network and GPS
-		mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-		mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-
-		// get the last known coordinates for an initial value
-        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-		if (null == location) {
-			location = new Location("BLANK");
-		}
-        CFApplication.setLastKnownLocation(location);
+        // backup location if Google play isn't working or installed
+        mLastLocationDeprecated = getLocationDeprecated();
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
@@ -574,6 +682,23 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 	}
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+        CFLog.d("CALL: onStart!");
+        mGoogleApiClient.connect();
+
+    }
+    @Override
+    protected void onStop()
+    {
+        super.onStop();
+
+        mGoogleApiClient.disconnect();
+
+    }
 
 	@Override
 	protected void onDestroy() {
@@ -633,17 +758,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
         mUiUpdateTimer = new Timer();
         mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000l, 1000l);
-
-        // ask for updates from network and GPS
-        mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-        mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-
-        // get the last known coordinates for an initial value
-        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if (location != null)
-            CFApplication.setLastKnownLocation(location);
-
-
 
     }
 
@@ -1014,6 +1128,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
      */
     private final class UiUpdateTimerTask extends TimerTask {
 
+
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
@@ -1025,7 +1140,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         if (outputThread.valid_id) {
                             reason = "Server is overloaded.";
                         } else {
-                            reason = "Invalid invite code.";
+                            reason = "Invalid user code.";
                         }
                         LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
                     }
@@ -1036,8 +1151,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     LayoutData.mMessageView.setMessage(null, null);
                 }
 
+
                 final StatusView.Status status = new StatusView.Status.Builder()
-                        .setEventCount(mParticleReco.event_count)
+                        .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0 )
                         .setFps((int) (getFPS()))
                         .setStabilizationCounter(stabilization_counter)
                         .setTotalEvents(l2thread.getTotalEvents())
@@ -1122,8 +1238,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             + CONFIG.getL1Threshold() + "\n"
                             + "Exposure Blocks:" + xbManager.getTotalXBs() + "\n"
                             + "Upload server = "+upload_url+"\n"
-                            + "Current location: (long="+ CFApplication.getLastKnownLocation().getLongitude()+", lat="+CFApplication.getLastKnownLocation().getLatitude()+")" + "\n"
+                            + "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+")" + "\n"
+                            + "Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+")" + "\n"
+
                     );
+                }
+
+                if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude()==0.0) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText()+
+                            "Location unavailable.");
+                    locationWarning();
                 }
 
             }
