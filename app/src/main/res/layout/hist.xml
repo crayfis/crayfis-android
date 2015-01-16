@@ -10,6 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="20sp"
+        android:typeface="monospace"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
         tools:text=" Frames:0\n Candidates:0 "/>

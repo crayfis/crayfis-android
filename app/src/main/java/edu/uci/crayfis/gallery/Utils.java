@@ -86,12 +86,13 @@ public class Utils {
         this._context = context;
     }
 
-    public void deleteImages()
+    public int deleteImages()
     {
 
         File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
 
+        int num_deleted=0;
 
         // check for directory
         if (directory.isDirectory()) {
@@ -109,9 +110,11 @@ public class Utils {
                     File file = new File(filePath);
                     boolean res = file.delete();
                     CFLog.d("Gallery: success? "+res+" deleting file "+filePath);
+                    if (res) num_deleted++;
                 }
             }
         }
+        return num_deleted;
     }
 
     public ArrayList<String> getListOfImages() {
@@ -133,12 +136,12 @@ public class Utils {
 
                     // get file path
                     String filePath = listFiles[i].getAbsolutePath();
-                    CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
+                   // CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
 
                     // check for supported file extension
                     if (IsSupportedFile(filePath)) {
                         // Add image path to array list
-                        CFLog.d("Gallery: Adding file "+i+" = "+filePath);
+                        //CFLog.d("Gallery: Adding file "+i+" = "+filePath);
 
                         filePaths.add(filePath);
                     }

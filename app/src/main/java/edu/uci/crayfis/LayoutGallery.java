@@ -102,6 +102,9 @@ public class LayoutGallery extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
+
+        CFLog.d("Gallery on create view called");
+
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.gallery, null);
 
         gridView = (GridView) root.findViewById(R.id.grid_view);
@@ -124,7 +127,10 @@ public class LayoutGallery extends Fragment {
             @Override
             public void onClick(View v) {
                 CFLog.d("Layout Gallery: deleting images!");
-                utils.deleteImages();
+                int num = utils.deleteImages();
+
+                Toast.makeText(getActivity(), "Deleted "+num+" images.",
+                        Toast.LENGTH_SHORT).show();
                 images = utils.getSavedImages();
 
             }

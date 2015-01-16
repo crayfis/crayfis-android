@@ -54,7 +54,7 @@ public class SavedImage {
 
         max_pix=max;
         num_pix=pixels.size();
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy-HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
         Date resultdate = new Date(t);
         date=sdf.format(resultdate);
         filename=makeFilename(max, num_pix, date);

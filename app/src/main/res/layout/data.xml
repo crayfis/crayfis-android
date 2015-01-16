@@ -25,6 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textSize="20sp"
+        android:typeface="monospace"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
         tools:text="Time: 1h2m3s \nRate: 23fps"/>
