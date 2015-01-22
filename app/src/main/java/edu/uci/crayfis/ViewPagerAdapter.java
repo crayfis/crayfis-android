@@ -21,13 +21,14 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
     }
 
-    private static String[] Titles = {"Status","Data","Leaderboard","Dosimeter","Gallery","Developer"};
+    private static String[] Titles = {"Status","Data","Network Map","Your Account","","Gallery","Developer"};
     public static final int STATUS = 0;
     public static final int DATA = 1;
     public static final int LEADER = 2;
-    public static final int DOSIMETER = 3;
-    public static final int GALLERY = 4;
-    public static final int DEVELOPER = 5;
+    public static final int LOGIN = 3;
+    public static final int DOSIMETER = 4;
+    public static final int GALLERY = 5;
+    public static final int DEVELOPER = 6;
 
     @Override
     public CharSequence getPageTitle(int position) {
@@ -38,26 +39,29 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         Fragment f = new Fragment();
-        switch(position){
+        switch(position) {
             case STATUS:
-                f=LayoutData.getInstance();
+                f = LayoutData.getInstance();
                 break;
             case DATA:
-                f=LayoutHist.getInstance();
+                f = LayoutHist.getInstance();
                 break;
             case DOSIMETER:
-                f=LayoutTime.getInstance();
+                f = LayoutTime.getInstance();
                 break;
             case GALLERY:
-                f=LayoutGallery.getInstance();
+                f = LayoutGallery.getInstance();
                 break;
             case DEVELOPER:
-                f=LayoutDeveloper.getInstance();
-                    break;
-            case LEADER:
-                f=LayoutLeader.getInstance();
+                f = LayoutDeveloper.getInstance();
                 break;
-               }
+            case LEADER:
+                f = LayoutLeader.getInstance();
+                break;
+            case LOGIN:
+                f = LayoutLogin.getInstance();
+                break;
+        }
 
         return f;
     }

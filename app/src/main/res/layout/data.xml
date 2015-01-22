@@ -20,6 +20,12 @@
         ProgressWheel:barWidth="50dp"
         ProgressWheel:rimWidth="30dp" />
 
+    <edu.uci.crayfis.widget.MessageView
+        android:layout_width="match_parent"
+        android:layout_height="24dp"
+        android:gravity="center"
+        android:id="@+id/message_view"/>
+
     <edu.uci.crayfis.widget.StatusView
         android:id="@+id/status_view"
         android:layout_width="match_parent"
@@ -30,11 +36,6 @@
         android:textColor="@android:color/white"
         tools:text="Time: 1h2m3s \nRate: 23fps"/>
 
-    <edu.uci.crayfis.widget.MessageView
-        android:layout_width="match_parent"
-        android:layout_height="24dp"
-        android:gravity="center"
-        android:id="@+id/message_view"/>
 
 
 

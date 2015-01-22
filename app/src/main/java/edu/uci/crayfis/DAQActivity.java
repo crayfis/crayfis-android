@@ -814,12 +814,35 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
     }
 
+    private void userErrorMessage(String mess, boolean fatal)
+    {
+        final TextView tx1 = new TextView(this);
+        tx1.setText(mess);
+        tx1.setTextColor(Color.WHITE);
+        tx1.setBackgroundColor(Color.BLACK);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(Html.fromHtml("<font color='#FFFFFF'>CRAYFIS Error</font>")).setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                    }
+                })
+
+                .setView(tx1).show();
+        finish();
+        System.exit(0);
+    }
+
     /**
 	 * Sets up the camera if it is not already setup.
 	 */
 	private void setUpAndConfigureCamera() {
 		// Open and configure the camera
-		mCamera = Camera.open();
+        try {
+            mCamera = Camera.open();
+        } catch (Exception e) {
+            userErrorMessage("CRAYFIS could not access the camera.",true);
+
+        }
 
 		Camera.Parameters param = mCamera.getParameters();
 
@@ -1235,11 +1258,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
                     if (mLayoutDeveloper.mTextView != null)
                     mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                            + CONFIG.getL1Threshold() + "\n"
-                            + "Exposure Blocks:" + xbManager.getTotalXBs() + "\n"
+                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                            + "Exposure Blocks:" + ( xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                             + "Upload server = "+upload_url+"\n"
-                            + "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime()+ "\n"
-                            + "Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime()+"\n"
+                            + ( mLastLocation != null ? "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime() : "" )+ "\n"
+                            + ( mLastLocationDeprecated != null ?"Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime() : "" )+"\n"
 
                     );
                 }
