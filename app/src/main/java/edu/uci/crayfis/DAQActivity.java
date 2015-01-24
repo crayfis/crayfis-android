@@ -20,6 +20,7 @@ package edu.uci.crayfis;
 import android.text.Html;
 import android.support.v4.view.ViewPager;
 
+import java.lang.OutOfMemoryError;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -255,8 +256,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
     }
 
+    private String last_update_URL = "";
     public void showUpdateURL(String url)
     {
+        last_update_URL=url;
         final SpannableString s = new SpannableString(url);
         final TextView tx1 = new TextView(this);
 
@@ -590,9 +593,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 .getSystemService(Context.LOCATION_SERVICE);
 
         // ask for updates from network and GPS
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-
+        try {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+        } catch (RuntimeException e)
+        { // some phones do not support
+        }
         // get the last known coordinates for an initial value
         Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (null == location) {
@@ -1185,6 +1191,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
                 if (outputThread==null || !outputThread.canUpload()) {
                     if (outputThread.permit_upload) {
+                        if (LayoutData.mMessageView != null )
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
                     } else {
                         String reason;
@@ -1193,119 +1200,123 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         } else {
                             reason = "Invalid user code.";
                         }
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
+                        if (LayoutData.mMessageView != null )
+
+                            LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
                     }
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                    if (LayoutData.mMessageView != null )
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
                 } else {
-                    LayoutData.mMessageView.setMessage(null, null);
+                    if (LayoutData.mMessageView != null )
+
+                        LayoutData.mMessageView.setMessage(null, null);
                 }
 
+                try {
 
-                final StatusView.Status status = new StatusView.Status.Builder()
-                        .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0 )
-                        .setFps((int) (getFPS()))
-                        .setStabilizationCounter(stabilization_counter)
-                        .setTotalEvents(l2thread.getTotalEvents())
-                        .setTotalPixels(l2thread.getTotalPixels())
-                        .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
-                        .build();
+                    final StatusView.Status status = new StatusView.Status.Builder()
+                            .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0)
+                            .setFps((int) (getFPS()))
+                            .setStabilizationCounter(stabilization_counter)
+                            .setTotalEvents(l2thread.getTotalEvents())
+                            .setTotalPixels(l2thread.getTotalPixels())
+                            .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
+                            .build();
 
-                final DataView.Status dstatus = new DataView.Status.Builder()
-                        .setTotalEvents((int)mParticleReco.h_l2pixel.getIntegral())
-                        .setTotalPixels(L1counter_data*previewSize.height*previewSize.width)
-                        .setTotalFrames(L1counter_data)
-                        .build();
+                    final DataView.Status dstatus = new DataView.Status.Builder()
+                            .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
+                            .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
+                            .setTotalFrames(L1counter_data)
+                            .build();
 
-                final CFApplication application = (CFApplication) getApplication();
+                    final CFApplication application = (CFApplication) getApplication();
 
-                if (application.getApplicationState() == CFApplication.State.STABILIZATION)
-                {
-                    mLayoutData.mProgressWheel.setText("Checking camera is covered");
-                    mLayoutData.mProgressWheel.setTextSize(22);
+                    if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
+                        mLayoutData.mProgressWheel.setText("Checking camera is covered");
+                        mLayoutData.mProgressWheel.setTextSize(22);
 
-                    mLayoutData.mProgressWheel.setTextColor(Color.RED);
-                    mLayoutData.mProgressWheel.setBarColor(Color.RED);
+                        mLayoutData.mProgressWheel.setTextColor(Color.RED);
+                        mLayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                    mLayoutData.mProgressWheel.spin();
+                        mLayoutData.mProgressWheel.spin();
+                    }
+
+
+                    if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                        mLayoutData.mProgressWheel.setText("Measuring backgrounds");
+                        mLayoutData.mProgressWheel.setTextSize(27);
+
+                        mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                        mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+
+                        int needev = CONFIG.getCalibrationSampleFrames();
+                        float frac = calibration_counter / ((float) 1.0 * needev);
+                        int progress = (int) (360 * frac);
+                        mLayoutData.mProgressWheel.setProgress(progress);
+                    }
+                    if (application.getApplicationState() == CFApplication.State.DATA) {
+                        mLayoutData.mProgressWheel.setTextSize(30);
+
+                        mLayoutData.mProgressWheel.setText("Taking Data!");
+                        mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                        mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+
+                        mLayoutHist.updateData();
+
+                        // solid circle
+                        mLayoutData.mProgressWheel.setProgress(360);
+
+                    }
+
+                    mLayoutData.mStatusView.setStatus(status);
+                    mLayoutHist.mDataView.setStatus(dstatus);
+
+
+                    mLayoutTime.updateData();
+
+                    if (mLayoutDeveloper == null)
+                        mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
+
+                    String server_address = context.getString(R.string.server_address);
+                    String server_port = context.getString(R.string.server_port);
+                    String upload_uri = context.getString(R.string.upload_uri);
+                    boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+
+                    String upload_proto;
+                    if (force_https) {
+                        upload_proto = "https://";
+                    } else {
+                        upload_proto = "http://";
+                    }
+                    String upload_url = upload_proto + server_address + ":" + server_port + upload_uri;
+
+                    if (mLayoutDeveloper != null) {
+                        if (mLayoutDeveloper.mAppBuildView != null)
+                            mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+                        if (mLayoutDeveloper.mTextView != null)
+                            mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
+                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                            + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                            + "Upload server = " + upload_url + "\n"
+                                            + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
+                                            + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+
+                            );
+                    }
+
+                    if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude() == 0.0) {
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
+                                "Location unavailable.");
+                        locationWarning();
+                    }
+
+                    if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
+                        showUpdateURL(CONFIG.getUpdateURL());
+                    }
+                } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
                 }
-
-
-                if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                    mLayoutData.mProgressWheel.setText("Measuring backgrounds");
-                    mLayoutData.mProgressWheel.setTextSize(27);
-
-                    mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                    mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
-
-                    int needev = CONFIG.getCalibrationSampleFrames();
-                    float frac = calibration_counter/((float)1.0*needev);
-                    int progress = (int)(360*frac);
-                    mLayoutData.mProgressWheel.setProgress( progress );
-                     }
-                if (application.getApplicationState() == CFApplication.State.DATA) {
-                    mLayoutData.mProgressWheel.setTextSize(30);
-
-                    mLayoutData.mProgressWheel.setText("Taking Data!");
-                    mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                    mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
-
-                    mLayoutHist.updateData();
-
-                    // solid circle
-                    mLayoutData.mProgressWheel.setProgress( 360);
-
-                }
-
-                mLayoutData.mStatusView.setStatus(status);
-                mLayoutHist.mDataView.setStatus(dstatus);
-
-
-
-                mLayoutTime.updateData();
-
-                if (mLayoutDeveloper==null)
-                    mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
-
-                String server_address = context.getString(R.string.server_address);
-                String server_port = context.getString(R.string.server_port);
-                String upload_uri = context.getString(R.string.upload_uri);
-                boolean force_https = context.getResources().getBoolean(R.bool.force_https);
-
-                String upload_proto;
-                if (force_https) {
-                    upload_proto = "https://";
-                } else {
-                    upload_proto = "http://";
-                }
-                String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-
-                if (mLayoutDeveloper != null) {
-                    if (mLayoutDeveloper.mAppBuildView != null)
-                    mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
-                    if (mLayoutDeveloper.mTextView != null)
-                    mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
-                            + "Exposure Blocks:" + ( xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                            + "Upload server = "+upload_url+"\n"
-                            + ( mLastLocation != null ? "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime() : "" )+ "\n"
-                            + ( mLastLocationDeprecated != null ?"Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime() : "" )+"\n"
-
-                    );
-                }
-
-                if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude()==0.0) {
-                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText()+
-                            "Location unavailable.");
-                    locationWarning();
-                }
-
-                if (CONFIG.getUpdateURL() != "")
-                {
-                    showUpdateURL(CONFIG.getUpdateURL());
-                }
-
             }
         };
 
