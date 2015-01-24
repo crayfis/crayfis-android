@@ -102,6 +102,10 @@ public class RawCameraFrame {
         }
 
         int length = mSize.height * mSize.width;
+
+        // just in case
+        if (length > mBytes.length) length = mBytes.length;
+
         for (int i = 0; i < length; i++) {
             // make sure we promote the (signed) byte to int for comparison!
             int val = mBytes[i] & 0xFF;

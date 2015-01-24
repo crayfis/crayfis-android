@@ -87,7 +87,10 @@ public class ParticleReco {
             buf.setXbn(xbn);
 
             for (RecoPixel p : pixels) {
-                buf.addPixels(p.buildProto());
+                try {
+                    buf.addPixels(p.buildProto());
+                } catch (Exception e) { // do not crash
+                }
             }
 
             return buf.build();

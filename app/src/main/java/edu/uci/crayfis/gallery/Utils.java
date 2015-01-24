@@ -193,7 +193,12 @@ public class Utils {
                         // Add image path to array list
                         CFLog.d("Gallery: Adding file "+i+" = "+filePath);
 
-                        filePaths.add(new SavedImage(filePath));
+                        try {
+                            filePaths.add(new SavedImage(filePath));
+                        } catch (Exception e)
+                        {
+                        // couldn't do it. Don't crash.
+                         }
                     }
                 }
             } else {

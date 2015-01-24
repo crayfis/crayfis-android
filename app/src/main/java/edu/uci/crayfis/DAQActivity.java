@@ -900,7 +900,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// Create an instance of Camera
         CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
+        try {
         mPreview.setCamera(mCamera);
+          }  catch (Exception e) {
+           userErrorMessage("CRAYFIS could not access the camera.",true);
+           }
         CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
@@ -936,6 +940,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void onPreviewFrame(byte[] bytes, Camera camera) {
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
+
+        // sanity check
+        if (bytes == null) return;
 
 		// get a reference to the current xb, so it doesn't change from underneath us
 		ExposureBlock xb = xbManager.getCurrentExposureBlock();
@@ -1155,7 +1162,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
-                if (!outputThread.canUpload()) {
+                if (outputThread==null || !outputThread.canUpload()) {
                     if (outputThread.permit_upload) {
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
                     } else {
