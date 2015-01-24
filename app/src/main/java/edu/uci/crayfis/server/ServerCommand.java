@@ -29,6 +29,18 @@ public class ServerCommand {
     @SerializedName("nickname") private String mDeviceNickname;
     @SerializedName("account_name") private String mAccountName;
     @SerializedName("account_score") private Float mAccountScore;
+    @SerializedName("update_url") private String mUpdateURL;
+
+
+    /**
+     * Get the Account Name
+     *
+     * @return String or {@code null}.
+     */
+    @Nullable
+    public String getUpdateURL() {
+        return mUpdateURL;
+    }
 
     /**
      * Get the Account Score

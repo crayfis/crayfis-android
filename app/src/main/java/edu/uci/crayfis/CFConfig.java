@@ -28,6 +28,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_ACCOUNT_SCORE = "account_score";
+    private static final String KEY_UPDATE_URL = "update_url";
 
 
 
@@ -49,6 +50,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
+    private static final String DEFAULT_UPDATE_URL = "";
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -66,6 +68,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
+    private String mUpdateURL;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -85,6 +88,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
+        mUpdateURL = DEFAULT_UPDATE_URL;
     }
 
     /**
@@ -247,6 +251,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public String getAccountName() { return mAccountName; }
     public float getAccountScore() { return mAccountScore; }
+    public String getUpdateURL() { return mUpdateURL; }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
@@ -265,6 +270,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME,DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
+        mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL,DEFAULT_UPDATE_URL);
 
     }
 
@@ -317,6 +323,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
         }
+        if (serverCommand.getUpdateURL() != null) {
+            mUpdateURL = serverCommand.getUpdateURL();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
@@ -335,6 +344,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
+                .putString(KEY_UPDATE_URL,mUpdateURL)
                 .apply();
     }
 }

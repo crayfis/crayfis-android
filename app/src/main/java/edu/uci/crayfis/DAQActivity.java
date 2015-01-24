@@ -255,6 +255,27 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
     }
 
+    public void showUpdateURL(String url)
+    {
+        final SpannableString s = new SpannableString(url);
+        final TextView tx1 = new TextView(this);
+
+        tx1.setText("A new version of CRAYFIS is available. Click here for the update: "+s);
+        tx1.setAutoLinkMask(RESULT_OK);
+        tx1.setMovementMethod(LinkMovementMethod.getInstance());
+        tx1.setTextColor(Color.WHITE);
+        tx1.setBackgroundColor(Color.BLACK);
+        Linkify.addLinks(s, Linkify.WEB_URLS);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle( Html.fromHtml("<font color='#FFFFFF'>Update CRAYFIS</font>")).setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                    }
+                })
+
+                .setView(tx1).show();
+    }
+
 	public void clickedAbout() {
 
 		final SpannableString s = new SpannableString(
@@ -1278,6 +1299,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText()+
                             "Location unavailable.");
                     locationWarning();
+                }
+
+                if (CONFIG.getUpdateURL() != "")
+                {
+                    showUpdateURL(CONFIG.getUpdateURL());
                 }
 
             }
