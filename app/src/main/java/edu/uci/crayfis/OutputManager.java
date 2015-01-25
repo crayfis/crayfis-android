@@ -30,13 +30,6 @@ import edu.uci.crayfis.util.CFLog;
 
 public class OutputManager extends Thread {
 
-    private static final CFConfig CONFIG = CFConfig.getInstance();
-    private CFApplication.AppBuild mAppBuild;
-
-    // -----8<-----------
-
-	public static final int connect_timeout = 2 * 1000; // ms
-	public static final int read_timeout = 5 * 1000; // ms
 
 	private long last_cache_upload = 0;
 	
@@ -47,19 +40,7 @@ public class OutputManager extends Thread {
 	
 	public final int output_queue_limit = 100;
 	
-	public String server_address;
-	public String server_port;
-	public String upload_uri;
-	public boolean force_https;
-	
-	public boolean debug_stream;
-	
-	public String upload_url;
-	
-	private boolean start_uploading = false;
-	public boolean permit_upload = true;
-	public boolean valid_id = true;
-	
+
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
     private static OutputManager sInstance;
 	Context context;
@@ -77,52 +58,8 @@ public class OutputManager extends Thread {
 
 	private OutputManager(Context context) {
 		this.context = context;
+	}
 
-        mAppBuild = ((CFApplication) context.getApplicationContext()).getBuildInformation();
-
-		server_address = context.getString(R.string.server_address);
-		server_port = context.getString(R.string.server_port);
-		upload_uri = context.getString(R.string.upload_uri);
-        force_https = context.getResources().getBoolean(R.bool.force_https);
-		
-		String upload_proto;
-		if (force_https) {
-			upload_proto = "https://";
-		} else {
-			upload_proto = "http://";
-		}
-		upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-		
-		debug_stream = context.getResources().getBoolean(R.bool.debug_stream);
-	}
-	
-	public boolean useWifiOnly() {
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-		return sharedPrefs.getBoolean("prefWifiOnly", true);
-	}
-	
-	// Some utilities for determining the network state
-	public NetworkInfo getNetworkInfo() {
-		ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-		return cm.getActiveNetworkInfo();
-	}
-	
-	// Check if there is *any* connectivity
-	public boolean isConnected() {
-		NetworkInfo info = getNetworkInfo();
-		return (info != null && info.isConnected());
-	}
-	
-	// Check if we're connected to WiFi
-	public boolean isConnectedWifi() {
-		NetworkInfo info = getNetworkInfo();
-		return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
-	}
-	
-	public boolean canUpload() {
-		return permit_upload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
-	}
-	
 	public boolean commitExposureBlock(ExposureBlock xb) {
 		if (stopRequested) {
 			// oops! too late. We're shutting down.
@@ -153,17 +90,6 @@ public class OutputManager extends Thread {
 		boolean success = outputQueue.offer(cal);
 		start_uploading = true;
 		return success;
-	}
-
-	/**
-	 * Blocks until the thread has stopped
-	 */
-	public void stopThread() {
-		stopRequested = true;
-		while (running) {
-			this.interrupt();
-			Thread.yield();
-		}
 	}
 
 	@Override
