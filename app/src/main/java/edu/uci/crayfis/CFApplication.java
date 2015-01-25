@@ -15,6 +15,8 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.server.UploadExposureService;
+
 /**
  * Extension of {@link android.app.Application}.
  */
@@ -44,6 +46,10 @@ public class CFApplication extends Application {
         config.onSharedPreferenceChanged(localPrefs, null);
 
         setApplicationState(State.INIT);
+
+        // DEBUG
+        final Intent intent = new Intent(this, UploadExposureService.class);
+        startService(intent);
     }
 
     /**
