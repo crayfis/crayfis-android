@@ -33,6 +33,11 @@ public class UploadExposureService extends IntentService {
 
     @Override
     protected void onHandleIntent(final Intent intent) {
+        lazyInit();
+        android.util.Log.d(":::", "Bonk.");
+    }
+
+    private void lazyInit() {
         final CFApplication context = (CFApplication) getApplicationContext();
         if (sAppBuild == null) {
             sAppBuild = context.getBuildInformation();
@@ -43,7 +48,6 @@ public class UploadExposureService extends IntentService {
         if (sDebugStream == null) {
             sDebugStream = context.getResources().getBoolean(R.bool.debug_stream);
         }
-        android.util.Log.d(":::", "Bonk.");
     }
 
 

@@ -30,46 +30,10 @@ import edu.uci.crayfis.util.CFLog;
 
 public class OutputManager extends Thread {
 
-
 	private long last_cache_upload = 0;
-	
-	// true if a request has been made to stop the thread
-	volatile boolean stopRequested = false;
-	// true if the thread is running and can process more data
-	volatile boolean running = true;
-	
 	public final int output_queue_limit = 100;
-	
 
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
-    private static OutputManager sInstance;
-	Context context;
-
-    public static synchronized OutputManager getInstance(@NonNull final Context context) {
-        if (sInstance == null) {
-            sInstance = new OutputManager(context.getApplicationContext());
-            sInstance.start();
-        }
-        return sInstance;
-    }
-
-
-
-
-	private OutputManager(Context context) {
-		this.context = context;
-	}
-
-	public boolean commitExposureBlock(ExposureBlock xb) {
-		if (stopRequested) {
-			// oops! too late. We're shutting down.
-			CFLog.w("DAQActivity Rejecting ExposureBlock; stop has already been requested.");
-			return false;
-		}
-		boolean success = outputQueue.offer(xb.buildProto());
-		start_uploading = true;
-		return success;
-	}
 
 	public boolean commitRunConfig(DataProtos.RunConfig rc) {
 		if (stopRequested) {
