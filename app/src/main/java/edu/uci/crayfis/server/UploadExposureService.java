@@ -55,7 +55,6 @@ public class UploadExposureService extends IntentService {
     private static final CFConfig sConfig = CFConfig.getInstance();
     private static CFApplication.AppBuild sAppBuild;
     private static ServerInfo sServerInfo;
-    private static Boolean sDebugStream;
 
     private static boolean sPermitUpload = true;
     private static boolean sValidId = true;
@@ -69,7 +68,8 @@ public class UploadExposureService extends IntentService {
      * @param context The context for the intent.
      * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}.
      */
-    public static void submitExposureBlock(@NonNull final Context context, @NonNull final ExposureBlock exposureBlock) {
+    public static void submitExposureBlock(@NonNull final Context context,
+                                           @NonNull final ExposureBlock exposureBlock) {
         final Intent intent = new Intent(context, UploadExposureService.class);
         intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
         context.startService(intent);
@@ -83,7 +83,8 @@ public class UploadExposureService extends IntentService {
      * @param context The context for the intent.
      * @param runConfig The {@link edu.uci.crayfis.DataProtos.RunConfig}.
      */
-    public static void submitRunConfig(@NonNull final Context context, @NonNull final DataProtos.RunConfig runConfig) {
+    public static void submitRunConfig(@NonNull final Context context,
+                                       @NonNull final DataProtos.RunConfig runConfig) {
         final Intent intent = new Intent(context, UploadExposureService.class);
         intent.putExtra(RUN_CONFIG, runConfig);
         context.startService(intent);
@@ -115,18 +116,29 @@ public class UploadExposureService extends IntentService {
         final AbstractMessage message = getAbstractMessage(intent);
         if (message != null) {
             CFLog.d("Got message " + message);
-
-            final DataProtos.DataChunk.Builder chunk = DataProtos.DataChunk.newBuilder();
-            if (message instanceof DataProtos.ExposureBlock) {
-                chunk.addExposureBlocks((DataProtos.ExposureBlock) message);
-            } else if (message instanceof DataProtos.RunConfig) {
-                chunk.addRunConfigs((DataProtos.RunConfig) message);
-            } else if (message instanceof DataProtos.CalibrationResult) {
-                chunk.addCalibrationResults((DataProtos.CalibrationResult) message);
-            } else {
-                throw new RuntimeException("Unhandled message " + message);
+            final AbstractMessage uploadMessage = createDataChunk(message).build();
+            final File file = saveMessageToCache(uploadMessage);
+            if (file != null) {
+                new UploadExposureTask((CFApplication) getApplicationContext(),
+                        sServerInfo,
+                        sAppBuild.getRunId().toString(),
+                        file).execute();
             }
         }
+    }
+
+    private DataProtos.DataChunk.Builder createDataChunk(final AbstractMessage message) {
+        final DataProtos.DataChunk.Builder rtn = DataProtos.DataChunk.newBuilder();
+        if (message instanceof DataProtos.ExposureBlock) {
+            rtn.addExposureBlocks((DataProtos.ExposureBlock) message);
+        } else if (message instanceof DataProtos.RunConfig) {
+            rtn.addRunConfigs((DataProtos.RunConfig) message);
+        } else if (message instanceof DataProtos.CalibrationResult) {
+            rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
+        } else {
+            throw new RuntimeException("Unhandled message " + message);
+        }
+        return rtn;
     }
 
     private void lazyInit() {
@@ -136,9 +148,6 @@ public class UploadExposureService extends IntentService {
         }
         if (sServerInfo == null) {
             sServerInfo = new ServerInfo(context);
-        }
-        if (sDebugStream == null) {
-            sDebugStream = context.getResources().getBoolean(R.bool.debug_stream);
         }
     }
 
@@ -247,144 +256,45 @@ public class UploadExposureService extends IntentService {
     // output the given data chunk, either by uploading if the network
     // is available, or (TODO: by outputting to file.)
     private void outputChunk(AbstractMessage toWrite) {
-        boolean uploaded = false;
-        if (canUpload()) {
-            // Upload to network:
-            uploaded = directUpload(toWrite, sAppBuild.getRunId().toString());
-        }
-
-        if (uploaded) {
-            // Looks like everything went okay. We're done here.
+        if (canUpload() && directUpload(toWrite, sAppBuild.getRunId().toString())) {
             return;
         }
 
-        // oops! network is either not available, or there was an
-        // error during the upload.
-        // TODO: write out to a file.
         CFLog.i("DAQActivity Unable to upload to network! Falling back to local storage.");
+        saveMessageToCache(toWrite);
+    }
+
+    @Nullable
+    private File saveMessageToCache(final AbstractMessage abstractMessage) {
         int timestamp = (int) (System.currentTimeMillis()/1e3);
         String filename = sAppBuild.getRunId().toString() + "_" + timestamp + ".bin";
-        //File outfile = new File(context.getFilesDir(), filename);
         FileOutputStream outputStream;
+
         try {
             outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
-            toWrite.writeTo(outputStream);
+            abstractMessage.writeTo(outputStream);
             outputStream.close();
             CFLog.i("DAQActivity Data saved to " + filename);
         }
         catch (Exception ex) {
             CFLog.e("DAQActivity Error saving to file! Dropping data.", ex);
+            return null;
         }
-    }
 
-    private boolean directUpload(AbstractMessage toWrite, String run_id) {
-        // okay, we got a writable object, let's dump it to the server!
-
-        ByteString raw_data = toWrite.toByteString();
-
-        CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
-
-        int serverResponseCode;
-
-        SharedPreferences sharedprefs = PreferenceManager.
-                getDefaultSharedPreferences(getApplicationContext());
-        boolean success = false;
-        try {
-            URL u = new URL(sServerInfo.uploadUrl);
-            HttpURLConnection c = (HttpURLConnection) u.openConnection();
-            c.setRequestMethod("POST");
-            c.setRequestProperty("Content-type", "application/octet-stream");
-            c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
-            c.setRequestProperty("Device-id", sServerInfo.deviceId);
-            c.setRequestProperty("Run-id", run_id);
-            c.setRequestProperty("Crayfis-version", "a " + sServerInfo.buildVersion);
-            c.setRequestProperty("Crayfis-version-code", Integer.toString(sServerInfo.versionCode));
-
-            String app_code = sharedprefs.getString("prefUserID", "");
-            if (app_code != null && ! app_code.isEmpty()) {
-                c.setRequestProperty("App-code", app_code);
-            }
-
-            if (sDebugStream) {
-                c.setRequestProperty("Debug-stream", "yes");
-            }
-            c.setUseCaches(false);
-            c.setAllowUserInteraction(false);
-            c.setDoOutput(true);
-            c.setConnectTimeout(sServerInfo.connectTimeout);
-            c.setReadTimeout(sServerInfo.readTimeout);
-
-            OutputStream os = c.getOutputStream();
-
-            // try writing to the output stream
-            raw_data.writeTo(os);
-
-            CFLog.i("DAQActivity Connecting to upload server at: " + sServerInfo.uploadUrl);
-            c.connect();
-            serverResponseCode = c.getResponseCode();
-            if (serverResponseCode == 403 || serverResponseCode == 401) {
-                // server rejected us! so we are not allowed to upload.
-                // oh well! we can still take data at least.
-
-                permit_upload = false;
-
-                if (serverResponseCode == 401) {
-                    // server rejected us because our app code is invalid.
-                    SharedPreferences.Editor editor = sharedprefs.edit();
-                    editor.putBoolean("badID", true);
-                    editor.apply();
-                    CFLog.w("DAQActivity setting bad ID flag!");
-                    valid_id = false;
-                }
-                return false;
-            }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
-            String line;
-            StringBuilder sb = new StringBuilder();
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-
-            final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
-            CFConfig.getInstance().updateFromServer(serverCommand);
-            ((CFApplication) getApplicationContext()).savePreferences();
-
-            CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
-
-            // and now disconnect
-            c.disconnect();
-
-            if (serverResponseCode == 202 || serverResponseCode == 200) {
-                // looks like everything went okay!
-                success = true;
-                // make sure we clear the badID flag.
-                SharedPreferences.Editor editor = sharedprefs.edit();
-                editor.putBoolean("badID", true);
-                editor.apply();
-                valid_id = true;
-            }
-        }
-        catch (MalformedURLException ex) {
-            CFLog.e("DAQActivity Oh noes! The upload url is malformed.", ex);
-        }
-        catch (IOException ex) {
-            CFLog.e("DAQActivity Oh noes! An IOException occured.", ex);
-        }
-        catch (java.lang.OutOfMemoryError ex) { CFLog.e("Oh noes! An OutofMemory occured.", ex);}
-        return success;
+        return new File(getApplicationContext().getFilesDir().toString() + filename);
     }
 
     /**
      * POJO for the server information.
      */
-    private static final class ServerInfo {
-        private final String uploadUrl;
-        private final String deviceId;
-        private final String buildVersion;
-        private final int versionCode;
+    static final class ServerInfo {
+        final String uploadUrl;
+        final String deviceId;
+        final String buildVersion;
+        final int versionCode;
 
-        private final int connectTimeout = 2 * 1000; // ms
-        private final int readTimeout = 5 * 1000; // ms
+        final int connectTimeout = 2 * 1000; // ms
+        final int readTimeout = 5 * 1000; // ms
 
         private ServerInfo(@NonNull final Context context) {
             final String serverAddress = context.getString(R.string.server_address);
