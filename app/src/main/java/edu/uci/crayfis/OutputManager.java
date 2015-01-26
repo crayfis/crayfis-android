@@ -35,27 +35,6 @@ public class OutputManager extends Thread {
 
 	private ArrayBlockingQueue<AbstractMessage> outputQueue = new ArrayBlockingQueue<AbstractMessage>(output_queue_limit);
 
-	public boolean commitRunConfig(DataProtos.RunConfig rc) {
-		if (stopRequested) {
-			// oops! too late. We're shutting down.
-			CFLog.w("DAQActivity Rejecting RunConfig; stop has already been requested.");
-			return false;
-		}
-		boolean success = outputQueue.offer(rc);
-		return success;
-	}
-
-	public boolean commitCalibrationResult(DataProtos.CalibrationResult cal) {
-		if (stopRequested) {
-			// oops! too late. We're shutting down.
-			CFLog.w("DAQActivity Rejecting CalibrationResult; stop has already been requested.");
-			return false;
-		}
-		boolean success = outputQueue.offer(cal);
-		start_uploading = true;
-		return success;
-	}
-
 	@Override
 	public void run() {
 		DataProtos.DataChunk.Builder chunk = null;
@@ -71,36 +50,36 @@ public class OutputManager extends Thread {
 			}
 
 			AbstractMessage toWrite = null;
-
-			try {
-				toWrite = outputQueue.poll(1, TimeUnit.SECONDS);
-			}
-			catch (InterruptedException ex) {
-				// probably somebody trying to kill the thread. go back
-				// to the top, where we'll check stopRequested
-				continue;
-			}
-
-			if (toWrite == null) {
-				// oops! nothing on the queue. oh well?
-				continue;
-			}
-
-			if (chunk == null) {
-				// make a new chunk builder
-				chunk = DataProtos.DataChunk.newBuilder();
-			}
-
-			if (toWrite instanceof DataProtos.ExposureBlock) {
-				chunk.addExposureBlocks((DataProtos.ExposureBlock) toWrite);
-			}
-			else if (toWrite instanceof DataProtos.RunConfig) {
-				chunk.addRunConfigs((DataProtos.RunConfig) toWrite);
-			}
-			else if (toWrite instanceof DataProtos.CalibrationResult) {
-				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
-			}
-
+//
+//			try {
+//				toWrite = outputQueue.poll(1, TimeUnit.SECONDS);
+//			}
+//			catch (InterruptedException ex) {
+//				// probably somebody trying to kill the thread. go back
+//				// to the top, where we'll check stopRequested
+//				continue;
+//			}
+//
+//			if (toWrite == null) {
+//				// oops! nothing on the queue. oh well?
+//				continue;
+//			}
+//
+//			if (chunk == null) {
+//				// make a new chunk builder
+//				chunk = DataProtos.DataChunk.newBuilder();
+//			}
+//
+//			if (toWrite instanceof DataProtos.ExposureBlock) {
+//				chunk.addExposureBlocks((DataProtos.ExposureBlock) toWrite);
+//			}
+//			else if (toWrite instanceof DataProtos.RunConfig) {
+//				chunk.addRunConfigs((DataProtos.RunConfig) toWrite);
+//			}
+//			else if (toWrite instanceof DataProtos.CalibrationResult) {
+//				chunk.addCalibrationResults((DataProtos.CalibrationResult) toWrite);
+//			}
+//
 			chunkSize += toWrite.getSerializedSize();
 
 			// if we haven't gotten anything interesting to upload yet
