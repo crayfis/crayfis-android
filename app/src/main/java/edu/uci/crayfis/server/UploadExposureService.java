@@ -10,7 +10,20 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.google.protobuf.AbstractMessage;
+import com.google.protobuf.ByteString;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -178,11 +191,198 @@ public class UploadExposureService extends IntentService {
         return sPermitUpload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
     }
 
+    // check to see if there is a file, and if so, upload it.
+    // return the number of files uploaded (currently fixed to 1 max)
+    private int uploadFile() {
+
+        File localDir = getApplicationContext().getFilesDir();
+        int n_uploaded = 0;
+        for (File f : localDir.listFiles()) {
+            if (!canUpload()) {
+                // No network connection available... nothing to do here.
+                return n_uploaded;
+            }
+
+            String filename = f.getName();
+            if (! filename.endsWith(".bin"))
+                continue;
+            String[] pieces = filename.split("_");
+            if (pieces.length < 2) {
+                CFLog.w("DAQActivity Skipping malformatted filename: " + filename);
+                continue;
+            }
+            String run_id = pieces[0];
+            CFLog.i("DAQActivity Found local file from run: " + run_id);
+
+            DataProtos.DataChunk chunk;
+            try {
+                chunk = DataProtos.DataChunk.parseFrom(new FileInputStream(f));
+            }
+            catch (IOException ex) {
+                CFLog.e("DAQActivity Failed to read local file!", ex);
+                // TODO: should we remove the file?
+                continue;
+            }
+
+            // okay, lets send the file off to upload:
+            boolean uploaded = directUpload(chunk, run_id);
+
+            if (uploaded) {
+                // great! the file uploaded successfully.
+                // now we can delete it from the local store.
+                CFLog.i("DAQActivity Successfully uploaded local file: " + filename);
+                f.delete();
+                n_uploaded += 1;
+                last_cache_upload = System.currentTimeMillis();
+            }
+            else {
+                CFLog.w("DAQActivity Failed to upload file: " + filename);
+            }
+
+            break; // only try to upload one file at a time.
+        }
+        return n_uploaded;
+    }
+
+    // output the given data chunk, either by uploading if the network
+    // is available, or (TODO: by outputting to file.)
+    private void outputChunk(AbstractMessage toWrite) {
+        boolean uploaded = false;
+        if (canUpload()) {
+            // Upload to network:
+            uploaded = directUpload(toWrite, sAppBuild.getRunId().toString());
+        }
+
+        if (uploaded) {
+            // Looks like everything went okay. We're done here.
+            return;
+        }
+
+        // oops! network is either not available, or there was an
+        // error during the upload.
+        // TODO: write out to a file.
+        CFLog.i("DAQActivity Unable to upload to network! Falling back to local storage.");
+        int timestamp = (int) (System.currentTimeMillis()/1e3);
+        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + ".bin";
+        //File outfile = new File(context.getFilesDir(), filename);
+        FileOutputStream outputStream;
+        try {
+            outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
+            toWrite.writeTo(outputStream);
+            outputStream.close();
+            CFLog.i("DAQActivity Data saved to " + filename);
+        }
+        catch (Exception ex) {
+            CFLog.e("DAQActivity Error saving to file! Dropping data.", ex);
+        }
+    }
+
+    private boolean directUpload(AbstractMessage toWrite, String run_id) {
+        // okay, we got a writable object, let's dump it to the server!
+
+        ByteString raw_data = toWrite.toByteString();
+
+        CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
+
+        int serverResponseCode;
+
+        SharedPreferences sharedprefs = PreferenceManager.
+                getDefaultSharedPreferences(getApplicationContext());
+        boolean success = false;
+        try {
+            URL u = new URL(sServerInfo.uploadUrl);
+            HttpURLConnection c = (HttpURLConnection) u.openConnection();
+            c.setRequestMethod("POST");
+            c.setRequestProperty("Content-type", "application/octet-stream");
+            c.setRequestProperty("Content-length", String.format("%d", raw_data.size()));
+            c.setRequestProperty("Device-id", sServerInfo.deviceId);
+            c.setRequestProperty("Run-id", run_id);
+            c.setRequestProperty("Crayfis-version", "a " + sServerInfo.buildVersion);
+            c.setRequestProperty("Crayfis-version-code", Integer.toString(sServerInfo.versionCode));
+
+            String app_code = sharedprefs.getString("prefUserID", "");
+            if (app_code != null && ! app_code.isEmpty()) {
+                c.setRequestProperty("App-code", app_code);
+            }
+
+            if (sDebugStream) {
+                c.setRequestProperty("Debug-stream", "yes");
+            }
+            c.setUseCaches(false);
+            c.setAllowUserInteraction(false);
+            c.setDoOutput(true);
+            c.setConnectTimeout(sServerInfo.connectTimeout);
+            c.setReadTimeout(sServerInfo.readTimeout);
+
+            OutputStream os = c.getOutputStream();
+
+            // try writing to the output stream
+            raw_data.writeTo(os);
+
+            CFLog.i("DAQActivity Connecting to upload server at: " + sServerInfo.uploadUrl);
+            c.connect();
+            serverResponseCode = c.getResponseCode();
+            if (serverResponseCode == 403 || serverResponseCode == 401) {
+                // server rejected us! so we are not allowed to upload.
+                // oh well! we can still take data at least.
+
+                permit_upload = false;
+
+                if (serverResponseCode == 401) {
+                    // server rejected us because our app code is invalid.
+                    SharedPreferences.Editor editor = sharedprefs.edit();
+                    editor.putBoolean("badID", true);
+                    editor.apply();
+                    CFLog.w("DAQActivity setting bad ID flag!");
+                    valid_id = false;
+                }
+                return false;
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
+            String line;
+            StringBuilder sb = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+
+            final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
+            CFConfig.getInstance().updateFromServer(serverCommand);
+            ((CFApplication) getApplicationContext()).savePreferences();
+
+            CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
+
+            // and now disconnect
+            c.disconnect();
+
+            if (serverResponseCode == 202 || serverResponseCode == 200) {
+                // looks like everything went okay!
+                success = true;
+                // make sure we clear the badID flag.
+                SharedPreferences.Editor editor = sharedprefs.edit();
+                editor.putBoolean("badID", true);
+                editor.apply();
+                valid_id = true;
+            }
+        }
+        catch (MalformedURLException ex) {
+            CFLog.e("DAQActivity Oh noes! The upload url is malformed.", ex);
+        }
+        catch (IOException ex) {
+            CFLog.e("DAQActivity Oh noes! An IOException occured.", ex);
+        }
+        catch (java.lang.OutOfMemoryError ex) { CFLog.e("Oh noes! An OutofMemory occured.", ex);}
+        return success;
+    }
+
     /**
      * POJO for the server information.
      */
     private static final class ServerInfo {
         private final String uploadUrl;
+        private final String deviceId;
+        private final String buildVersion;
+        private final int versionCode;
+
         private final int connectTimeout = 2 * 1000; // ms
         private final int readTimeout = 5 * 1000; // ms
 
@@ -197,6 +397,10 @@ public class UploadExposureService extends IntentService {
                     serverAddress,
                     serverPort,
                     uploadUri);
+
+            deviceId = sAppBuild.getDeviceId();
+            buildVersion = sAppBuild.getBuildVersion();
+            versionCode = sAppBuild.getVersionCode();
         }
     }
 }
