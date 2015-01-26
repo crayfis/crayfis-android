@@ -9,7 +9,7 @@ import java.util.LinkedList;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.OutputManager;
+import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -18,7 +18,6 @@ import edu.uci.crayfis.util.CFLog;
 public final class ExposureBlockManager {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-    private final OutputManager OUTPUT_MANAGER;
     private final CFApplication APPLICATION;
 
     private int mTotalXBs = 0;
@@ -54,7 +53,6 @@ public final class ExposureBlockManager {
 
     private ExposureBlockManager(@NonNull final Context context) {
         APPLICATION = (CFApplication) context.getApplicationContext();
-        OUTPUT_MANAGER = OutputManager.getInstance(APPLICATION);
     }
 
     // Atomically check whether the current XB is to old, and if so,
@@ -144,7 +142,7 @@ public final class ExposureBlockManager {
             if (xb.end_time < safe_time) {
                 // okay, it's safe to commit this block now.
                 it.remove();
-                OUTPUT_MANAGER.commitExposureBlock(xb);
+                UploadExposureService.submitExposureBlock(APPLICATION, xb);
             }
         }
     }
@@ -170,13 +168,7 @@ public final class ExposureBlockManager {
         }
 
         CFLog.i("DAQActivity Commiting old exposure block!");
-        final boolean success = OUTPUT_MANAGER.commitExposureBlock(xb);
-
-        if (!success) {
-            // Oops! The output manager's queue must be full!
-            throw new RuntimeException("Oh no! Couldn't commit an exposure block. What to do?");
-        }
-
+        UploadExposureService.submitExposureBlock(APPLICATION, xb);
         mCommittedXBs++;
     }
 

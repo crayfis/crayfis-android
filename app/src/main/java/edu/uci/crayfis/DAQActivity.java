@@ -86,6 +86,7 @@ import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
+import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.AppBuildView;
 import edu.uci.crayfis.widget.MessageView;
@@ -180,9 +181,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	// Thread where image data is processed for L2
 	private L2Processor l2thread;
-
-	// thread to handle output of committed data
-	private OutputManager outputThread;
 
 	// class to find particles in frames
 	private ParticleReco mParticleReco;
@@ -386,7 +384,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 */
                 // and commit it to the output stream
                 CFLog.i("DAQActivity Committing new calibration result.");
-                outputThread.commitCalibrationResult(cal.build());
+                UploadExposureService.submitCalibrationResult(this, cal.build());
 
                 // update the thresholds
                 //new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
@@ -686,18 +684,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
-		// Spin up the output and image processing threads:
-		outputThread = OutputManager.getInstance(this);
-
-        //Prevents thread from thread duplication if it's already initialized
-		if (outputThread.getState() == Thread.State.NEW) {
-            outputThread.start();
-        }
-
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-
 
         final PagerTabStrip strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
         strip.setDrawFullUnderline(false);
@@ -744,11 +732,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		l2thread.stopThread();
 		l2thread = null;
 
-		// request to stop the OutputManager. It will automatically
-		// try to upload any remaining data before dying.
-		outputThread.stopThread();
-		outputThread = null;
-
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
@@ -778,7 +761,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// we can generate and commit the runconfig
 		if (run_config == null) {
 			generateRunConfig();
-			outputThread.commitRunConfig(run_config);
+            UploadExposureService.submitRunConfig(this, run_config);
 		}
 
         if (mUiUpdateTimer != null) {
