@@ -1,6 +1,9 @@
 package edu.uci.crayfis.server;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -24,40 +27,69 @@ import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
 /**
- * Created by username on 1/26/2015.
+ * An implementation of AsyncTask that uploads a chunk from the local cache.
+ *
+ * Upon a successful upload, the chunk will be removed from the cache.  This will also
+ * parse any response from the server and update the local configuration accordingly through
+ * {@link edu.uci.crayfis.CFConfig#updateFromServer(ServerCommand)}.
  */
 public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
+    private static final String INVALID_FILE = "invalid_file";
+    private static final String MALFORMED_FILE = "malformed";
+
     private final CFApplication mApplication;
     private final UploadExposureService.ServerInfo mServerInfo;
-    private final String mRunId;
     private final File mFile;
+    private String mRunId;
 
+    /**
+     * Create a new instance.
+     *
+     * @param application {@link edu.uci.crayfis.CFApplication}
+     * @param serverInfo The {@link edu.uci.crayfis.server.UploadExposureService.ServerInfo} to use for uploading.
+     * @param file The File to upload.
+     */
     public UploadExposureTask(@NonNull final CFApplication application,
                               @NonNull final UploadExposureService.ServerInfo serverInfo,
-                              @NonNull final String runId,
                               @NonNull final File file) {
         mApplication = application;
         mServerInfo = serverInfo;
-        mRunId = runId;
         mFile = file;
     }
 
     @Override
     protected Boolean doInBackground(final Object... objects) {
+        if (! canUpload()) {
+            CFLog.w("Attempted to upload a block to the server but can't upload right now.");
+            return Boolean.FALSE;
+        }
+
+        mRunId = getRunIdFromFile();
+        if (mRunId.equals(MALFORMED_FILE) || mRunId.equals(INVALID_FILE)) {
+            final String filename = mFile.getName();
+            if (mRunId.equals(MALFORMED_FILE)) {
+                CFLog.e(filename + " is malformed");
+            }
+            if (mRunId.equals(INVALID_FILE)) {
+                CFLog.e(filename + " is invalid.");
+            }
+            return Boolean.FALSE;
+        }
 
         try {
             final DataProtos.DataChunk chunk = DataProtos.DataChunk.
                     parseFrom(new FileInputStream(mFile));
             final ByteString rawData = chunk.toByteString();
 
-            CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " +
-                    rawData.size() + " bytes");
+            CFLog.i("Uploading a " + rawData.size() + "b chunk");
 
             uploadData(rawData);
         } catch (IOException ex) {
-            CFLog.e("Unable to upload file " + mFile, ex);
-            mFile.delete();
+            CFLog.e("Unable to upload file " + mFile.getName(), ex);
+            if (!mFile.delete()) {
+                CFLog.e("Could not delete file " + mFile.getName());
+            }
         } catch (OutOfMemoryError ex) {
             // FIXME Why was this even running out of memory?
             CFLog.e("Oh noes! An OutofMemory occured.", ex);
@@ -66,7 +98,23 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         return Boolean.TRUE;
     }
 
-    private final Boolean uploadData(@NonNull final ByteString rawData) throws IOException {
+    @NonNull
+    private String getRunIdFromFile() {
+        String filename = mFile.getName();
+        if (! filename.endsWith(".bin")) {
+            return INVALID_FILE;
+        }
+
+        String[] pieces = filename.split("_");
+        if (pieces.length < 2) {
+            return MALFORMED_FILE;
+        }
+
+        return pieces[0];
+    }
+
+    @NonNull
+    private Boolean uploadData(@NonNull final ByteString rawData) throws IOException {
         URL u = new URL(mServerInfo.uploadUrl);
         HttpURLConnection c = (HttpURLConnection) u.openConnection();
         c.setRequestMethod("POST");
@@ -148,4 +196,35 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
         return Boolean.TRUE;
     }
+
+    private boolean useWifiOnly() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        return sharedPrefs.getBoolean("prefWifiOnly", true);
+    }
+
+    // Some utilities for determining the network state
+    private NetworkInfo getNetworkInfo() {
+        ConnectivityManager cm = (ConnectivityManager) mApplication.
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo();
+    }
+
+    // Check if there is *any* connectivity
+    private boolean isConnected() {
+        NetworkInfo info = getNetworkInfo();
+        return (info != null && info.isConnected());
+    }
+
+    // Check if we're connected to WiFi
+    private boolean isConnectedWifi() {
+        NetworkInfo info = getNetworkInfo();
+        return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
+    }
+
+    private boolean canUpload() {
+        // FIXME The server tells us if we can upload, need to handle that.
+//        return sPermitUpload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
+        return (!useWifiOnly() && isConnected()) || isConnectedWifi();
+    }
+
 }

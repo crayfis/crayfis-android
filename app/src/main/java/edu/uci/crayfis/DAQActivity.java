@@ -606,7 +606,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        /*
+        TODO: Flush the UploadExposureService queue.
 
+        The idea here is that if there are files left in the queue, whenever this activity is
+        relaunched, that would be a good time to try to flush it.  This avoids background
+        watchers and makes it more probible that the data is uploaded at a time that is
+        convenient to the user.
+         */
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 

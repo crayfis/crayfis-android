@@ -3,27 +3,13 @@ package edu.uci.crayfis.server;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.google.gson.Gson;
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.ByteString;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -33,7 +19,15 @@ import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
 /**
- * Created by jodi on 2015-01-25.
+ * An implementation of IntentService that handles uploading blocks to the server.
+ *
+ * You can use the helper methods {@link #submitCalibrationResult(android.content.Context, edu.uci.crayfis.DataProtos.CalibrationResult)},
+ * {@link #submitExposureBlock(android.content.Context, edu.uci.crayfis.exposure.ExposureBlock)} or
+ * {@link #submitRunConfig(android.content.Context, edu.uci.crayfis.DataProtos.RunConfig)} to make this
+ * easier to use.
+ *
+ * This does not perform any uploading itself.  It instead validates that a valid block has been
+ * received, write to the cache and execute a {@link edu.uci.crayfis.server.UploadExposureTask}.
  */
 public class UploadExposureService extends IntentService {
 
@@ -119,10 +113,9 @@ public class UploadExposureService extends IntentService {
             final AbstractMessage uploadMessage = createDataChunk(message).build();
             final File file = saveMessageToCache(uploadMessage);
             if (file != null) {
-                new UploadExposureTask((CFApplication) getApplicationContext(),
-                        sServerInfo,
-                        sAppBuild.getRunId().toString(),
-                        file).execute();
+                CFLog.d("Queueing upload task");
+                new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
+                        execute();
             }
         }
     }
@@ -170,98 +163,6 @@ public class UploadExposureService extends IntentService {
         }
 
         return null;
-    }
-
-    private boolean useWifiOnly() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        return sharedPrefs.getBoolean("prefWifiOnly", true);
-    }
-
-    // Some utilities for determining the network state
-    private NetworkInfo getNetworkInfo() {
-        ConnectivityManager cm = (ConnectivityManager) getApplicationContext()
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo();
-    }
-
-    // Check if there is *any* connectivity
-    private boolean isConnected() {
-        NetworkInfo info = getNetworkInfo();
-        return (info != null && info.isConnected());
-    }
-
-    // Check if we're connected to WiFi
-    private boolean isConnectedWifi() {
-        NetworkInfo info = getNetworkInfo();
-        return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
-    }
-
-    private boolean canUpload() {
-        return sPermitUpload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
-    }
-
-    // check to see if there is a file, and if so, upload it.
-    // return the number of files uploaded (currently fixed to 1 max)
-    private int uploadFile() {
-
-        File localDir = getApplicationContext().getFilesDir();
-        int n_uploaded = 0;
-        for (File f : localDir.listFiles()) {
-            if (!canUpload()) {
-                // No network connection available... nothing to do here.
-                return n_uploaded;
-            }
-
-            String filename = f.getName();
-            if (! filename.endsWith(".bin"))
-                continue;
-            String[] pieces = filename.split("_");
-            if (pieces.length < 2) {
-                CFLog.w("DAQActivity Skipping malformatted filename: " + filename);
-                continue;
-            }
-            String run_id = pieces[0];
-            CFLog.i("DAQActivity Found local file from run: " + run_id);
-
-            DataProtos.DataChunk chunk;
-            try {
-                chunk = DataProtos.DataChunk.parseFrom(new FileInputStream(f));
-            }
-            catch (IOException ex) {
-                CFLog.e("DAQActivity Failed to read local file!", ex);
-                // TODO: should we remove the file?
-                continue;
-            }
-
-            // okay, lets send the file off to upload:
-            boolean uploaded = directUpload(chunk, run_id);
-
-            if (uploaded) {
-                // great! the file uploaded successfully.
-                // now we can delete it from the local store.
-                CFLog.i("DAQActivity Successfully uploaded local file: " + filename);
-                f.delete();
-                n_uploaded += 1;
-                last_cache_upload = System.currentTimeMillis();
-            }
-            else {
-                CFLog.w("DAQActivity Failed to upload file: " + filename);
-            }
-
-            break; // only try to upload one file at a time.
-        }
-        return n_uploaded;
-    }
-
-    // output the given data chunk, either by uploading if the network
-    // is available, or (TODO: by outputting to file.)
-    private void outputChunk(AbstractMessage toWrite) {
-        if (canUpload() && directUpload(toWrite, sAppBuild.getRunId().toString())) {
-            return;
-        }
-
-        CFLog.i("DAQActivity Unable to upload to network! Falling back to local storage.");
-        saveMessageToCache(toWrite);
     }
 
     @Nullable
