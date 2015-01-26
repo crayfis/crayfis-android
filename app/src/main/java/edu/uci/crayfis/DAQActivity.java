@@ -1173,18 +1173,18 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
-                if (outputThread==null || !outputThread.canUpload()) {
-                    if (outputThread.permit_upload) {
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
-                    } else {
-                        String reason;
-                        if (outputThread.valid_id) {
-                            reason = "Server is overloaded.";
-                        } else {
-                            reason = "Invalid user code.";
-                        }
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
-                    }
+                if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                }
+                else if (!outputThread.canUpload()) {
+//                        String reason;
+//                        if (outputThread.valid_id) {
+//                            reason = "Server is overloaded.";
+//                        } else {
+//                            reason = "Invalid user code.";
+//                        }
+//                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
+//                    }
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
                     LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
@@ -1212,48 +1212,48 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 if (application.getApplicationState() == CFApplication.State.STABILIZATION)
                 {
-                    mLayoutData.mProgressWheel.setText("Checking camera is covered");
-                    mLayoutData.mProgressWheel.setTextSize(22);
+                    LayoutData.mProgressWheel.setText("Checking camera is covered");
+                    LayoutData.mProgressWheel.setTextSize(22);
 
-                    mLayoutData.mProgressWheel.setTextColor(Color.RED);
-                    mLayoutData.mProgressWheel.setBarColor(Color.RED);
+                    LayoutData.mProgressWheel.setTextColor(Color.RED);
+                    LayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                    mLayoutData.mProgressWheel.spin();
+                    LayoutData.mProgressWheel.spin();
                 }
 
 
                 if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                    mLayoutData.mProgressWheel.setText("Measuring backgrounds");
-                    mLayoutData.mProgressWheel.setTextSize(27);
+                    LayoutData.mProgressWheel.setText("Measuring backgrounds");
+                    LayoutData.mProgressWheel.setTextSize(27);
 
-                    mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                    mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+                    LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                    LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
                     int needev = CONFIG.getCalibrationSampleFrames();
                     float frac = calibration_counter/((float)1.0*needev);
                     int progress = (int)(360*frac);
-                    mLayoutData.mProgressWheel.setProgress( progress );
+                    LayoutData.mProgressWheel.setProgress( progress );
                      }
                 if (application.getApplicationState() == CFApplication.State.DATA) {
-                    mLayoutData.mProgressWheel.setTextSize(30);
+                    LayoutData.mProgressWheel.setTextSize(30);
 
-                    mLayoutData.mProgressWheel.setText("Taking Data!");
-                    mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                    mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+                    LayoutData.mProgressWheel.setText("Taking Data!");
+                    LayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                    LayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
-                    mLayoutHist.updateData();
+                    LayoutHist.updateData();
 
                     // solid circle
-                    mLayoutData.mProgressWheel.setProgress( 360);
+                    LayoutData.mProgressWheel.setProgress( 360);
 
                 }
 
-                mLayoutData.mStatusView.setStatus(status);
-                mLayoutHist.mDataView.setStatus(dstatus);
+                LayoutData.mStatusView.setStatus(status);
+                LayoutHist.mDataView.setStatus(dstatus);
 
 
 
-                mLayoutTime.updateData();
+                LayoutTime.updateData();
 
                 if (mLayoutDeveloper==null)
                     mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
@@ -1272,10 +1272,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 
                 if (mLayoutDeveloper != null) {
-                    if (mLayoutDeveloper.mAppBuildView != null)
-                    mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
-                    if (mLayoutDeveloper.mTextView != null)
-                    mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
+                    if (LayoutDeveloper.mAppBuildView != null)
+                    LayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+                    if (LayoutDeveloper.mTextView != null)
+                        LayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
                             + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
                             + "Exposure Blocks:" + ( xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                             + "Upload server = "+upload_url+"\n"
@@ -1291,7 +1291,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     locationWarning();
                 }
 
-                if (CONFIG.getUpdateURL() != "")
+                if (CONFIG != null && CONFIG.getUpdateURL() != null)
                 {
                     showUpdateURL(CONFIG.getUpdateURL());
                 }

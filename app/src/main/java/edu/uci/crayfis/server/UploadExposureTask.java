@@ -1,9 +1,6 @@
 package edu.uci.crayfis.server;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -197,34 +194,10 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         return Boolean.TRUE;
     }
 
-    private boolean useWifiOnly() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-        return sharedPrefs.getBoolean("prefWifiOnly", true);
-    }
-
-    // Some utilities for determining the network state
-    private NetworkInfo getNetworkInfo() {
-        ConnectivityManager cm = (ConnectivityManager) mApplication.
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        return cm.getActiveNetworkInfo();
-    }
-
-    // Check if there is *any* connectivity
-    private boolean isConnected() {
-        NetworkInfo info = getNetworkInfo();
-        return (info != null && info.isConnected());
-    }
-
-    // Check if we're connected to WiFi
-    private boolean isConnectedWifi() {
-        NetworkInfo info = getNetworkInfo();
-        return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
-    }
-
     private boolean canUpload() {
         // FIXME The server tells us if we can upload, need to handle that.
 //        return sPermitUpload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
-        return (!useWifiOnly() && isConnected()) || isConnectedWifi();
+        return mApplication.isNetworkAvailable();
     }
 
 }
