@@ -46,6 +46,18 @@ public class UploadExposureService extends IntentService {
      */
     public static final String CALIBRATION_RESULT = "calibration_result";
 
+    /**
+     * A RunConfig is only to be uploaded if an ExposureBlock or CalibrationResult has been received.
+     *
+     * The run config is tied to the lifespan of CFApplication.  As such, this will
+     * be reset when a new RunConfiguration is generated after the instance of
+     * CFApplication no longer exists because this will no longer exist either.
+     */
+    @Nullable
+    private static DataProtos.RunConfig sPendingRunConfig;
+
+    private static boolean sReceivedExposureBlock;
+
     private static final CFConfig sConfig = CFConfig.getInstance();
     private static CFApplication.AppBuild sAppBuild;
     private static ServerInfo sServerInfo;
@@ -70,7 +82,8 @@ public class UploadExposureService extends IntentService {
     }
 
     /**
-     * Helper for submitting a {@link edu.uci.crayfis.DataProtos.RunConfig}.
+     * Helper for submitting a {@link edu.uci.crayfis.DataProtos.RunConfig}.  You should be sure
+     * to call this before submitting your first exposure block.
      *
      * This will create a new Intent and call startService with that intent.
      *
@@ -110,27 +123,50 @@ public class UploadExposureService extends IntentService {
         final AbstractMessage message = getAbstractMessage(intent);
         if (message != null) {
             CFLog.d("Got message " + message);
-            final AbstractMessage uploadMessage = createDataChunk(message).build();
-            final File file = saveMessageToCache(uploadMessage);
-            if (file != null) {
-                CFLog.d("Queueing upload task");
-                new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
-                        execute();
+            final DataProtos.DataChunk.Builder builder = createDataChunk(message);
+            if (builder != null) {
+                if (sPendingRunConfig != null) {
+                    submitRunConfig(getApplicationContext(), sPendingRunConfig);
+                }
+                final AbstractMessage uploadMessage = builder.build();
+                final File file = saveMessageToCache(uploadMessage);
+                if (file != null) {
+                    CFLog.d("Queueing upload task");
+                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
+                            execute();
+                }
             }
         }
     }
 
+    /**
+     * Create the data chunk.
+     *
+     * This will return an instance of {@link edu.uci.crayfis.DataProtos.DataChunk.Builder}
+     * if the right message has been received.  In the case of {@link edu.uci.crayfis.DataProtos.RunConfig},
+     * if {@link #sPendingRunConfig} is null, it will be saved and {@code null} returned.  Otherwise,
+     * it will be placed in the builder and {@link #sPendingRunConfig} cleared.
+     *
+     * @param message The incoming {@link com.google.protobuf.AbstractMessage}.
+     * @return An instance of {@link edu.uci.crayfis.DataProtos.DataChunk.Builder} or {@code null}.
+     */
+    @Nullable
     private DataProtos.DataChunk.Builder createDataChunk(final AbstractMessage message) {
         final DataProtos.DataChunk.Builder rtn = DataProtos.DataChunk.newBuilder();
         if (message instanceof DataProtos.ExposureBlock) {
             rtn.addExposureBlocks((DataProtos.ExposureBlock) message);
         } else if (message instanceof DataProtos.RunConfig) {
-            rtn.addRunConfigs((DataProtos.RunConfig) message);
+            if (sPendingRunConfig == null) {
+                sPendingRunConfig = (DataProtos.RunConfig) message;
+                return null;
+            } else {
+                rtn.addRunConfigs(sPendingRunConfig);
+                sPendingRunConfig = null;
+            }
         } else if (message instanceof DataProtos.CalibrationResult) {
             rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
-        } else {
-            throw new RuntimeException("Unhandled message " + message);
         }
+
         return rtn;
     }
 
