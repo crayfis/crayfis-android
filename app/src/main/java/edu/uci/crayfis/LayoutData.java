@@ -17,6 +17,9 @@ import edu.uci.crayfis.widget.AppBuildView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
 
+import android.text.method.ScrollingMovementMethod;
+
+
 public class LayoutData extends Fragment{
 
     // Widgets for giving feedback to the user.
@@ -47,6 +50,7 @@ public class LayoutData extends Fragment{
         mProgressWheel = (ProgressWheel) root.findViewById(R.id.pw_spinner);
         mProgressWheel.spin();
         mStatusView = (StatusView) root.findViewById(R.id.status_view);
+        mStatusView.setMovementMethod(new ScrollingMovementMethod());
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
 
         return root;

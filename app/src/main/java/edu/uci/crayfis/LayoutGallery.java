@@ -24,6 +24,9 @@ import edu.uci.crayfis.gallery.Utils;
 
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+
+import com.crashlytics.android.Crashlytics;
+
 import edu.uci.crayfis.gallery.GridViewImageAdapter;
 
 import edu.uci.crayfis.gallery.SavedImage;
@@ -117,7 +120,10 @@ public class LayoutGallery extends Fragment {
         InitilizeGridLayout();
 
         // loading all image paths from SD card
-        images = utils.getSavedImages();
+        try {
+            images = utils.getSavedImages();
+        } catch (Exception e) {                             Crashlytics.logException(e);
+        }
 
         textView.setText(images.size()+" Images");
 
@@ -131,7 +137,7 @@ public class LayoutGallery extends Fragment {
 
                 Toast.makeText(getActivity(), "Deleted "+num+" images.",
                         Toast.LENGTH_SHORT).show();
-                images = utils.getSavedImages();
+                //images = utils.getSavedImages();
 
             }
         });
@@ -147,7 +153,8 @@ public class LayoutGallery extends Fragment {
                 CFLog.d("GridView: clicked"+position+id);
                 try {
                     Toast.makeText(getActivity(), "Pixel hits: " + images.get(position).num_pix + "  Max pixel: " + images.get(position).max_pix + "  Date: " + images.get(position).date, Toast.LENGTH_SHORT).show();
-                } catch (Exception e) { };
+                } catch (Exception e) {                             Crashlytics.logException(e);
+                };
             }
         });
 

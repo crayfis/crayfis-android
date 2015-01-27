@@ -34,6 +34,8 @@
         android:typeface="monospace"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"
+        android:maxLines = "10"
+        android:scrollbars = "vertical"
         tools:text="Time: 1h2m3s \nRate: 23fps"/>
 
 

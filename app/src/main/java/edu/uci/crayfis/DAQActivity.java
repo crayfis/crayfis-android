@@ -17,6 +17,8 @@
 
 package edu.uci.crayfis;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.text.Html;
 import android.support.v4.view.ViewPager;
 
@@ -620,12 +622,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 
-
-		// FIXME: for debugging only!!! We need to figure out how
 		// to keep DAQ going without taking over the phone.
-		PowerManager pm = (PowerManager)
-		getSystemService(Context.POWER_SERVICE); wl =
-		pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+		PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
+       // wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,"SDWL");
 
 		// get the grav/accelerometer, if any
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -716,14 +716,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         super.onStart();
         CFLog.d("CALL: onStart!");
         mGoogleApiClient.connect();
+        CFLog.d("DAQActivity onStart: wake lock held?"+wl.isHeld());
+
 
     }
     @Override
     protected void onStop()
     {
         super.onStop();
+        CFLog.d("DAQActivity onStop: wake lock held?"+wl.isHeld());
+
+        if (wl.isHeld())
+            wl.release();
 
         mGoogleApiClient.disconnect();
+
+        ///  Moved from onPause
+
+        CFLog.i("DAQActivity Suspending!");
+
+        // stop the camera preview and all processing
+        if (mCamera != null) {
+            mPreview.setCamera(null);
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+
+            // clear out any (old) buffers
+            l2thread.clearQueue();
+
+            // If the app is being paused, we don't want that
+            // counting towards the current exposure block.
+            // So close it out cleaning by moving to the IDLE state.
+            // FIXME This may not be valid if things are running in the background.
+            ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+        }
 
     }
 
@@ -755,7 +783,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	protected void onResume() {
 		super.onResume();
 
-		wl.acquire();
+		if (!wl.isHeld()) wl.acquire();
+        CFLog.d("DAQActivity onResume: PWNP wake lock held?"+wl.isHeld());
 
 		Sensor sens = gravSensor;
 		if (sens == null) {
@@ -794,10 +823,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         mUiUpdateTimer.cancel();
 
-		if (wl.isHeld())
-			wl.release();
+        CFLog.d("DAQActivity onPause: wake lock held?"+wl.isHeld());
+
 
 		mSensorManager.unregisterListener(this);
+
 
 		CFLog.i("DAQActivity Suspending!");
 
@@ -818,6 +848,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // FIXME This may not be valid if things are running in the background.
             ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 		}
+		
 	}
 
     @Override
@@ -992,7 +1023,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // update the FPS calculation periodically
         if (L1counter % fps_update_interval == 0) {
-            updateFPS();
+            double fps = updateFPS();
+            CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
         }
 
         final CFApplication application = (CFApplication) getApplication();
@@ -1213,6 +1245,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                         LayoutData.mMessageView.setMessage(null, null);
                 }
+
+                // turn on developer options if it has been selected
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefDeveloperMode", false));
 
                 try {
 
