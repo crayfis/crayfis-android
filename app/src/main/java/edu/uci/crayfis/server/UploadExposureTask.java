@@ -79,14 +79,16 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
                     parseFrom(new FileInputStream(mFile));
             final ByteString rawData = chunk.toByteString();
 
-            CFLog.i("Uploading a " + rawData.size() + "b chunk");
+            CFLog.i("Uploading a " + rawData.size() + "b from " + mFile.getName());
 
-            uploadData(rawData);
+            if (uploadData(rawData)) {
+                CFLog.d("Uploading " + mFile.getName() + " complete.");
+                if (!mFile.delete()) {
+                    CFLog.e("Could not delete file " + mFile.getName());
+                }
+            }
         } catch (IOException ex) {
             CFLog.e("Unable to upload file " + mFile.getName(), ex);
-            if (!mFile.delete()) {
-                CFLog.e("Could not delete file " + mFile.getName());
-            }
         } catch (OutOfMemoryError ex) {
             // FIXME Why was this even running out of memory?
             CFLog.e("Oh noes! An OutofMemory occured.", ex);
@@ -144,7 +146,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         // try writing to the output stream
         rawData.writeTo(os);
 
-        CFLog.i("DAQActivity Connecting to upload server at: " + mServerInfo.uploadUrl);
+        CFLog.i("Connecting to upload server at: " + mServerInfo.uploadUrl);
         c.connect();
 
         final int serverResponseCode = c.getResponseCode();
@@ -160,7 +162,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
                 SharedPreferences.Editor editor = sharedprefs.edit();
                 editor.putBoolean("badID", true);
                 editor.apply();
-                CFLog.w("DAQActivity setting bad ID flag!");
+                CFLog.w("Setting bad ID flag!");
 
                 // TODO There was a valid_id variable here, it's used in DAQActivity.
             }
@@ -177,7 +179,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         CFConfig.getInstance().updateFromServer(serverCommand);
         mApplication.savePreferences();
 
-        CFLog.i("DAQActivity Connected! Status = " + serverResponseCode);
+        CFLog.i("Connected! Status = " + serverResponseCode);
 
         // and now disconnect
         c.disconnect();

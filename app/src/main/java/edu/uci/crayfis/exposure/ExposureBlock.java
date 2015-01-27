@@ -197,4 +197,15 @@ public class ExposureBlock implements Parcelable {
 		return buf.toByteArray();
 	}
 
+    public static final Creator<ExposureBlock> CREATOR = new Creator<ExposureBlock>() {
+        @Override
+        public ExposureBlock createFromParcel(final Parcel source) {
+            return new ExposureBlock(source);
+        }
+
+        @Override
+        public ExposureBlock[] newArray(final int size) {
+            return new ExposureBlock[size];
+        }
+    };
 }

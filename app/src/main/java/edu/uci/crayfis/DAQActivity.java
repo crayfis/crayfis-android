@@ -17,58 +17,45 @@
 
 package edu.uci.crayfis;
 
-import android.text.Html;
-import android.support.v4.view.ViewPager;
-
-
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.location.LocationServices;
-
-
 import android.location.Location;
-//import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerTabStrip;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Html;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.util.TypedValue;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
 
 import org.json.JSONObject;
 
@@ -88,10 +75,11 @@ import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.AppBuildView;
+import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
-import edu.uci.crayfis.widget.DataView;
+
+//import android.location.LocationListener;
 
 
 /**
@@ -1175,8 +1163,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
                 if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
                     LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
-                }
-                else if (!outputThread.canUpload()) {
+//                }
+//                else if (!outputThread.canUpload()) {
 //                        String reason;
 //                        if (outputThread.valid_id) {
 //                            reason = "Server is overloaded.";
@@ -1293,7 +1281,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 if (CONFIG != null && CONFIG.getUpdateURL() != null)
                 {
-                    showUpdateURL(CONFIG.getUpdateURL());
+                    // FIXME: This gets into a crazy loop with dev.crayfis.io and this doesn't belong here
+//                    showUpdateURL(CONFIG.getUpdateURL());
                 }
 
             }

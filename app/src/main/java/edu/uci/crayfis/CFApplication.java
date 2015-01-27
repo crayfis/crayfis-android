@@ -120,14 +120,13 @@ public class CFApplication extends Application {
     }
 
     private boolean useWifiOnly() {
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         return sharedPrefs.getBoolean("prefWifiOnly", true);
     }
 
     // Some utilities for determining the network state
     private NetworkInfo getNetworkInfo() {
-        ConnectivityManager cm = (ConnectivityManager) mApplication.
-                getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         return cm.getActiveNetworkInfo();
     }
 

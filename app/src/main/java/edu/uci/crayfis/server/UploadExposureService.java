@@ -154,17 +154,21 @@ public class UploadExposureService extends IntentService {
     private DataProtos.DataChunk.Builder createDataChunk(final AbstractMessage message) {
         final DataProtos.DataChunk.Builder rtn = DataProtos.DataChunk.newBuilder();
         if (message instanceof DataProtos.ExposureBlock) {
+            CFLog.d("Received an exposure block.");
             rtn.addExposureBlocks((DataProtos.ExposureBlock) message);
         } else if (message instanceof DataProtos.RunConfig) {
             if (sPendingRunConfig == null) {
+                CFLog.d("Received a run configuration.  Keeping a reference for now.");
                 sPendingRunConfig = (DataProtos.RunConfig) message;
                 return null;
             } else {
+                CFLog.d("Using previously referenced run config.");
                 rtn.addRunConfigs(sPendingRunConfig);
                 sPendingRunConfig = null;
             }
         } else if (message instanceof DataProtos.CalibrationResult) {
             rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
+            // FIXME: This doesn't trigger the run config upload.
         }
 
         return rtn;
@@ -204,21 +208,21 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private File saveMessageToCache(final AbstractMessage abstractMessage) {
         int timestamp = (int) (System.currentTimeMillis()/1e3);
-        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + ".bin";
+        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + abstractMessage.getClass().getSimpleName() + ".bin";
         FileOutputStream outputStream;
 
         try {
             outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
             abstractMessage.writeTo(outputStream);
             outputStream.close();
-            CFLog.i("DAQActivity Data saved to " + filename);
+            CFLog.i("Data saved to " + filename);
         }
         catch (Exception ex) {
-            CFLog.e("DAQActivity Error saving to file! Dropping data.", ex);
+            CFLog.e("Error saving to file! Dropping data.", ex);
             return null;
         }
 
-        return new File(getApplicationContext().getFilesDir().toString() + filename);
+        return new File(getApplicationContext().getFilesDir().toString() + "/" + filename);
     }
 
     /**
