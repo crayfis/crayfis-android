@@ -17,6 +17,9 @@
 
 package edu.uci.crayfis;
 
+import android.view.WindowManager.LayoutParams;
+import android.view.WindowManager;
+
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.text.Html;
@@ -128,7 +131,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
-	PowerManager.WakeLock wl;
+	private PowerManager.WakeLock wl;
 
 	private char[][] histo_chars = new char[256][256];
 	// draw some X axis labels
@@ -349,6 +352,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 	}
 
+    // last time we warned about the location
+    private long last_location_warning=0;
+
     /**
      * Set up for the transition to {@link edu.uci.crayfis.CFApplication.State#DATA}
      *
@@ -356,7 +362,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
      * @throws IllegalFsmStateException
      */
 	private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-		switch (previousState) {
+
+        // reset the location warning, so we start the 5 min clock on that
+        last_location_warning = System.currentTimeMillis();
+        switch (previousState) {
             case INIT:
                 l2thread.setFixedThreshold(true);
                 xbManager.newExposureBlock();
@@ -624,8 +633,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		// to keep DAQ going without taking over the phone.
 		PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-        wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
-       // wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,"SDWL");
+        // = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
+        wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,"SDWL");
 
 		// get the grav/accelerometer, if any
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -848,7 +857,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // FIXME This may not be valid if things are running in the background.
             ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 		}
-		
+
 	}
 
     @Override
@@ -898,65 +907,72 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
-            userErrorMessage("CRAYFIS could not access the camera.",true);
+            userErrorMessage("CRAYFIS could not open the camera.",true);
 
         }
+        try {
 
-		Camera.Parameters param = mCamera.getParameters();
+            Camera.Parameters param= mCamera.getParameters();
+                CFLog.d("params: Camera params are" + param.flatten());
 
-		CFLog.d("params: Camera params are" + param.flatten());
+            // Select the preview size closest to 320x240
+            // Smaller images are recommended because some computer vision
+            // operations are very expensive
+            List<Camera.Size> sizes = param.getSupportedPreviewSizes();
+            // previewSize = sizes.get(closest(sizes,640,480));
+            previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
+            // Camera.Size previewSize = sizes.get(closest(sizes,176,144));
 
-		// Select the preview size closest to 320x240
-		// Smaller images are recommended because some computer vision
-		// operations are very expensive
-		List<Camera.Size> sizes = param.getSupportedPreviewSizes();
-		// previewSize = sizes.get(closest(sizes,640,480));
-		previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
-		// Camera.Size previewSize = sizes.get(closest(sizes,176,144));
+            if (mParticleReco == null) {
+                // if we don't already have a particleReco object setup,
+                // do that now that we know the camera size.
+                mParticleReco = ParticleReco.getInstance();
+                mParticleReco.setPreviewSize(previewSize);
+                l2thread = new L2Processor(this, previewSize);
+                l2thread.start();
+            }
 
-        if (mParticleReco == null) {
-            // if we don't already have a particleReco object setup,
-            // do that now that we know the camera size.
-            mParticleReco = ParticleReco.getInstance();
-            mParticleReco.setPreviewSize(previewSize);
-            l2thread = new L2Processor(this, previewSize);
-            l2thread.start();
-        }
+            CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
+            param.setPreviewSize(previewSize.width, previewSize.height);
+            // param.setFocusMode("FIXED");
+            param.setExposureCompensation(0);
 
-        CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
-		param.setPreviewSize(previewSize.width, previewSize.height);
-		// param.setFocusMode("FIXED");
-		param.setExposureCompensation(0);
+            // Try to pick the highest FPS range possible
+            int minfps = 0, maxfps = 0;
+            List<int[]> validRanges = param.getSupportedPreviewFpsRange();
+            if (validRanges != null)
+                for (int[] rng : validRanges) {
+                    CFLog.i("DAQActivity Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
+                    if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
+                        maxfps = rng[1];
+                        minfps = rng[0];
+                    }
+                }
+            CFLog.i("DAQActivity Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
+            try{
+                // Try to set minimum=maximum FPS range.
+                // This seems to work for some phones...
+                param.setPreviewFpsRange(maxfps, maxfps);
 
-		// Try to pick the highest FPS range possible
-		int minfps = 0, maxfps = 0;
-		List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-		if (validRanges != null)
-			for (int[] rng : validRanges) {
-				CFLog.i("DAQActivity Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-				if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-					maxfps = rng[1];
-					minfps = rng[0];
-				}
-			}
-		CFLog.i("DAQActivity Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
-		try{
-			// Try to set minimum=maximum FPS range.
-			// This seems to work for some phones...
-			param.setPreviewFpsRange(maxfps, maxfps);
+                mCamera.setParameters(param);
+            }
+            catch (RuntimeException ex) {
+                // but some phones will throw a fit. So just give it a "supported" range.
+                CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
+                param.setPreviewFpsRange(minfps, maxfps);
 
-			mCamera.setParameters(param);
-		}
-		catch (RuntimeException ex) {
-			// but some phones will throw a fit. So just give it a "supported" range.
-			CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
-			param.setPreviewFpsRange(minfps, maxfps);
+                mCamera.setParameters(param);
+            }
 
-			mCamera.setParameters(param);
-		}
+            // Create an instance of Camera
+            CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
-		// Create an instance of Camera
-        CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
+            } catch (Exception e) {
+                userErrorMessage("CRAYFIS could not access the camera parameters.",true);
+
+            }
+
+
 
         try {
         mPreview.setCamera(mCamera);
@@ -1246,6 +1262,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         LayoutData.mMessageView.setMessage(null, null);
                 }
 
+
+
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefDeveloperMode", false));
@@ -1270,47 +1288,55 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     final CFApplication application = (CFApplication) getApplication();
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
-                        mLayoutData.mProgressWheel.setText("Checking camera is covered");
-                        mLayoutData.mProgressWheel.setTextSize(22);
+                        if (mLayoutData.mProgressWheel != null) {
+                            mLayoutData.mProgressWheel.setText("Checking camera is covered");
+                            mLayoutData.mProgressWheel.setTextSize(22);
 
-                        mLayoutData.mProgressWheel.setTextColor(Color.RED);
-                        mLayoutData.mProgressWheel.setBarColor(Color.RED);
+                            mLayoutData.mProgressWheel.setTextColor(Color.RED);
+                            mLayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                        mLayoutData.mProgressWheel.spin();
+                            mLayoutData.mProgressWheel.spin();
+                        }
                     }
 
 
                     if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                        mLayoutData.mProgressWheel.setText("Measuring backgrounds");
-                        mLayoutData.mProgressWheel.setTextSize(27);
+                        if (mLayoutData.mProgressWheel != null) {
 
-                        mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                        mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+                            mLayoutData.mProgressWheel.setText("Measuring backgrounds");
+                            mLayoutData.mProgressWheel.setTextSize(27);
 
-                        int needev = CONFIG.getCalibrationSampleFrames();
-                        float frac = calibration_counter / ((float) 1.0 * needev);
-                        int progress = (int) (360 * frac);
-                        mLayoutData.mProgressWheel.setProgress(progress);
+                            mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                            mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+
+                            int needev = CONFIG.getCalibrationSampleFrames();
+                            float frac = calibration_counter / ((float) 1.0 * needev);
+                            int progress = (int) (360 * frac);
+                            mLayoutData.mProgressWheel.setProgress(progress);
+                        }
                     }
                     if (application.getApplicationState() == CFApplication.State.DATA) {
-                        mLayoutData.mProgressWheel.setTextSize(30);
+                        if (mLayoutData.mProgressWheel != null) {
 
-                        mLayoutData.mProgressWheel.setText("Taking Data!");
-                        mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                        mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+                            mLayoutData.mProgressWheel.setTextSize(30);
 
-                        mLayoutHist.updateData();
+                            mLayoutData.mProgressWheel.setText("Taking Data!");
+                            mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                            mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
-                        // solid circle
-                        mLayoutData.mProgressWheel.setProgress(360);
+                            mLayoutHist.updateData();
 
+                            // solid circle
+                            mLayoutData.mProgressWheel.setProgress(360);
+                        }
                     }
+                    if (mLayoutData != null && mLayoutData.mStatusView != null)
+                        mLayoutData.mStatusView.setStatus(status);
+                    if (mLayoutHist != null && mLayoutHist.mDataView != null)
+                        mLayoutHist.mDataView.setStatus(dstatus);
 
-                    mLayoutData.mStatusView.setStatus(status);
-                    mLayoutHist.mDataView.setStatus(dstatus);
 
-
-                    mLayoutTime.updateData();
+                    if (mLayoutTime != null) mLayoutTime.updateData();
 
                     if (mLayoutDeveloper == null)
                         mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
@@ -1342,10 +1368,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             );
                     }
 
-                    if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude() == 0.0) {
+                    if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude() == 0.0)
+                    {
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
                                 "Location unavailable.");
-                        locationWarning();
+                        if (application.getApplicationState() == CFApplication.State.DATA
+                            && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
+                        {
+                            locationWarning();
+                            last_location_warning = System.currentTimeMillis();
+                        }
                     }
 
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {

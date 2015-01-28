@@ -86,6 +86,7 @@ public class ParticleReco {
 
             buf.setXbn(xbn);
 
+            if (pixels != null)
             for (RecoPixel p : pixels) {
                 try {
                     buf.addPixels(p.buildProto());
