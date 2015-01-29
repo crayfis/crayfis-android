@@ -332,9 +332,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 				.setView(tx1).show();
 	}
 
-	private void newLocation(Location location) {
-        CFApplication.setLastKnownLocation(location);
-	}
+    private boolean location_valid(Location location)
+    {
+
+        return (location != null
+                && java.lang.Math.abs(location.getLongitude())>0.1
+                && java.lang.Math.abs(location.getLatitude())>0.1);
+
+    }
+
+	private void newLocation(Location location, boolean deprecated)
+    {
+        CFLog.d("## newLocation data "+location+" deprecated? "+deprecated);
+        if (deprecated==false)
+        {
+            //  Google location API
+            // as long as it's valid, update the data
+            if (location != null)
+                CFApplication.setLastKnownLocation(location);
+        } else {
+            // deprecated interface as backup
+
+            // is it valid?
+            if (location_valid(location))
+            {
+                // do we not have a valid current location?
+                if (location_valid(CFApplication.getLastKnownLocation()) == false)
+                {
+                    // use the deprecated info if it's the best we have
+                    CFApplication.setLastKnownLocation(location);
+                }
+        }
+
+        }
+        CFLog.d("@@ current location is "+CFApplication.getLastKnownLocation());
+
+    }
 
 	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		// The *only* valid way to get into calibration mode
@@ -535,13 +568,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mGoogleApiClient);
         CFLog.d("onConnected: asking for location = "+mLastLocation);
 
-        // Google fails if the services app is not installed. In that case
-        // use the deprecated location services as backup
-        if (mLastLocation == null)
-           mLastLocation = mLastLocationDeprecated;
-
-        // set the location
-        newLocation(mLastLocation);
+        // set the location; if this is false newLocation() will disregard it
+        newLocation(mLastLocation,false);
 
         // request updates as well
         mLocationRequest = new LocationRequest();
@@ -553,11 +581,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     }
 
+    // Google location update interface
     public void onLocationChanged(Location location)
     {
         CFLog.d("onLocationChanged: new  location = "+mLastLocation);
 
-        newLocation(location);
+        // set the location; if this is false newLocation() will disregard it
+        newLocation(location,false);
     }
 
     @Override
@@ -580,12 +610,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     {
         if (mLocationListener==null) {
             mLocationListener = new android.location.LocationListener() {
+                // deprecated location update interface
                 public void onLocationChanged(Location location) {
                     // Called when a new location is found by the network location
                     // provider.
                     CFLog.d("onLocationChangedDeprecated: new  location = "+location);
 
                     mLastLocationDeprecated = location;
+
+                    // update the location in case the Google method failed
+                    newLocation(location,true);
+
                 }
 
                 public void onStatusChanged(String provider, int status,
@@ -686,11 +721,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         /////////
         CFLog.d("  @@@@ LOCATION STUFF 2 @@@@ ");
-        newLocation(new Location("BLANK"));
+        newLocation(new Location("BLANK"),false);
         buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
         // backup location if Google play isn't working or installed
         mLastLocationDeprecated = getLocationDeprecated();
+        newLocation(mLastLocationDeprecated,true);
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
@@ -896,7 +932,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 .setView(tx1).show();
         finish();
-        System.exit(0);
+        if (fatal)
+            System.exit(0);
     }
 
     /**
@@ -1364,11 +1401,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                                             + "Upload server = " + upload_url + "\n"
                                             + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
                                             + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-
+                                            + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n"
                             );
                     }
 
-                    if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude() == 0.0)
+                    if (location_valid(CFApplication.getLastKnownLocation()) == false)
                     {
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
                                 "Location unavailable.");

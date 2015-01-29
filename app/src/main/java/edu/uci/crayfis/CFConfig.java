@@ -280,6 +280,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param serverCommand {@link edu.uci.crayfis.server.ServerCommand}
      */
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
+        if (serverCommand == null) return;
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
         }
