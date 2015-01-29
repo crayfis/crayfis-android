@@ -17,7 +17,10 @@
 
 package edu.uci.crayfis;
 
-import android.view.WindowManager.LayoutParams;
+import android.provider.Settings;
+
+import android.view.Window;
+
 import android.view.WindowManager;
 
 import android.content.SharedPreferences;
@@ -110,6 +113,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private ViewPager _mViewPager;
     private ViewPagerAdapter _adapter;
 
+    private PagerTabStrip mPagerTabStrip;
 
     private static LayoutData mLayoutData = LayoutData.getInstance();
     private static LayoutHist mLayoutHist = LayoutHist.getInstance();
@@ -662,11 +666,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
+        CFLog.d("  Yet more newer system settings stuff ");
+
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
 
 
-
-		// to keep DAQ going without taking over the phone.
+        // to keep DAQ going without taking over the phone.
 		PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
         // = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
         wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,"SDWL");
@@ -684,8 +691,15 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		editor.commit();
 		*/
 
-		setContentView(R.layout.video);
 
+
+        //Remove notification bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+
+        setContentView(R.layout.video);
+
+        mPagerTabStrip = (PagerTabStrip) findViewById(R.id.pts_main);
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
         _mViewPager.setAdapter(_adapter);
@@ -718,9 +732,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 
 		starttime = System.currentTimeMillis();
-
+        last_user_interaction = starttime;
         /////////
-        CFLog.d("  @@@@ LOCATION STUFF 2 @@@@ ");
         newLocation(new Location("BLANK"),false);
         buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
@@ -829,7 +842,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		super.onResume();
 
 		if (!wl.isHeld()) wl.acquire();
-        CFLog.d("DAQActivity onResume: PWNP wake lock held?"+wl.isHeld());
+        CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
 
 		Sensor sens = gravSensor;
 		if (sens == null) {
@@ -1044,6 +1057,28 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		return best;
 	}
 
+    private long last_user_interaction=0;
+
+    @Override
+    public void onUserInteraction()
+    {
+        last_user_interaction=System.currentTimeMillis();
+        CFLog.d(" The UserActivity at time= "+last_user_interaction);
+        if (_mViewPager.getCurrentItem() == ViewPagerAdapter.INACTIVE)
+        {
+            CFLog.d(" Switching out of INACTIVE pane");
+            getSupportActionBar().show();
+            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
+            _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
+
+
+        }
+    }
+
+
+
+
+
 	/**
 	 * Called each time a new image arrives in the data stream.
 	 */
@@ -1078,6 +1113,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         if (L1counter % fps_update_interval == 0) {
             double fps = updateFPS();
             CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
+
         }
 
         final CFApplication application = (CFApplication) getApplication();
@@ -1200,9 +1236,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private double updateFPS() {
         long now = System.currentTimeMillis();
-        int nframes = frame_times.size();
-        last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
-        return last_fps;
+        if (frame_times != null) {
+            int nframes = frame_times.size();
+            last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+            return last_fps;
+        }
+        return 0.0;
     }
 
     public double getFPS() {
@@ -1299,7 +1338,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         LayoutData.mMessageView.setMessage(null, null);
                 }
 
+                CFLog.d(" Last user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
+                if ((last_user_interaction - System.currentTimeMillis()) < -10e3
+                        && (_mViewPager.getCurrentItem() != ViewPagerAdapter.INACTIVE)
+                        ) // wait 10s
+                {
+                    CFLog.d(" Now switching to INACTIVE pane due to user inactivity and dimming.");
+                    _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
+                    getSupportActionBar().hide();
 
+                    Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
+
+
+                }
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -1420,6 +1471,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
                         showUpdateURL(CONFIG.getUpdateURL());
                     }
+
+
+
                 } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
                 }
             }
