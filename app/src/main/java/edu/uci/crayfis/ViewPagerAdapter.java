@@ -31,10 +31,10 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
 
     }
 
-    private static String[] Titles = {" ","Developer","Status","Data","Network Map","Your Account","Realtime","Gallery"};
+    private static String[] Titles = {"Developer","Live View","Status","Data","Network Map","Your Account","Realtime","Gallery"};
 
-    public static final int INACTIVE=0;
-    public static final int DEVELOPER = 1;
+    public static final int INACTIVE=1;
+    public static final int DEVELOPER = 0;
     public static final int STATUS = 2;
     public static final int DATA = 3;
     public static final int LEADER = 4;

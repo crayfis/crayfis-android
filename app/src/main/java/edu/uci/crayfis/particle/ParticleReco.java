@@ -155,6 +155,7 @@ public class ParticleReco {
     public Histogram h_numpixel = new Histogram(200);
 
 
+
     public History hist_mean = new History(200);
 
     // counters to keep track of how many events and pixels

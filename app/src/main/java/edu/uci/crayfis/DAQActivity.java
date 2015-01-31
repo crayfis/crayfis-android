@@ -17,6 +17,7 @@
 
 package edu.uci.crayfis;
 
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import android.provider.Settings;
 
 import android.view.Window;
@@ -30,6 +31,7 @@ import android.support.v4.view.ViewPager;
 
 import java.lang.OutOfMemoryError;
 
+import android.view.View;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -85,6 +87,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
@@ -115,6 +118,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private PagerTabStrip mPagerTabStrip;
 
+    private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private static LayoutData mLayoutData = LayoutData.getInstance();
     private static LayoutHist mLayoutHist = LayoutHist.getInstance();
     private static LayoutTime mLayoutTime = LayoutTime.getInstance();
@@ -347,7 +351,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	private void newLocation(Location location, boolean deprecated)
     {
-        CFLog.d("## newLocation data "+location+" deprecated? "+deprecated);
+
         if (deprecated==false)
         {
             //  Google location API
@@ -369,7 +373,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 
         }
-        CFLog.d("@@ current location is "+CFApplication.getLastKnownLocation());
+        //CFLog.d("## newLocation data "+location+" deprecated? "+deprecated+" -> current location is "+CFApplication.getLastKnownLocation());
 
     }
 
@@ -402,6 +406,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // reset the location warning, so we start the 5 min clock on that
         last_location_warning = System.currentTimeMillis();
+
+        // start the user interaction clock
+        last_user_interaction = System.currentTimeMillis();
         switch (previousState) {
             case INIT:
                 l2thread.setFixedThreshold(true);
@@ -588,7 +595,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     // Google location update interface
     public void onLocationChanged(Location location)
     {
-        CFLog.d("onLocationChanged: new  location = "+mLastLocation);
+        //CFLog.d("onLocationChanged: new  location = "+mLastLocation);
 
         // set the location; if this is false newLocation() will disregard it
         newLocation(location,false);
@@ -618,7 +625,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 public void onLocationChanged(Location location) {
                     // Called when a new location is found by the network location
                     // provider.
-                    CFLog.d("onLocationChangedDeprecated: new  location = "+location);
+                    //CFLog.d("onLocationChangedDeprecated: new  location = "+location);
 
                     mLastLocationDeprecated = location;
 
@@ -699,7 +706,24 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         setContentView(R.layout.video);
 
+
+
+/*
+
         mPagerTabStrip = (PagerTabStrip) findViewById(R.id.pts_main);
+
+        CFLog.d(" Pager tab strip: "+mPagerTabStrip);
+        if (mPagerTabStrip != null)
+        {
+            CFLog.d("  pager tabcolor="+mPagerTabStrip.getTabIndicatorColor()+" underline?"+mPagerTabStrip.getDrawFullUnderline());
+            mPagerTabStrip.setDrawFullUnderline(false);
+            mPagerTabStrip.setTabIndicatorColor(Color.GREEN);
+            mPagerTabStrip.setBackgroundColor(Color.YELLOW);
+
+            CFLog.d("  pager tabcolor="+mPagerTabStrip.getTabIndicatorColor()+" underline?"+mPagerTabStrip.getDrawFullUnderline());
+
+        }
+        */
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
         _mViewPager.setAdapter(_adapter);
@@ -1058,20 +1082,24 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
     private long last_user_interaction=0;
-
+    private int previous_item = ViewPagerAdapter.STATUS;
+    private boolean sleep_mode = false;
     @Override
     public void onUserInteraction()
     {
         last_user_interaction=System.currentTimeMillis();
         CFLog.d(" The UserActivity at time= "+last_user_interaction);
-        if (_mViewPager.getCurrentItem() == ViewPagerAdapter.INACTIVE)
+        if (sleep_mode==true)
         {
-            CFLog.d(" Switching out of INACTIVE pane");
+            //wake up
+            CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item);
             getSupportActionBar().show();
             Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
-            _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
 
+            findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
+            _mViewPager.setCurrentItem(previous_item);
 
+            sleep_mode=false;
         }
     }
 
@@ -1112,7 +1140,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         // update the FPS calculation periodically
         if (L1counter % fps_update_interval == 0) {
             double fps = updateFPS();
-            CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
+            //CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
 
         }
 
@@ -1313,7 +1341,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
-                if (outputThread==null || !outputThread.canUpload()) {
+                if (outputThread!=null && !outputThread.canUpload()){
                     if (outputThread.permit_upload) {
                         if (LayoutData.mMessageView != null )
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
@@ -1338,17 +1366,24 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         LayoutData.mMessageView.setMessage(null, null);
                 }
 
-                CFLog.d(" Last user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if ((last_user_interaction - System.currentTimeMillis()) < -10e3
-                        && (_mViewPager.getCurrentItem() != ViewPagerAdapter.INACTIVE)
-                        ) // wait 10s
+                final CFApplication application = (CFApplication) getApplication();
+
+
+                //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
+                if ( sleep_mode == false
+                        && (last_user_interaction - System.currentTimeMillis()) < -10e3
+                        && (application.getApplicationState() == CFApplication.State.DATA)
+                        ) // wait 10s after going into DATA mode
                 {
-                    CFLog.d(" Now switching to INACTIVE pane due to user inactivity and dimming.");
+                    // go to sleep
+                    previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
+                    CFLog.d(" Now switching to INACTIVE pane due to user inactivity and dimming and invisibling.");
                     _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
                     getSupportActionBar().hide();
 
                     Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
-
+                    findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
+                    sleep_mode=true;
 
                 }
 
@@ -1373,7 +1408,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             .setTotalFrames(L1counter_data)
                             .build();
 
-                    final CFApplication application = (CFApplication) getApplication();
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
                         if (mLayoutData.mProgressWheel != null) {
@@ -1391,7 +1425,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
                         if (mLayoutData.mProgressWheel != null) {
 
-                            mLayoutData.mProgressWheel.setText("Measuring backgrounds");
+                            mLayoutData.mProgressWheel.setText("Measuring levels");
                             mLayoutData.mProgressWheel.setTextSize(27);
 
                             mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
@@ -1424,6 +1458,20 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         mLayoutHist.mDataView.setStatus(dstatus);
 
 
+                    if (mLayoutBlack != null)
+                    {
+                            try {
+                                RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
+                                if (ev!=null) {
+                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time);
+                                    mLayoutBlack.addEvent(ev);
+                                } else {
+                                   // CFLog.d(" L2thread poll returns null ");
+                                }
+
+                            } catch (Exception e) {}
+                    }
+
                     if (mLayoutTime != null) mLayoutTime.updateData();
 
                     if (mLayoutDeveloper == null)
@@ -1449,6 +1497,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
                                             + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
                                             + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                            + "Splashes in L2: "+l2thread.display_pixels.size()+(mLayoutBlack!=null ? (" in widget: "+mLayoutBlack.events.size()) : "")+"\n"
                                             + "Upload server = " + upload_url + "\n"
                                             + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
                                             + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
@@ -1458,7 +1507,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                     if (location_valid(CFApplication.getLastKnownLocation()) == false)
                     {
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
+                        if (LayoutData.mMessageView != null)
+                            LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
                                 "Location unavailable.");
                         if (application.getApplicationState() == CFApplication.State.DATA
                             && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
