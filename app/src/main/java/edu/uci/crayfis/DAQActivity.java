@@ -1391,6 +1391,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefDeveloperMode", false));
 
+
                 try {
 
                     final StatusView.Status status = new StatusView.Status.Builder()
@@ -1457,8 +1458,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (mLayoutHist != null && mLayoutHist.mDataView != null)
                         mLayoutHist.mDataView.setStatus(dstatus);
 
-
-                    if (mLayoutBlack != null)
+                    boolean show_splashes = sharedPrefs.getBoolean("prefSplashView",true);
+                    if (show_splashes && mLayoutBlack != null)
                     {
                             try {
                                 RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
