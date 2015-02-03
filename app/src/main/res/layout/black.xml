@@ -6,7 +6,7 @@
     <edu.uci.crayfis.widget.SplashView
         android:id="@+id/splash_view"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="fill_parent"
         android:gravity="center_horizontal"
         />
 

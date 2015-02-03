@@ -110,11 +110,8 @@ public class RawCameraFrame {
         }
 
         for (int i = 0; i < length; i++) {
-            // make sure we promote the (signed) byte to int for comparison!
             int val = mBytes[i] & 0xFF;
-            if ( val > mPixMax) {
-                mPixMax = val;
-            }
+            if (val > mPixMax) mPixMax = val;
         }
 
         return mPixMax;

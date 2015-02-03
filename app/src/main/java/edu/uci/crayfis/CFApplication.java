@@ -14,6 +14,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
+import android.hardware.Camera;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -109,6 +110,7 @@ public class CFApplication extends Application {
     public static void setLastKnownLocation(Location lastKnownLocation) {
         mLastKnownLocation = lastKnownLocation;
     }
+
 
     /**
      * Wrapper class containing information relavent to this instance of the application.

@@ -18,6 +18,7 @@
         android:layout_height="fill_parent"
         android:id="@+id/viewPager" >
 
+
         <android.support.v4.view.PagerTabStrip
             android:id="@+id/pts_main"
             android:layout_width="match_parent"

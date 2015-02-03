@@ -47,6 +47,15 @@ public class Histogram implements Iterable<Integer> {
         }
     }
 
+    @Override
+    public String toString()
+    {
+        String res="";
+        for (int i=0;i<15;i++)
+           res += "[ bin "+i+" = "+values[i]+"] ";
+        return res;
+    }
+
     public void clear() {
         for (int i = 0; i < values.length; ++i) {
             values[i] = 0;

@@ -10,6 +10,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
+import android.hardware.Camera;
 
 import java.util.ArrayList;
 
@@ -23,6 +24,8 @@ public class LayoutBlack extends Fragment{
     public static SplashView mSplashView;
 
     public final static Object event_lock = new Object();
+
+    public static Camera.Size previewSize;
 
     public LayoutBlack()
     {
@@ -74,6 +77,9 @@ public class LayoutBlack extends Fragment{
         mSplashView = (SplashView) root.findViewById(R.id.splash_view);
 
         CFLog.d(" LayoutBlack splashview = "+mSplashView+" with #events="+events.size());
+
+
+
         return root;
     }
 

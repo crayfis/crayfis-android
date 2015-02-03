@@ -116,7 +116,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private ViewPager _mViewPager;
     private ViewPagerAdapter _adapter;
 
-    private PagerTabStrip mPagerTabStrip;
+    private PagerTabStrip strip;
 
     private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private static LayoutData mLayoutData = LayoutData.getInstance();
@@ -290,6 +290,34 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 })
 
                 .setView(tx1).show();
+    }
+
+    public void goToSleep()
+    {
+        previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
+        CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
+        _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
+        getSupportActionBar().hide();
+
+        try {
+            screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            CFLog.d(" saving screen brightness of "+screen_brightness);
+        } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
+        findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
+
+        strip.setTextColor(Color.BLACK);
+        strip.setTabIndicatorColor(Color.BLACK);
+        strip.setBackgroundColor(Color.BLACK);
+
+
+        sleep_mode=true;
+    }
+
+    public void clickedSleep()
+    {
+        // go to sleep
+        goToSleep();
     }
 
 	public void clickedAbout() {
@@ -676,7 +704,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         CFLog.d("  Yet more newer system settings stuff ");
 
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
+        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
 
 
@@ -708,22 +736,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 
-/*
 
-        mPagerTabStrip = (PagerTabStrip) findViewById(R.id.pts_main);
-
-        CFLog.d(" Pager tab strip: "+mPagerTabStrip);
-        if (mPagerTabStrip != null)
-        {
-            CFLog.d("  pager tabcolor="+mPagerTabStrip.getTabIndicatorColor()+" underline?"+mPagerTabStrip.getDrawFullUnderline());
-            mPagerTabStrip.setDrawFullUnderline(false);
-            mPagerTabStrip.setTabIndicatorColor(Color.GREEN);
-            mPagerTabStrip.setBackgroundColor(Color.YELLOW);
-
-            CFLog.d("  pager tabcolor="+mPagerTabStrip.getTabIndicatorColor()+" underline?"+mPagerTabStrip.getDrawFullUnderline());
-
-        }
-        */
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
         _mViewPager.setAdapter(_adapter);
@@ -780,7 +793,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 
-        final PagerTabStrip strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
+        strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
         strip.setDrawFullUnderline(false);
         strip.setTabIndicatorColor(Color.RED);
         strip.setBackgroundColor(Color.GRAY);
@@ -948,6 +961,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             case R.id.menu_about:
                 clickedAbout();
                 return true;
+            case R.id.menu_sleep:
+                clickedSleep();
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -996,12 +1012,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // previewSize = sizes.get(closest(sizes,640,480));
             previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
             // Camera.Size previewSize = sizes.get(closest(sizes,176,144));
+            CFLog.d(" preview size="+previewSize);
 
             if (mParticleReco == null) {
                 // if we don't already have a particleReco object setup,
                 // do that now that we know the camera size.
                 mParticleReco = ParticleReco.getInstance();
                 mParticleReco.setPreviewSize(previewSize);
+                mLayoutBlack.previewSize = previewSize;
                 l2thread = new L2Processor(this, previewSize);
                 l2thread.start();
             }
@@ -1084,6 +1102,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private long last_user_interaction=0;
     private int previous_item = ViewPagerAdapter.STATUS;
     private boolean sleep_mode = false;
+    private int screen_brightness = 0;
     @Override
     public void onUserInteraction()
     {
@@ -1092,13 +1111,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         if (sleep_mode==true)
         {
             //wake up
-            CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item);
             getSupportActionBar().show();
-            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
+
+            // if we somehow didn't capture the old brightness, don't set it to zero
+            if (screen_brightness<=150) screen_brightness=150;
+            CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
+
+            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
 
             findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
             _mViewPager.setCurrentItem(previous_item);
-
+            strip.setTextColor(Color.WHITE);
+            strip.setBackgroundColor(Color.GRAY);
+            strip.setTabIndicatorColor(Color.RED);
             sleep_mode=false;
         }
     }
@@ -1194,6 +1219,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             if (new_l2 < 2) {
                 new_l2 = 2;
             }
+
             if (new_l1 != CONFIG.getL1Threshold()) {
                 // the L1 threshold is drifting! set the new threshold and trigger a new XB.
                 CONFIG.setL1Threshold(new_l1);
@@ -1201,6 +1227,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 xbManager.newExposureBlock();
                 CFLog.i("Resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
                 CFLog.i("Triggering new XB.");
+
+
             }
         }
 
@@ -1375,15 +1403,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         && (application.getApplicationState() == CFApplication.State.DATA)
                         ) // wait 10s after going into DATA mode
                 {
-                    // go to sleep
-                    previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
-                    CFLog.d(" Now switching to INACTIVE pane due to user inactivity and dimming and invisibling.");
-                    _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
-                    getSupportActionBar().hide();
-
-                    Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
-                    findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
-                    sleep_mode=true;
+                    goToSleep();
 
                 }
 
@@ -1464,7 +1484,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             try {
                                 RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
                                 if (ev!=null) {
-                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time);
+                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time+ " pv ="+previewSize);
                                     mLayoutBlack.addEvent(ev);
                                 } else {
                                    // CFLog.d(" L2thread poll returns null ");
@@ -1498,7 +1518,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
                                             + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
                                             + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                                            + "Splashes in L2: "+l2thread.display_pixels.size()+(mLayoutBlack!=null ? (" in widget: "+mLayoutBlack.events.size()) : "")+"\n"
+                                            + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                             + "Upload server = " + upload_url + "\n"
                                             + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
                                             + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"

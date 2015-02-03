@@ -227,9 +227,9 @@ class L2Processor extends Thread {
             event.pixels = pixels;
 
             // and to the display list
-            CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
+            //CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
             display_pixels.offer(event);
-            CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
+            //CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
 
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 // keep track of the running totals for acquired
