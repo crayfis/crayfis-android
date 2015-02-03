@@ -74,6 +74,7 @@ import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
@@ -1163,16 +1164,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
                 if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
                     LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
-//                }
-//                else if (!outputThread.canUpload()) {
-//                        String reason;
-//                        if (outputThread.valid_id) {
-//                            reason = "Server is overloaded.";
-//                        } else {
-//                            reason = "Invalid user code.";
-//                        }
-//                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
-//                    }
+                } else if (!UploadExposureTask.sPermitUpload.get()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Server is overloaded.");
+                } else if (!UploadExposureTask.sValidId.get()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Invalid user code.");
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
                     LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);

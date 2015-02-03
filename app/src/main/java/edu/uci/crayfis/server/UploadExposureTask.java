@@ -16,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -34,6 +35,9 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
     private static final String INVALID_FILE = "invalid_file";
     private static final String MALFORMED_FILE = "malformed";
+
+    public static final AtomicBoolean sPermitUpload = new AtomicBoolean(true);
+    public static final AtomicBoolean sValidId = new AtomicBoolean(true);
 
     private final CFApplication mApplication;
     private final UploadExposureService.ServerInfo mServerInfo;
@@ -155,7 +159,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             // server rejected us! so we are not allowed to upload.
             // oh well! we can still take data at least.
 
-            // TODO There was a permit_upload variable here...
+            sPermitUpload.set(false);
 
             if (serverResponseCode == 401) {
                 // server rejected us because our app code is invalid.
@@ -163,11 +167,12 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
                 editor.putBoolean("badID", true);
                 editor.apply();
                 CFLog.w("Setting bad ID flag!");
-
-                // TODO There was a valid_id variable here, it's used in DAQActivity.
+                sValidId.set(false);
             }
+
             return Boolean.FALSE;
         }
+
         BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
         String line;
         StringBuilder sb = new StringBuilder();
@@ -189,17 +194,13 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             SharedPreferences.Editor editor = sharedprefs.edit();
             editor.putBoolean("badID", false);
             editor.apply();
-
-            // TODO There was a valid_id variable here, it's used in DAQActivity.
+            sValidId.set(true);
         }
 
         return Boolean.TRUE;
     }
 
     private boolean canUpload() {
-        // FIXME The server tells us if we can upload, need to handle that.
-//        return sPermitUpload && ( (!useWifiOnly() && isConnected()) || isConnectedWifi());
-        return mApplication.isNetworkAvailable();
+        return mApplication.isNetworkAvailable() && sPermitUpload.get() && sValidId.get();
     }
-
 }
