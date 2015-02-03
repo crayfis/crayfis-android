@@ -58,7 +58,7 @@ public final class StatusView extends TextView {
                         status.getFps()
                         );
                 if (CONFIG.getAccountName() != null) {
-                 text += String.format("\n\n Account: %s\n Score: %1.1f\n",CONFIG.getAccountName(),CONFIG.getAccountScore());
+                 text += String.format("\n\n Device: %s\nAccount: %s\n Score: %1.1f\n",CONFIG.getDeviceNickname(),CONFIG.getAccountName(),CONFIG.getAccountScore());
                 }
                 setText(text);
                 break;

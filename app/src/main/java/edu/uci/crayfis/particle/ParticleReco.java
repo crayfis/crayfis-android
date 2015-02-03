@@ -100,6 +100,7 @@ public class ParticleReco {
 
             buf.setXbn(xbn);
 
+            if (pixels != null)
             for (RecoPixel p : pixels) {
                 try {
                     buf.addPixels(p.buildProto());
@@ -237,6 +238,7 @@ public class ParticleReco {
     public Histogram h_l2pixel = new Histogram(256);
     public Histogram h_maxpixel = new Histogram(256);
     public Histogram h_numpixel = new Histogram(200);
+
 
 
     public History hist_mean = new History(200);

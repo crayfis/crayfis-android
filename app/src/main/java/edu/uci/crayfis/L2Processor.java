@@ -34,6 +34,7 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
 
 import edu.uci.crayfis.util.CFLog;
@@ -49,6 +50,9 @@ class L2Processor extends Thread {
     ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(L2Queue_maxFrames);
     // max amount of time to wait on L2Queue (seconds)
     int L2Timeout = 1;
+
+    private static final int L2_maxdisplay = 100;
+    ArrayBlockingQueue<RecoEvent> display_pixels = new ArrayBlockingQueue<RecoEvent>(L2_maxdisplay);
 
 
     // ----8< --------
@@ -221,6 +225,11 @@ class L2Processor extends Thread {
 
             // Now add them to the event.
             event.pixels = pixels;
+
+            // and to the display list
+            //CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
+            display_pixels.offer(event);
+            //CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
 
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 // keep track of the running totals for acquired

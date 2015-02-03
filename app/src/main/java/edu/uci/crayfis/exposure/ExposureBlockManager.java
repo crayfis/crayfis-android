@@ -1,5 +1,6 @@
 package edu.uci.crayfis.exposure;
 
+import java.util.ConcurrentModificationException;
 import android.content.Context;
 import android.location.Location;
 import android.support.annotation.NonNull;
@@ -137,13 +138,17 @@ public final class ExposureBlockManager {
             return;
         }
 
-        for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
-            ExposureBlock xb = it.next();
-            if (xb.end_time < safe_time) {
-                // okay, it's safe to commit this block now.
-                it.remove();
-                UploadExposureService.submitExposureBlock(APPLICATION, xb);
-            }
+        // DW bandaid to avoid crashing here
+        boolean failed=false;
+        for (Iterator<ExposureBlock> it = retired_blocks.iterator(); !failed && it.hasNext(); ) {
+            try {
+                ExposureBlock xb = it.next();
+                if (xb.end_time < safe_time) {
+                    // okay, it's safe to commit this block now.
+                    it.remove();
+                    UploadExposureService.submitExposureBlock(APPLICATION, xb);
+                }
+            } catch (ConcurrentModificationException e) { failed=true;}
         }
     }
 

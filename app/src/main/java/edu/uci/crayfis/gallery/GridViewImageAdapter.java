@@ -26,6 +26,9 @@ package edu.uci.crayfis.gallery;
     import android.widget.BaseAdapter;
     import android.widget.GridView;
     import android.widget.ImageView;
+
+    import com.crashlytics.android.Crashlytics;
+
     import edu.uci.crayfis.LayoutGallery;
     import edu.uci.crayfis.gallery.SavedImage;
 
@@ -72,14 +75,17 @@ package edu.uci.crayfis.gallery;
             }
 
             // get screen dimensions
-            Bitmap image = decodeFile(_filePaths.get(position).filename, imageWidth,
-                    imageWidth);
+            try {
+                Bitmap image = decodeFile(_filePaths.get(position).filename, imageWidth,
+                        imageWidth);
 
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setLayoutParams(new GridView.LayoutParams(imageWidth,
-                    imageWidth));
-            imageView.setImageBitmap(image);
-
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                imageView.setLayoutParams(new GridView.LayoutParams(imageWidth,
+                        imageWidth));
+                imageView.setImageBitmap(image);
+            } catch (Exception e ) {              Crashlytics.logException(e);
+                e.printStackTrace();
+            }
 
             return imageView;
 
@@ -110,8 +116,9 @@ package edu.uci.crayfis.gallery;
                 o2.inSampleSize = scale;
                 return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
             } catch (FileNotFoundException e) {
+                Crashlytics.logException(e);
                 e.printStackTrace();
-            }
+            } catch (OutOfMemoryError e){ Crashlytics.logException(e); /* don't want to do anything if OOM */ }
             return null;
         }
 

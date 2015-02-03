@@ -73,7 +73,7 @@ public class Utils {
     public static final int GRID_PADDING = 4; // in dp
 
     // SD card image directory
-    public static final String DIRNAME = "/crayfis";
+    public static final String DIRNAME = "/.crayfis";
 
     // supported file formats
     public static final List<String> FILE_EXTN = Arrays.asList("jpg", "jpeg",
@@ -88,11 +88,13 @@ public class Utils {
 
     public int deleteImages()
     {
-
-        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
-
         int num_deleted=0;
+
+        try
+        {
+        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File directory = new File(sdCard.getAbsolutePath() + DIRNAME);
+
 
         // check for directory
         if (directory.isDirectory()) {
@@ -109,10 +111,14 @@ public class Utils {
                     String filePath = listFiles[i].getAbsolutePath();
                     File file = new File(filePath);
                     boolean res = file.delete();
-                    CFLog.d("Gallery: success? "+res+" deleting file "+filePath);
+                    CFLog.d("Gallery: success? " + res + " deleting file " + filePath);
                     if (res) num_deleted++;
                 }
             }
+        }
+       } catch (Exception e)
+        {
+            Crashlytics.logException(e);
         }
         return num_deleted;
     }
@@ -197,6 +203,7 @@ public class Utils {
                             filePaths.add(new SavedImage(filePath));
                         } catch (Exception e)
                         {
+                            Crashlytics.logException(e);
                         // couldn't do it. Don't crash.
                          }
                     }

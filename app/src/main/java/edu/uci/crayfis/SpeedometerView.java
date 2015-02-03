@@ -96,8 +96,7 @@ public class SpeedometerView extends View {
     }
 
     public void setSpeed(double speed) {
-        if (speed < 0)
-            throw new IllegalArgumentException("Non-positive value specified as a speed.");
+        if (speed < 0) speed=0;
         if (speed > maxSpeed)
             speed = maxSpeed;
         this.speed = speed;

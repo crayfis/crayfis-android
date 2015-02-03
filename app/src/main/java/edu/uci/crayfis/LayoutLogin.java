@@ -101,32 +101,33 @@ public class LayoutLogin extends Fragment {
 
                     CFLog.d(" CRAYFIS got html data = "+msg.length());
 
-                    // get the account name
-
                     /// get the user code
                     String code = "";
+                    try
                     {
                         String tag = "your user code:";
                         int index = msg.indexOf(tag);
                         int code_start = index + tag.length() + 4; // +1 for space +3 for <b> tag
                         int code_length = 6;
-                        code = msg.substring(code_start, code_start + code_length);
+                        if (code_start>=0)
+                          code = msg.substring(code_start, code_start + code_length);
                         CFLog.d(" CRAYFIS got user code = " + code);
-                    }
+                    } catch (Exception e) {}
 
-                    /// get the user code
+                    /// get the account name
                     String username = "";
+                    try
                     {
                         String tag = "Hello,";
                         int index = msg.indexOf(tag);
                         int code_start = index + tag.length() + 9; // +1 for space +8 for <strong> tag
                         int code_end = msg.indexOf("</strong>",code_start)-1;
-                        username = msg.substring(code_start, code_end);
+                        if (code_end>code_start)
+                          username = msg.substring(code_start, code_end);
                         CFLog.d(" CRAYFIS got user name = " + username);
-                    }
+                    } catch (Exception e) {}
 
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                    String curr_code = sharedPrefs.getString("prefUserID","");
 
                     if (code.length()==6)
                     {

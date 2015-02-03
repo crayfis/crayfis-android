@@ -17,6 +17,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
+import android.hardware.Camera;
 
 import edu.uci.crayfis.server.UploadExposureService;
 

@@ -43,4 +43,18 @@
             android:title="Click to prevent autostart" >
      </CheckBoxPreference>
 
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="prefSplashView"
+        android:summary="Disable for black screen running"
+        android:title="Enable live view splashes" >
+    </CheckBoxPreference>
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="prefDeveloperMode"
+        android:summary="Saves and displays interesting images"
+        android:title="Enable gallery" >
+    </CheckBoxPreference>
+
 </PreferenceScreen>

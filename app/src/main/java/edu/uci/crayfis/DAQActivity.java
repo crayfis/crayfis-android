@@ -17,6 +17,22 @@
 
 package edu.uci.crayfis;
 
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
+import android.provider.Settings;
+
+import android.view.Window;
+
+import android.view.WindowManager;
+
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.text.Html;
+import android.support.v4.view.ViewPager;
+
+import java.lang.OutOfMemoryError;
+
+import android.view.View;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -64,6 +80,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
@@ -95,7 +112,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private ViewPager _mViewPager;
     private ViewPagerAdapter _adapter;
 
+    private PagerTabStrip strip;
 
+    private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private static LayoutData mLayoutData = LayoutData.getInstance();
     private static LayoutHist mLayoutHist = LayoutHist.getInstance();
     private static LayoutTime mLayoutTime = LayoutTime.getInstance();
@@ -116,7 +135,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 	// WakeLock to prevent the phone from sleeping during DAQ
-	PowerManager.WakeLock wl;
+	private PowerManager.WakeLock wl;
 
 	private char[][] histo_chars = new char[256][256];
 	// draw some X axis labels
@@ -243,8 +262,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
     }
 
+    private String last_update_URL = "";
     public void showUpdateURL(String url)
     {
+        last_update_URL=url;
         final SpannableString s = new SpannableString(url);
         final TextView tx1 = new TextView(this);
 
@@ -262,6 +283,34 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 })
 
                 .setView(tx1).show();
+    }
+
+    public void goToSleep()
+    {
+        previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
+        CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
+        _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
+        getSupportActionBar().hide();
+
+        try {
+            screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            CFLog.d(" saving screen brightness of "+screen_brightness);
+        } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
+        findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
+
+        strip.setTextColor(Color.BLACK);
+        strip.setTabIndicatorColor(Color.BLACK);
+        strip.setBackgroundColor(Color.BLACK);
+
+
+        sleep_mode=true;
+    }
+
+    public void clickedSleep()
+    {
+        // go to sleep
+        goToSleep();
     }
 
 	public void clickedAbout() {
@@ -312,9 +361,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 				.setView(tx1).show();
 	}
 
-	private void newLocation(Location location) {
-        CFApplication.setLastKnownLocation(location);
-	}
+    private boolean location_valid(Location location)
+    {
+
+        return (location != null
+                && java.lang.Math.abs(location.getLongitude())>0.1
+                && java.lang.Math.abs(location.getLatitude())>0.1);
+
+    }
+
+	private void newLocation(Location location, boolean deprecated)
+    {
+
+        if (deprecated==false)
+        {
+            //  Google location API
+            // as long as it's valid, update the data
+            if (location != null)
+                CFApplication.setLastKnownLocation(location);
+        } else {
+            // deprecated interface as backup
+
+            // is it valid?
+            if (location_valid(location))
+            {
+                // do we not have a valid current location?
+                if (location_valid(CFApplication.getLastKnownLocation()) == false)
+                {
+                    // use the deprecated info if it's the best we have
+                    CFApplication.setLastKnownLocation(location);
+                }
+        }
+
+        }
+        //CFLog.d("## newLocation data "+location+" deprecated? "+deprecated+" -> current location is "+CFApplication.getLastKnownLocation());
+
+    }
 
 	private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 		// The *only* valid way to get into calibration mode
@@ -332,6 +414,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 	}
 
+    // last time we warned about the location
+    private long last_location_warning=0;
+
     /**
      * Set up for the transition to {@link edu.uci.crayfis.CFApplication.State#DATA}
      *
@@ -339,7 +424,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
      * @throws IllegalFsmStateException
      */
 	private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-		switch (previousState) {
+
+        // reset the location warning, so we start the 5 min clock on that
+        last_location_warning = System.currentTimeMillis();
+
+        // start the user interaction clock
+        last_user_interaction = System.currentTimeMillis();
+        switch (previousState) {
             case INIT:
                 l2thread.setFixedThreshold(true);
                 xbManager.newExposureBlock();
@@ -509,13 +600,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mGoogleApiClient);
         CFLog.d("onConnected: asking for location = "+mLastLocation);
 
-        // Google fails if the services app is not installed. In that case
-        // use the deprecated location services as backup
-        if (mLastLocation == null)
-           mLastLocation = mLastLocationDeprecated;
-
-        // set the location
-        newLocation(mLastLocation);
+        // set the location; if this is false newLocation() will disregard it
+        newLocation(mLastLocation,false);
 
         // request updates as well
         mLocationRequest = new LocationRequest();
@@ -527,11 +613,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     }
 
+    // Google location update interface
     public void onLocationChanged(Location location)
     {
-        CFLog.d("onLocationChanged: new  location = "+mLastLocation);
+        //CFLog.d("onLocationChanged: new  location = "+mLastLocation);
 
-        newLocation(location);
+        // set the location; if this is false newLocation() will disregard it
+        newLocation(location,false);
     }
 
     @Override
@@ -554,12 +642,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     {
         if (mLocationListener==null) {
             mLocationListener = new android.location.LocationListener() {
+                // deprecated location update interface
                 public void onLocationChanged(Location location) {
                     // Called when a new location is found by the network location
                     // provider.
-                    CFLog.d("onLocationChangedDeprecated: new  location = "+location);
+                    //CFLog.d("onLocationChangedDeprecated: new  location = "+location);
 
                     mLastLocationDeprecated = location;
+
+                    // update the location in case the Google method failed
+                    newLocation(location,true);
+
                 }
 
                 public void onStatusChanged(String provider, int status,
@@ -578,9 +671,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 .getSystemService(Context.LOCATION_SERVICE);
 
         // ask for updates from network and GPS
-        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-
+        try {
+            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+        } catch (RuntimeException e)
+        { // some phones do not support
+        }
         // get the last known coordinates for an initial value
         Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (null == location) {
@@ -605,6 +701,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
+        CFLog.d("  Yet more newer system settings stuff ");
+
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
+
         final File files[] = getFilesDir().listFiles();
         int foundFiles = 0;
         for (int i = 0; i < files.length && foundFiles < 5; i++) {
@@ -614,11 +715,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             }
         }
 
-		// FIXME: for debugging only!!! We need to figure out how
-		// to keep DAQ going without taking over the phone.
-		PowerManager pm = (PowerManager)
-		getSystemService(Context.POWER_SERVICE); wl =
-		pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+
+        // to keep DAQ going without taking over the phone.
+		PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+        // = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "My Tag");
+        wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK,"SDWL");
 
 		// get the grav/accelerometer, if any
 		mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -633,7 +734,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		editor.commit();
 		*/
 
-		setContentView(R.layout.video);
+
+
+        //Remove notification bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+
+        setContentView(R.layout.video);
+
+
+
 
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
@@ -667,21 +777,21 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 
 		starttime = System.currentTimeMillis();
-
+        last_user_interaction = starttime;
         /////////
-        CFLog.d("  @@@@ LOCATION STUFF 2 @@@@ ");
-        newLocation(new Location("BLANK"));
+        newLocation(new Location("BLANK"),false);
         buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
         // backup location if Google play isn't working or installed
         mLastLocationDeprecated = getLocationDeprecated();
+        newLocation(mLastLocationDeprecated,true);
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 
-        final PagerTabStrip strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
+        strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
         strip.setDrawFullUnderline(false);
         strip.setTabIndicatorColor(Color.RED);
         strip.setBackgroundColor(Color.GRAY);
@@ -699,14 +809,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         super.onStart();
         CFLog.d("CALL: onStart!");
         mGoogleApiClient.connect();
+        CFLog.d("DAQActivity onStart: wake lock held?"+wl.isHeld());
+
 
     }
     @Override
     protected void onStop()
     {
         super.onStop();
+        CFLog.d("DAQActivity onStop: wake lock held?"+wl.isHeld());
+
+        if (wl.isHeld())
+            wl.release();
 
         mGoogleApiClient.disconnect();
+
+        ///  Moved from onPause
+
+        CFLog.i("DAQActivity Suspending!");
+
+        // stop the camera preview and all processing
+        if (mCamera != null) {
+            mPreview.setCamera(null);
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+
+            // clear out any (old) buffers
+            l2thread.clearQueue();
+
+            // If the app is being paused, we don't want that
+            // counting towards the current exposure block.
+            // So close it out cleaning by moving to the IDLE state.
+            // FIXME This may not be valid if things are running in the background.
+            ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+        }
 
     }
 
@@ -733,7 +871,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	protected void onResume() {
 		super.onResume();
 
-		wl.acquire();
+		if (!wl.isHeld()) wl.acquire();
+        CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
 
 		Sensor sens = gravSensor;
 		if (sens == null) {
@@ -772,10 +911,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         mUiUpdateTimer.cancel();
 
-		if (wl.isHeld())
-			wl.release();
+        CFLog.d("DAQActivity onPause: wake lock held?"+wl.isHeld());
+
 
 		mSensorManager.unregisterListener(this);
+
 
 		CFLog.i("DAQActivity Suspending!");
 
@@ -796,6 +936,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // FIXME This may not be valid if things are running in the background.
             ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 		}
+
 	}
 
     @Override
@@ -812,6 +953,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 return true;
             case R.id.menu_about:
                 clickedAbout();
+                return true;
+            case R.id.menu_sleep:
+                clickedSleep();
                 return true;
 
             default:
@@ -834,7 +978,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 .setView(tx1).show();
         finish();
-        System.exit(0);
+        if (fatal)
+            System.exit(0);
     }
 
     /**
@@ -845,65 +990,74 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
-            userErrorMessage("CRAYFIS could not access the camera.",true);
+            userErrorMessage("CRAYFIS could not open the camera.",true);
 
         }
+        try {
 
-		Camera.Parameters param = mCamera.getParameters();
+            Camera.Parameters param= mCamera.getParameters();
+                CFLog.d("params: Camera params are" + param.flatten());
 
-		CFLog.d("params: Camera params are" + param.flatten());
+            // Select the preview size closest to 320x240
+            // Smaller images are recommended because some computer vision
+            // operations are very expensive
+            List<Camera.Size> sizes = param.getSupportedPreviewSizes();
+            // previewSize = sizes.get(closest(sizes,640,480));
+            previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
+            // Camera.Size previewSize = sizes.get(closest(sizes,176,144));
+            CFLog.d(" preview size="+previewSize);
 
-		// Select the preview size closest to 320x240
-		// Smaller images are recommended because some computer vision
-		// operations are very expensive
-		List<Camera.Size> sizes = param.getSupportedPreviewSizes();
-		// previewSize = sizes.get(closest(sizes,640,480));
-		previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
-		// Camera.Size previewSize = sizes.get(closest(sizes,176,144));
+            if (mParticleReco == null) {
+                // if we don't already have a particleReco object setup,
+                // do that now that we know the camera size.
+                mParticleReco = ParticleReco.getInstance();
+                mParticleReco.setPreviewSize(previewSize);
+                mLayoutBlack.previewSize = previewSize;
+                l2thread = new L2Processor(this, previewSize);
+                l2thread.start();
+            }
 
-        if (mParticleReco == null) {
-            // if we don't already have a particleReco object setup,
-            // do that now that we know the camera size.
-            mParticleReco = ParticleReco.getInstance();
-            mParticleReco.setPreviewSize(previewSize);
-            l2thread = new L2Processor(this, previewSize);
-            l2thread.start();
-        }
+            CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
+            param.setPreviewSize(previewSize.width, previewSize.height);
+            // param.setFocusMode("FIXED");
+            param.setExposureCompensation(0);
 
-        CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
-		param.setPreviewSize(previewSize.width, previewSize.height);
-		// param.setFocusMode("FIXED");
-		param.setExposureCompensation(0);
+            // Try to pick the highest FPS range possible
+            int minfps = 0, maxfps = 0;
+            List<int[]> validRanges = param.getSupportedPreviewFpsRange();
+            if (validRanges != null)
+                for (int[] rng : validRanges) {
+                    CFLog.i("DAQActivity Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
+                    if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
+                        maxfps = rng[1];
+                        minfps = rng[0];
+                    }
+                }
+            CFLog.i("DAQActivity Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
+            try{
+                // Try to set minimum=maximum FPS range.
+                // This seems to work for some phones...
+                param.setPreviewFpsRange(maxfps, maxfps);
 
-		// Try to pick the highest FPS range possible
-		int minfps = 0, maxfps = 0;
-		List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-		if (validRanges != null)
-			for (int[] rng : validRanges) {
-				CFLog.i("DAQActivity Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-				if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-					maxfps = rng[1];
-					minfps = rng[0];
-				}
-			}
-		CFLog.i("DAQActivity Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
-		try{
-			// Try to set minimum=maximum FPS range.
-			// This seems to work for some phones...
-			param.setPreviewFpsRange(maxfps, maxfps);
+                mCamera.setParameters(param);
+            }
+            catch (RuntimeException ex) {
+                // but some phones will throw a fit. So just give it a "supported" range.
+                CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
+                param.setPreviewFpsRange(minfps, maxfps);
 
-			mCamera.setParameters(param);
-		}
-		catch (RuntimeException ex) {
-			// but some phones will throw a fit. So just give it a "supported" range.
-			CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
-			param.setPreviewFpsRange(minfps, maxfps);
+                mCamera.setParameters(param);
+            }
 
-			mCamera.setParameters(param);
-		}
+            // Create an instance of Camera
+            CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
-		// Create an instance of Camera
-        CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
+            } catch (Exception e) {
+                userErrorMessage("CRAYFIS could not access the camera parameters.",true);
+
+            }
+
+
 
         try {
         mPreview.setCamera(mCamera);
@@ -938,6 +1092,39 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		return best;
 	}
 
+    private long last_user_interaction=0;
+    private int previous_item = ViewPagerAdapter.STATUS;
+    private boolean sleep_mode = false;
+    private int screen_brightness = 0;
+    @Override
+    public void onUserInteraction()
+    {
+        last_user_interaction=System.currentTimeMillis();
+        CFLog.d(" The UserActivity at time= "+last_user_interaction);
+        if (sleep_mode==true)
+        {
+            //wake up
+            getSupportActionBar().show();
+
+            // if we somehow didn't capture the old brightness, don't set it to zero
+            if (screen_brightness<=150) screen_brightness=150;
+            CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
+
+            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
+
+            findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
+            _mViewPager.setCurrentItem(previous_item);
+            strip.setTextColor(Color.WHITE);
+            strip.setBackgroundColor(Color.GRAY);
+            strip.setTabIndicatorColor(Color.RED);
+            sleep_mode=false;
+        }
+    }
+
+
+
+
+
 	/**
 	 * Called each time a new image arrives in the data stream.
 	 */
@@ -970,7 +1157,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // update the FPS calculation periodically
         if (L1counter % fps_update_interval == 0) {
-            updateFPS();
+            double fps = updateFPS();
+            //CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
+
         }
 
         final CFApplication application = (CFApplication) getApplication();
@@ -1023,6 +1212,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             if (new_l2 < 2) {
                 new_l2 = 2;
             }
+
             if (new_l1 != CONFIG.getL1Threshold()) {
                 // the L1 threshold is drifting! set the new threshold and trigger a new XB.
                 CONFIG.setL1Threshold(new_l1);
@@ -1030,6 +1220,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 xbManager.newExposureBlock();
                 CFLog.i("Resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
                 CFLog.i("Triggering new XB.");
+
+
             }
         }
 
@@ -1093,9 +1285,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private double updateFPS() {
         long now = System.currentTimeMillis();
-        int nframes = frame_times.size();
-        last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
-        return last_fps;
+        if (frame_times != null) {
+            int nframes = frame_times.size();
+            last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+            return last_fps;
+        }
+        return 0.0;
     }
 
     public double getFPS() {
@@ -1175,116 +1370,143 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Invalid user code.");
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                    if (LayoutData.mMessageView != null )
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
                 } else {
-                    LayoutData.mMessageView.setMessage(null, null);
+                    if (LayoutData.mMessageView != null )
+
+                        LayoutData.mMessageView.setMessage(null, null);
                 }
-
-
-                final StatusView.Status status = new StatusView.Status.Builder()
-                        .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0 )
-                        .setFps((int) (getFPS()))
-                        .setStabilizationCounter(stabilization_counter)
-                        .setTotalEvents(l2thread.getTotalEvents())
-                        .setTotalPixels(l2thread.getTotalPixels())
-                        .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
-                        .build();
-
-                final DataView.Status dstatus = new DataView.Status.Builder()
-                        .setTotalEvents((int)mParticleReco.h_l2pixel.getIntegral())
-                        .setTotalPixels(L1counter_data*previewSize.height*previewSize.width)
-                        .setTotalFrames(L1counter_data)
-                        .build();
 
                 final CFApplication application = (CFApplication) getApplication();
 
-                if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+
+                //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
+                if ( sleep_mode == false
+                        && (last_user_interaction - System.currentTimeMillis()) < -10e3
+                        && (application.getApplicationState() == CFApplication.State.DATA)
+                        ) // wait 10s after going into DATA mode
                 {
-                    LayoutData.mProgressWheel.setText("Checking camera is covered");
-                    LayoutData.mProgressWheel.setTextSize(22);
-
-                    LayoutData.mProgressWheel.setTextColor(Color.RED);
-                    LayoutData.mProgressWheel.setBarColor(Color.RED);
-
-                    LayoutData.mProgressWheel.spin();
-                }
-
-
-                if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                    LayoutData.mProgressWheel.setText("Measuring backgrounds");
-                    LayoutData.mProgressWheel.setTextSize(27);
-
-                    LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                    LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
-
-                    int needev = CONFIG.getCalibrationSampleFrames();
-                    float frac = calibration_counter/((float)1.0*needev);
-                    int progress = (int)(360*frac);
-                    LayoutData.mProgressWheel.setProgress( progress );
-                     }
-                if (application.getApplicationState() == CFApplication.State.DATA) {
-                    LayoutData.mProgressWheel.setTextSize(30);
-
-                    LayoutData.mProgressWheel.setText("Taking Data!");
-                    LayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                    LayoutData.mProgressWheel.setBarColor(Color.GREEN);
-
-                    LayoutHist.updateData();
-
-                    // solid circle
-                    LayoutData.mProgressWheel.setProgress( 360);
+                    goToSleep();
 
                 }
 
-                LayoutData.mStatusView.setStatus(status);
-                LayoutHist.mDataView.setStatus(dstatus);
+                // turn on developer options if it has been selected
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefDeveloperMode", false));
 
 
+                try {
 
-                LayoutTime.updateData();
+                    final StatusView.Status status = new StatusView.Status.Builder()
+                            .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0)
+                            .setFps((int) (getFPS()))
+                            .setStabilizationCounter(stabilization_counter)
+                            .setTotalEvents(l2thread.getTotalEvents())
+                            .setTotalPixels(l2thread.getTotalPixels())
+                            .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
+                            .build();
 
-                if (mLayoutDeveloper==null)
-                    mLayoutDeveloper=(LayoutDeveloper) LayoutDeveloper.getInstance();
+                    if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+                    {
+                        LayoutData.mProgressWheel.setText("Checking camera is covered");
+                        LayoutData.mProgressWheel.setTextSize(22);
 
-                String server_address = context.getString(R.string.server_address);
-                String server_port = context.getString(R.string.server_port);
-                String upload_uri = context.getString(R.string.upload_uri);
-                boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+                        LayoutData.mProgressWheel.setTextColor(Color.RED);
+                        LayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                String upload_proto;
-                if (force_https) {
-                    upload_proto = "https://";
-                } else {
-                    upload_proto = "http://";
+                        LayoutData.mProgressWheel.spin();
+                    }
+
+
+                    if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                        LayoutData.mProgressWheel.setText("Measuring backgrounds");
+                        LayoutData.mProgressWheel.setTextSize(27);
+
+                        LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                        LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+
+                        int needev = CONFIG.getCalibrationSampleFrames();
+                        float frac = calibration_counter/((float)1.0*needev);
+                        int progress = (int)(360*frac);
+                        LayoutData.mProgressWheel.setProgress( progress );
+                         }
+                    if (application.getApplicationState() == CFApplication.State.DATA) {
+                        LayoutData.mProgressWheel.setTextSize(30);
+
+                        LayoutData.mProgressWheel.setText("Taking Data!");
+                        LayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                        LayoutData.mProgressWheel.setBarColor(Color.GREEN);
+
+                        LayoutHist.updateData();
+
+                        // solid circle
+                        LayoutData.mProgressWheel.setProgress(360);
+
+                        LayoutData.mStatusView.setStatus(status);
+                        final DataView.Status dstatus = new DataView.Status.Builder()
+                                .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
+                                .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
+                                .setTotalFrames(L1counter_data)
+                                .build();
+
+                        LayoutHist.mDataView.setStatus(dstatus);
+
+                        boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
+                        if (show_splashes && mLayoutBlack != null) {
+                            try {
+                                RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
+                                if (ev != null) {
+                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
+                                    mLayoutBlack.addEvent(ev);
+                                } else {
+                                    // CFLog.d(" L2thread poll returns null ");
+                                }
+
+                            } catch (Exception e) {
+                            }
+                        }
+
+                        if (mLayoutTime != null) mLayoutTime.updateData();
+
+                        if (mLayoutDeveloper == null)
+                            mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
+
+                    }
+
+                    String server_address = context.getString(R.string.server_address);
+                    String server_port = context.getString(R.string.server_port);
+                    String upload_uri = context.getString(R.string.upload_uri);
+                    boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+                    String upload_proto;
+                    if (force_https) {
+                        upload_proto = "https://";
+                    } else {
+                        upload_proto = "http://";
+                    }
+                    String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
+
+                    if (mLayoutDeveloper != null) {
+                        if (LayoutDeveloper.mAppBuildView != null)
+                        LayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+                        if (LayoutDeveloper.mTextView != null)
+                            LayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
+                                + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                + "Exposure Blocks:" + ( xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                + "Upload server = "+upload_url+"\n"
+                                + ( mLastLocation != null ? "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime() : "" )+ "\n"
+                                + ( mLastLocationDeprecated != null ?"Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime() : "" )+"\n"
+
+                        );
+                    }
+
+                    if (CONFIG != null && CONFIG.getUpdateURL() != null) {
+                        // FIXME: This gets into a crazy loop with dev.crayfis.io and this doesn't belong here
+                        //                    showUpdateURL(CONFIG.getUpdateURL())
+                    }
+                } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
+
                 }
-                String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-
-                if (mLayoutDeveloper != null) {
-                    if (LayoutDeveloper.mAppBuildView != null)
-                    LayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
-                    if (LayoutDeveloper.mTextView != null)
-                        LayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
-                            + "Exposure Blocks:" + ( xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                            + "Upload server = "+upload_url+"\n"
-                            + ( mLastLocation != null ? "Current google location: (long="+ mLastLocation.getLongitude()+", lat="+mLastLocation.getLatitude()+") accuracy = " +mLastLocation.getAccuracy()+" provider = "+mLastLocation.getProvider()+" time="+mLastLocation.getTime() : "" )+ "\n"
-                            + ( mLastLocationDeprecated != null ?"Current android location: (long="+ mLastLocationDeprecated.getLongitude()+", lat="+mLastLocationDeprecated.getLatitude()+") accuracy = " +mLastLocationDeprecated.getAccuracy()+" provider = "+mLastLocationDeprecated.getProvider()+" time="+mLastLocationDeprecated.getTime() : "" )+"\n"
-
-                    );
-                }
-
-                if (CFApplication.getLastKnownLocation().getLongitude() == 0.0 && CFApplication.getLastKnownLocation().getLatitude()==0.0) {
-                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText()+
-                            "Location unavailable.");
-                    locationWarning();
-                }
-
-                if (CONFIG != null && CONFIG.getUpdateURL() != null)
-                {
-                    // FIXME: This gets into a crazy loop with dev.crayfis.io and this doesn't belong here
-//                    showUpdateURL(CONFIG.getUpdateURL());
-                }
-
             }
         };
 
