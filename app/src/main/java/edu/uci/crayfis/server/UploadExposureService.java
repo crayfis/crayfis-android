@@ -228,7 +228,7 @@ public class UploadExposureService extends IntentService {
     /**
      * POJO for the server information.
      */
-    static final class ServerInfo {
+    public static final class ServerInfo {
         final String uploadUrl;
         final String deviceId;
         final String buildVersion;
@@ -237,7 +237,7 @@ public class UploadExposureService extends IntentService {
         final int connectTimeout = 2 * 1000; // ms
         final int readTimeout = 5 * 1000; // ms
 
-        private ServerInfo(@NonNull final Context context) {
+        public ServerInfo(@NonNull final Context context) {
             final String serverAddress = context.getString(R.string.server_address);
             final String serverPort = context.getString(R.string.server_port);
             final String uploadUri = context.getString(R.string.upload_uri);

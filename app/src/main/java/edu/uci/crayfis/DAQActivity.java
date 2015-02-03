@@ -59,6 +59,7 @@ import com.google.gson.JsonSyntaxException;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -604,10 +605,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
-
-
-
-
+        final File files[] = getFilesDir().listFiles();
+        int foundFiles = 0;
+        for (int i = 0; i < files.length && foundFiles < 5; i++) {
+            if (files[i].getName().endsWith(".bin")) {
+                new UploadExposureTask((CFApplication) getApplication(),
+                        new UploadExposureService.ServerInfo(this), files[i]);
+            }
+        }
 
 		// FIXME: for debugging only!!! We need to figure out how
 		// to keep DAQ going without taking over the phone.
