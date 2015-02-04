@@ -207,9 +207,9 @@ public class UploadExposureService extends IntentService {
 
     @Nullable
     private File saveMessageToCache(final AbstractMessage abstractMessage) {
-        int timestamp = (int) (System.currentTimeMillis()/1e3);
+        final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
-        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
+        final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
         FileOutputStream outputStream;
 
         try {
