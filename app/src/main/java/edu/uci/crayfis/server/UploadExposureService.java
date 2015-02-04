@@ -208,7 +208,8 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private File saveMessageToCache(final AbstractMessage abstractMessage) {
         int timestamp = (int) (System.currentTimeMillis()/1e3);
-        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + abstractMessage.getClass().getSimpleName() + ".bin";
+        final String type = getDataChunkType(abstractMessage);
+        String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
         FileOutputStream outputStream;
 
         try {
@@ -223,6 +224,25 @@ public class UploadExposureService extends IntentService {
         }
 
         return new File(getApplicationContext().getFilesDir().toString() + "/" + filename);
+    }
+
+    private String getDataChunkType(final AbstractMessage abstractMessage) {
+        final String rtn;
+        if (! (abstractMessage instanceof DataProtos.DataChunk)) {
+            rtn = "UNKNOWN";
+        } else {
+            final DataProtos.DataChunk chunk = (DataProtos.DataChunk) abstractMessage;
+            if (chunk.getCalibrationResultsCount() > 0) {
+                rtn = "Calibration";
+            } else if (chunk.getRunConfigsCount() > 0) {
+                rtn = "RunConfig";
+            } else if (chunk.getExposureBlocksCount() > 0) {
+                rtn = "Exposure";
+            } else {
+                rtn = "UNKNOWN";
+            }
+        }
+        return rtn;
     }
 
     /**
