@@ -1,6 +1,9 @@
 package edu.uci.crayfis.exposure;
 
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -10,7 +13,7 @@ import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
 
-public class ExposureBlock {
+public class ExposureBlock implements Parcelable {
 	public static final String TAG = "ExposureBlock";
 	
 	public UUID run_id;
@@ -48,8 +51,58 @@ public class ExposureBlock {
 	public ExposureBlock() {
 		reset();
 	}
-	
-	public void reset() {
+
+    private ExposureBlock(@NonNull final Parcel parcel) {
+        run_id = (UUID) parcel.readSerializable();
+        start_time = parcel.readLong();
+        end_time = parcel.readLong();
+        start_loc = parcel.readParcelable(Location.class.getClassLoader());
+        frames_dropped = parcel.readLong();
+        L1_thresh = parcel.readInt();
+        L2_thresh = parcel.readInt();
+        L1_processed = parcel.readLong();
+        L1_pass = parcel.readLong();
+        L1_skip = parcel.readLong();
+        L2_processed = parcel.readLong();
+        L2_pass = parcel.readLong();
+        L2_skip = parcel.readLong();
+        total_pixels = parcel.readInt();
+        xbn = parcel.readInt();
+        daq_state = (CFApplication.State) parcel.readSerializable();
+        frozen = parcel.readInt() == 1;
+        aborted = parcel.readInt() == 1;
+        events = parcel.createTypedArrayList(RecoEvent.CREATOR);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(final Parcel dest, final int flags) {
+        dest.writeSerializable(run_id);
+        dest.writeLong(start_time);
+        dest.writeLong(end_time);
+        dest.writeParcelable(start_loc, flags);
+        dest.writeLong(frames_dropped);
+        dest.writeInt(L1_thresh);
+        dest.writeInt(L2_thresh);
+        dest.writeLong(L1_processed);
+        dest.writeLong(L1_pass);
+        dest.writeLong(L1_skip);
+        dest.writeLong(L2_processed);
+        dest.writeLong(L2_pass);
+        dest.writeLong(L2_skip);
+        dest.writeInt(total_pixels);
+        dest.writeInt(xbn);
+        dest.writeSerializable(daq_state);
+        dest.writeInt(frozen ? 1 : 0);
+        dest.writeInt(aborted ? 1 : 0);
+        dest.writeTypedList(events);
+    }
+
+    public void reset() {
 		start_time = System.currentTimeMillis();
 		frames_dropped = 0;
 		L1_processed = L1_pass = L1_skip = 0;
@@ -143,4 +196,16 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock buf = buildProto();
 		return buf.toByteArray();
 	}
+
+    public static final Creator<ExposureBlock> CREATOR = new Creator<ExposureBlock>() {
+        @Override
+        public ExposureBlock createFromParcel(final Parcel source) {
+            return new ExposureBlock(source);
+        }
+
+        @Override
+        public ExposureBlock[] newArray(final int size) {
+            return new ExposureBlock[size];
+        }
+    };
 }

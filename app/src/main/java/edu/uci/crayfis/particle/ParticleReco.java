@@ -8,9 +8,9 @@ package edu.uci.crayfis.particle;
 
 import android.hardware.Camera;
 import android.location.Location;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import edu.uci.crayfis.util.CFLog;
-
 
 import java.util.ArrayList;
 
@@ -58,7 +58,7 @@ public class ParticleReco {
         return previewSize.height * previewSize.width;
     }
 
-    public class RecoEvent {
+    public static class RecoEvent implements Parcelable {
         public long time;
         public Location location;
         public float[] orientation;
@@ -70,6 +70,20 @@ public class ParticleReco {
         public int xbn;
 
         public ArrayList<RecoPixel> pixels = new ArrayList<RecoPixel>();
+
+        public RecoEvent() {
+
+        }
+
+        private RecoEvent(@NonNull final Parcel parcel) {
+            time = parcel.readLong();
+            location = parcel.readParcelable(Location.class.getClassLoader());
+            orientation = parcel.createFloatArray();
+            quality = parcel.readInt() == 1;
+            background = parcel.readFloat();
+            variance = parcel.readFloat();
+            xbn = parcel.readInt();
+        }
 
         public DataProtos.Event buildProto() {
             DataProtos.Event.Builder buf = DataProtos.Event.newBuilder();
@@ -96,9 +110,37 @@ public class ParticleReco {
 
             return buf.build();
         }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(final Parcel dest, final int flags) {
+            dest.writeLong(time);
+            dest.writeParcelable(location, flags);
+            dest.writeFloatArray(orientation);
+            dest.writeInt(quality ? 1 : 0);
+            dest.writeFloat(background);
+            dest.writeFloat(variance);
+            dest.writeInt(xbn);
+        }
+
+        public static final Creator<RecoEvent> CREATOR = new Creator<RecoEvent>() {
+            @Override
+            public RecoEvent createFromParcel(final Parcel source) {
+                return new RecoEvent(source);
+            }
+
+            @Override
+            public RecoEvent[] newArray(final int size) {
+                return new RecoEvent[size];
+            }
+        };
     }
 
-    public class RecoPixel {
+    public static class RecoPixel implements Parcelable {
         public int x, y;
         public int val;
         public float avg_3, avg_5;
@@ -115,6 +157,49 @@ public class ParticleReco {
 
             return buf.build();
         }
+
+        public RecoPixel() {
+
+        }
+
+        private RecoPixel(@NonNull final Parcel parcel) {
+            x = parcel.readInt();
+            y = parcel.readInt();
+            val  = parcel.readInt();
+            avg_3 = parcel.readFloat();
+            avg_5 = parcel.readFloat();
+            near_max = parcel.readInt();
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(final Parcel dest, final int flags) {
+            dest.writeInt(x);
+            dest.writeInt(y);
+            dest.writeInt(val);
+            dest.writeFloat(avg_3);
+            dest.writeFloat(avg_5);
+            dest.writeInt(near_max);
+        }
+
+        /**
+         * Parcelable.
+         */
+        public static final Creator<RecoPixel> CREATOR = new Creator<RecoPixel>() {
+            @Override
+            public RecoPixel createFromParcel(final Parcel source) {
+                return new RecoPixel(source);
+            }
+
+            @Override
+            public RecoPixel[] newArray(final int size) {
+                return new RecoPixel[size];
+            }
+        };
     }
 
     public class History {
