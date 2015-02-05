@@ -18,6 +18,8 @@
 package edu.uci.crayfis;
 
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
+
+import android.os.Build;
 import android.provider.Settings;
 
 import android.view.Window;
@@ -571,7 +573,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		b.setIdLo(runId.getLeastSignificantBits());
 		b.setCrayfisBuild(mAppBuild.getBuildVersion());
 		b.setStartTime(System.currentTimeMillis());
+
+        /* get a bunch of camera info */
 		b.setCameraParams(mCamera.getParameters().flatten());
+
+        /* get a bunch of hw build info */
+        String hw_params = "";
+        hw_params += "build-board=" + Build.BOARD + ";";
+        hw_params += "build-brand=" + Build.BRAND + ";";
+        hw_params += "build-cpu-abi=" + Build.CPU_ABI + ";";
+        hw_params += "build-cpu-abi2=" + Build.CPU_ABI2 + ";";
+        hw_params += "build-device=" + Build.DEVICE + ";";
+        hw_params += "build-display=" + Build.DISPLAY + ";";
+        hw_params += "build-fingerprint=" + Build.FINGERPRINT + ";";
+        hw_params += "build-hardware=" + Build.HARDWARE + ";";
+        hw_params += "build-host=" + Build.HOST + ";";
+        hw_params += "build-id=" + Build.ID + ";";
+        hw_params += "build-manufacturer=" + Build.MANUFACTURER + ";";
+        hw_params += "build-model=" + Build.MODEL + ";";
+        hw_params += "build-radio=" + Build.RADIO + ";";
+        hw_params += "build-serial=" + Build.SERIAL + ";";
+        hw_params += "build-board=" + Build.BOARD + ";";
+        hw_params += "build-tags=" + Build.TAGS + ";";
+        hw_params += "build-time=" + Build.TIME + ";";
+        hw_params += "build-type=" + Build.TYPE + ";";
+        hw_params += "build-user=" + Build.USER + ";";
+        b.setHwParams(hw_params);
+        CFLog.i("SET HWPARAMS = " + hw_params);
+
+        /* get a bunch of os build info */
+        String os_params = "";
+        os_params += "version-codename=" + Build.VERSION.CODENAME + ";";
+        os_params += "version-incremental=" + Build.VERSION.INCREMENTAL + ";";
+        os_params += "version-release=" + Build.VERSION.RELEASE + ";";
+        os_params += "version-sdk-int=" + Build.VERSION.SDK_INT + ";";
+        b.setOsParams(os_params);
+        CFLog.i("SET OSPARAMS = " + os_params);
 
 		run_config = b.build();
 	}
