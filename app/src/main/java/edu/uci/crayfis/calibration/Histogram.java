@@ -181,7 +181,8 @@ public class Histogram implements Iterable<Integer> {
         }
 
         for (int i = a; i <= b; ++i) {
-            integral += values[i];
+            if (values[i] > 0)
+                integral += values[i];
         }
 
         return integral;
