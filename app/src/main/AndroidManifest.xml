@@ -44,6 +44,9 @@
             </intent-filter>
         </receiver>
 
+        <service android:name=".server.UploadExposureService"
+                 android:exported="false"/>
+
         <activity
             android:name="edu.uci.crayfis.DAQActivity"
             android:screenOrientation="portrait"

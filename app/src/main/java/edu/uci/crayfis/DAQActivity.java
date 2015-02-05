@@ -18,6 +18,8 @@
 package edu.uci.crayfis;
 
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
+
+import android.os.Build;
 import android.provider.Settings;
 
 import android.view.Window;
@@ -39,50 +41,43 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
-import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
-import com.google.android.gms.location.LocationServices;
-
-
 import android.location.Location;
-//import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerTabStrip;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Html;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.SurfaceView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.util.TypedValue;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
+import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
-
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -98,11 +93,14 @@ import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.server.ServerCommand;
+import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.AppBuildView;
+import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
-import edu.uci.crayfis.widget.DataView;
+
+//import android.location.LocationListener;
 
 
 /**
@@ -194,9 +192,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 	// Thread where image data is processed for L2
 	private L2Processor l2thread;
-
-	// thread to handle output of committed data
-	private OutputManager outputThread;
 
 	// class to find particles in frames
 	private ParticleReco mParticleReco;
@@ -494,7 +489,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 */
                 // and commit it to the output stream
                 CFLog.i("DAQActivity Committing new calibration result.");
-                outputThread.commitCalibrationResult(cal.build());
+                UploadExposureService.submitCalibrationResult(this, cal.build());
 
                 // update the thresholds
                 //new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
@@ -600,7 +595,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		b.setIdLo(runId.getLeastSignificantBits());
 		b.setCrayfisBuild(mAppBuild.getBuildVersion());
 		b.setStartTime(System.currentTimeMillis());
+
+        /* get a bunch of camera info */
 		b.setCameraParams(mCamera.getParameters().flatten());
+
+        /* get a bunch of hw build info */
+        String hw_params = "";
+        hw_params += "build-board=" + Build.BOARD + ";";
+        hw_params += "build-brand=" + Build.BRAND + ";";
+        hw_params += "build-cpu-abi=" + Build.CPU_ABI + ";";
+        hw_params += "build-cpu-abi2=" + Build.CPU_ABI2 + ";";
+        hw_params += "build-device=" + Build.DEVICE + ";";
+        hw_params += "build-display=" + Build.DISPLAY + ";";
+        hw_params += "build-fingerprint=" + Build.FINGERPRINT + ";";
+        hw_params += "build-hardware=" + Build.HARDWARE + ";";
+        hw_params += "build-host=" + Build.HOST + ";";
+        hw_params += "build-id=" + Build.ID + ";";
+        hw_params += "build-manufacturer=" + Build.MANUFACTURER + ";";
+        hw_params += "build-model=" + Build.MODEL + ";";
+        hw_params += "build-radio=" + Build.RADIO + ";";
+        hw_params += "build-serial=" + Build.SERIAL + ";";
+        hw_params += "build-board=" + Build.BOARD + ";";
+        hw_params += "build-tags=" + Build.TAGS + ";";
+        hw_params += "build-time=" + Build.TIME + ";";
+        hw_params += "build-type=" + Build.TYPE + ";";
+        hw_params += "build-user=" + Build.USER + ";";
+        b.setHwParams(hw_params);
+        CFLog.i("SET HWPARAMS = " + hw_params);
+
+        /* get a bunch of os build info */
+        String os_params = "";
+        os_params += "version-codename=" + Build.VERSION.CODENAME + ";";
+        os_params += "version-incremental=" + Build.VERSION.INCREMENTAL + ";";
+        os_params += "version-release=" + Build.VERSION.RELEASE + ";";
+        os_params += "version-sdk-int=" + Build.VERSION.SDK_INT + ";";
+        b.setOsParams(os_params);
+        CFLog.i("SET OSPARAMS = " + os_params);
 
 		run_config = b.build();
 	}
@@ -719,7 +749,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        /*
+        TODO: Flush the UploadExposureService queue.
 
+        The idea here is that if there are files left in the queue, whenever this activity is
+        relaunched, that would be a good time to try to flush it.  This avoids background
+        watchers and makes it more probible that the data is uploaded at a time that is
+        convenient to the user.
+         */
 
         mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
 
@@ -728,6 +765,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
         //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
+        final File files[] = getFilesDir().listFiles();
+        int foundFiles = 0;
+        for (int i = 0; i < files.length && foundFiles < 5; i++) {
+            if (files[i].getName().endsWith(".bin")) {
+                new UploadExposureTask((CFApplication) getApplication(),
+                        new UploadExposureService.ServerInfo(this), files[i]);
+            }
+        }
 
 
         // to keep DAQ going without taking over the phone.
@@ -802,18 +847,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
-		// Spin up the output and image processing threads:
-		outputThread = OutputManager.getInstance(this);
-
-        //Prevents thread from thread duplication if it's already initialized
-		if (outputThread.getState() == Thread.State.NEW) {
-            outputThread.start();
-        }
-
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-
 
         strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
         strip.setDrawFullUnderline(false);
@@ -891,11 +926,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		l2thread.stopThread();
 		l2thread = null;
 
-		// request to stop the OutputManager. It will automatically
-		// try to upload any remaining data before dying.
-		outputThread.stopThread();
-		outputThread = null;
-
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
@@ -926,7 +956,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// we can generate and commit the runconfig
 		if (run_config == null) {
 			generateRunConfig();
-			outputThread.commitRunConfig(run_config);
+            UploadExposureService.submitRunConfig(this, run_config);
 		}
 
         if (mUiUpdateTimer != null) {
@@ -1394,21 +1424,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
-                if (outputThread!=null && !outputThread.canUpload()){
-                    if (outputThread.permit_upload) {
-                        if (LayoutData.mMessageView != null )
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR,getResources().getString(R.string.network_unavailable));
-                    } else {
-                        String reason;
-                        if (outputThread.valid_id) {
-                            reason = getResources().getString(R.string.server_overload);
-                        } else {
-                            reason = getResources().getString(R.string.bad_user_code);
-                        }
-                        if (LayoutData.mMessageView != null )
 
-                            LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, reason);
-                    }
+                if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, getResources().getString(R.string.network_unavailable));
+                } else if (!UploadExposureTask.sPermitUpload.get()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
+                } else if (!UploadExposureTask.sValidId.get()) {
+                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.bad_user_code));
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
                     if (LayoutData.mMessageView != null )
@@ -1448,93 +1470,85 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
                             .build();
 
-                    final DataView.Status dstatus = new DataView.Status.Builder()
-                            .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
-                            .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
-                            .setTotalFrames(L1counter_data)
-                            .build();
 
+                    if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+                    {
+                        LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
+                        LayoutData.mProgressWheel.setTextSize(22);
 
-                    if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
-                        if (mLayoutData.mProgressWheel != null) {
-                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
-                            mLayoutData.mProgressWheel.setTextSize(22);
+                        LayoutData.mProgressWheel.setTextColor(Color.RED);
+                        LayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                            mLayoutData.mProgressWheel.setTextColor(Color.RED);
-                            mLayoutData.mProgressWheel.setBarColor(Color.RED);
-
-                            mLayoutData.mProgressWheel.spin();
-                        }
+                        LayoutData.mProgressWheel.spin();
                     }
 
 
                     if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                        if (mLayoutData.mProgressWheel != null) {
+                        LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
+                        LayoutData.mProgressWheel.setTextSize(27);
 
-                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-                            mLayoutData.mProgressWheel.setTextSize(27);
+                         mLayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
+                         mLayoutData.mProgressWheel.setTextSize(27);
 
-                            mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                            mLayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
-                            int needev = CONFIG.getCalibrationSampleFrames();
-                            float frac = calibration_counter / ((float) 1.0 * needev);
-                            int progress = (int) (360 * frac);
-                            mLayoutData.mProgressWheel.setProgress(progress);
-                        }
-                    }
+                        int needev = CONFIG.getCalibrationSampleFrames();
+                        float frac = calibration_counter/((float)1.0*needev);
+                        int progress = (int)(360*frac);
+                        LayoutData.mProgressWheel.setProgress( progress );
+                         }
                     if (application.getApplicationState() == CFApplication.State.DATA) {
-                        if (mLayoutData.mProgressWheel != null) {
+                        LayoutData.mProgressWheel.setTextSize(30);
 
-                            mLayoutData.mProgressWheel.setTextSize(30);
 
                             mLayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
                             mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
                             mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
-                            mLayoutHist.updateData();
+                        // solid circle
+                        LayoutData.mProgressWheel.setProgress(360);
 
-                            // solid circle
-                            mLayoutData.mProgressWheel.setProgress(360);
-                        }
-                    }
-                    if (mLayoutData != null && mLayoutData.mStatusView != null)
-                        mLayoutData.mStatusView.setStatus(status);
-                    if (mLayoutHist != null && mLayoutHist.mDataView != null)
-                        mLayoutHist.mDataView.setStatus(dstatus);
+                        LayoutData.mStatusView.setStatus(status);
+                        final DataView.Status dstatus = new DataView.Status.Builder()
+                                .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
+                                .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
+                                .setTotalFrames(L1counter_data)
+                                .build();
 
-                    boolean show_splashes = sharedPrefs.getBoolean("prefSplashView",true);
-                    if (show_splashes && mLayoutBlack != null)
-                    {
+                        LayoutHist.mDataView.setStatus(dstatus);
+
+                        boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
+                        if (show_splashes && mLayoutBlack != null) {
                             try {
                                 RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
-                                if (ev!=null) {
-                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time+ " pv ="+previewSize);
+                                if (ev != null) {
+                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
                                     mLayoutBlack.addEvent(ev);
                                 } else {
-                                   // CFLog.d(" L2thread poll returns null ");
+                                    // CFLog.d(" L2thread poll returns null ");
                                 }
 
-                            } catch (Exception e) {}
+                            } catch (Exception e) {
+                            }
+                        }
+
+                        if (mLayoutTime != null) mLayoutTime.updateData();
+
+                        if (mLayoutDeveloper == null)
+                            mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
+
                     }
-
-                    if (mLayoutTime != null) mLayoutTime.updateData();
-
-                    if (mLayoutDeveloper == null)
-                        mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
 
                     String server_address = context.getString(R.string.server_address);
                     String server_port = context.getString(R.string.server_port);
                     String upload_uri = context.getString(R.string.upload_uri);
                     boolean force_https = context.getResources().getBoolean(R.bool.force_https);
-
                     String upload_proto;
                     if (force_https) {
                         upload_proto = "https://";
                     } else {
                         upload_proto = "http://";
                     }
-                    String upload_url = upload_proto + server_address + ":" + server_port + upload_uri;
+                    String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 
                     if (mLayoutDeveloper != null) {
                         if (mLayoutDeveloper.mAppBuildView != null)
@@ -1566,11 +1580,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
                         showUpdateURL(CONFIG.getUpdateURL());
+
                     }
-
-
-
                 } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
+
                 }
             }
         };
