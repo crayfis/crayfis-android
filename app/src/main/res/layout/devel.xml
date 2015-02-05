@@ -21,6 +21,7 @@
         android:background="#FFFFFF"
         android:textColor="#000000"
         android:text="Developer View"
+        android:scrollbars = "vertical"
         android:textSize="15dp"/>
 
 

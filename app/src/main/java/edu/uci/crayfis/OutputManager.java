@@ -332,16 +332,17 @@ public class OutputManager extends Thread {
 
 	private boolean directUpload(AbstractMessage toWrite, String run_id) {
 		// okay, we got a writable object, let's dump it to the server!
+        boolean success = false;
 
-		ByteString raw_data = toWrite.toByteString();
+        try {
 
-		CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
+    		ByteString raw_data = toWrite.toByteString();
 
-		int serverResponseCode = 0;
+    		CFLog.i("DAQActivity Okay! We're going to upload a chunk; it has " + raw_data.size() + " bytes");
 
-		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
-		boolean success = false;
-		try {
+    		int serverResponseCode = 0;
+
+    		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
 			URL u = new URL(upload_url);
 			HttpURLConnection c = (HttpURLConnection) u.openConnection();
 			c.setRequestMethod("POST");

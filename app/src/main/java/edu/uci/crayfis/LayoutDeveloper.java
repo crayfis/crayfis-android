@@ -6,6 +6,7 @@ package edu.uci.crayfis;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +43,8 @@ public class LayoutDeveloper extends Fragment{
 
 
         mTextView = (TextView)root.findViewById(R.id.devel_text);
+        mTextView.setMovementMethod(new ScrollingMovementMethod());
+
         mAppBuildView = (AppBuildView) root.findViewById(R.id.app_build_view);
 
 
@@ -56,7 +59,7 @@ public class LayoutDeveloper extends Fragment{
         if (isVisibleToUser)
         {
             if (!shown_message) {
-                Toast.makeText(getActivity(), "This pane shows developer-level details.", Toast.LENGTH_LONG).show();
+                Toast.makeText(getActivity(), R.string.toast_devel, Toast.LENGTH_LONG).show();
                 shown_message = true;
             }
         }

@@ -25,10 +25,10 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import edu.uci.crayfis.util.CFLog;
 
@@ -76,43 +76,11 @@ public class MainActivity extends Activity  {
 
 			setContentView(R.layout.main);
 
-            /*
-			final Button button = (Button)findViewById(R.id.sign_in);
-			final EditText input = (EditText)findViewById(R.id.userIDlogin);
 
-			button.setOnClickListener(new View.OnClickListener() {
-				@Override
-				public void onClick (View view) {
-					//Store the userID
-					userID = input.getText().toString();
-					CFLog.d("User ID: " + userID);
-					
-					
-					//Check that they input something
-					if (!("".equals(userID))) {
-						//Commit the ID to sharedprefs..
-						editor.putString("prefUserID", userID);
-						editor.commit();
-						
-						// now start running
-						Intent intent = new Intent(MainActivity.this, DAQActivity.class);
-						startActivity(intent);
-	
-						// now quit
-						MainActivity.this.finish();
-					}
-					else {
-						String text = "Please enter an user ID!";
-						int duration = Toast.LENGTH_LONG;
-						
-						Toast toast = Toast.makeText(getApplicationContext(),  text,  duration);
-						toast.show();
-					}
-				}
-			});
-			*/
-			//They want to run and save locally.
-			final Button button2 = (Button)findViewById(R.id.run_without_user_id);
+            TextView whattodo = (TextView)findViewById(R.id.what_to_do);
+            whattodo.setMovementMethod(new ScrollingMovementMethod());
+
+            final Button button2 = (Button)findViewById(R.id.run_without_user_id);
 			button2.setOnClickListener(new View.OnClickListener() {
 				
 				@Override

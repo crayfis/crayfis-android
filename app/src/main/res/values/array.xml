@@ -9,7 +9,27 @@
         <item>30</item>
         <item>35</item>
         <item>40</item>   
-    </string-array>    
+    </string-array>
+    <string-array name="hist_bins">
+        <item>Cand. Pix</item>
+        <item>Good. Cand.</item>
+        <item>Clean Cand.</item>
+    </string-array>
+    <string-array name="time_bins">
+        <item></item>
+        <item>Frame Samples</item>
+        <item></item>
+    </string-array>
+    <string-array name="pager_titles">
+        <item>Developer</item>
+        <item>Live View</item>
+        <item>Status</item>
+        <item>Data</item>
+        <item>Network Map</item>
+        <item>Your Account</item>
+        <item>Dosimeter</item>
+        <item>Gallery</item>
+    </string-array>
     <string-array name="pref_startwait">
         <item>0 </item>
         <item>10 </item>

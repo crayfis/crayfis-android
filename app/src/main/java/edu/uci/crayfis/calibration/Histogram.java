@@ -51,8 +51,12 @@ public class Histogram implements Iterable<Integer> {
     public String toString()
     {
         String res="";
-        for (int i=0;i<15;i++)
-           res += "[ bin "+i+" = "+values[i]+"] ";
+        int n_total = getEntries();
+        for (int i=0;i<10;i++) {
+                double rate = getIntegral(i, 256) / (1.0*n_total);
+
+            res += "[ bin " + i + " = " + values[i] + " eff = "+rate+"] \n";
+        }
         return res;
     }
 

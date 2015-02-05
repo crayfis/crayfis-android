@@ -1,9 +1,10 @@
 package edu.uci.crayfis.calibration;
 
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.util.CFLog;
 
 public class L1Calibrator {
-    private FrameHistory<Integer> max_pixels;
+    private static FrameHistory<Integer> max_pixels;
 
     private final int n_frames = 1000;
 
@@ -25,17 +26,17 @@ public class L1Calibrator {
         return sInstance;
     }
 
-    public FrameHistory<Integer> getMaxPixels() { return max_pixels; }
+    public static FrameHistory<Integer> getMaxPixels() { return max_pixels; }
 
-    public void clear() {
+    public static void clear() {
         max_pixels.clear();
     }
 
-    public void AddFrame(RawCameraFrame frame) {
+    public static void AddFrame(RawCameraFrame frame) {
         max_pixels.add_value(frame.getPixMax());
     }
 
-    public Histogram getHistogram() {
+    public static Histogram getHistogram() {
         return max_pixels.getHistogram(256);
     }
 
@@ -44,7 +45,7 @@ public class L1Calibrator {
      *  or equal to the specified value.
      *  @param target_eff The target (maximum) fraction of events passing L1
      */
-    public int findL1Threshold(double target_eff) {
+    public static int findL1Threshold(double target_eff) {
         Histogram h = getHistogram();
         int n_total = h.getEntries();
 
@@ -52,12 +53,16 @@ public class L1Calibrator {
         double rate = 0;
         for (thresh = 255; thresh >= 1; --thresh) {
             rate = h.getIntegral(thresh, 256) / n_total;
+            //if (thresh<20) CFLog.d(" L1Calibrator. Thresh="+thresh+" integral="+h.getIntegral(thresh, 256)+" rate="+rate+" compare to "+target_eff);
             if (rate > target_eff) break;
         }
         if (rate > target_eff) {
+            //CFLog.d(" L1Calibrator. Thresh="+(thresh+1));
             return thresh + 1;
         } else {
+            //CFLog.d(" L1Calibrator. Thresh="+thresh);
             return thresh;
         }
     }
+
 }

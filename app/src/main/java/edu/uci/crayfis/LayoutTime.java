@@ -85,7 +85,7 @@ public class LayoutTime extends Fragment {
             if (!shown_message)
             {
 
-                Toast.makeText(getActivity(), "This pane shows a radiation dosimeter. Still in development.",
+                Toast.makeText(getActivity(), R.string.toast_dosimeter,
                         Toast.LENGTH_SHORT).show();
             shown_message=true;
             }
@@ -137,7 +137,7 @@ public class LayoutTime extends Fragment {
         mGraphTime = new LineGraphView (context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
         mGraphTime.getGraphViewStyle().setNumVerticalLabels(4);
-        mGraphTime.setHorizontalLabels(new String[] {"","Frame samples",""});
+        mGraphTime.setHorizontalLabels(getResources().getStringArray(R.array.time_bins));
         mGraphTime.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
         mGraphTime.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
 

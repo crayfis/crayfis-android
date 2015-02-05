@@ -64,7 +64,7 @@ public class LayoutData extends Fragment{
         if (isVisibleToUser)
         {
             if (!shown_message) {
-             Toast.makeText(getActivity(), "This pane shows the status.\n Swipe for other views.", Toast.LENGTH_LONG).show();
+             Toast.makeText(getActivity(), R.string.toast_data, Toast.LENGTH_LONG).show();
             shown_message = true;
             }
         }

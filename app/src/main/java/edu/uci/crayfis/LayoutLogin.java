@@ -46,7 +46,7 @@ public class LayoutLogin extends Fragment {
             if (!shown_message)
             {
 
-                Toast.makeText(getActivity(), "Create an account or login to see your active devices.",
+                Toast.makeText(getActivity(), R.string.toast_login,
                         Toast.LENGTH_SHORT).show();
                 shown_message=true;
             }
@@ -85,6 +85,7 @@ public class LayoutLogin extends Fragment {
 
         //Creation of the Webview found in the XML Layout file
         browserView = (WebView)root.findViewById(R.id.webkit_login);
+        browserView.setWebViewClient(new WebViewClient());
         mProgressBar = (ProgressBar)root.findViewById(R.id.webprogress_login);
         mProgressBar.setVisibility(View.VISIBLE);
 
@@ -132,7 +133,7 @@ public class LayoutLogin extends Fragment {
                     if (code.length()==6)
                     {
                         sharedPrefs.edit().putString("prefUserID",code).apply();
-                        Toast.makeText(getActivity(), "This device has been connected to account "+username+" with user code "+code,
+                        Toast.makeText(getActivity(), R.string.login_notice+" "+username+" "+R.string.login_notice_code+" "+code,
                                 Toast.LENGTH_SHORT).show();
                     }
 

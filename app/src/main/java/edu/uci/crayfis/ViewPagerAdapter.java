@@ -28,10 +28,10 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
         super(fm);
         developerMode=true;
         _context=context;
-
+        Titles = _context.getResources().getStringArray(R.array.pager_titles);
     }
 
-    private static String[] Titles = {"Developer","Live View","Status","Data","Network Map","Your Account","Realtime","Gallery"};
+    private static String[] Titles; // set by resources for internationalizationability
 
     public static final int INACTIVE=1;
     public static final int DEVELOPER = 0;

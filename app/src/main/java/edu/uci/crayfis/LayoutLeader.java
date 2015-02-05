@@ -4,6 +4,7 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 1/5/15.
  */
 
+import android.webkit.WebViewClient;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -41,7 +42,7 @@ public class LayoutLeader extends Fragment {
             if (!shown_message)
             {
 
-                Toast.makeText(getActivity(), "This pane shows the active network map and leaderboard.",
+                Toast.makeText(getActivity(), R.string.toast_leader,
                         Toast.LENGTH_SHORT).show();
                 shown_message=true;
             }
@@ -78,6 +79,7 @@ public class LayoutLeader extends Fragment {
 
         //Creation of the Webview found in the XML Layout file
         browserView = (WebView)root.findViewById(R.id.webkit);
+        browserView.setWebViewClient(new WebViewClient());
         mProgressBar = (ProgressBar)root.findViewById(R.id.webprogress);
         mProgressBar.setVisibility(View.VISIBLE);
 

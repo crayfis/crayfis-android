@@ -254,12 +254,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     public void locationWarning() {
         if (!locationWarningGiven) {
             final TextView tx1 = new TextView(this);
-            tx1.setText("CRAYFIS is unable to determine the location of your device. Please check your Location settings.");
+            tx1.setText(getResources().getString(R.string.location_warning));
             tx1.setTextColor(Color.WHITE);
             tx1.setBackgroundColor(Color.BLACK);
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(Html.fromHtml("<font color='#FFFFFF'>CRAYFIS Location Error</font>")).setCancelable(false)
-                    .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            builder.setTitle(getResources().getString(R.string.location_warn_title)).setCancelable(false)
+                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                         }
                     })
@@ -276,15 +276,15 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         final SpannableString s = new SpannableString(url);
         final TextView tx1 = new TextView(this);
 
-        tx1.setText("A new version of CRAYFIS is available. Click here for the update: "+s);
+        tx1.setText(getResources().getString(R.string.update_notice)+s);
         tx1.setAutoLinkMask(RESULT_OK);
         tx1.setMovementMethod(LinkMovementMethod.getInstance());
         tx1.setTextColor(Color.WHITE);
         tx1.setBackgroundColor(Color.BLACK);
         Linkify.addLinks(s, Linkify.WEB_URLS);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle( Html.fromHtml("<font color='#FFFFFF'>Update CRAYFIS</font>")).setCancelable(false)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setTitle( getResources().getString(R.string.update_title)).setCancelable(false)
+                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                     }
                 })
@@ -323,34 +323,56 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public void clickedAbout() {
 
 		final SpannableString s = new SpannableString(
-				"crayfis.ps.uci.edu/about");
+				"crayfis.io/about.html");
 
 		final TextView tx1 = new TextView(this);
 
         if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
-  		  tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                "This view shows the current state of the app as well as:\n\t Time: seconds of data-taking\n" +
-                "\t Rate: scan rate, frames-per-second\n" +
-                  " Swipe right for more views.\n For more details: "
+  		  tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
+                  +getResources().getString(R.string.help_data)+"\n\n"+
+                  getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
 				+ s);
         if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
-            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                    "This view shows:\n" +
-                    "\t Frames scanned: number of video frames examined\n" +
-                    "\t Pixels scanned: number of pixels examined\n" +
-                    "\t Candidates: number of pixels above the noise threshold\n" +
-                    "On the bottom is a histogram showing the quality of the pixels above threshold. \nSwipe sideways for different views\nFor more details:  "
-                            + s);
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
+                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s
+                           );
         if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
-            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                    "This view shows a time series showing the max pixel value found in each frame." +
-                    "\nSwipe sideways for more views\nFor more details:  "
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+
                     + s);
 
         if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
-            tx1.setText("CRAYFIS is an app which uses your phone to look for cosmic ray particles.\n"+
-                    "This view shows a gallery of the most interesting hits. Note that not every particle candidate hit is saved." +
-                    "\nSwipe sideways for more views\nFor more details:  "
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LOGIN)
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LEADER)
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DEVELOPER)
+        tx1.setText(getResources().getString(R.string.crayfis_about)+
+                "\n"+getResources().getString(R.string.toast_devel)+"\n"+
+                getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                + s);
+
+        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
                     + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
@@ -359,8 +381,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         tx1.setBackgroundColor(Color.BLACK);
 		Linkify.addLinks(s, Linkify.WEB_URLS);
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle( Html.fromHtml("<font color='#FFFFFF'>About CRAYFIS</font>")).setCancelable(false)
-				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+		builder.setTitle( getResources().getString(R.string.about_title)).setCancelable(false)
+				.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int id) {
 					}
 				})
@@ -499,13 +521,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 
 	}
-
+    double target_L1_eff;
     public int calculateL1Threshold() {
         double fps = updateFPS();
         if (fps == 0) {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
-        double target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
+        target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
         return L1cal.findL1Threshold(target_L1_eff);
     }
 
@@ -847,6 +869,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // FIXME This may not be valid if things are running in the background.
             ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
         }
+        // give back brightness control
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC);
+
 
     }
 
@@ -977,8 +1002,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         tx1.setTextColor(Color.WHITE);
         tx1.setBackgroundColor(Color.BLACK);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(Html.fromHtml("<font color='#FFFFFF'>CRAYFIS Error</font>")).setCancelable(false)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+        builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
+                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                     }
                 })
@@ -997,7 +1022,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
-            userErrorMessage("CRAYFIS could not open the camera.",true);
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
 
         }
         try {
@@ -1060,7 +1085,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
             } catch (Exception e) {
-                userErrorMessage("CRAYFIS could not access the camera parameters.",true);
+                userErrorMessage(getResources().getString(R.string.camera_error),true);
 
             }
 
@@ -1069,7 +1094,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         try {
         mPreview.setCamera(mCamera);
           }  catch (Exception e) {
-           userErrorMessage("CRAYFIS could not access the camera.",true);
+           userErrorMessage(getResources().getString(R.string.camera_error),true);
            }
         CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
@@ -1225,7 +1250,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 CONFIG.setL1Threshold(new_l1);
                 CONFIG.setL2Threshold(new_l2);
                 xbManager.newExposureBlock();
-                CFLog.i("Resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
+                CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
                 CFLog.i("Triggering new XB.");
 
 
@@ -1372,13 +1397,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 if (outputThread!=null && !outputThread.canUpload()){
                     if (outputThread.permit_upload) {
                         if (LayoutData.mMessageView != null )
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Network unavailable.");
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR,getResources().getString(R.string.network_unavailable));
                     } else {
                         String reason;
                         if (outputThread.valid_id) {
-                            reason = "Server is overloaded.";
+                            reason = getResources().getString(R.string.server_overload);
                         } else {
-                            reason = "Invalid user code.";
+                            reason = getResources().getString(R.string.bad_user_code);
                         }
                         if (LayoutData.mMessageView != null )
 
@@ -1387,7 +1412,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
                     if (LayoutData.mMessageView != null )
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, "Ignored " + ignoredFrames);
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.ignored)+" " + ignoredFrames);
                 } else {
                     if (LayoutData.mMessageView != null )
 
@@ -1409,8 +1434,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefDeveloperMode", false));
-
+                _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
+                l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
 
                 try {
 
@@ -1432,7 +1457,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
                         if (mLayoutData.mProgressWheel != null) {
-                            mLayoutData.mProgressWheel.setText("Checking camera is covered");
+                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
                             mLayoutData.mProgressWheel.setTextSize(22);
 
                             mLayoutData.mProgressWheel.setTextColor(Color.RED);
@@ -1446,7 +1471,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
                         if (mLayoutData.mProgressWheel != null) {
 
-                            mLayoutData.mProgressWheel.setText("Measuring levels");
+                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
                             mLayoutData.mProgressWheel.setTextSize(27);
 
                             mLayoutData.mProgressWheel.setTextColor(Color.YELLOW);
@@ -1463,7 +1488,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                             mLayoutData.mProgressWheel.setTextSize(30);
 
-                            mLayoutData.mProgressWheel.setText("Taking Data!");
+                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
                             mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
                             mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
@@ -1516,7 +1541,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
                         if (mLayoutDeveloper.mTextView != null)
                             mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+last_fps+" target eff="+target_L1_eff+"\n"
                                             + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                                             + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                             + "Upload server = " + upload_url + "\n"
@@ -1530,7 +1555,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     {
                         if (LayoutData.mMessageView != null)
                             LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
-                                "Location unavailable.");
+                                    getResources().getString(R.string.location_unavailable));
                         if (application.getApplicationState() == CFApplication.State.DATA
                             && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
                         {

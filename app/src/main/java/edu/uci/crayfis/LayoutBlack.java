@@ -40,7 +40,7 @@ public class LayoutBlack extends Fragment{
         {
            if (!shown_message)
            {
-              Toast.makeText(getActivity(), "This shows cosmic ray candidates hitting your phone in real time.\n Prefer a black screen? You can disable it in Settings.",Toast.LENGTH_LONG).show();
+              Toast.makeText(getActivity(), getResources().getString(R.string.toast_black),Toast.LENGTH_LONG).show();
               shown_message=true;
            }
         }

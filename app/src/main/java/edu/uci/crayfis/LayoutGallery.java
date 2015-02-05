@@ -84,15 +84,15 @@ public class LayoutGallery extends Fragment {
             if (images.size()==0)
             {
 
-            Toast.makeText(getActivity(), "When especially interested candidates are found, this pane will show you a gallery of images.",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), R.string.toast_gallery_zero,Toast.LENGTH_SHORT).show();
+
                 shown_message=true;
 
             }
             else {
              if (!shown_message)
              {
-                 Toast.makeText(getActivity(), "This pane shows you a gallery of images of interesting candidates.",
+                 Toast.makeText(getActivity(), R.string.toast_gallery,
                          Toast.LENGTH_SHORT).show();
                  shown_message=true;
              }
@@ -125,7 +125,7 @@ public class LayoutGallery extends Fragment {
         } catch (Exception e) {                             Crashlytics.logException(e);
         }
 
-        textView.setText(images.size()+" Images");
+        textView.setText(images.size()+R.string.Images);
 
         final Button button2 = (Button)root.findViewById(R.id.delete_gallery);
         button2.setOnClickListener(new View.OnClickListener() {
@@ -135,7 +135,7 @@ public class LayoutGallery extends Fragment {
                 CFLog.d("Layout Gallery: deleting images!");
                 int num = utils.deleteImages();
 
-                Toast.makeText(getActivity(), "Deleted "+num+" images.",
+                Toast.makeText(getActivity(), R.string.Deleted+num+R.string.small_images,
                         Toast.LENGTH_SHORT).show();
                 //images = utils.getSavedImages();
 
@@ -152,7 +152,7 @@ public class LayoutGallery extends Fragment {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 CFLog.d("GridView: clicked"+position+id);
                 try {
-                    Toast.makeText(getActivity(), "Pixel hits: " + images.get(position).num_pix + "  Max pixel: " + images.get(position).max_pix + "  Date: " + images.get(position).date, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), R.string.pixel_hits + images.get(position).num_pix + " "+ R.string.max_pixel  + images.get(position).max_pix + " " + R.string.date + images.get(position).date, Toast.LENGTH_SHORT).show();
                 } catch (Exception e) {                             Crashlytics.logException(e);
                 };
             }

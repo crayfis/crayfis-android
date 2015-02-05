@@ -57,6 +57,7 @@ class L2Processor extends Thread {
 
     // ----8< --------
 
+    boolean save_images=false;
 
     private Utils mUtils;
 
@@ -187,6 +188,7 @@ class L2Processor extends Thread {
 
             // If we got a bad frame, go straight to stabilization mode.
             if (!PARTICLE_RECO.good_quality && !mFixedThreshold) {
+                CFLog.d(" !! BAD DATA! quality = "+PARTICLE_RECO.good_quality);
                 APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
                 continue;
             }
@@ -228,7 +230,8 @@ class L2Processor extends Thread {
 
             // and to the display list
             //CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
-            display_pixels.offer(event);
+            if (display_pixels.size()< L2_maxdisplay)
+                display_pixels.offer(event);
             //CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
 
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
@@ -255,7 +258,7 @@ class L2Processor extends Thread {
                         RecoPixel pix = event.pixels.get(i);
                         if (pix.val > max) max = pix.val;
                     }
-                    if (max > CONFIG.getL2Threshold()*1.2)
+                    if (save_images && max > CONFIG.getL2Threshold()*1.2)
                     try {
 
                         SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
