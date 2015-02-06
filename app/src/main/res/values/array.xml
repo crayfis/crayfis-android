@@ -28,6 +28,7 @@
         <item>Network Map</item>
         <item>Your Account</item>
         <item>Dosimeter</item>
+        <item>Feedback</item>
         <item>Gallery</item>
     </string-array>
     <string-array name="pref_startwait">

@@ -860,6 +860,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
 
 
+      
+
+
 	}
 
     @Override

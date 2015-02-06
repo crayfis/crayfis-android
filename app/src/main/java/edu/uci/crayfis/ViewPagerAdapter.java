@@ -40,7 +40,8 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
     public static final int LEADER = 4;
     public static final int LOGIN = 5;
     public static final int DOSIMETER = 6;
-    public static final int GALLERY = 7;
+    public static final int FEEDBACK = 7;
+    public static final int GALLERY = 8;
 
     @Override
     public CharSequence getPageTitle(int position) {
@@ -74,6 +75,9 @@ public class ViewPagerAdapter extends FragmentPagerAdapter {
                 break;
             case LOGIN:
                 f = LayoutLogin.getInstance();
+                break;
+            case FEEDBACK:
+                f = LayoutFeedback.getInstance();
                 break;
         }
 
