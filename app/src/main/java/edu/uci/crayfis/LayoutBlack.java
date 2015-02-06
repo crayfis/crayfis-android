@@ -76,7 +76,7 @@ public class LayoutBlack extends Fragment{
 
         mSplashView = (SplashView) root.findViewById(R.id.splash_view);
 
-        CFLog.d(" LayoutBlack splashview = "+mSplashView+" with #events="+events.size());
+        //CFLog.d(" LayoutBlack splashview = "+mSplashView+" with #events="+events.size());
 
 
 

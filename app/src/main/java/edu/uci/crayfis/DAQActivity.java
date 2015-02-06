@@ -290,13 +290,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     public void goToSleep()
     {
         previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
-        CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
+        //CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
         _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
         getSupportActionBar().hide();
 
         try {
             screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
-            CFLog.d(" saving screen brightness of "+screen_brightness);
+           // CFLog.d(" saving screen brightness of "+screen_brightness);
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
         findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
@@ -1162,7 +1162,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     public void onUserInteraction()
     {
         last_user_interaction=System.currentTimeMillis();
-        CFLog.d(" The UserActivity at time= "+last_user_interaction);
+       // CFLog.d(" The UserActivity at time= "+last_user_interaction);
         if (sleep_mode==true)
         {
             //wake up
@@ -1170,7 +1170,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
-            CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
+          //  CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
 
             Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
 
@@ -1487,9 +1487,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
                         LayoutData.mProgressWheel.setTextSize(27);
 
-                         mLayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-                         mLayoutData.mProgressWheel.setTextSize(27);
 
+                        LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                        LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
                         int needev = CONFIG.getCalibrationSampleFrames();
                         float frac = calibration_counter/((float)1.0*needev);
@@ -1521,7 +1521,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             try {
                                 RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
                                 if (ev != null) {
-                                    CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
+                                    //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
                                     mLayoutBlack.addEvent(ev);
                                 } else {
                                     // CFLog.d(" L2thread poll returns null ");
