@@ -17,13 +17,11 @@
 		android:layout_width="fill_parent"
 		android:layout_height="wrap_content"
 		android:layout_gravity="center"
-		android:text="@string/userIDlogin"
+		android:text="@string/userIDlogin1"
 		android:textColor="#000000"
 		android:textSize="15sp"
 		android:gravity="center" />
 	     	            
-
-         
 
 		
  	<Button
@@ -36,5 +34,16 @@
         android:textSize="18sp"
         android:background="#FF0000"
         android:textColor="#FFFFFF" />
-        
+
+    <TextView
+        android:id="@+id/what_to_do"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/userIDlogin2"
+        android:textColor="#000000"
+        android:textSize="15sp"
+        android:scrollbars = "vertical"
+        android:gravity="center" />
+
 </LinearLayout>

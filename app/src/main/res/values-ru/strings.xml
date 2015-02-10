@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="pref_save_data">Сохранить данные?</string>
+    <string name="app_name">CRAYFIS бета</string>
+    <string name="pref_show_image">Показать </string>
+    <string name="pref_do_reco">"Do Reco"</string>
+    <string name="pref_threshold">Предел</string>
+    <string name="pref_startwait">Здержка после подключения питания</string>
+    <string name="pref_startafter">Время начала работы</string>
+    <string name="settings_startafter_summary">Автоматический старт выключен до этого времени </string>
+    <string name="settings_startwait_summary">Задержка старта после подключения зарядного устройства, в секундах </string>
+    <string name="pref_startbefore">Время окончания работы</string>
+
+    <string name="userIDlogin1">Добро пожаловать в CRAYFIS бета тестирование! \nСпасибо за помощь!\n\n\n Приложение CRAYFIS \n сделает ваш телефон\n частью всемирной сети\n поиска космических частиц.\n\n Дополнительная информация: http://crayfis.io/.</string>
+    <string name="userIDlogin2">\n\n Что вам надо сделать:\n Подключите зарядное устройство и\n положите телефон камерой вниз (экраном вверх).\n\n Калибрация после старта займет 30-60s \n после чего приложение начнет собирать данные!</string>
+
+    <string name="settings_wifi_title">Только на Wifi Wifi only</string>
+    <string name="settings_wifi_summary">Производить загрузку только по Wifi</string>
+    <string name="settings_code_summary">Создано сайтом CRAYFIS</string>
+    <string name="settings_code_title">CRAYFIS User code"</string>
+    <string name="settings_gallery_title">Включить галерею</string>
+    <string name="settings_gallery_summary">Сохраняет и показывает интересные изображения</string>
+    <string name="settings_splash_title">Позволить просмотр всплесков в реальном времени</string>
+    <string name="settings_splash_summary">Запретить для выключения экрана во время работы</string>
+    <string name="settings_autostart_summary">Выключить автостарт</string>
+    <string name="settings_autostart_title">Нажмите чтобы предотвратить автостарт</string>
+    <string name="menu_about">О программе</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_sleep">Сон</string>
+    <string name="menu_view_mode">Режим Просмотра</string>
+    <string name="toast_black">Этот экран показывает в реальном времени возможные космические лучи падающие на ваш телефон.\n\nПредпочитаете черный экран? Вы можете выключить всплески в Настройках.</string>
+    <string name="toast_data">Эта панель показывает статус.\n\nЧтобы перейти на следующую страницу, проведите пальцем по экрану.</string>
+    <string name="help_data">На этой странице показан статус приложения в данный момент а также:\n\tВремя: время сбора данных в секундах\n\tЧастота: частота сканирования, кадры в секунду</string>
+    <string name="help_hist">Эта страница показывает:\n\t Просканированные кадры: количество проанализированных видеокадров\n\t Просканированные пиксели: количество проанализированных пикселей\n\t Кандидаты: количествопикселей превышающих уровень шума\nГистограмма внизу показывает качество пикселей превышающих уровень шума.</string>
+    <string name="toast_devel">Эта страница показывает информацию для разработчиков.</string>
+    <string name="toast_gallery_zero">Когда найдены особенно интересные кандидаты, эта страница покажет галерею изображений.</string>
+    <string name="toast_gallery">Эта страница показывает галерею самых интересных кандидатов</string>
+    <string name="toast_login">Create an account or login to see your active devices.</string>
+    <string name="login_notice_code">with user code</string>
+    <string name="toast_dosimeter">Эта страница показывает дозиметр радиации. Она находится в процессе разработки.</string>
+    <string name="location_warning">CRAYFIS не может определить местонахождение вашего устройства. Пожалуйста проверьте настройки местонахождения.</string>
+    <string name="location_warn_title">CRAYFIS Ошибка местонахождения</string>
+    <string name="ok">OK</string>
+    <string name="update_notice">Появилась новая версия CRAYFIS. Нажмите здесь чтобы установить обновление: </string>
+    <string name="crayfis_about">CRAYFIS -- это приложение которое превращает ваш телефон в детектор космических лучей. </string>
+    <string name="swipe_help">Для перехода на другуя страницу проведите пальцем по экрану.</string>
+    <string name="more_details">Для дополнительной информации:</string>
+    <string name="update_title">Обновить CRAYFIS</string>
+    <string name="about_title">O CRAYFIS</string>
+    <string name="login_notice">Это устройство подключено к учетной записи.</string>
+    <string name="Images">Изображения</string>
+    <string name="Deleted">Вытерто</string>
+    <string name="small_images">Изображения.</string>
+    <string name="pixel_hits">Попадание пикселей:</string>
+    <string name="max_pixel">Max pixel:</string>
+    <string name="date">Данные:</string>
+    <string name="location_unavailable">Местонахождение неизвестно</string>
+    <string name="taking_data">Собираем данные!</string>
+    <string name="calibration">Меряем уровни</string>
+    <string name="network_unavailable">Нет доступа в сеть</string>
+    <string name="stabilization">Проверяем что камера закрыта</string>
+    <string name="bad_user_code">Неправильный код пользователя.</string>
+    <string name="server_overload">Сервер перегружен</string>
+    <string name="ignored">Проигнорирован</string>
+    <string name="toast_leader">Эта панель показывает карту активной сети и лидеров.</string>
+    <string name="hist_toast_zero">После окончания калибрации, в этой панели будут показаны кандидаты частиц.</string>
+    <string name="hist_toast">Эта панель показывает гистограмму потенциальных частиц.</string>
+    <string name="fatal_error_title">CRAYFIS Ошибка</string>
+    <string name="camera_error">CRAYFIS не смог открыть камеру.</string>
+    <string name="fatal_error_message">Произошла внутренняя ошибка и страница которую вы смотрите должна закрыться.  Пожалуйста, попробуйте заново.</string>
+    <string name="pager_dev">Разработчик</string>
+    <plurals name="total_frames">
+        <item quantity="one">%d кадр</item>
+        <item quantity="other">%d кадров</item>
+    </plurals>
+
+    <plurals name="total_candidates">
+        <item quantity="one">%d кандидат</item>
+        <item quantity="other">%d кандидаты</item>
+    </plurals>
+
+
+</resources>

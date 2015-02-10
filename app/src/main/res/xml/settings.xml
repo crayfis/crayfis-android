@@ -1,46 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
- 	 <EditTextPreference
-                android:title="Name"
-                android:summary="Your Name"
-                android:defaultValue="Citizen Scientist"
-                android:key="prefUserName"/>
-     <EditTextPreference
-	     		android:title="Email"
-	     		android:summary="Your email address"
-	    		android:defaultValue="we@love.you"
-	    		android:key="prefUserEmail"/>
-     <EditTextPreference
-         		android:title="User ID"
-         		android:summary="Your CRAYFIS user ID"
-         		android:key="prefUserID" />
-     
-     <CheckBoxPreference
-            android:defaultValue="false"
-            android:key="prefAnon"
-            android:summary="Be anonymous"
-            android:title="Privacy" >
-     </CheckBoxPreference>
 
+     <EditTextPreference
+         		android:title="@string/settings_code_title"
+         		android:summary="@string/settings_code_summary"
+         		android:key="prefUserID" />
      <CheckBoxPreference
          	android:defaultValue="true"
          	android:key="prefWifiOnly"
-         	android:summary="Only use Wifi to upload data"
-         	android:title="Wifi only" >
+         	android:summary="@string/settings_wifi_summary"
+         	android:title="@string/settings_wifi_title">
      </CheckBoxPreference>
      
      <ListPreference
             android:key="prefStartWait"
             android:defaultValue="0"
             android:entries="@array/pref_startwait"
-            android:summary="Seconds to wait before launch, after you plug in phone"
+            android:summary="@string/settings_startwait_summary"
             android:entryValues="@array/pref_startwait"
             android:title="@string/pref_startwait" />
      <ListPreference
             android:key="prefStartAfter"
             android:defaultValue="20"
             android:entries="@array/pref_starttimes"
-            android:summary="The app will not autostart before this time."
+            android:summary="@string/settings_startafter_summary"
             android:entryValues="@array/pref_starttimes"
             android:title="@string/pref_startafter" />
      <ListPreference
@@ -53,8 +36,29 @@
      <CheckBoxPreference
             android:defaultValue="true"
             android:key="prefNoAutoStart"
-            android:summary="Do not autostart"
-            android:title="Click to prevent autostart" >
+            android:summary="@string/settings_autostart_summary"
+            android:title="@string/settings_autostart_title">
      </CheckBoxPreference>
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="prefSplashView"
+        android:summary="@string/settings_splash_summary"
+        android:title="@string/settings_splash_title">
+    </CheckBoxPreference>
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="prefEnableGallery"
+        android:summary="@string/settings_gallery_summary"
+        android:title="@string/settings_gallery_title">
+    </CheckBoxPreference>
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="prefFixThreshold"
+        android:summary="@string/settings_thresh_summary"
+        android:title="@string/settings_thresh_title">
+    </CheckBoxPreference>
 
 </PreferenceScreen>

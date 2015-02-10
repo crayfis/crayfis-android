@@ -48,14 +48,14 @@ public class LayoutTime extends Fragment {
 
     public static GraphView.GraphViewData[] make_graph_data(Integer values[])
     {
-        CFLog.i(" Making graph data for nbins ="+values.length);
+        //CFLog.i(" Making graph data for nbins ="+values.length);
         int max_bin = values.length;
 
         boolean do_log=false;
         GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
         for (int i=0;i<max_bin;i++)
         {
-            CFLog.i(" make graph data: "+i);
+            //CFLog.i(" make graph data: "+i);
             if (do_log) {
                 if (values[i] > 0)
                     gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
@@ -85,7 +85,7 @@ public class LayoutTime extends Fragment {
             if (!shown_message)
             {
 
-                Toast.makeText(getActivity(), "This pane shows a radiation dosimeter. Still in development.",
+                Toast.makeText(getActivity(), R.string.toast_dosimeter,
                         Toast.LENGTH_SHORT).show();
             shown_message=true;
             }
@@ -137,7 +137,7 @@ public class LayoutTime extends Fragment {
         mGraphTime = new LineGraphView (context, "");
         mGraphTime.setManualYAxisBounds(30., 0.);
         mGraphTime.getGraphViewStyle().setNumVerticalLabels(4);
-        mGraphTime.setHorizontalLabels(new String[] {"","Frame samples",""});
+        mGraphTime.setHorizontalLabels(getResources().getStringArray(R.array.time_bins));
         mGraphTime.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
         mGraphTime.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
 

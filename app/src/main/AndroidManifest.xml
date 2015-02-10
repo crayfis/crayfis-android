@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
 
     <uses-feature android:name="android.hardware.camera"/>
     <uses-feature android:name="android.hardware.camera.autofocus"/>
@@ -43,6 +44,9 @@
             </intent-filter>
         </receiver>
 
+        <service android:name=".server.UploadExposureService"
+                 android:exported="false"/>
+
         <activity
             android:name="edu.uci.crayfis.DAQActivity"
             android:screenOrientation="portrait"
@@ -50,6 +54,9 @@
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"
             android:screenOrientation="portrait"/>
+
+        <meta-data android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
 
         <meta-data
             android:name="com.crashlytics.ApiKey"

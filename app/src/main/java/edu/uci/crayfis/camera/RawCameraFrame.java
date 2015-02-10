@@ -1,5 +1,6 @@
 package edu.uci.crayfis.camera;
 
+import edu.uci.crayfis.util.CFLog;
 import android.hardware.Camera;
 import android.location.Location;
 
@@ -20,6 +21,7 @@ public class RawCameraFrame {
     private float[] mOrientation;
     private Camera.Size mSize;
     private int mPixMax;
+    private int length;
 
     /**
      * Create a new instance.
@@ -37,6 +39,12 @@ public class RawCameraFrame {
         mOrientation = orient.clone();
         mSize = size;
         mPixMax = -1;
+
+        length = mSize.height * mSize.width;
+
+        // just in case
+        if (length > mBytes.length) length = mBytes.length;
+       // CFLog.d(" RCF length = "+length);
     }
 
     /**
@@ -101,13 +109,9 @@ public class RawCameraFrame {
             return mPixMax;
         }
 
-        int length = mSize.height * mSize.width;
         for (int i = 0; i < length; i++) {
-            // make sure we promote the (signed) byte to int for comparison!
             int val = mBytes[i] & 0xFF;
-            if ( val > mPixMax) {
-                mPixMax = val;
-            }
+            if (val > mPixMax) mPixMax = val;
         }
 
         return mPixMax;

@@ -88,13 +88,13 @@ public class LayoutHist extends Fragment{
 
     private static GraphViewSeries mGraphSeries;
 
-    private GraphViewSeriesStyle mGraphSeriesStyle;
-
     public static void updateData() {
 
         if (mParticleReco !=null) {
-            mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.getValues()));
-            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.getIntegral()), 0.);
+            if (mGraphSeries !=null && mParticleReco.h_l2pixel != null)
+                mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.getValues()));
+            if (mGraph != null && mParticleReco.h_l2pixel != null)
+                mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.getIntegral()), 0.);
         }
 
     }
@@ -125,10 +125,10 @@ public class LayoutHist extends Fragment{
             {
                 if (mParticleReco.h_l2pixel.getIntegral()==0)
                 {
-                    Toast.makeText(getActivity(), "When the app has finished calibrating, this pane will show a histogram of the particle candidates.",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.hist_toast_zero,Toast.LENGTH_LONG).show();
                 } else {
                     if (!shown_message)
-                    Toast.makeText(getActivity(), "This pane shows a histogram of the particle candidates.",Toast.LENGTH_LONG).show();
+                    Toast.makeText(getActivity(), R.string.hist_toast,Toast.LENGTH_LONG).show();
 
                 }
                 shown_message=true;
@@ -157,7 +157,9 @@ public class LayoutHist extends Fragment{
 
         mGraph = new BarGraphView(context," ");
         mGraph.setManualYAxisBounds(100., 0.);
-        mGraph.setHorizontalLabels(new String[] {"Cand. Pix","Good Cand.","Clean Cand."});
+        String labels[] = new String[3];
+        labels[0] = "blah";
+        mGraph.setHorizontalLabels( getResources().getStringArray(R.array.hist_bins));
         //mGraph.setVerticalLabels(new String[] {"100k","10k","1k","100","10","1"});
         mGraph.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
         mGraph.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);

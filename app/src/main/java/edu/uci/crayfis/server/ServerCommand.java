@@ -27,6 +27,40 @@ public class ServerCommand {
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
     @SerializedName("experiment") private String mCurrentExperiment;
     @SerializedName("nickname") private String mDeviceNickname;
+    @SerializedName("account_name") private String mAccountName;
+    @SerializedName("account_score") private Float mAccountScore;
+    @SerializedName("update_url") private String mUpdateURL;
+
+
+    /**
+     * Get the Account Name
+     *
+     * @return String or {@code null}.
+     */
+    @Nullable
+    public String getUpdateURL() {
+        return mUpdateURL;
+    }
+
+    /**
+     * Get the Account Score
+     *
+     * @return Long or {@code null}.
+     */
+    @Nullable
+    public Float getAccountScore() {
+        return mAccountScore;
+    }
+
+    /**
+     * Get the Account Name
+     *
+     * @return String or {@code null}.
+     */
+    @Nullable
+    public String getAccountName() {
+        return mAccountName;
+    }
 
     /**
      * Get the L1 threshold.

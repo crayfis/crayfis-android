@@ -39,7 +39,7 @@ public class SavedImage {
         date="???";
         if (fn1.length>1) {
             String delims2 = "_";
-            String[] tokens = fn1[0].split(delims2);
+            String[] tokens = fn1[1].split(delims2);
             if (tokens.length>6) {
                 max_pix = Integer.valueOf(tokens[2]);
                 num_pix = Integer.valueOf(tokens[4]);
@@ -54,7 +54,7 @@ public class SavedImage {
 
         max_pix=max;
         num_pix=pixels.size();
-        SimpleDateFormat sdf = new SimpleDateFormat("MMM-dd-yyyy-HH:mm");
+        SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
         Date resultdate = new Date(t);
         date=sdf.format(resultdate);
         filename=makeFilename(max, num_pix, date);

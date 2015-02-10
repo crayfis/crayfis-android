@@ -7,6 +7,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
@@ -14,6 +17,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
+import android.hardware.Camera;
+
+import edu.uci.crayfis.server.UploadExposureService;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -44,6 +50,10 @@ public class CFApplication extends Application {
         config.onSharedPreferenceChanged(localPrefs, null);
 
         setApplicationState(State.INIT);
+
+        // DEBUG
+        final Intent intent = new Intent(this, UploadExposureService.class);
+        startService(intent);
     }
 
     /**
@@ -108,6 +118,42 @@ public class CFApplication extends Application {
 
     public static void setLastKnownLocation(Location lastKnownLocation) {
         mLastKnownLocation = lastKnownLocation;
+    }
+
+    private boolean useWifiOnly() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        return sharedPrefs.getBoolean("prefWifiOnly", true);
+    }
+
+    // Some utilities for determining the network state
+    private NetworkInfo getNetworkInfo() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        return cm.getActiveNetworkInfo();
+    }
+
+    // Check if there is *any* connectivity
+    private boolean isConnected() {
+        NetworkInfo info = getNetworkInfo();
+        return (info != null && info.isConnected());
+    }
+
+    // Check if we're connected to WiFi
+    private boolean isConnectedWifi() {
+        NetworkInfo info = getNetworkInfo();
+        return (info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI);
+    }
+
+    /**
+     * Checks if there is an available network connection available based on the configuration.
+     *
+     * <ul>
+     *     <li>{@code true} if WiFi is enabled.</li>
+     *     <li>{@code true} if WiFi only is disabled and the cellular data connection is available.</li>
+     * </ul>
+     * @return Whether the network is available or not.
+     */
+    public boolean isNetworkAvailable() {
+        return (!useWifiOnly() && isConnected()) || isConnectedWifi();
     }
 
     /**

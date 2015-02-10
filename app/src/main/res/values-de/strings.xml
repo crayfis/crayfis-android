@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="pref_save_data">Daten Speichern?</string>
+    <string name="app_name">CRAYFIS beta</string>
+    <string name="pref_show_image">Bild Zeigen</string>
+    <string name="pref_do_reco">"Do Reco"</string>
+    <string name="pref_threshold">Schwellenwert</string>
+    <string name="pref_startwait">Waits to start after plugin</string>
+    <string name="pref_startafter"> Nur nach dieser Uhrzeit starten</string>
+    <string name="settings_startafter_summary">Die App wird nicht vor dieser Zeit starten</string>
+    <string name="settings_startwait_summary">Wartezeit in Sekunden nach dem Einstecken des Telefons vor der App Startzeit</string>
+    <string name="pref_startbefore">Only runs before this time</string>
+    <string name="userIDlogin1">Wilkommen bei dem CRAYFIS beta testing! \nVielen Dank fuer ihre Hilfe!\n\n\n CRAYFIS ist ein App \ndas euer  Smartphone\n als Teil eines Weltweit verbreiteten Netzwerk\nzur Suche nach kosmischen strahlen benutzen wird.\n\n Weitere Informationen unter: http://crayfis.io/.</string>
+    <string name="userIDlogin2">\n\nAnleitung:\n Smartphone einstecken mit\n Kamera nach open auf einer ebenen Flaeche.\n\n Sobald das App startet werden nach einer Startphase von 30-60 Sekunden zur kalibrierung Daten gesammelt!</string>
+
+    <string name="settings_wifi_title">Nur auf Wifi</string>
+    <string name="settings_wifi_summary">Nur Wifi zur Datenuebertragung nutzen</string>
+    <string name="settings_code_summary">Generated from the CRAYFIS website</string>
+    <string name="settings_code_title">CRAYFIS User code"</string>
+    <string name="settings_gallery_title"> Gallerie aktivieren</string>
+    <string name="settings_gallery_summary">Interessante Bilder sichern und zeigen</string>
+    <string name="settings_splash_title">live view splashes</string>
+    <string name="settings_splash_summary">Abschalten fuer den  "schwartzer Schirm" Modus</string>
+    <string name="settings_autostart_summary">Kein Autostart gestatten</string>
+    <string name="settings_autostart_title">Klicken, um Autostart zu verhindern</string>
+    <string name="menu_about">About</string>
+    <string name="menu_settings">Einstellungen</string>
+    <string name="menu_sleep">Ruhezustand</string>
+    <string name="menu_view_mode">Ansicht</string>
+    <string name="toast_black">This shows cosmic ray candidates hitting your phone in real time.\n\nPrefer a black screen? You can disable live splashes in Settings.</string>
+    <string name="toast_data">Dieses Fenster zeigt den aktuellen Zustand.\n\nWischen Sie fuer andere Ansichten.</string>
+    <string name="help_data">This view shows the current state of the app as well as:\n\tTime: seconds of data-taking\n\tRate: scan rate, frames-per-second</string>
+    <string name="help_hist">This view shows:\n\t Frames scanned: number of video frames examined\n\t Pixels scanned: number of pixels examined\n\t Candidates: number of pixels above the noise threshold\nOn the bottom is a histogram showing the quality of the pixels above threshold.</string>
+    <string name="toast_devel">This pane shows developer-level details.</string>
+    <string name="toast_gallery_zero">Dieses Fenster zeigt besonders interessante Teilchenkandidaten.</string>
+    <string name="toast_gallery">"Dieses Fenster zeigt eine Gallerie interessanter Teilchenkandidaten."</string>
+    <string name="toast_login">Konto erstellen oder einloggen um eingeschaltete Geraete zu listen.</string>
+    <string name="login_notice_code">mit Benutzercode</string>
+    <string name="toast_dosimeter">Hier wird ein Dosismessgeraet dargestellt. In Entwicklung.</string>
+    <string name="location_warning">CRAYFIS konnte die Lage des Geraetes nicht feststellen. Bitte ueberprufen Sie die Lageeinstellungen.</string>
+    <string name="location_warn_title">CRAYFIS Lagefehler</string>
+    <string name="ok">OK</string>
+    <string name="update_notice">Eine neuere Version von CRAFIS ist verfuegbar. Clicken Sie hier fuer die Update: </string>
+    <string name="crayfis_about">Das CRAYFIS app nutzt Euer Telefon, um kosmische Strahlen zu finden. </string>
+    <string name="swipe_help">Nach links oder rechts swipen fuer alternative Ansichten</string>
+    <string name="more_details">Fuer weitere Informationen:</string>
+    <string name="update_title">Update CRAYFIS</string>
+    <string name="about_title">About CRAYFIS</string>
+    <string name="login_notice">This device has been connected to account</string>
+    <string name="Images">Bilder</string>
+    <string name="Deleted">Entfernt.</string>
+    <string name="small_images">Bilder.</string>
+    <string name="pixel_hits">Pixel hits:</string>
+    <string name="max_pixel">Max pixel:</string>
+    <string name="date">Datum:</string>
+    <string name="location_unavailable">Lage nicht verfuegbar</string>
+    <string name="taking_data">Daten werden gesammelt!</string>
+    <string name="calibration">Werte werden ueberprueft</string>
+    <string name="network_unavailable">Netzwerk nicht verfuegbar</string>
+    <string name="stabilization">Checking camera is covered</string>
+    <string name="bad_user_code">Unglueltiger Benuztercode.</string>
+    <string name="server_overload">Server ueberbelastet</string>
+    <string name="ignored">Unbeachtet</string>
+    <string name="toast_leader">Dieses Fenster stellt die aktuelle Netzwerk da sowohl als auch das Leaderboard.</string>
+    <string name="hist_toast_zero">Nach der Kalibrierug zeigt dieses Fenster ein aktuelles Histogramm der Teilchenkandidaten</string>
+    <string name="hist_toast">Dieses Fenster zeigt ein Histogramm der Teilchenkandidaten.</string>
+    <string name="fatal_error_title">CRAYFIS Programmfehler</string>
+    <string name="camera_error">Dem Zugang zur Kamera wurde CRAYFIS nicht gestattet.</string>
+    <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
+    <string name="pager_dev">Entwickler</string>
+    <plurals name="total_frames">
+        <item quantity="one">%d Frame</item>
+        <item quantity="other">%d Frames</item>
+    </plurals>
+
+    <plurals name="total_candidates">
+        <item quantity="one">%d Kandidat</item>
+        <item quantity="other">%d Kandidaten</item>
+    </plurals>
+</resources>

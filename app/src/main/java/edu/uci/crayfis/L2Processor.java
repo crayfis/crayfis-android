@@ -34,6 +34,7 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
 
 import edu.uci.crayfis.util.CFLog;
@@ -50,9 +51,13 @@ class L2Processor extends Thread {
     // max amount of time to wait on L2Queue (seconds)
     int L2Timeout = 1;
 
+    private static final int L2_maxdisplay = 100;
+    ArrayBlockingQueue<RecoEvent> display_pixels = new ArrayBlockingQueue<RecoEvent>(L2_maxdisplay);
+
 
     // ----8< --------
 
+    boolean save_images=false;
 
     private Utils mUtils;
 
@@ -183,6 +188,7 @@ class L2Processor extends Thread {
 
             // If we got a bad frame, go straight to stabilization mode.
             if (!PARTICLE_RECO.good_quality && !mFixedThreshold) {
+                CFLog.d(" !! BAD DATA! quality = "+PARTICLE_RECO.good_quality);
                 APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
                 continue;
             }
@@ -222,6 +228,12 @@ class L2Processor extends Thread {
             // Now add them to the event.
             event.pixels = pixels;
 
+            // and to the display list
+            //CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
+            if (display_pixels.size()< L2_maxdisplay)
+                display_pixels.offer(event);
+            //CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
+
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 // keep track of the running totals for acquired
                 // events/pixels over the app lifetime.
@@ -246,7 +258,7 @@ class L2Processor extends Thread {
                         RecoPixel pix = event.pixels.get(i);
                         if (pix.val > max) max = pix.val;
                     }
-                    if (max > CONFIG.getL2Threshold()*1.2)
+                    if (save_images && max > CONFIG.getL2Threshold()*1.2)
                     try {
 
                         SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
