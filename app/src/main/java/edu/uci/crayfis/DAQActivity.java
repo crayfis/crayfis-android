@@ -1466,7 +1466,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
-                fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false);
+                // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 
                 try {
 
