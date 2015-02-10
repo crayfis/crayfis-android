@@ -84,7 +84,7 @@ public class LayoutFeedback extends Fragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://crayfis.uservoice.com";
+        final String leaderURL = "https://crayfis.uservoice.com/forums/272573-general";
 
         CFLog.d("CRAYFIS loading" + leaderURL);
         browserView.loadUrl(leaderURL);

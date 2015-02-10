@@ -95,8 +95,8 @@ public class SplashView extends ImageView
                 int maxCanvasX = c.getWidth();
                 int maxCanvasY = c.getHeight();
 
-                scale_x = maxCanvasY / ((float) 0.9 * maxCameraX);  // 0.9 to avoid off screen edge effects
-                scale_y = maxCanvasX / ((float) 0.9 * maxCameraY);
+                scale_x = maxCanvasY / ((float) 1.1 * maxCameraX);  // 1.1 to avoid off screen edge effects
+                scale_y = maxCanvasX / ((float) 1.1 * maxCameraY);
                 //CFLog.d("Splashview camera = "+maxCameraX+","+maxCameraY+" canvas = "+maxCanvasX+", "+maxCanvasY+" scaling = "+scale_x+", "+scale_y);
             } else {
                 //CFLog.d("The splashView does not have the camera size "+mLayoutBlack);

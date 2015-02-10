@@ -381,7 +381,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 					public void onClick(DialogInterface dialog, int id) {
 					}
 				})
-
+                .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        // switch to feedback item
+                        _mViewPager.setCurrentItem(ViewPagerAdapter.FEEDBACK);
+                    }
+                })
 				.setView(tx1).show();
 	}
 
@@ -1187,7 +1192,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     }
 
 
-
+    private boolean fix_threshold=false;
 
 
 	/**
@@ -1271,7 +1276,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
         // periodically check if the L1 calibration has drifted
-        if (L1counter % fps_update_interval == 0) {
+        if (L1counter % fps_update_interval == 0 && !fix_threshold) {
             int new_l1 = calculateL1Threshold();
             int new_l2 = new_l1-1;
             if (new_l2 < 2) {
@@ -1461,6 +1466,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
+                fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false);
 
                 try {
 
@@ -1535,6 +1541,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         }
 
                         if (mLayoutTime != null) mLayoutTime.updateData();
+                        if (mLayoutHist != null) mLayoutHist.updateData();
 
                         if (mLayoutDeveloper == null)
                             mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();

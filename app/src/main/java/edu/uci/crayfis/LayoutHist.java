@@ -88,8 +88,6 @@ public class LayoutHist extends Fragment{
 
     private static GraphViewSeries mGraphSeries;
 
-    private GraphViewSeriesStyle mGraphSeriesStyle;
-
     public static void updateData() {
 
         if (mParticleReco !=null) {
