@@ -1219,6 +1219,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // pack the image bytes along with other event info into a RawCameraFrame object
         RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, xb, orientation, camera.getParameters().getPreviewSize());
+        frame.setLocation(CFApplication.getLastKnownLocation());
 
         // show the frame to the L1 calibrator
         L1cal.AddFrame(frame);

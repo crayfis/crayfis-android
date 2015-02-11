@@ -171,6 +171,15 @@ public class ExposureBlock implements Parcelable {
 		
 		buf.setGpsLat(start_loc.getLatitude());
 		buf.setGpsLon(start_loc.getLongitude());
+        buf.setGpsFixtime(start_loc.getTime());
+        if (start_loc.hasAccuracy()) {
+            buf.setGpsAccuracy(start_loc.getAccuracy());
+        } else {
+            CFLog.e("WTF no accuracy??");
+        }
+        if (start_loc.hasAltitude()) {
+            buf.setGpsAltitude(start_loc.getAltitude());
+        }
 		
 		buf.setStartTime(start_time);
 		buf.setEndTime(end_time);

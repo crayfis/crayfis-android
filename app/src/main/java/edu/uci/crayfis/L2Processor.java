@@ -181,8 +181,6 @@ class L2Processor extends Thread {
                 continue;
             }
 
-            frame.setLocation(CFApplication.getLastKnownLocation());
-
             // First, build the event from the raw frame.
             ParticleReco.RecoEvent event = PARTICLE_RECO.buildEvent(frame);
 
