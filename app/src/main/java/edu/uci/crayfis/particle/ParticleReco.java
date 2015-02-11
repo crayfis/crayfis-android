@@ -91,6 +91,14 @@ public class ParticleReco {
             buf.setTimestamp(time);
             buf.setGpsLat(location.getLatitude());
             buf.setGpsLon(location.getLongitude());
+            buf.setGpsFixtime(location.getTime());
+            if (location.hasAccuracy()) {
+                buf.setGpsAccuracy(location.getAccuracy());
+            }
+            if (location.hasAltitude()) {
+                buf.setGpsAltitude(location.getAltitude());
+            }
+
             buf.setOrientX(orientation[0]);
             buf.setOrientY(orientation[1]);
             buf.setOrientZ(orientation[2]);
