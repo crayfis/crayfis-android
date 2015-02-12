@@ -35,7 +35,8 @@ public class LayoutBlack extends Fragment{
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
-        super.setUserVisibleHint(isVisibleToUser);
+            super.setUserVisibleHint(isVisibleToUser);
+
         if (isVisibleToUser)
         {
            if (!shown_message)

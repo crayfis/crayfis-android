@@ -112,33 +112,39 @@ action#android.intent.action.ACTION_POWER_DISCONNECTED
 ADDED from AndroidManifest.xml:43:17
 	android:name
 		ADDED from AndroidManifest.xml:43:25
-activity#edu.uci.crayfis.DAQActivity
+service#edu.uci.crayfis.server.UploadExposureService
 ADDED from AndroidManifest.xml:47:9
-	android:screenOrientation
-		ADDED from AndroidManifest.xml:49:13
-	android:theme
-		ADDED from AndroidManifest.xml:50:13
+	android:exported
+		ADDED from AndroidManifest.xml:48:18
 	android:name
-		ADDED from AndroidManifest.xml:48:13
-activity#edu.uci.crayfis.UserSettingActivity
-ADDED from AndroidManifest.xml:51:9
+		ADDED from AndroidManifest.xml:47:18
+activity#edu.uci.crayfis.DAQActivity
+ADDED from AndroidManifest.xml:50:9
 	android:screenOrientation
+		ADDED from AndroidManifest.xml:52:13
+	android:theme
 		ADDED from AndroidManifest.xml:53:13
 	android:name
-		ADDED from AndroidManifest.xml:52:13
+		ADDED from AndroidManifest.xml:51:13
+activity#edu.uci.crayfis.UserSettingActivity
+ADDED from AndroidManifest.xml:54:9
+	android:screenOrientation
+		ADDED from AndroidManifest.xml:56:13
+	android:name
+		ADDED from AndroidManifest.xml:55:13
 meta-data#com.google.android.gms.version
-ADDED from AndroidManifest.xml:55:9
+ADDED from AndroidManifest.xml:58:9
 MERGED from com.google.android.gms:play-services:6.5.87:21:9
 	android:name
-		ADDED from AndroidManifest.xml:55:20
+		ADDED from AndroidManifest.xml:58:20
 	android:value
-		ADDED from AndroidManifest.xml:56:13
-meta-data#com.crashlytics.ApiKey
-ADDED from AndroidManifest.xml:58:9
-	android:name
 		ADDED from AndroidManifest.xml:59:13
+meta-data#com.crashlytics.ApiKey
+ADDED from AndroidManifest.xml:61:9
+	android:name
+		ADDED from AndroidManifest.xml:62:13
 	android:value
-		ADDED from AndroidManifest.xml:60:13
+		ADDED from AndroidManifest.xml:63:13
 uses-sdk
 INJECTED from AndroidManifest.xml:0:0 reason: use-sdk injection requested
 MERGED from com.android.support:support-v4:21.0.0:15:5

@@ -543,8 +543,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             case IDLE:
                 // This is the first state transisiton of the app. Go straight into stabilization
                 // so the calibratoin will be clean.
+                if (l2thread != null)
+                {
                 l2thread.setFixedThreshold(false);
                 l2thread.clearQueue();
+                }
                 stabilization_counter = 0;
                 calibration_counter = 0;
                 xbManager.newExposureBlock();
@@ -1483,41 +1486,49 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION)
                     {
-                        LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
-                        LayoutData.mProgressWheel.setTextSize(22);
+                        if (LayoutData.mProgressWheel != null) {
+                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
+                            LayoutData.mProgressWheel.setTextSize(22);
 
-                        LayoutData.mProgressWheel.setTextColor(Color.RED);
-                        LayoutData.mProgressWheel.setBarColor(Color.RED);
+                            LayoutData.mProgressWheel.setTextColor(Color.RED);
+                            LayoutData.mProgressWheel.setBarColor(Color.RED);
 
-                        LayoutData.mProgressWheel.spin();
+                            LayoutData.mProgressWheel.spin();
+                        }
                     }
 
 
                     if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                        LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-                        LayoutData.mProgressWheel.setTextSize(27);
+                        if (LayoutData.mProgressWheel != null) {
+
+                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
+                            LayoutData.mProgressWheel.setTextSize(27);
 
 
-                        LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                        LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+                            LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
+                            LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
 
-                        int needev = CONFIG.getCalibrationSampleFrames();
-                        float frac = calibration_counter/((float)1.0*needev);
-                        int progress = (int)(360*frac);
-                        LayoutData.mProgressWheel.setProgress( progress );
+                            int needev = CONFIG.getCalibrationSampleFrames();
+                            float frac = calibration_counter / ((float) 1.0 * needev);
+                            int progress = (int) (360 * frac);
+                            LayoutData.mProgressWheel.setProgress(progress);
+                        }
                          }
                     if (application.getApplicationState() == CFApplication.State.DATA) {
-                        LayoutData.mProgressWheel.setTextSize(30);
+                        if (LayoutData.mProgressWheel != null) {
+
+                            LayoutData.mProgressWheel.setTextSize(30);
 
 
-                            mLayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
-                            mLayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                            mLayoutData.mProgressWheel.setBarColor(Color.GREEN);
+                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
+                            LayoutData.mProgressWheel.setTextColor(Color.GREEN);
+                            LayoutData.mProgressWheel.setBarColor(Color.GREEN);
 
-                        // solid circle
-                        LayoutData.mProgressWheel.setProgress(360);
+                            // solid circle
+                            LayoutData.mProgressWheel.setProgress(360);
 
-                        LayoutData.mStatusView.setStatus(status);
+                            LayoutData.mStatusView.setStatus(status);
+                        }
                         final DataView.Status dstatus = new DataView.Status.Builder()
                                 .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
                                 .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)

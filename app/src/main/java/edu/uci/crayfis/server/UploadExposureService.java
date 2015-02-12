@@ -249,10 +249,10 @@ public class UploadExposureService extends IntentService {
      * POJO for the server information.
      */
     public static final class ServerInfo {
-        final String uploadUrl;
-        final String deviceId;
-        final String buildVersion;
-        final int versionCode;
+         String uploadUrl;
+         String deviceId;
+         String buildVersion;
+         int versionCode;
 
         final int connectTimeout = 2 * 1000; // ms
         final int readTimeout = 5 * 1000; // ms
@@ -269,9 +269,11 @@ public class UploadExposureService extends IntentService {
                     serverPort,
                     uploadUri);
 
-            deviceId = sAppBuild.getDeviceId();
-            buildVersion = sAppBuild.getBuildVersion();
-            versionCode = sAppBuild.getVersionCode();
+            if (sAppBuild != null) {
+                deviceId = sAppBuild.getDeviceId();
+                buildVersion = sAppBuild.getBuildVersion();
+                versionCode = sAppBuild.getVersionCode();
+            }
         }
     }
 }
