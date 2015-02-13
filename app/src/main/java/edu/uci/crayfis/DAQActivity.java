@@ -752,6 +752,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         return location;
     }
 
+    private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -770,6 +771,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         CFLog.d("  Yet more newer system settings stuff ");
 
+
+        try {
+            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
+        } catch (Exception e){ }
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
         //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
@@ -916,7 +921,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
         }
         // give back brightness control
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC);
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
 
 
     }
@@ -1468,7 +1473,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
+                if (_adapter != null)
+                    _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 

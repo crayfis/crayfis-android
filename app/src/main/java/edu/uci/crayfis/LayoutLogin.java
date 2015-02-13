@@ -164,7 +164,7 @@ public class LayoutLogin extends Fragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+server_address+"/accounts/login/";
+        final String leaderURL = "http://"+server_address+"/accounts/login/?embed";
 
         CFLog.d("CRAYFIS loading" + leaderURL);
         browserView.loadUrl(leaderURL);
