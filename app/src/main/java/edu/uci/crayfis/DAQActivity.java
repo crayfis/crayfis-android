@@ -866,10 +866,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
         strip.setDrawFullUnderline(false);
         strip.setTabIndicatorColor(Color.RED);
-        strip.setBackgroundColor(Color.GRAY);
+        strip.setBackgroundColor(Color.WHITE);
         strip.setNonPrimaryAlpha(0.5f);
         strip.setTextSpacing(25);
-        strip.setTextColor(Color.WHITE);
+        strip.setTextColor(Color.BLACK);
         strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
 
 
@@ -1192,8 +1192,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
             findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
             _mViewPager.setCurrentItem(previous_item);
-            strip.setTextColor(Color.WHITE);
-            strip.setBackgroundColor(Color.GRAY);
+            strip.setTextColor(Color.BLACK);
+            strip.setBackgroundColor(Color.WHITE);
             strip.setTabIndicatorColor(Color.RED);
             sleep_mode=false;
         }
@@ -1443,11 +1443,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             public void run() {
 
                 if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
-                    LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, getResources().getString(R.string.network_unavailable));
+                    if (LayoutData.mMessageView != null)
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, getResources().getString(R.string.network_unavailable));
                 } else if (!UploadExposureTask.sPermitUpload.get()) {
-                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
+                    if (LayoutData.mMessageView != null)
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
                 } else if (!UploadExposureTask.sValidId.get()) {
-                    LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.bad_user_code));
+                    if (LayoutData.mMessageView != null)
+                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.bad_user_code));
                 } else if (L2busy > 0) {
                     final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
                     if (LayoutData.mMessageView != null )
@@ -1480,6 +1483,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 try {
 
+                    if (LayoutData.mLightMeter != null) {
+                        LayoutData.updateData();
+                    }
+
                     final StatusView.Status status = new StatusView.Status.Builder()
                             .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0)
                             .setFps((int) (getFPS()))
@@ -1504,45 +1511,54 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     }
 
 
-                    if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                    if (application.getApplicationState() == CFApplication.State.CALIBRATION)
+                    {
                         if (LayoutData.mProgressWheel != null) {
 
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
                             LayoutData.mProgressWheel.setTextSize(27);
 
 
-                            LayoutData.mProgressWheel.setTextColor(Color.YELLOW);
-                            LayoutData.mProgressWheel.setBarColor(Color.YELLOW);
+                            LayoutData.mProgressWheel.setTextColor(Color.RED);
+                            LayoutData.mProgressWheel.setBarColor(Color.RED);
 
                             int needev = CONFIG.getCalibrationSampleFrames();
                             float frac = calibration_counter / ((float) 1.0 * needev);
                             int progress = (int) (360 * frac);
                             LayoutData.mProgressWheel.setProgress(progress);
                         }
-                         }
-                    if (application.getApplicationState() == CFApplication.State.DATA) {
+                    }
+                    if (application.getApplicationState() == CFApplication.State.DATA)
+                    {
                         if (LayoutData.mProgressWheel != null) {
 
                             LayoutData.mProgressWheel.setTextSize(30);
 
 
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
-                            LayoutData.mProgressWheel.setTextColor(Color.GREEN);
-                            LayoutData.mProgressWheel.setBarColor(Color.GREEN);
+                            LayoutData.mProgressWheel.setTextColor(0xFF00AA00);
+                            LayoutData.mProgressWheel.setBarColor(0xFF00AA00);
 
                             // solid circle
                             LayoutData.mProgressWheel.setProgress(360);
+                        }
 
+                        if (LayoutData.mStatusView != null)
+                        {
                             LayoutData.mStatusView.setStatus(status);
                         }
-                        final DataView.Status dstatus = new DataView.Status.Builder()
-                                .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
-                                .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
-                                .setTotalFrames(L1counter_data)
-                                .build();
+                        if (mParticleReco != null) {
+                            final DataView.Status dstatus = new DataView.Status.Builder()
+                                    .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
+                                    .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
+                                    .setTotalFrames(L1counter_data)
+                                    .build();
 
-                        LayoutHist.mDataView.setStatus(dstatus);
 
+                            if (LayoutHist.mDataView != null) {
+                                LayoutHist.mDataView.setStatus(dstatus);
+                            }
+                        }
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {
@@ -1555,6 +1571,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                                 }
 
                             } catch (Exception e) {
+                                // just don't do it
                             }
                         }
 

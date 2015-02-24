@@ -121,14 +121,15 @@ public class LayoutHist extends Fragment{
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
-            if (mParticleReco != null)
+            Context act = getActivity();
+            if (mParticleReco != null && act !=null)
             {
                 if (mParticleReco.h_l2pixel.getIntegral()==0)
                 {
-                    Toast.makeText(getActivity(), R.string.hist_toast_zero,Toast.LENGTH_LONG).show();
+                    Toast.makeText(act, R.string.hist_toast_zero,Toast.LENGTH_LONG).show();
                 } else {
                     if (!shown_message)
-                    Toast.makeText(getActivity(), R.string.hist_toast,Toast.LENGTH_LONG).show();
+                    Toast.makeText(act, R.string.hist_toast,Toast.LENGTH_LONG).show();
 
                 }
                 shown_message=true;

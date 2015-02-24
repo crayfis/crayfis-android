@@ -4,7 +4,6 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/18/14.
  */
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -12,12 +11,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import edu.uci.crayfis.particle.ParticleReco;
-import edu.uci.crayfis.widget.AppBuildView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
+import edu.uci.crayfis.widget.LightMeter;
 
+import edu.uci.crayfis.util.CFLog;
 import android.text.method.ScrollingMovementMethod;
+import edu.uci.crayfis.calibration.L1Calibrator;
 
 
 public class LayoutData extends Fragment{
@@ -25,13 +25,18 @@ public class LayoutData extends Fragment{
     // Widgets for giving feedback to the user.
     public static StatusView mStatusView;
     public static MessageView mMessageView;
-
+    public static LightMeter mLightMeter;
     public static ProgressWheel mProgressWheel;
 
     private static LayoutData mInstance =null;
 
+    private static L1Calibrator mL1Calibrator;
+
+
     public LayoutData()
     {
+        mL1Calibrator = L1Calibrator.getInstance();
+
     }
 
     public static LayoutData getInstance() {
@@ -42,12 +47,29 @@ public class LayoutData extends Fragment{
         return mInstance;
     }
 
+
+    public static void updateData() {
+
+        if (mL1Calibrator !=null) {
+            Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
+            values=mL1Calibrator.getMaxPixels().toArray(values);
+
+            // want very responsive data, so use latest
+            if (values.length>0)
+                mLightMeter.setLevel(values[values.length-1]);
+            else
+                mLightMeter.setLevel(0);
+        }
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.data, null);
 
 
         mProgressWheel = (ProgressWheel) root.findViewById(R.id.pw_spinner);
+        mLightMeter = (LightMeter) root.findViewById(R.id.lightmeter);
+
         mProgressWheel.spin();
         mStatusView = (StatusView) root.findViewById(R.id.status_view);
         mStatusView.setMovementMethod(new ScrollingMovementMethod());

@@ -116,6 +116,7 @@ public class ProgressWheel extends View {
         int widthWithoutPadding = width - getPaddingLeft() - getPaddingRight();
         int heigthWithoutPadding = height - getPaddingTop() - getPaddingBottom();
 
+        /*
         // Finally we have some simple logic that calculates the size of the view
         // and calls setMeasuredDimension() to set that size.
         // Before we compare the width and height of the view, we remove the padding,
@@ -138,6 +139,7 @@ public class ProgressWheel extends View {
         // change the default behaviour and to do that we need to call
         // setMeasuredDimension() with our own values.
         setMeasuredDimension(size + getPaddingLeft() + getPaddingRight(), size + getPaddingTop() + getPaddingBottom());
+        */
     }
 
     /**

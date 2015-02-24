@@ -54,12 +54,12 @@
         android:title="@string/settings_gallery_title">
     </CheckBoxPreference>
 
-    <!-- Expert use only
+    <!-- Expert use only -->
     <CheckBoxPreference
         android:defaultValue="false"
         android:key="prefFixThreshold"
         android:summary="@string/settings_thresh_summary"
         android:title="@string/settings_thresh_title">
-    </CheckBoxPreference> -->
+    </CheckBoxPreference> <!-- expert only -->
 
 </PreferenceScreen>

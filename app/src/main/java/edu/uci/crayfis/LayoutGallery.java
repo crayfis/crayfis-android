@@ -134,8 +134,8 @@ public class LayoutGallery extends Fragment {
             public void onClick(View v) {
                 CFLog.d("Layout Gallery: deleting images!");
                 int num = utils.deleteImages();
-
-                Toast.makeText(getActivity(), R.string.Deleted+num+R.string.small_images,
+                Context act = getActivity();
+                if (act != null) Toast.makeText(act, R.string.Deleted+num+R.string.small_images,
                         Toast.LENGTH_SHORT).show();
                 //images = utils.getSavedImages();
 

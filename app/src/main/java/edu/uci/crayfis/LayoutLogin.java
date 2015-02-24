@@ -133,7 +133,9 @@ public class LayoutLogin extends Fragment {
                     if (code.length()==6)
                     {
                         sharedPrefs.edit().putString("prefUserID",code).apply();
-                        Toast.makeText(getActivity(), R.string.login_notice+" "+username+" "+R.string.login_notice_code+" "+code,
+                        Context act = getActivity();
+                        if (act != null )
+                            Toast.makeText(act, R.string.login_notice+" "+username+" "+R.string.login_notice_code+" "+code,
                                 Toast.LENGTH_SHORT).show();
                     }
 
