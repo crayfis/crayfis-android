@@ -76,7 +76,7 @@ public class ProgressWheel extends View {
     boolean isGrowing = false;
     float grow_val=(float)0.0;
     long last_draw_time = System.currentTimeMillis();
-    float rate = (float)0.25e-3; // 0.1e-3 = 1/10 growth of circle radius per second
+    float rate = (float)0.125e-3; // 0.1e-3 = 1/10 growth of circle radius per second
 
     //Other
     private String text = "";
