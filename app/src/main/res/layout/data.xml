@@ -12,14 +12,14 @@
         android:id="@+id/pw_spinner"
         android:layout_width="wrap_content"
         android:gravity="center_horizontal"
-        android:layout_height="200dp"
+        android:layout_height="250dp"
         ProgressWheel:text=" "
         ProgressWheel:textColor="#FFF"
         ProgressWheel:textSize="20sp"
         ProgressWheel:rimColor="#FFF"
         ProgressWheel:barLength="60dp"
         ProgressWheel:barColor="#FF0000"
-        ProgressWheel:barWidth="30dp"
+        ProgressWheel:barWidth="15dp"
         ProgressWheel:rimWidth="20dp" />
 
     <edu.uci.crayfis.widget.LightMeter

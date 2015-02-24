@@ -4,6 +4,7 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/19/14.
  */
 
+import edu.uci.crayfis.util.CFLog;
         import android.content.Context;
         import android.content.res.TypedArray;
         import android.graphics.Canvas;
@@ -72,6 +73,11 @@ public class ProgressWheel extends View {
     int progress = 0;
     boolean isSpinning = false;
 
+    boolean isGrowing = false;
+    float grow_val=(float)0.0;
+    long last_draw_time = System.currentTimeMillis();
+    float rate = (float)0.25e-3; // 0.1e-3 = 1/10 growth of circle radius per second
+
     //Other
     private String text = "";
     private String[] splitText = {};
@@ -93,11 +99,7 @@ public class ProgressWheel extends View {
     //Setting up stuff
     //----------------------------------
 
-    /*
-     * When this is called, make the view square.
-     * From: http://www.jayway.com/2012/12/12/creating-custom-android-views-part-4-measuring-and-how-to-force-a-view-to-be-square/
-     *
-     */
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // The first thing that happen is that we call the superclass
@@ -106,40 +108,6 @@ public class ProgressWheel extends View {
         // convenient way to get most of this complexity handled.
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        // We can’t use getWidth() or getHight() here. During the measuring
-        // pass the view has not gotten its final size yet (this happens first
-        // at the start of the layout pass) so we have to use getMeasuredWidth()
-        // and getMeasuredHeight().
-        int size = 0;
-        int width = getMeasuredWidth();
-        int height = getMeasuredHeight();
-        int widthWithoutPadding = width - getPaddingLeft() - getPaddingRight();
-        int heigthWithoutPadding = height - getPaddingTop() - getPaddingBottom();
-
-        /*
-        // Finally we have some simple logic that calculates the size of the view
-        // and calls setMeasuredDimension() to set that size.
-        // Before we compare the width and height of the view, we remove the padding,
-        // and when we set the dimension we add it back again. Now the actual content
-        // of the view will be square, but, depending on the padding, the total dimensions
-        // of the view might not be.
-        if (widthWithoutPadding > heigthWithoutPadding) {
-            size = heigthWithoutPadding;
-        } else {
-            size = widthWithoutPadding;
-        }
-
-        // If you override onMeasure() you have to call setMeasuredDimension().
-        // This is how you report back the measured size.  If you don’t call
-        // setMeasuredDimension() the parent will throw an exception and your
-        // application will crash.
-        // We are calling the onMeasure() method of the superclass so we don’t
-        // actually need to call setMeasuredDimension() since that takes care
-        // of that. However, the purpose with overriding onMeasure() was to
-        // change the default behaviour and to do that we need to call
-        // setMeasuredDimension() with our own values.
-        setMeasuredDimension(size + getPaddingLeft() + getPaddingRight(), size + getPaddingTop() + getPaddingBottom());
-        */
     }
 
     /**
@@ -215,10 +183,21 @@ public class ProgressWheel extends View {
                 width - paddingRight,
                 height - paddingBottom);
 
-        circleBounds = new RectF(paddingLeft + barWidth,
-                paddingTop + barWidth,
-                width - paddingRight - barWidth,
-                height - paddingBottom - barWidth);
+        float center_x = width/(float)2.0;
+        float center_y = height/(float)2.0;
+        float max_radius = (height/((float)2.0)) - paddingTop - barWidth;
+       // CFLog.d(" geom: width, height = "+width+", "+height+" barwidth = "+barWidth+" padding = "+paddingTop+" max radius = "+max_radius);
+
+        float radius = max_radius;
+
+        if (isGrowing)
+           radius = grow_val*max_radius;
+
+       // CFLog.d(" progress circle center = ("+center_x+", "+center_y+" radius = "+radius+ " grow val="+grow_val);
+        circleBounds = new RectF(center_x - radius,
+                center_y - radius,
+                center_x + radius,
+                center_y + radius);
         circleInnerContour = new RectF(circleBounds.left + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.top + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.right - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.bottom - (rimWidth / 2.0f) - (contourSize / 2.0f));
         circleOuterContour = new RectF(circleBounds.left - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.top - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.right + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.bottom + (rimWidth / 2.0f) + (contourSize / 2.0f));
 
@@ -283,6 +262,23 @@ public class ProgressWheel extends View {
 
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        //CFLog.d("========= onDraw: grow val = "+grow_val+" last time = "+last_draw_time);
+
+        if (last_draw_time>0 && isGrowing) {
+            long this_time = System.currentTimeMillis();
+            long dtime = (this_time - last_draw_time);
+            float grow_delta = (dtime*rate);
+          //  CFLog.d(" dtime = "+dtime+" rate = "+rate+" delta = "+grow_delta);
+            grow_val += grow_delta;
+
+//            CFLog.d(" onDraw:  new vals = " + grow_val);
+            if (grow_val > 1.1) grow_val = (float)0.1;
+
+            // recalculate circle sizes
+            setupBounds();
+            last_draw_time = this_time;
+        }
+
         //Draw the inner circle
         canvas.drawArc(circleBounds, 360, 360, false, circlePaint);
         //Draw the rim
@@ -354,6 +350,17 @@ public class ProgressWheel extends View {
      */
     public void spin() {
         isSpinning = true;
+        postInvalidate();
+    }
+
+    public void grow() {
+        isGrowing = true;
+        postInvalidate();
+    }
+
+    public void stopGrowing() {
+        isGrowing = false;
+        setupBounds();
         postInvalidate();
     }
 

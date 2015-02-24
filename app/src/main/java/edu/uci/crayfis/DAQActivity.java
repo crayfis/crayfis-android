@@ -1506,6 +1506,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             LayoutData.mProgressWheel.setTextColor(Color.RED);
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
 
+                            LayoutData.mProgressWheel.stopGrowing();
                             LayoutData.mProgressWheel.spin();
                         }
                     }
@@ -1526,6 +1527,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             float frac = calibration_counter / ((float) 1.0 * needev);
                             int progress = (int) (360 * frac);
                             LayoutData.mProgressWheel.setProgress(progress);
+                            LayoutData.mProgressWheel.stopGrowing();
+
                         }
                     }
                     if (application.getApplicationState() == CFApplication.State.DATA)
@@ -1541,6 +1544,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                             // solid circle
                             LayoutData.mProgressWheel.setProgress(360);
+                            LayoutData.mProgressWheel.grow();
+
                         }
 
                         if (LayoutData.mStatusView != null)
