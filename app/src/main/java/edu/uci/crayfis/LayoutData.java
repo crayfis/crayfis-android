@@ -18,6 +18,7 @@ import edu.uci.crayfis.widget.LightMeter;
 import edu.uci.crayfis.util.CFLog;
 import android.text.method.ScrollingMovementMethod;
 import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.particle.ParticleReco;
 
 
 public class LayoutData extends Fragment{
@@ -31,12 +32,13 @@ public class LayoutData extends Fragment{
     private static LayoutData mInstance =null;
 
     private static L1Calibrator mL1Calibrator;
+    private static ParticleReco mParticleReco;
 
 
     public LayoutData()
     {
         mL1Calibrator = L1Calibrator.getInstance();
-
+        mParticleReco = ParticleReco.getInstance();
     }
 
     public static LayoutData getInstance() {
@@ -52,14 +54,20 @@ public class LayoutData extends Fragment{
 
         if (mL1Calibrator !=null) {
             Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
-            values=mL1Calibrator.getMaxPixels().toArray(values);
+            values = mL1Calibrator.getMaxPixels().toArray(values);
 
             // want very responsive data, so use latest
-            if (values.length>0)
-                mLightMeter.setLevel(values[values.length-1]);
+            if (values.length > 0)
+                mLightMeter.setLevel(values[values.length - 1]);
             else
                 mLightMeter.setLevel(0);
+
         }
+
+
+            mLightMeter.setGood(mLightMeter.getLevel() < 50);
+
+
     }
 
     @Override

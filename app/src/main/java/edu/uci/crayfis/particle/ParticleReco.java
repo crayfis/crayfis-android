@@ -357,7 +357,7 @@ public class ParticleReco {
         good_quality = (background < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
         if (!good_quality)
-        CFLog.d("reco: background = "+background+" var = "+variance);
+            CFLog.d("reco: background = "+background+" var = "+variance);
 
         event.background = background;
         event.variance = variance;

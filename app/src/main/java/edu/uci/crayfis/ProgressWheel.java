@@ -11,6 +11,8 @@ import edu.uci.crayfis.util.CFLog;
         import android.graphics.Paint;
         import android.graphics.Paint.Style;
         import android.graphics.RectF;
+import android.graphics.Rect;
+
         import android.graphics.Shader;
         import android.util.AttributeSet;
         import android.view.View;
@@ -61,6 +63,7 @@ public class ProgressWheel extends View {
     //Rectangles
     @SuppressWarnings("unused")
     private RectF rectBounds = new RectF();
+
     private RectF circleBounds = new RectF();
     private RectF circleOuterContour = new RectF();
     private RectF circleInnerContour = new RectF();
@@ -69,14 +72,14 @@ public class ProgressWheel extends View {
     //The amount of pixels to move the bar by on each draw
     private int spinSpeed = 2;
     //The number of milliseconds to wait inbetween each draw
-    private int delayMillis = 0;
+    private int delayMillis = 100;
     int progress = 0;
     boolean isSpinning = false;
 
     boolean isGrowing = false;
     float grow_val=(float)0.0;
     long last_draw_time = System.currentTimeMillis();
-    float rate = (float)0.125e-3; // 0.1e-3 = 1/10 growth of circle radius per second
+    float rate = (float)0.15e-3; // 0.1e-3 = 1/10 growth of circle radius per second
 
     //Other
     private String text = "";
@@ -93,6 +96,7 @@ public class ProgressWheel extends View {
 
         parseAttributes(context.obtainStyledAttributes(attrs,
                 R.styleable.ProgressWheel));
+
     }
 
     //----------------------------------
@@ -151,6 +155,7 @@ public class ProgressWheel extends View {
         textPaint.setStyle(Style.FILL);
         textPaint.setAntiAlias(true);
         textPaint.setTextSize(textSize);
+        textPaint.setShadowLayer(2,1,1,0xFF000000);
 
         contourPaint.setColor(contourColor);
         contourPaint.setAntiAlias(true);
@@ -178,10 +183,11 @@ public class ProgressWheel extends View {
         int width = getWidth(); //this.getLayoutParams().width;
         int height = getHeight(); //this.getLayoutParams().height;
 
-        rectBounds = new RectF(paddingLeft,
+        rectBounds.set(paddingLeft,
                 paddingTop,
                 width - paddingRight,
                 height - paddingBottom);
+
 
         float center_x = width/(float)2.0;
         float center_y = height/(float)2.0;
@@ -194,12 +200,12 @@ public class ProgressWheel extends View {
            radius = grow_val*max_radius;
 
        // CFLog.d(" progress circle center = ("+center_x+", "+center_y+" radius = "+radius+ " grow val="+grow_val);
-        circleBounds = new RectF(center_x - radius,
+        circleBounds.set(center_x - radius,
                 center_y - radius,
                 center_x + radius,
                 center_y + radius);
-        circleInnerContour = new RectF(circleBounds.left + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.top + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.right - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.bottom - (rimWidth / 2.0f) - (contourSize / 2.0f));
-        circleOuterContour = new RectF(circleBounds.left - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.top - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.right + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.bottom + (rimWidth / 2.0f) + (contourSize / 2.0f));
+        circleInnerContour.set(circleBounds.left + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.top + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.right - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.bottom - (rimWidth / 2.0f) - (contourSize / 2.0f));
+        circleOuterContour.set(circleBounds.left - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.top - (rimWidth / 2.0f) - (contourSize / 2.0f), circleBounds.right + (rimWidth / 2.0f) + (contourSize / 2.0f), circleBounds.bottom + (rimWidth / 2.0f) + (contourSize / 2.0f));
 
         fullRadius = (width - paddingRight - barWidth) / 2;
         circleRadius = (fullRadius - barWidth) + 1;
@@ -301,15 +307,18 @@ public class ProgressWheel extends View {
             canvas.drawText(s, this.getWidth() / 2 - horizontalTextOffset,
                     this.getHeight() / 2 + verticalTextOffset, textPaint);
         }
-        if (isSpinning) {
+        if (isSpinning || isGrowing) {
             scheduleRedraw();
         }
     }
 
     private void scheduleRedraw() {
-        progress += spinSpeed;
-        if (progress > 360) {
-            progress = 0;
+        if (isSpinning) {
+            progress += spinSpeed;
+
+            if (progress > 360) {
+                progress = 0;
+            }
         }
         postInvalidateDelayed(delayMillis);
     }

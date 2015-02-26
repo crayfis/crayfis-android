@@ -171,7 +171,7 @@ public class LightMeter extends View {
 
         String text = "Light Level: Low (good)";
         int color = 0xFF00AA00;
-        if (progress > 20)
+        if (!isGood)
         {
             text = "Light Level: High (poor)";
             color = 0xFFFF0000;
@@ -211,6 +211,14 @@ public class LightMeter extends View {
         progress = i;
         //CFLog.d("Light meter level = "+i);
         postInvalidate();
+    }
+
+    public int getLevel() { return progress; }
+
+    private boolean isGood=true;
+    public void setGood(boolean good)
+    {
+        isGood=good;
     }
 
     //----------------------------------
