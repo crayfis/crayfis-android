@@ -4,6 +4,9 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/19/14.
  */
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+
 import edu.uci.crayfis.util.CFLog;
         import android.content.Context;
         import android.content.res.TypedArray;
@@ -59,6 +62,7 @@ public class ProgressWheel extends View {
     private Paint rimPaint = new Paint();
     private Paint textPaint = new Paint();
     private Paint contourPaint = new Paint();
+    private Paint bgPaint = new Paint();
 
     //Rectangles
     @SuppressWarnings("unused")
@@ -79,11 +83,15 @@ public class ProgressWheel extends View {
     boolean isGrowing = false;
     float grow_val=(float)0.0;
     long last_draw_time = System.currentTimeMillis();
-    float rate = (float)0.15e-3; // 0.1e-3 = 1/10 growth of circle radius per second
+    float rate = (float)0.1e-3; // 0.1e-3 = 1/10 growth of circle radius per second
 
     //Other
     private String text = "";
     private String[] splitText = {};
+
+    Bitmap backgroundr;
+    Bitmap background = null;
+
 
     /**
      * The constructor for the ProgressWheel
@@ -96,6 +104,8 @@ public class ProgressWheel extends View {
 
         parseAttributes(context.obtainStyledAttributes(attrs,
                 R.styleable.ProgressWheel));
+
+        backgroundr = BitmapFactory.decodeResource(getResources(), R.drawable.tracks);
 
     }
 
@@ -126,6 +136,7 @@ public class ProgressWheel extends View {
         // Share the dimensions
         layout_width = w;
         layout_height = h;
+        background.createScaledBitmap(backgroundr,layout_width,layout_height,false);
 
         setupBounds();
         setupPaints();
@@ -161,6 +172,8 @@ public class ProgressWheel extends View {
         contourPaint.setAntiAlias(true);
         contourPaint.setStyle(Style.STROKE);
         contourPaint.setStrokeWidth(contourSize);
+
+        bgPaint.setAlpha(0);
     }
 
     /**
@@ -262,6 +275,17 @@ public class ProgressWheel extends View {
         a.recycle();
     }
 
+    private boolean showBG = false;
+    public void showBackground()
+    {
+        showBG=true;
+    }
+
+    public void doNotShowBackground()
+    {
+        showBG=false;
+    }
+
     //----------------------------------
     //Animation stuff
     //----------------------------------
@@ -269,6 +293,18 @@ public class ProgressWheel extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         //CFLog.d("========= onDraw: grow val = "+grow_val+" last time = "+last_draw_time);
+
+        if (background==null) {
+            background = backgroundr.createScaledBitmap(backgroundr,getWidth(),getHeight(),false);
+            CFLog.d("Progress wheel scaling to "+getWidth()+", "+getHeight()+" bms ="+backgroundr+" "+background);
+        }
+        if (showBG) {
+            bgPaint.setAlpha((int) (progress * (255.0 / 360.0)));
+
+            CFLog.d("Progress wheel bg: progress = "+progress+" alpha = "+((int) (progress * (255.0 / 360.0))));
+            canvas.drawBitmap(background,0,0,bgPaint);
+
+        }
 
         if (last_draw_time>0 && isGrowing) {
             long this_time = System.currentTimeMillis();
@@ -278,7 +314,7 @@ public class ProgressWheel extends View {
             grow_val += grow_delta;
 
 //            CFLog.d(" onDraw:  new vals = " + grow_val);
-            if (grow_val > 1.1) grow_val = (float)0.1;
+            if (grow_val > 1.5) grow_val = (float)0.1;
 
             // recalculate circle sizes
             setupBounds();

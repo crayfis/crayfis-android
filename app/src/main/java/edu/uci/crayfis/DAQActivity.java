@@ -1508,6 +1508,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                             LayoutData.mProgressWheel.stopGrowing();
                             LayoutData.mProgressWheel.spin();
+                            LayoutData.mProgressWheel.doNotShowBackground();
                         }
                     }
 
@@ -1528,6 +1529,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             int progress = (int) (360 * frac);
                             LayoutData.mProgressWheel.setProgress(progress);
                             LayoutData.mProgressWheel.stopGrowing();
+                            LayoutData.mProgressWheel.showBackground();
+
 
                         }
                     }
@@ -1544,6 +1547,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                             // solid circle
                             LayoutData.mProgressWheel.setProgress(360);
+                            LayoutData.mProgressWheel.showBackground();
                             LayoutData.mProgressWheel.grow();
 
                         }
