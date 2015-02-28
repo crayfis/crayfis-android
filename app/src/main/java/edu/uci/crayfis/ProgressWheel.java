@@ -76,14 +76,14 @@ public class ProgressWheel extends View {
     //The amount of pixels to move the bar by on each draw
     private int spinSpeed = 2;
     //The number of milliseconds to wait inbetween each draw
-    private int delayMillis = 100;
+    private int delayMillis = 50;
     int progress = 0;
     boolean isSpinning = false;
 
     boolean isGrowing = false;
     float grow_val=(float)0.0;
     long last_draw_time = System.currentTimeMillis();
-    float rate = (float)0.1e-3; // 0.1e-3 = 1/10 growth of circle radius per second
+    float rate = (float)0.125e-3; // 0.1e-3 = 1/10 growth of circle radius per second
 
     //Other
     private String text = "";
@@ -166,7 +166,7 @@ public class ProgressWheel extends View {
         textPaint.setStyle(Style.FILL);
         textPaint.setAntiAlias(true);
         textPaint.setTextSize(textSize);
-        textPaint.setShadowLayer(2,1,1,0xFF000000);
+        textPaint.setShadowLayer(4,3,3,0xFF000000);
 
         contourPaint.setColor(contourColor);
         contourPaint.setAntiAlias(true);
@@ -314,7 +314,7 @@ public class ProgressWheel extends View {
             grow_val += grow_delta;
 
 //            CFLog.d(" onDraw:  new vals = " + grow_val);
-            if (grow_val > 1.5) grow_val = (float)0.1;
+            if (grow_val > 2) grow_val = (float)0.1;
 
             // recalculate circle sizes
             setupBounds();

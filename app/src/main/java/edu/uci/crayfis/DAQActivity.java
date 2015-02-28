@@ -65,6 +65,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -287,6 +288,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 .setView(tx1).show();
     }
 
+    private long sleeping_since=0;
+    private int cands_before_sleeping=0;
     public void goToSleep()
     {
         previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
@@ -307,6 +310,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
         sleep_mode=true;
+        sleeping_since = System.currentTimeMillis();
+        cands_before_sleeping = l2thread.getTotalEvents();
     }
 
     public void clickedSleep()
@@ -1196,6 +1201,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             strip.setBackgroundColor(Color.WHITE);
             strip.setTabIndicatorColor(Color.RED);
             sleep_mode=false;
+
+            long current_time = System.currentTimeMillis();
+            float time_sleeping = (current_time-sleeping_since)*(float)1e-3;
+            int cand_sleeping = l2thread.getTotalEvents()-cands_before_sleeping;
+            if (time_sleeping > 5.0)
+            {
+                Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
+
+
+            }
+
         }
     }
 
