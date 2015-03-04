@@ -12,7 +12,7 @@
     <string name="settings_startafter_summary">App otomotik baslamaz</string>
     <string name="settings_startwait_summary">Baslamasina birkac saniye kaldi</string>
 	<string name="pref_startbefore">Sadece birkex calisir</string>
-	<string name="userIDlogin1">CRAYFIS beta testine hosgeldiniz! \nYardiminiz icin tesekkurler!\n\n\n CRAYFIS bir app'tir ve kozmik isin parcaciklarini bulmak icin akilli telefonunuzu kullanir.\n\n For more info: http://crayfis.io/.</string>
+	<string name="userIDlogin1">CRAYFIS beta testine hosgeldiniz! \nYardiminiz icin tesekkurler!\n\n\n CRAYFIS bir app\'tir ve kozmik isin parcaciklarini bulmak icin akilli telefonunuzu kullanir.\n\n For more info: http://crayfis.io/.</string>
     <string name="userIDlogin2">\tek yapmaniz gereken:\n telefonunuzu fise takin ve\n kamerasin yukari bakacak sekilde yerlestirin.\n\n Baslayinca kalibre olmasi icin 30-60saniye gerekiyor\n ondan sonra data hemen yuklemeye baslar!</string>
 
     <string name="settings_wifi_title">Sadece Wifi</string>
@@ -31,7 +31,7 @@
     <string name="menu_view_mode">Goruntu modu</string>
     <string name="toast_black">Kozmik isin adaylarinin telefonunuzu isabet aldigini gosterir.\n\nSiyah ekran mi tercih edersiniz? Ayarlara gidip canli sicramalari gecersizlestirebilirsiniz.</string>
     <string name="toast_data">Bu pano durumu gosterir .\n\Diger secenekler icin ekrani kaydirin.</string>
-    <string name="help_data">Bu goruntu app'taki guncel durumu gosterir ve ayrica:\n\tzaman: data saniyelerini\n\toran: tarama oranini, her saniyede ki cerceveyi gosterir</string>
+    <string name="help_data">Bu goruntu app\'taki guncel durumu gosterir ve ayrica:\n\tzaman: data saniyelerini\n\toran: tarama oranini, her saniyede ki cerceveyi gosterir</string>
     <string name="help_hist">Bu goruntunun gosterdikleri:\n\t cercevelere tarandi: bircok video cerceveleri incelendi\n\t Pixels tarandi: bircok pixels incelendi\n\t Adaylar: bircok pixels gurultu esiginin ustunde\ nOn alttaki histogram esigin ustundeki pixel kalitesini gosterir.</string>
     <string name="toast_devel">Bu pano gelistirici seviye detaylarini gosterir.</string>
     <string name="toast_gallery_zero">Ozellikle igilenen adaylar bulundugunda, bu pano goruntu galerisini gosterir.</string>
@@ -42,8 +42,8 @@
     <string name="location_warning">CRAYFIS aracin konumunu belirleyemiyor. Lutfen konum araclarini kontrol edin.</string>
     <string name="location_warn_title">CRAYFIS Konum Hatasi</string>
     <string name="ok">Tamam</string>
-    <string name="update_notice">CRAYFIS'in yeni versiyonu hazir. Guncellestirmek icin tikla: </string>
-    <string name="crayfis_about">CRAYFIS bir app'tir ve kozmik isin parcaciklarini bulmak icin akilli telefonunuzu kullanir. </string>
+    <string name="update_notice">CRAYFIS\'in yeni versiyonu hazir. Guncellestirmek icin tikla: </string>
+    <string name="crayfis_about">CRAYFIS bir app\'tir ve kozmik isin parcaciklarini bulmak icin akilli telefonunuzu kullanir. </string>
     <string name="swipe_help">Diger goruntuler icin sola veya saga kaydir</string>
     <string name="more_details">Detaylar icin:</string>
     <string name="update_title">CRAYFIS guncellestir</string>
