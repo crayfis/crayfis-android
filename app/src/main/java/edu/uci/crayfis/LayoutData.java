@@ -24,7 +24,6 @@ import edu.uci.crayfis.particle.ParticleReco;
 public class LayoutData extends Fragment{
 
     // Widgets for giving feedback to the user.
-    public static StatusView mStatusView;
     public static MessageView mMessageView;
     public static LightMeter mLightMeter;
     public static ProgressWheel mProgressWheel;
@@ -79,8 +78,7 @@ public class LayoutData extends Fragment{
         mLightMeter = (LightMeter) root.findViewById(R.id.lightmeter);
 
         mProgressWheel.spin();
-        mStatusView = (StatusView) root.findViewById(R.id.status_view);
-        mStatusView.setMovementMethod(new ScrollingMovementMethod());
+
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
 
         return root;

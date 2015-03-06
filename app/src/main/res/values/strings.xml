@@ -9,7 +9,9 @@
 	<string name="pref_threshold">Threshold</string>
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
-    <string name="settings_startafter_summary">The app will not autostart before this time</string>
+    <string name="settings_startafter_summary">The app will not autostart after this time</string>
+    <string name="settings_startbefore_summary">The app will not autostart before this time</string>
+
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 	<string name="pref_startbefore">Only runs before this time</string>
 	<string name="userIDlogin1">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>

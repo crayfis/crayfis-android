@@ -186,22 +186,23 @@ public class UploadExposureService extends IntentService {
 
     @Nullable
     private AbstractMessage getAbstractMessage(@NonNull final Intent intent) {
-        final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
-        if (exposureBlock != null) {
-            return exposureBlock.buildProto();
-        }
+        if (intent != null) {
+            final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
+            if (exposureBlock != null) {
+                return exposureBlock.buildProto();
+            }
 
-        final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
-        if (runConfig != null) {
-            return runConfig;
-        }
+            final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
+            if (runConfig != null) {
+                return runConfig;
+            }
 
-        final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
-                getSerializableExtra(CALIBRATION_RESULT);
-        if (calibrationResult != null) {
-            return calibrationResult;
+            final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
+                    getSerializableExtra(CALIBRATION_RESULT);
+            if (calibrationResult != null) {
+                return calibrationResult;
+            }
         }
-
         return null;
     }
 

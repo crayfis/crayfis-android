@@ -101,6 +101,8 @@ import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.StatusView;
 
+import edu.uci.crayfis.LayoutLevels;
+
 //import android.location.LocationListener;
 
 
@@ -1230,43 +1232,44 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         // sanity check
         if (bytes == null) return;
 
-		// get a reference to the current xb, so it doesn't change from underneath us
-		ExposureBlock xb = xbManager.getCurrentExposureBlock();
+        try {
+            // get a reference to the current xb, so it doesn't change from underneath us
+            ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
-        // next, bump the number of L1 events seen by this xb.
-		L1counter++;
-		xb.L1_processed++;
+            // next, bump the number of L1 events seen by this xb.
+            L1counter++;
+            xb.L1_processed++;
 
-        // record the (approximate) acquisition time
-        // FIXME: can we do better than this, perhaps at Camera API level?
-		long acq_time = System.currentTimeMillis();
+            // record the (approximate) acquisition time
+            // FIXME: can we do better than this, perhaps at Camera API level?
+            long acq_time = System.currentTimeMillis();
 
-        // pack the image bytes along with other event info into a RawCameraFrame object
-        RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, xb, orientation, camera.getParameters().getPreviewSize());
-        frame.setLocation(CFApplication.getLastKnownLocation());
+            // pack the image bytes along with other event info into a RawCameraFrame object
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, xb, orientation, camera.getParameters().getPreviewSize());
+            frame.setLocation(CFApplication.getLastKnownLocation());
 
-        // show the frame to the L1 calibrator
-        L1cal.AddFrame(frame);
-        // and track the acquisition times for FPS calculation
-        frame_times.add_value(acq_time);
+            // show the frame to the L1 calibrator
+            L1cal.AddFrame(frame);
+            // and track the acquisition times for FPS calculation
+            frame_times.add_value(acq_time);
 
-        // update the FPS calculation periodically
-        if (L1counter % fps_update_interval == 0) {
-            double fps = updateFPS();
-            //CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
+            // update the FPS calculation periodically
+            if (L1counter % fps_update_interval == 0) {
+                double fps = updateFPS();
+                //CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
 
-        }
-
-        final CFApplication application = (CFApplication) getApplication();
-		if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-            // if we are in (L1) calibration mode, there's no need to do anything else with this
-            // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-            calibration_counter++;
-
-            if (calibration_counter > CONFIG.getCalibrationSampleFrames()) {
-                application.setApplicationState(CFApplication.State.DATA);
             }
-            return;
+
+            final CFApplication application = (CFApplication) getApplication();
+            if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
+                // if we are in (L1) calibration mode, there's no need to do anything else with this
+                // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
+                calibration_counter++;
+
+                if (calibration_counter > CONFIG.getCalibrationSampleFrames()) {
+                    application.setApplicationState(CFApplication.State.DATA);
+                }
+                return;
 
             /*
 			// In calbration mode, there's no need for L1 trigger; just go straight to L2
@@ -1280,53 +1283,53 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 			return;
 			*/
-		}
-
-		if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
-			// If we're in stabilization mode, just drop frames until we've skipped enough
-			stabilization_counter++;
-			if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
-                application.setApplicationState(CFApplication.State.CALIBRATION);
-			}
-			return;
-		}
-
-		if (application.getApplicationState() == CFApplication.State.IDLE) {
-			// Not sure why we're still acquiring frames in IDLE mode...
-			CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
-			return;
-		}
-
-        L1counter_data++;
-
-
-        // periodically check if the L1 calibration has drifted
-        if (L1counter % fps_update_interval == 0 && !fix_threshold) {
-            int new_l1 = calculateL1Threshold();
-            int new_l2 = new_l1-1;
-            if (new_l2 < 2) {
-                new_l2 = 2;
             }
 
-            if (new_l1 != CONFIG.getL1Threshold()) {
-                // the L1 threshold is drifting! set the new threshold and trigger a new XB.
-                CONFIG.setL1Threshold(new_l1);
-                CONFIG.setL2Threshold(new_l2);
-                xbManager.newExposureBlock();
-                CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
-                CFLog.i("Triggering new XB.");
-
-
+            if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
+                // If we're in stabilization mode, just drop frames until we've skipped enough
+                stabilization_counter++;
+                if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
+                    application.setApplicationState(CFApplication.State.CALIBRATION);
+                }
+                return;
             }
-        }
 
-		// prescale
-		// Jodi - removed L1prescale as it never changed.
-		if (L1counter % 1 == 0) {
-			// make sure there's room on the queue
-			if (l2thread.getRemainingCapacity() > 0) {
-				// check if we pass the L1 threshold
-				boolean pass = false;
+            if (application.getApplicationState() == CFApplication.State.IDLE) {
+                // Not sure why we're still acquiring frames in IDLE mode...
+                CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
+                return;
+            }
+
+            L1counter_data++;
+
+
+            // periodically check if the L1 calibration has drifted
+            if (L1counter % fps_update_interval == 0 && !fix_threshold) {
+                int new_l1 = calculateL1Threshold();
+                int new_l2 = new_l1 - 1;
+                if (new_l2 < 2) {
+                    new_l2 = 2;
+                }
+
+                if (new_l1 != CONFIG.getL1Threshold()) {
+                    // the L1 threshold is drifting! set the new threshold and trigger a new XB.
+                    CONFIG.setL1Threshold(new_l1);
+                    CONFIG.setL2Threshold(new_l2);
+                    xbManager.newExposureBlock();
+                    CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
+                    CFLog.i("Triggering new XB.");
+
+
+                }
+            }
+
+            // prescale
+            // Jodi - removed L1prescale as it never changed.
+            if (L1counter % 1 == 0) {
+                // make sure there's room on the queue
+                if (l2thread.getRemainingCapacity() > 0) {
+                    // check if we pass the L1 threshold
+                    boolean pass = false;
                 /*
 				int length = previewSize.width * previewSize.height;
                 int max=-1;
@@ -1341,41 +1344,42 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 					}
 				}
 				*/
-                int max = frame.getPixMax();
-                if (max > xb.L1_thresh) {
-                    // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-                    // have changed.
-                    pass = true;
+                    int max = frame.getPixMax();
+                    if (max > xb.L1_thresh) {
+                        // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
+                        // have changed.
+                        pass = true;
+                    }
+                    if (pass) {
+                        xb.L1_pass++;
+
+                        // this frame has passed the L1 threshold, put it on the
+                        // L2 processing queue.
+                        boolean queue_accept = l2thread.submitToQueue(frame);
+
+                        if (!queue_accept) {
+                            // oops! the queue is full... this frame will be dropped.
+                            CFLog.e("DAQActivity Could not add frame to L2 Queue!");
+                            L2busy++;
+                        }
+                    }
+                } else {
+                    // no room on the L2 queue! We'll have to skip this frame.
+                    xb.L1_skip++;
                 }
-				if (pass) {
-					xb.L1_pass++;
 
-					// this frame has passed the L1 threshold, put it on the
-					// L2 processing queue.
-					boolean queue_accept = l2thread.submitToQueue(frame);
-
-					if (! queue_accept) {
-						// oops! the queue is full... this frame will be dropped.
-						CFLog.e("DAQActivity Could not add frame to L2 Queue!");
-						L2busy++;
-					}
-				}
-			}
-			else {
-				// no room on the L2 queue! We'll have to skip this frame.
-				xb.L1_skip++;
-			}
-
-		}
+            }
 
 
+            // Can only do trivial amounts of image processing inside this function
+            // or else bad stuff happens.
+            // To work around this issue most of the processing has been pushed onto
+            // a thread and the call below
+            // tells the thread to wake up and process another image
 
-        // Can only do trivial amounts of image processing inside this function
-		// or else bad stuff happens.
-		// To work around this issue most of the processing has been pushed onto
-		// a thread and the call below
-		// tells the thread to wake up and process another image
-
+        } catch (Exception e)
+        { // dont' crash, jsut drop frame
+        }
 	}
 
     private double updateFPS() {
@@ -1503,14 +1507,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                         LayoutData.updateData();
                     }
 
-                    final StatusView.Status status = new StatusView.Status.Builder()
-                            .setEventCount(mParticleReco != null ? mParticleReco.event_count : 0)
-                            .setFps((int) (getFPS()))
-                            .setStabilizationCounter(stabilization_counter)
-                            .setTotalEvents(l2thread.getTotalEvents())
-                            .setTotalPixels(l2thread.getTotalPixels())
-                            .setTime((int) (1.0e-3 * xbManager.getExposureTime()))
-                            .build();
+                    if (LayoutLevels.mStatusView != null)
+                    {
+                        LayoutLevels.mStatusView.setStatus((int) (1.0e-3 * xbManager.getExposureTime()),
+                                (int) (getFPS()));
+
+                    }
+
+
 
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION)
@@ -1568,10 +1572,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                         }
 
-                        if (LayoutData.mStatusView != null)
-                        {
-                            LayoutData.mStatusView.setStatus(status);
-                        }
+
                         if (mParticleReco != null) {
                             final DataView.Status dstatus = new DataView.Status.Builder()
                                     .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())

@@ -296,12 +296,12 @@ public class ProgressWheel extends View {
 
         if (background==null) {
             background = backgroundr.createScaledBitmap(backgroundr,getWidth(),getHeight(),false);
-            CFLog.d("Progress wheel scaling to "+getWidth()+", "+getHeight()+" bms ="+backgroundr+" "+background);
+           // CFLog.d("Progress wheel scaling to "+getWidth()+", "+getHeight()+" bms ="+backgroundr+" "+background);
         }
         if (showBG) {
             bgPaint.setAlpha((int) (progress * (255.0 / 360.0)));
 
-            CFLog.d("Progress wheel bg: progress = "+progress+" alpha = "+((int) (progress * (255.0 / 360.0))));
+            //CFLog.d("Progress wheel bg: progress = "+progress+" alpha = "+((int) (progress * (255.0 / 360.0))));
             canvas.drawBitmap(background,0,0,bgPaint);
 
         }

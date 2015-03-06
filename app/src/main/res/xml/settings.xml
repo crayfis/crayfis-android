@@ -30,7 +30,7 @@
             android:key="prefStartBefore"
             android:defaultValue="8"
             android:entries="@array/pref_starttimes"
-            android:summary="The app will not autostart after this time."
+            android:summary="@string/settings_startbefore_summary"
             android:entryValues="@array/pref_starttimes"
             android:title="@string/pref_startbefore" />
      <CheckBoxPreference
