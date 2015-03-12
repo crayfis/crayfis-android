@@ -194,7 +194,10 @@ public class ExposureBlock implements Parcelable {
 		// they're really huge.
 		if (daq_state != CFApplication.State.CALIBRATION) {
 			for (RecoEvent evt : events) {
-				buf.addEvents(evt.buildProto());
+                try {
+                    buf.addEvents(evt.buildProto());
+                } catch (Exception e) {
+                }
 			}
 		}
 				

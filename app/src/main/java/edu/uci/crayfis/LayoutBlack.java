@@ -12,6 +12,7 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 import android.hardware.Camera;
 
+import android.content.Context;
 import java.util.ArrayList;
 
 import edu.uci.crayfis.particle.ParticleReco;
@@ -41,8 +42,11 @@ public class LayoutBlack extends Fragment{
         {
            if (!shown_message)
            {
-              Toast.makeText(getActivity(), getResources().getString(R.string.toast_black),Toast.LENGTH_LONG).show();
-              shown_message=true;
+               Context cx = getActivity();
+               if (cx != null) {
+                   Toast.makeText(cx, getResources().getString(R.string.toast_black), Toast.LENGTH_LONG).show();
+                   shown_message = true;
+               }
            }
         }
         else {  }

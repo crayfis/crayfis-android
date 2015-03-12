@@ -441,7 +441,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             case STABILIZATION:
                 mParticleReco.reset();
                 L1cal.clear();
-                frame_times.clear();
+                synchronized(frame_times) {
+                    frame_times.clear();
+                }
                 calibration_start = System.currentTimeMillis();
                 xbManager.newExposureBlock();
                 break;
@@ -1251,8 +1253,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             // show the frame to the L1 calibrator
             L1cal.AddFrame(frame);
             // and track the acquisition times for FPS calculation
-            frame_times.add_value(acq_time);
-
+            synchronized(frame_times) {
+                frame_times.add_value(acq_time);
+            }
             // update the FPS calculation periodically
             if (L1counter % fps_update_interval == 0) {
                 double fps = updateFPS();
@@ -1384,10 +1387,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private double updateFPS() {
         long now = System.currentTimeMillis();
-        if (frame_times != null) {
-            int nframes = frame_times.size();
-            last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
-            return last_fps;
+        synchronized(frame_times) {
+            if (frame_times != null) {
+                int nframes = frame_times.size();
+                last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+                return last_fps;
+            }
         }
         return 0.0;
     }
