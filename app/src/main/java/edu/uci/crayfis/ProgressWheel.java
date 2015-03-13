@@ -105,7 +105,7 @@ public class ProgressWheel extends View {
         parseAttributes(context.obtainStyledAttributes(attrs,
                 R.styleable.ProgressWheel));
 
-        backgroundr = BitmapFactory.decodeResource(getResources(), R.drawable.earthCR);
+        backgroundr = BitmapFactory.decodeResource(getResources(), R.drawable.earthcr);
 
     }
 
