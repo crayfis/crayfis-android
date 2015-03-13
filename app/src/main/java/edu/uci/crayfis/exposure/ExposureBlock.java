@@ -110,7 +110,7 @@ public class ExposureBlock implements Parcelable {
     }
 
     public void reset() {
-        start_time_nano = System.nanoTime();
+        start_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
 		start_time = System.currentTimeMillis();
 		frames_dropped = 0;
 		L1_processed = L1_pass = L1_skip = 0;
@@ -121,7 +121,7 @@ public class ExposureBlock implements Parcelable {
 	public void freeze() {
 		frozen = true;
 		end_time = System.currentTimeMillis();
-        end_time_nano = System.nanoTime();
+        end_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
 	}
 	
 	public long age() {

@@ -603,13 +603,18 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
 	public void generateRunConfig() {
+        long run_start_time_nano = System.nanoTime();
+        long run_start_time = System.currentTimeMillis();
+
+        CFApplication.setStartTimeNano(run_start_time_nano);
+
 		DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
 
         final UUID runId = mAppBuild.getRunId();
 		b.setIdHi(runId.getMostSignificantBits());
 		b.setIdLo(runId.getLeastSignificantBits());
 		b.setCrayfisBuild(mAppBuild.getBuildVersion());
-		b.setStartTime(System.currentTimeMillis());
+		b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
 		b.setCameraParams(mCamera.getParameters().flatten());
@@ -1231,7 +1236,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         // record the (approximate) acquisition time
         // FIXME: can we do better than this, perhaps at Camera API level?
-        long acq_time_nano = System.nanoTime();
+        long acq_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
         long acq_time = System.currentTimeMillis();
 
         // sanity check
