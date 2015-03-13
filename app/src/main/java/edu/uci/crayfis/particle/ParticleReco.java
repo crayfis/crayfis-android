@@ -83,6 +83,7 @@ public class ParticleReco {
             background = parcel.readFloat();
             variance = parcel.readFloat();
             xbn = parcel.readInt();
+            pixels = parcel.createTypedArrayList(RecoPixel.CREATOR);
         }
 
         public DataProtos.Event buildProto() {
@@ -133,6 +134,7 @@ public class ParticleReco {
             dest.writeFloat(background);
             dest.writeFloat(variance);
             dest.writeInt(xbn);
+            dest.writeTypedList(pixels);
         }
 
         public static final Creator<RecoEvent> CREATOR = new Creator<RecoEvent>() {
