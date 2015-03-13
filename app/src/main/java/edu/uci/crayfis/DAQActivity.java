@@ -1229,6 +1229,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 
+        // record the (approximate) acquisition time
+        // FIXME: can we do better than this, perhaps at Camera API level?
+        long acq_time_nano = System.nanoTime();
+        long acq_time = System.currentTimeMillis();
+
         // sanity check
         if (bytes == null) return;
 
@@ -1240,12 +1245,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             L1counter++;
             xb.L1_processed++;
 
-            // record the (approximate) acquisition time
-            // FIXME: can we do better than this, perhaps at Camera API level?
-            long acq_time = System.currentTimeMillis();
-
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, xb, orientation, camera.getParameters().getPreviewSize());
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano, xb, orientation, camera.getParameters().getPreviewSize());
             frame.setLocation(CFApplication.getLastKnownLocation());
 
             // show the frame to the L1 calibrator

@@ -60,6 +60,7 @@ public class ParticleReco {
 
     public static class RecoEvent implements Parcelable {
         public long time;
+        public long time_nano;
         public Location location;
         public float[] orientation;
 
@@ -77,6 +78,7 @@ public class ParticleReco {
 
         private RecoEvent(@NonNull final Parcel parcel) {
             time = parcel.readLong();
+            time_nano = parcel.readLong();
             location = parcel.readParcelable(Location.class.getClassLoader());
             orientation = parcel.createFloatArray();
             quality = parcel.readInt() == 1;
@@ -89,6 +91,7 @@ public class ParticleReco {
             DataProtos.Event.Builder buf = DataProtos.Event.newBuilder();
 
             buf.setTimestamp(time);
+            buf.setTimestampNano(time_nano);
             buf.setGpsLat(location.getLatitude());
             buf.setGpsLon(location.getLongitude());
             buf.setGpsFixtime(location.getTime());
@@ -127,6 +130,7 @@ public class ParticleReco {
         @Override
         public void writeToParcel(final Parcel dest, final int flags) {
             dest.writeLong(time);
+            dest.writeLong(time_nano);
             dest.writeParcelable(location, flags);
             dest.writeFloatArray(orientation);
             dest.writeInt(quality ? 1 : 0);
@@ -287,6 +291,7 @@ public class ParticleReco {
         RecoEvent event = new RecoEvent();
 
         event.time = frame.getAcquiredTime();
+        event.time_nano = frame.getNanoTime();
         event.location = frame.getLocation();
         event.orientation = frame.getOrientation();
 
