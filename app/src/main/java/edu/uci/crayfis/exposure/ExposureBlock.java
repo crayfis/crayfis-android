@@ -20,6 +20,9 @@ public class ExposureBlock implements Parcelable {
 
 	public long start_time;
 	public long end_time;
+
+    public long start_time_nano;
+    public long end_time_nano;
 	
 	public Location start_loc;
 	
@@ -56,6 +59,8 @@ public class ExposureBlock implements Parcelable {
         run_id = (UUID) parcel.readSerializable();
         start_time = parcel.readLong();
         end_time = parcel.readLong();
+        start_time_nano = parcel.readLong();
+        end_time_nano = parcel.readLong();
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
         frames_dropped = parcel.readLong();
         L1_thresh = parcel.readInt();
@@ -84,6 +89,8 @@ public class ExposureBlock implements Parcelable {
         dest.writeSerializable(run_id);
         dest.writeLong(start_time);
         dest.writeLong(end_time);
+        dest.writeLong(start_time_nano);
+        dest.writeLong(end_time_nano);
         dest.writeParcelable(start_loc, flags);
         dest.writeLong(frames_dropped);
         dest.writeInt(L1_thresh);
@@ -103,6 +110,7 @@ public class ExposureBlock implements Parcelable {
     }
 
     public void reset() {
+        start_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
 		start_time = System.currentTimeMillis();
 		frames_dropped = 0;
 		L1_processed = L1_pass = L1_skip = 0;
@@ -113,9 +121,11 @@ public class ExposureBlock implements Parcelable {
 	public void freeze() {
 		frozen = true;
 		end_time = System.currentTimeMillis();
+        end_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
 	}
 	
 	public long age() {
+        // FIXME: should we use the nanotime(s) here? Beware corner case where the nanotime counter wraps around, though!
 		if (frozen) {
 			return end_time - start_time;
 		}
@@ -183,6 +193,9 @@ public class ExposureBlock implements Parcelable {
 		
 		buf.setStartTime(start_time);
 		buf.setEndTime(end_time);
+
+        buf.setStartTimeNano(start_time_nano);
+        buf.setEndTimeNano(end_time_nano);
 		
 		buf.setRunId(run_id.getLeastSignificantBits());
 		

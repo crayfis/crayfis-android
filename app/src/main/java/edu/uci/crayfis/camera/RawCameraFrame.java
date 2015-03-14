@@ -16,6 +16,7 @@ public class RawCameraFrame {
 
     private final byte[] mBytes;
     private final long mAcquiredTime;
+    private final long mNanoTime;
     private final ExposureBlock mExposureBlock;
     private Location mLocation;
     private float[] mOrientation;
@@ -27,14 +28,15 @@ public class RawCameraFrame {
      * Create a new instance.
      *
      * @param bytes Raw bytes from the camera.
-     * @param t The time in milliseconds.
+     * @param timestamp The time in milliseconds.
      * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}
      * @param orient The orientation of the device.
      * @param size The pixel dimensions of the frame
      */
-    public RawCameraFrame(byte[] bytes, long t, ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
+    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
         mBytes = bytes;
-        mAcquiredTime = t;
+        mAcquiredTime = timestamp;
+        mNanoTime = nanoTime;
         mExposureBlock = exposureBlock;
         mOrientation = orient.clone();
         mSize = size;
@@ -64,6 +66,13 @@ public class RawCameraFrame {
     public long getAcquiredTime() {
         return mAcquiredTime;
     }
+
+    /**
+     * Get the precision nano time.
+     *
+     * @return long
+     */
+    public long getNanoTime() { return mNanoTime; }
 
     /**
      * Get the {@link edu.uci.crayfis.exposure.ExposureBlock}

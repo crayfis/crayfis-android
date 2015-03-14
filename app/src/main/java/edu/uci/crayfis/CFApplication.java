@@ -34,6 +34,7 @@ public class CFApplication extends Application {
     private State mApplicationState;
 
     private static Location mLastKnownLocation;
+    private static long mStartTimeNano;
 
     private AppBuild mAppBuild;
 
@@ -119,6 +120,9 @@ public class CFApplication extends Application {
     public static void setLastKnownLocation(Location lastKnownLocation) {
         mLastKnownLocation = lastKnownLocation;
     }
+
+    public static long getStartTimeNano() { return mStartTimeNano; }
+    public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
