@@ -605,8 +605,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
 	public void generateRunConfig() {
-        long run_start_time_nano = System.nanoTime();
         long run_start_time = System.currentTimeMillis();
+        long run_start_time_nano = System.nanoTime() - 1000000 * run_start_time; // reference start time to unix epoch
 
         CFApplication.setStartTimeNano(run_start_time_nano);
 
