@@ -62,7 +62,7 @@ public class LayoutBlack extends Fragment{
         {
             events.add(p);
         }
-        CFLog.d(" Layoutblack "+this+" add event with "+p.pixels.size()+ " from time "+p.time+ " #events="+events.size());
+        //CFLog.d(" Layoutblack "+this+" add event with "+p.pixels.size()+ " from time "+p.time+ " #events="+events.size());
 
     }
 
