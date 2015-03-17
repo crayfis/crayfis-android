@@ -43,7 +43,7 @@ public class SplashView extends ImageView
         mContext = context;
         h = new Handler();
 
-        CFLog.d("new Splashview created!"+this);
+       // CFLog.d("new Splashview created!"+this);
 
         circlePaint = new Paint();
         circlePaint.setColor(Color.WHITE);

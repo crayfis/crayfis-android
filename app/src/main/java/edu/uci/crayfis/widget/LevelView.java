@@ -76,7 +76,7 @@ public class LevelView extends ImageView {
         for (int i=0;i<nLevels;i++)
            level_iconr[i] = BitmapFactory.decodeResource(getResources(), icons[i]);
         current_level = -1;
-        CFLog.d(" make new Levelsview");
+       // CFLog.d(" make new Levelsview");
     }
 
     int updateLevel()
@@ -122,7 +122,7 @@ public class LevelView extends ImageView {
 
         updateIcons();
 
-        CFLog.d(" level = "+current_level+ " icons are "+level_icon+", "+next_icon);
+       // CFLog.d(" level = "+current_level+ " icons are "+level_icon+", "+next_icon);
             c.drawBitmap(level_icon, 0, 0, bgPaint);
             if (next_icon != null)
                 c.drawBitmap(next_icon, 0, (int) (getHeight() * 0.9), bgPaint);
@@ -133,7 +133,7 @@ public class LevelView extends ImageView {
 
             String text_next = String.format("Next level (%s) requires: %1.1f",names[current_level+1],thresh[current_level+1]);
             c.drawText(text_next,(int)(getHeight()*0.1)+25,(int)(getHeight()*0.9)+textSize+5,textPaint);
-            CFLog.d(" Levelsview drawing text: " + text);
+//            CFLog.d(" Levelsview drawing text: " + text);
 
         h.postDelayed(r, FRAME_RATE);
 

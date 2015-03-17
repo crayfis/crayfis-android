@@ -17,6 +17,7 @@ public class RawCameraFrame {
     private final byte[] mBytes;
     private final long mAcquiredTime;
     private final long mNanoTime;
+    private final long mAcquiredTimeNTP;
     private final ExposureBlock mExposureBlock;
     private Location mLocation;
     private float[] mOrientation;
@@ -33,10 +34,11 @@ public class RawCameraFrame {
      * @param orient The orientation of the device.
      * @param size The pixel dimensions of the frame
      */
-    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
+    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
         mNanoTime = nanoTime;
+        mAcquiredTimeNTP = timestamp_ntp;
         mExposureBlock = exposureBlock;
         mOrientation = orient.clone();
         mSize = size;
@@ -59,10 +61,19 @@ public class RawCameraFrame {
     }
 
     /**
-     * Get the epoch time.
+     * Get the epoch time with NTP corrections.
      *
      * @return long
      */
+    public long getAcquiredTimeNTP() {
+        return mAcquiredTimeNTP;
+    }
+
+
+    /** Get the epoch time.
+            *
+            * @return long
+    */
     public long getAcquiredTime() {
         return mAcquiredTime;
     }

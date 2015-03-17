@@ -196,6 +196,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	// Thread where image data is processed for L2
 	private L2Processor l2thread;
 
+    // Thread for NTP updates
+    private SntpClient ntpThread;
+
 	// class to find particles in frames
 	private ParticleReco mParticleReco;
 
@@ -956,6 +959,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		l2thread.stopThread();
 		l2thread = null;
 
+        ntpThread.stopThread();
+        ntpThread = null;
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
@@ -1107,6 +1113,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 mLayoutBlack.previewSize = previewSize;
                 l2thread = new L2Processor(this, previewSize);
                 l2thread.start();
+
+                ntpThread = new SntpClient();
+                ntpThread.start();
             }
 
             CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
@@ -1240,6 +1249,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         // FIXME: can we do better than this, perhaps at Camera API level?
         long acq_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
         long acq_time = System.currentTimeMillis();
+        long acq_time_ntp = ntpThread.getNtpTime();
+        long diff = acq_time - acq_time_ntp;
+
+        //CFLog.d(" Frame times millis = "+acq_time+ " ntp = "+acq_time_ntp+" diff = "+diff);
 
         // sanity check
         if (bytes == null) return;
@@ -1253,7 +1266,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             xb.L1_processed++;
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano, xb, orientation, camera.getParameters().getPreviewSize());
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano,acq_time_ntp , xb, orientation, camera.getParameters().getPreviewSize());
             frame.setLocation(CFApplication.getLastKnownLocation());
 
             // show the frame to the L1 calibrator
