@@ -61,6 +61,7 @@ public class ParticleReco {
     public static class RecoEvent implements Parcelable {
         public long time;
         public long time_nano;
+        public long time_ntp;
         public Location location;
         public float[] orientation;
 
@@ -79,6 +80,7 @@ public class ParticleReco {
         private RecoEvent(@NonNull final Parcel parcel) {
             time = parcel.readLong();
             time_nano = parcel.readLong();
+            time_ntp = parcel.readLong();
             location = parcel.readParcelable(Location.class.getClassLoader());
             orientation = parcel.createFloatArray();
             quality = parcel.readInt() == 1;
@@ -93,6 +95,7 @@ public class ParticleReco {
 
             buf.setTimestamp(time);
             buf.setTimestampNano(time_nano);
+            buf.setTimestampNtp(time_ntp);
             buf.setGpsLat(location.getLatitude());
             buf.setGpsLon(location.getLongitude());
             buf.setGpsFixtime(location.getTime());
@@ -132,6 +135,7 @@ public class ParticleReco {
         public void writeToParcel(final Parcel dest, final int flags) {
             dest.writeLong(time);
             dest.writeLong(time_nano);
+            dest.writeLong(time_ntp);
             dest.writeParcelable(location, flags);
             dest.writeFloatArray(orientation);
             dest.writeInt(quality ? 1 : 0);
@@ -294,6 +298,7 @@ public class ParticleReco {
 
         event.time = frame.getAcquiredTime();
         event.time_nano = frame.getNanoTime();
+        event.time_ntp = frame.getAcquiredTimeNTP();
         event.location = frame.getLocation();
         event.orientation = frame.getOrientation();
 

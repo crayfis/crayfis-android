@@ -2661,6 +2661,24 @@ public final class DataProtos {
     long getEndTimeNano();
 
     /**
+     * <code>optional uint64 start_time_ntp = 24;</code>
+     */
+    boolean hasStartTimeNtp();
+    /**
+     * <code>optional uint64 start_time_ntp = 24;</code>
+     */
+    long getStartTimeNtp();
+
+    /**
+     * <code>optional uint64 end_time_ntp = 25;</code>
+     */
+    boolean hasEndTimeNtp();
+    /**
+     * <code>optional uint64 end_time_ntp = 25;</code>
+     */
+    long getEndTimeNtp();
+
+    /**
      * <code>optional double gps_lat = 4;</code>
      */
     boolean hasGpsLat();
@@ -2905,12 +2923,12 @@ public final class DataProtos {
               break;
             }
             case 33: {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000080;
               gpsLat_ = input.readDouble();
               break;
             }
             case 41: {
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000100;
               gpsLon_ = input.readDouble();
               break;
             }
@@ -2920,86 +2938,86 @@ public final class DataProtos {
               if (value == null) {
                 unknownFields.mergeVarintField(6, rawValue);
               } else {
-                bitField0_ |= 0x00000400;
+                bitField0_ |= 0x00001000;
                 daqState_ = value;
               }
               break;
             }
             case 58: {
-              if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+              if (!((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
                 events_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.Event>();
-                mutable_bitField0_ |= 0x00000800;
+                mutable_bitField0_ |= 0x00002000;
               }
               events_.add(input.readMessage(edu.uci.crayfis.DataProtos.Event.PARSER, extensionRegistry));
               break;
             }
             case 64: {
-              bitField0_ |= 0x00000800;
+              bitField0_ |= 0x00002000;
               l1Thresh_ = input.readInt32();
               break;
             }
             case 72: {
-              bitField0_ |= 0x00001000;
+              bitField0_ |= 0x00004000;
               l2Thresh_ = input.readInt32();
               break;
             }
             case 80: {
-              bitField0_ |= 0x00002000;
+              bitField0_ |= 0x00008000;
               l1Processed_ = input.readUInt32();
               break;
             }
             case 88: {
-              bitField0_ |= 0x00004000;
+              bitField0_ |= 0x00010000;
               l2Processed_ = input.readUInt32();
               break;
             }
             case 96: {
-              bitField0_ |= 0x00008000;
+              bitField0_ |= 0x00020000;
               framesDropped_ = input.readUInt32();
               break;
             }
             case 104: {
-              bitField0_ |= 0x00010000;
+              bitField0_ |= 0x00040000;
               l1Pass_ = input.readUInt32();
               break;
             }
             case 112: {
-              bitField0_ |= 0x00020000;
+              bitField0_ |= 0x00080000;
               l1Skip_ = input.readUInt32();
               break;
             }
             case 120: {
-              bitField0_ |= 0x00040000;
+              bitField0_ |= 0x00100000;
               l2Pass_ = input.readUInt32();
               break;
             }
             case 128: {
-              bitField0_ |= 0x00080000;
+              bitField0_ |= 0x00200000;
               l2Skip_ = input.readUInt32();
               break;
             }
             case 136: {
-              bitField0_ |= 0x00100000;
+              bitField0_ |= 0x00400000;
               xbn_ = input.readUInt32();
               break;
             }
             case 144: {
-              bitField0_ |= 0x00200000;
+              bitField0_ |= 0x00800000;
               aborted_ = input.readBool();
               break;
             }
             case 153: {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000200;
               gpsAltitude_ = input.readDouble();
               break;
             }
             case 165: {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000400;
               gpsAccuracy_ = input.readFloat();
               break;
             }
             case 168: {
-              bitField0_ |= 0x00000200;
+              bitField0_ |= 0x00000800;
               gpsFixtime_ = input.readUInt64();
               break;
             }
@@ -3013,6 +3031,16 @@ public final class DataProtos {
               endTimeNano_ = input.readUInt64();
               break;
             }
+            case 192: {
+              bitField0_ |= 0x00000020;
+              startTimeNtp_ = input.readUInt64();
+              break;
+            }
+            case 200: {
+              bitField0_ |= 0x00000040;
+              endTimeNtp_ = input.readUInt64();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3021,7 +3049,7 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((mutable_bitField0_ & 0x00002000) == 0x00002000)) {
           events_ = java.util.Collections.unmodifiableList(events_);
         }
         this.unknownFields = unknownFields.build();
@@ -3238,13 +3266,43 @@ public final class DataProtos {
       return endTimeNano_;
     }
 
+    public static final int START_TIME_NTP_FIELD_NUMBER = 24;
+    private long startTimeNtp_;
+    /**
+     * <code>optional uint64 start_time_ntp = 24;</code>
+     */
+    public boolean hasStartTimeNtp() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional uint64 start_time_ntp = 24;</code>
+     */
+    public long getStartTimeNtp() {
+      return startTimeNtp_;
+    }
+
+    public static final int END_TIME_NTP_FIELD_NUMBER = 25;
+    private long endTimeNtp_;
+    /**
+     * <code>optional uint64 end_time_ntp = 25;</code>
+     */
+    public boolean hasEndTimeNtp() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional uint64 end_time_ntp = 25;</code>
+     */
+    public long getEndTimeNtp() {
+      return endTimeNtp_;
+    }
+
     public static final int GPS_LAT_FIELD_NUMBER = 4;
     private double gpsLat_;
     /**
      * <code>optional double gps_lat = 4;</code>
      */
     public boolean hasGpsLat() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional double gps_lat = 4;</code>
@@ -3259,7 +3317,7 @@ public final class DataProtos {
      * <code>optional double gps_lon = 5;</code>
      */
     public boolean hasGpsLon() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional double gps_lon = 5;</code>
@@ -3274,7 +3332,7 @@ public final class DataProtos {
      * <code>optional double gps_altitude = 19;</code>
      */
     public boolean hasGpsAltitude() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional double gps_altitude = 19;</code>
@@ -3289,7 +3347,7 @@ public final class DataProtos {
      * <code>optional float gps_accuracy = 20;</code>
      */
     public boolean hasGpsAccuracy() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
      * <code>optional float gps_accuracy = 20;</code>
@@ -3304,7 +3362,7 @@ public final class DataProtos {
      * <code>optional uint64 gps_fixtime = 21;</code>
      */
     public boolean hasGpsFixtime() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000800) == 0x00000800);
     }
     /**
      * <code>optional uint64 gps_fixtime = 21;</code>
@@ -3319,7 +3377,7 @@ public final class DataProtos {
      * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
      */
     public boolean hasDaqState() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00001000) == 0x00001000);
     }
     /**
      * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
@@ -3369,7 +3427,7 @@ public final class DataProtos {
      * <code>optional int32 L1_thresh = 8;</code>
      */
     public boolean hasL1Thresh() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00002000) == 0x00002000);
     }
     /**
      * <code>optional int32 L1_thresh = 8;</code>
@@ -3384,7 +3442,7 @@ public final class DataProtos {
      * <code>optional int32 L2_thresh = 9;</code>
      */
     public boolean hasL2Thresh() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00004000) == 0x00004000);
     }
     /**
      * <code>optional int32 L2_thresh = 9;</code>
@@ -3399,7 +3457,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_processed = 10;</code>
      */
     public boolean hasL1Processed() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00008000) == 0x00008000);
     }
     /**
      * <code>optional uint32 L1_processed = 10;</code>
@@ -3414,7 +3472,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_processed = 11;</code>
      */
     public boolean hasL2Processed() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00010000) == 0x00010000);
     }
     /**
      * <code>optional uint32 L2_processed = 11;</code>
@@ -3429,7 +3487,7 @@ public final class DataProtos {
      * <code>optional uint32 frames_dropped = 12;</code>
      */
     public boolean hasFramesDropped() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00020000) == 0x00020000);
     }
     /**
      * <code>optional uint32 frames_dropped = 12;</code>
@@ -3444,7 +3502,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_pass = 13;</code>
      */
     public boolean hasL1Pass() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00040000) == 0x00040000);
     }
     /**
      * <code>optional uint32 L1_pass = 13;</code>
@@ -3459,7 +3517,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_skip = 14;</code>
      */
     public boolean hasL1Skip() {
-      return ((bitField0_ & 0x00020000) == 0x00020000);
+      return ((bitField0_ & 0x00080000) == 0x00080000);
     }
     /**
      * <code>optional uint32 L1_skip = 14;</code>
@@ -3474,7 +3532,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_pass = 15;</code>
      */
     public boolean hasL2Pass() {
-      return ((bitField0_ & 0x00040000) == 0x00040000);
+      return ((bitField0_ & 0x00100000) == 0x00100000);
     }
     /**
      * <code>optional uint32 L2_pass = 15;</code>
@@ -3489,7 +3547,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_skip = 16;</code>
      */
     public boolean hasL2Skip() {
-      return ((bitField0_ & 0x00080000) == 0x00080000);
+      return ((bitField0_ & 0x00200000) == 0x00200000);
     }
     /**
      * <code>optional uint32 L2_skip = 16;</code>
@@ -3504,7 +3562,7 @@ public final class DataProtos {
      * <code>optional uint32 xbn = 17;</code>
      */
     public boolean hasXbn() {
-      return ((bitField0_ & 0x00100000) == 0x00100000);
+      return ((bitField0_ & 0x00400000) == 0x00400000);
     }
     /**
      * <code>optional uint32 xbn = 17;</code>
@@ -3519,7 +3577,7 @@ public final class DataProtos {
      * <code>optional bool aborted = 18;</code>
      */
     public boolean hasAborted() {
-      return ((bitField0_ & 0x00200000) == 0x00200000);
+      return ((bitField0_ & 0x00800000) == 0x00800000);
     }
     /**
      * <code>optional bool aborted = 18;</code>
@@ -3534,6 +3592,8 @@ public final class DataProtos {
       endTime_ = 0L;
       startTimeNano_ = 0L;
       endTimeNano_ = 0L;
+      startTimeNtp_ = 0L;
+      endTimeNtp_ = 0L;
       gpsLat_ = 0D;
       gpsLon_ = 0D;
       gpsAltitude_ = 0D;
@@ -3575,58 +3635,58 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeUInt64(3, endTime_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeDouble(4, gpsLat_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeDouble(5, gpsLon_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         output.writeEnum(6, daqState_.getNumber());
       }
       for (int i = 0; i < events_.size(); i++) {
         output.writeMessage(7, events_.get(i));
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeInt32(8, l1Thresh_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
         output.writeInt32(9, l2Thresh_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
         output.writeUInt32(10, l1Processed_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
         output.writeUInt32(11, l2Processed_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
         output.writeUInt32(12, framesDropped_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
         output.writeUInt32(13, l1Pass_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
         output.writeUInt32(14, l1Skip_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
         output.writeUInt32(15, l2Pass_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
         output.writeUInt32(16, l2Skip_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
         output.writeUInt32(17, xbn_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
         output.writeBool(18, aborted_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeDouble(19, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeFloat(20, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeUInt64(21, gpsFixtime_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
@@ -3634,6 +3694,12 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeUInt64(23, endTimeNano_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt64(24, startTimeNtp_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt64(25, endTimeNtp_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3656,15 +3722,15 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, endTime_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(4, gpsLat_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(5, gpsLon_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeEnumSize(6, daqState_.getNumber());
       }
@@ -3672,59 +3738,59 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, events_.get(i));
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(8, l1Thresh_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, l2Thresh_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(10, l1Processed_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(11, l2Processed_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(12, framesDropped_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(13, l1Pass_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(14, l1Skip_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00100000) == 0x00100000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(15, l2Pass_);
       }
-      if (((bitField0_ & 0x00080000) == 0x00080000)) {
+      if (((bitField0_ & 0x00200000) == 0x00200000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(16, l2Skip_);
       }
-      if (((bitField0_ & 0x00100000) == 0x00100000)) {
+      if (((bitField0_ & 0x00400000) == 0x00400000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(17, xbn_);
       }
-      if (((bitField0_ & 0x00200000) == 0x00200000)) {
+      if (((bitField0_ & 0x00800000) == 0x00800000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(18, aborted_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(19, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(20, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(21, gpsFixtime_);
       }
@@ -3735,6 +3801,14 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(23, endTimeNano_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(24, startTimeNtp_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(25, endTimeNtp_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -3864,46 +3938,50 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000008);
         endTimeNano_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000010);
-        gpsLat_ = 0D;
+        startTimeNtp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000020);
-        gpsLon_ = 0D;
+        endTimeNtp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000040);
-        gpsAltitude_ = 0D;
+        gpsLat_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000080);
-        gpsAccuracy_ = 0F;
+        gpsLon_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000100);
-        gpsFixtime_ = 0L;
+        gpsAltitude_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000200);
-        daqState_ = edu.uci.crayfis.DataProtos.ExposureBlock.State.INIT;
+        gpsAccuracy_ = 0F;
         bitField0_ = (bitField0_ & ~0x00000400);
+        gpsFixtime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000800);
+        daqState_ = edu.uci.crayfis.DataProtos.ExposureBlock.State.INIT;
+        bitField0_ = (bitField0_ & ~0x00001000);
         if (eventsBuilder_ == null) {
           events_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00002000);
         } else {
           eventsBuilder_.clear();
         }
         l1Thresh_ = 0;
-        bitField0_ = (bitField0_ & ~0x00001000);
-        l2Thresh_ = 0;
-        bitField0_ = (bitField0_ & ~0x00002000);
-        l1Processed_ = 0;
         bitField0_ = (bitField0_ & ~0x00004000);
-        l2Processed_ = 0;
+        l2Thresh_ = 0;
         bitField0_ = (bitField0_ & ~0x00008000);
-        framesDropped_ = 0;
+        l1Processed_ = 0;
         bitField0_ = (bitField0_ & ~0x00010000);
-        l1Pass_ = 0;
+        l2Processed_ = 0;
         bitField0_ = (bitField0_ & ~0x00020000);
-        l1Skip_ = 0;
+        framesDropped_ = 0;
         bitField0_ = (bitField0_ & ~0x00040000);
-        l2Pass_ = 0;
+        l1Pass_ = 0;
         bitField0_ = (bitField0_ & ~0x00080000);
-        l2Skip_ = 0;
+        l1Skip_ = 0;
         bitField0_ = (bitField0_ & ~0x00100000);
-        xbn_ = 0;
+        l2Pass_ = 0;
         bitField0_ = (bitField0_ & ~0x00200000);
-        aborted_ = false;
+        l2Skip_ = 0;
         bitField0_ = (bitField0_ & ~0x00400000);
+        xbn_ = 0;
+        bitField0_ = (bitField0_ & ~0x00800000);
+        aborted_ = false;
+        bitField0_ = (bitField0_ & ~0x01000000);
         return this;
       }
 
@@ -3955,78 +4033,86 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000020;
         }
-        result.gpsLat_ = gpsLat_;
+        result.startTimeNtp_ = startTimeNtp_;
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
           to_bitField0_ |= 0x00000040;
         }
-        result.gpsLon_ = gpsLon_;
+        result.endTimeNtp_ = endTimeNtp_;
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
           to_bitField0_ |= 0x00000080;
         }
-        result.gpsAltitude_ = gpsAltitude_;
+        result.gpsLat_ = gpsLat_;
         if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.gpsAccuracy_ = gpsAccuracy_;
+        result.gpsLon_ = gpsLon_;
         if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
           to_bitField0_ |= 0x00000200;
         }
-        result.gpsFixtime_ = gpsFixtime_;
+        result.gpsAltitude_ = gpsAltitude_;
         if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
           to_bitField0_ |= 0x00000400;
         }
+        result.gpsAccuracy_ = gpsAccuracy_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
+        }
+        result.gpsFixtime_ = gpsFixtime_;
+        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+          to_bitField0_ |= 0x00001000;
+        }
         result.daqState_ = daqState_;
         if (eventsBuilder_ == null) {
-          if (((bitField0_ & 0x00000800) == 0x00000800)) {
+          if (((bitField0_ & 0x00002000) == 0x00002000)) {
             events_ = java.util.Collections.unmodifiableList(events_);
-            bitField0_ = (bitField0_ & ~0x00000800);
+            bitField0_ = (bitField0_ & ~0x00002000);
           }
           result.events_ = events_;
         } else {
           result.events_ = eventsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
-          to_bitField0_ |= 0x00000800;
-        }
-        result.l1Thresh_ = l1Thresh_;
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
-          to_bitField0_ |= 0x00001000;
-        }
-        result.l2Thresh_ = l2Thresh_;
         if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
           to_bitField0_ |= 0x00002000;
         }
-        result.l1Processed_ = l1Processed_;
+        result.l1Thresh_ = l1Thresh_;
         if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
           to_bitField0_ |= 0x00004000;
         }
-        result.l2Processed_ = l2Processed_;
+        result.l2Thresh_ = l2Thresh_;
         if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
           to_bitField0_ |= 0x00008000;
         }
-        result.framesDropped_ = framesDropped_;
+        result.l1Processed_ = l1Processed_;
         if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
           to_bitField0_ |= 0x00010000;
         }
-        result.l1Pass_ = l1Pass_;
+        result.l2Processed_ = l2Processed_;
         if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
           to_bitField0_ |= 0x00020000;
         }
-        result.l1Skip_ = l1Skip_;
+        result.framesDropped_ = framesDropped_;
         if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
           to_bitField0_ |= 0x00040000;
         }
-        result.l2Pass_ = l2Pass_;
+        result.l1Pass_ = l1Pass_;
         if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
           to_bitField0_ |= 0x00080000;
         }
-        result.l2Skip_ = l2Skip_;
+        result.l1Skip_ = l1Skip_;
         if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
           to_bitField0_ |= 0x00100000;
         }
-        result.xbn_ = xbn_;
+        result.l2Pass_ = l2Pass_;
         if (((from_bitField0_ & 0x00400000) == 0x00400000)) {
           to_bitField0_ |= 0x00200000;
+        }
+        result.l2Skip_ = l2Skip_;
+        if (((from_bitField0_ & 0x00800000) == 0x00800000)) {
+          to_bitField0_ |= 0x00400000;
+        }
+        result.xbn_ = xbn_;
+        if (((from_bitField0_ & 0x01000000) == 0x01000000)) {
+          to_bitField0_ |= 0x00800000;
         }
         result.aborted_ = aborted_;
         result.bitField0_ = to_bitField0_;
@@ -4060,6 +4146,12 @@ public final class DataProtos {
         if (other.hasEndTimeNano()) {
           setEndTimeNano(other.getEndTimeNano());
         }
+        if (other.hasStartTimeNtp()) {
+          setStartTimeNtp(other.getStartTimeNtp());
+        }
+        if (other.hasEndTimeNtp()) {
+          setEndTimeNtp(other.getEndTimeNtp());
+        }
         if (other.hasGpsLat()) {
           setGpsLat(other.getGpsLat());
         }
@@ -4082,7 +4174,7 @@ public final class DataProtos {
           if (!other.events_.isEmpty()) {
             if (events_.isEmpty()) {
               events_ = other.events_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00002000);
             } else {
               ensureEventsIsMutable();
               events_.addAll(other.events_);
@@ -4095,7 +4187,7 @@ public final class DataProtos {
               eventsBuilder_.dispose();
               eventsBuilder_ = null;
               events_ = other.events_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00002000);
               eventsBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getEventsFieldBuilder() : null;
@@ -4356,12 +4448,76 @@ public final class DataProtos {
         return this;
       }
 
+      private long startTimeNtp_ ;
+      /**
+       * <code>optional uint64 start_time_ntp = 24;</code>
+       */
+      public boolean hasStartTimeNtp() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional uint64 start_time_ntp = 24;</code>
+       */
+      public long getStartTimeNtp() {
+        return startTimeNtp_;
+      }
+      /**
+       * <code>optional uint64 start_time_ntp = 24;</code>
+       */
+      public Builder setStartTimeNtp(long value) {
+        bitField0_ |= 0x00000020;
+        startTimeNtp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 start_time_ntp = 24;</code>
+       */
+      public Builder clearStartTimeNtp() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        startTimeNtp_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long endTimeNtp_ ;
+      /**
+       * <code>optional uint64 end_time_ntp = 25;</code>
+       */
+      public boolean hasEndTimeNtp() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional uint64 end_time_ntp = 25;</code>
+       */
+      public long getEndTimeNtp() {
+        return endTimeNtp_;
+      }
+      /**
+       * <code>optional uint64 end_time_ntp = 25;</code>
+       */
+      public Builder setEndTimeNtp(long value) {
+        bitField0_ |= 0x00000040;
+        endTimeNtp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 end_time_ntp = 25;</code>
+       */
+      public Builder clearEndTimeNtp() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        endTimeNtp_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private double gpsLat_ ;
       /**
        * <code>optional double gps_lat = 4;</code>
        */
       public boolean hasGpsLat() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <code>optional double gps_lat = 4;</code>
@@ -4373,7 +4529,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 4;</code>
        */
       public Builder setGpsLat(double value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000080;
         gpsLat_ = value;
         onChanged();
         return this;
@@ -4382,7 +4538,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 4;</code>
        */
       public Builder clearGpsLat() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000080);
         gpsLat_ = 0D;
         onChanged();
         return this;
@@ -4393,7 +4549,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 5;</code>
        */
       public boolean hasGpsLon() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional double gps_lon = 5;</code>
@@ -4405,7 +4561,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 5;</code>
        */
       public Builder setGpsLon(double value) {
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000100;
         gpsLon_ = value;
         onChanged();
         return this;
@@ -4414,7 +4570,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 5;</code>
        */
       public Builder clearGpsLon() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000100);
         gpsLon_ = 0D;
         onChanged();
         return this;
@@ -4425,7 +4581,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 19;</code>
        */
       public boolean hasGpsAltitude() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional double gps_altitude = 19;</code>
@@ -4437,7 +4593,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 19;</code>
        */
       public Builder setGpsAltitude(double value) {
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000200;
         gpsAltitude_ = value;
         onChanged();
         return this;
@@ -4446,7 +4602,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 19;</code>
        */
       public Builder clearGpsAltitude() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000200);
         gpsAltitude_ = 0D;
         onChanged();
         return this;
@@ -4457,7 +4613,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 20;</code>
        */
       public boolean hasGpsAccuracy() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional float gps_accuracy = 20;</code>
@@ -4469,7 +4625,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 20;</code>
        */
       public Builder setGpsAccuracy(float value) {
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000400;
         gpsAccuracy_ = value;
         onChanged();
         return this;
@@ -4478,7 +4634,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 20;</code>
        */
       public Builder clearGpsAccuracy() {
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000400);
         gpsAccuracy_ = 0F;
         onChanged();
         return this;
@@ -4489,7 +4645,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 21;</code>
        */
       public boolean hasGpsFixtime() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional uint64 gps_fixtime = 21;</code>
@@ -4501,7 +4657,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 21;</code>
        */
       public Builder setGpsFixtime(long value) {
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00000800;
         gpsFixtime_ = value;
         onChanged();
         return this;
@@ -4510,7 +4666,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 21;</code>
        */
       public Builder clearGpsFixtime() {
-        bitField0_ = (bitField0_ & ~0x00000200);
+        bitField0_ = (bitField0_ & ~0x00000800);
         gpsFixtime_ = 0L;
         onChanged();
         return this;
@@ -4521,7 +4677,7 @@ public final class DataProtos {
        * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
        */
       public boolean hasDaqState() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00001000) == 0x00001000);
       }
       /**
        * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
@@ -4536,7 +4692,7 @@ public final class DataProtos {
         if (value == null) {
           throw new NullPointerException();
         }
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00001000;
         daqState_ = value;
         onChanged();
         return this;
@@ -4545,7 +4701,7 @@ public final class DataProtos {
        * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
        */
       public Builder clearDaqState() {
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00001000);
         daqState_ = edu.uci.crayfis.DataProtos.ExposureBlock.State.INIT;
         onChanged();
         return this;
@@ -4554,9 +4710,9 @@ public final class DataProtos {
       private java.util.List<edu.uci.crayfis.DataProtos.Event> events_ =
         java.util.Collections.emptyList();
       private void ensureEventsIsMutable() {
-        if (!((bitField0_ & 0x00000800) == 0x00000800)) {
+        if (!((bitField0_ & 0x00002000) == 0x00002000)) {
           events_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.Event>(events_);
-          bitField0_ |= 0x00000800;
+          bitField0_ |= 0x00002000;
          }
       }
 
@@ -4706,7 +4862,7 @@ public final class DataProtos {
       public Builder clearEvents() {
         if (eventsBuilder_ == null) {
           events_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00002000);
           onChanged();
         } else {
           eventsBuilder_.clear();
@@ -4783,7 +4939,7 @@ public final class DataProtos {
           eventsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               edu.uci.crayfis.DataProtos.Event, edu.uci.crayfis.DataProtos.Event.Builder, edu.uci.crayfis.DataProtos.EventOrBuilder>(
                   events_,
-                  ((bitField0_ & 0x00000800) == 0x00000800),
+                  ((bitField0_ & 0x00002000) == 0x00002000),
                   getParentForChildren(),
                   isClean());
           events_ = null;
@@ -4796,7 +4952,7 @@ public final class DataProtos {
        * <code>optional int32 L1_thresh = 8;</code>
        */
       public boolean hasL1Thresh() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00004000) == 0x00004000);
       }
       /**
        * <code>optional int32 L1_thresh = 8;</code>
@@ -4808,7 +4964,7 @@ public final class DataProtos {
        * <code>optional int32 L1_thresh = 8;</code>
        */
       public Builder setL1Thresh(int value) {
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00004000;
         l1Thresh_ = value;
         onChanged();
         return this;
@@ -4817,7 +4973,7 @@ public final class DataProtos {
        * <code>optional int32 L1_thresh = 8;</code>
        */
       public Builder clearL1Thresh() {
-        bitField0_ = (bitField0_ & ~0x00001000);
+        bitField0_ = (bitField0_ & ~0x00004000);
         l1Thresh_ = 0;
         onChanged();
         return this;
@@ -4828,7 +4984,7 @@ public final class DataProtos {
        * <code>optional int32 L2_thresh = 9;</code>
        */
       public boolean hasL2Thresh() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00008000) == 0x00008000);
       }
       /**
        * <code>optional int32 L2_thresh = 9;</code>
@@ -4840,7 +4996,7 @@ public final class DataProtos {
        * <code>optional int32 L2_thresh = 9;</code>
        */
       public Builder setL2Thresh(int value) {
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00008000;
         l2Thresh_ = value;
         onChanged();
         return this;
@@ -4849,7 +5005,7 @@ public final class DataProtos {
        * <code>optional int32 L2_thresh = 9;</code>
        */
       public Builder clearL2Thresh() {
-        bitField0_ = (bitField0_ & ~0x00002000);
+        bitField0_ = (bitField0_ & ~0x00008000);
         l2Thresh_ = 0;
         onChanged();
         return this;
@@ -4860,7 +5016,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public boolean hasL1Processed() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00010000) == 0x00010000);
       }
       /**
        * <code>optional uint32 L1_processed = 10;</code>
@@ -4872,7 +5028,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public Builder setL1Processed(int value) {
-        bitField0_ |= 0x00004000;
+        bitField0_ |= 0x00010000;
         l1Processed_ = value;
         onChanged();
         return this;
@@ -4881,7 +5037,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public Builder clearL1Processed() {
-        bitField0_ = (bitField0_ & ~0x00004000);
+        bitField0_ = (bitField0_ & ~0x00010000);
         l1Processed_ = 0;
         onChanged();
         return this;
@@ -4892,7 +5048,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public boolean hasL2Processed() {
-        return ((bitField0_ & 0x00008000) == 0x00008000);
+        return ((bitField0_ & 0x00020000) == 0x00020000);
       }
       /**
        * <code>optional uint32 L2_processed = 11;</code>
@@ -4904,7 +5060,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public Builder setL2Processed(int value) {
-        bitField0_ |= 0x00008000;
+        bitField0_ |= 0x00020000;
         l2Processed_ = value;
         onChanged();
         return this;
@@ -4913,7 +5069,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public Builder clearL2Processed() {
-        bitField0_ = (bitField0_ & ~0x00008000);
+        bitField0_ = (bitField0_ & ~0x00020000);
         l2Processed_ = 0;
         onChanged();
         return this;
@@ -4924,7 +5080,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public boolean hasFramesDropped() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00040000) == 0x00040000);
       }
       /**
        * <code>optional uint32 frames_dropped = 12;</code>
@@ -4936,7 +5092,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder setFramesDropped(int value) {
-        bitField0_ |= 0x00010000;
+        bitField0_ |= 0x00040000;
         framesDropped_ = value;
         onChanged();
         return this;
@@ -4945,7 +5101,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder clearFramesDropped() {
-        bitField0_ = (bitField0_ & ~0x00010000);
+        bitField0_ = (bitField0_ & ~0x00040000);
         framesDropped_ = 0;
         onChanged();
         return this;
@@ -4956,7 +5112,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public boolean hasL1Pass() {
-        return ((bitField0_ & 0x00020000) == 0x00020000);
+        return ((bitField0_ & 0x00080000) == 0x00080000);
       }
       /**
        * <code>optional uint32 L1_pass = 13;</code>
@@ -4968,7 +5124,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public Builder setL1Pass(int value) {
-        bitField0_ |= 0x00020000;
+        bitField0_ |= 0x00080000;
         l1Pass_ = value;
         onChanged();
         return this;
@@ -4977,7 +5133,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public Builder clearL1Pass() {
-        bitField0_ = (bitField0_ & ~0x00020000);
+        bitField0_ = (bitField0_ & ~0x00080000);
         l1Pass_ = 0;
         onChanged();
         return this;
@@ -4988,7 +5144,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public boolean hasL1Skip() {
-        return ((bitField0_ & 0x00040000) == 0x00040000);
+        return ((bitField0_ & 0x00100000) == 0x00100000);
       }
       /**
        * <code>optional uint32 L1_skip = 14;</code>
@@ -5000,7 +5156,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public Builder setL1Skip(int value) {
-        bitField0_ |= 0x00040000;
+        bitField0_ |= 0x00100000;
         l1Skip_ = value;
         onChanged();
         return this;
@@ -5009,7 +5165,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public Builder clearL1Skip() {
-        bitField0_ = (bitField0_ & ~0x00040000);
+        bitField0_ = (bitField0_ & ~0x00100000);
         l1Skip_ = 0;
         onChanged();
         return this;
@@ -5020,7 +5176,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public boolean hasL2Pass() {
-        return ((bitField0_ & 0x00080000) == 0x00080000);
+        return ((bitField0_ & 0x00200000) == 0x00200000);
       }
       /**
        * <code>optional uint32 L2_pass = 15;</code>
@@ -5032,7 +5188,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public Builder setL2Pass(int value) {
-        bitField0_ |= 0x00080000;
+        bitField0_ |= 0x00200000;
         l2Pass_ = value;
         onChanged();
         return this;
@@ -5041,7 +5197,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public Builder clearL2Pass() {
-        bitField0_ = (bitField0_ & ~0x00080000);
+        bitField0_ = (bitField0_ & ~0x00200000);
         l2Pass_ = 0;
         onChanged();
         return this;
@@ -5052,7 +5208,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public boolean hasL2Skip() {
-        return ((bitField0_ & 0x00100000) == 0x00100000);
+        return ((bitField0_ & 0x00400000) == 0x00400000);
       }
       /**
        * <code>optional uint32 L2_skip = 16;</code>
@@ -5064,7 +5220,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public Builder setL2Skip(int value) {
-        bitField0_ |= 0x00100000;
+        bitField0_ |= 0x00400000;
         l2Skip_ = value;
         onChanged();
         return this;
@@ -5073,7 +5229,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public Builder clearL2Skip() {
-        bitField0_ = (bitField0_ & ~0x00100000);
+        bitField0_ = (bitField0_ & ~0x00400000);
         l2Skip_ = 0;
         onChanged();
         return this;
@@ -5084,7 +5240,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public boolean hasXbn() {
-        return ((bitField0_ & 0x00200000) == 0x00200000);
+        return ((bitField0_ & 0x00800000) == 0x00800000);
       }
       /**
        * <code>optional uint32 xbn = 17;</code>
@@ -5096,7 +5252,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder setXbn(int value) {
-        bitField0_ |= 0x00200000;
+        bitField0_ |= 0x00800000;
         xbn_ = value;
         onChanged();
         return this;
@@ -5105,7 +5261,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder clearXbn() {
-        bitField0_ = (bitField0_ & ~0x00200000);
+        bitField0_ = (bitField0_ & ~0x00800000);
         xbn_ = 0;
         onChanged();
         return this;
@@ -5116,7 +5272,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public boolean hasAborted() {
-        return ((bitField0_ & 0x00400000) == 0x00400000);
+        return ((bitField0_ & 0x01000000) == 0x01000000);
       }
       /**
        * <code>optional bool aborted = 18;</code>
@@ -5128,7 +5284,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder setAborted(boolean value) {
-        bitField0_ |= 0x00400000;
+        bitField0_ |= 0x01000000;
         aborted_ = value;
         onChanged();
         return this;
@@ -5137,7 +5293,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder clearAborted() {
-        bitField0_ = (bitField0_ & ~0x00400000);
+        bitField0_ = (bitField0_ & ~0x01000000);
         aborted_ = false;
         onChanged();
         return this;
@@ -5175,6 +5331,15 @@ public final class DataProtos {
      * <code>optional uint64 timestamp_nano = 14;</code>
      */
     long getTimestampNano();
+
+    /**
+     * <code>optional uint64 timestamp_ntp = 15;</code>
+     */
+    boolean hasTimestampNtp();
+    /**
+     * <code>optional uint64 timestamp_ntp = 15;</code>
+     */
+    long getTimestampNtp();
 
     /**
      * <code>optional double gps_lat = 2;</code>
@@ -5357,71 +5522,76 @@ public final class DataProtos {
               break;
             }
             case 17: {
-              bitField0_ |= 0x00000004;
+              bitField0_ |= 0x00000008;
               gpsLat_ = input.readDouble();
               break;
             }
             case 25: {
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000010;
               gpsLon_ = input.readDouble();
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
                 pixels_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.Pixel>();
-                mutable_bitField0_ |= 0x00000080;
+                mutable_bitField0_ |= 0x00000100;
               }
               pixels_.add(input.readMessage(edu.uci.crayfis.DataProtos.Pixel.PARSER, extensionRegistry));
               break;
             }
             case 41: {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000100;
               avg_ = input.readDouble();
               break;
             }
             case 49: {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000200;
               std_ = input.readDouble();
               break;
             }
             case 56: {
-              bitField0_ |= 0x00000200;
+              bitField0_ |= 0x00000400;
               xbn_ = input.readUInt32();
               break;
             }
             case 69: {
-              bitField0_ |= 0x00000400;
+              bitField0_ |= 0x00000800;
               orientX_ = input.readFloat();
               break;
             }
             case 77: {
-              bitField0_ |= 0x00000800;
+              bitField0_ |= 0x00001000;
               orientY_ = input.readFloat();
               break;
             }
             case 85: {
-              bitField0_ |= 0x00001000;
+              bitField0_ |= 0x00002000;
               orientZ_ = input.readFloat();
               break;
             }
             case 89: {
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               gpsAltitude_ = input.readDouble();
               break;
             }
             case 101: {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               gpsAccuracy_ = input.readFloat();
               break;
             }
             case 104: {
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000080;
               gpsFixtime_ = input.readUInt64();
               break;
             }
             case 112: {
               bitField0_ |= 0x00000002;
               timestampNano_ = input.readUInt64();
+              break;
+            }
+            case 120: {
+              bitField0_ |= 0x00000004;
+              timestampNtp_ = input.readUInt64();
               break;
             }
           }
@@ -5432,7 +5602,7 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
           pixels_ = java.util.Collections.unmodifiableList(pixels_);
         }
         this.unknownFields = unknownFields.build();
@@ -5497,13 +5667,28 @@ public final class DataProtos {
       return timestampNano_;
     }
 
+    public static final int TIMESTAMP_NTP_FIELD_NUMBER = 15;
+    private long timestampNtp_;
+    /**
+     * <code>optional uint64 timestamp_ntp = 15;</code>
+     */
+    public boolean hasTimestampNtp() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint64 timestamp_ntp = 15;</code>
+     */
+    public long getTimestampNtp() {
+      return timestampNtp_;
+    }
+
     public static final int GPS_LAT_FIELD_NUMBER = 2;
     private double gpsLat_;
     /**
      * <code>optional double gps_lat = 2;</code>
      */
     public boolean hasGpsLat() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional double gps_lat = 2;</code>
@@ -5518,7 +5703,7 @@ public final class DataProtos {
      * <code>optional double gps_lon = 3;</code>
      */
     public boolean hasGpsLon() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional double gps_lon = 3;</code>
@@ -5533,7 +5718,7 @@ public final class DataProtos {
      * <code>optional double gps_altitude = 11;</code>
      */
     public boolean hasGpsAltitude() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional double gps_altitude = 11;</code>
@@ -5548,7 +5733,7 @@ public final class DataProtos {
      * <code>optional float gps_accuracy = 12;</code>
      */
     public boolean hasGpsAccuracy() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional float gps_accuracy = 12;</code>
@@ -5563,7 +5748,7 @@ public final class DataProtos {
      * <code>optional uint64 gps_fixtime = 13;</code>
      */
     public boolean hasGpsFixtime() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional uint64 gps_fixtime = 13;</code>
@@ -5613,7 +5798,7 @@ public final class DataProtos {
      * <code>optional double avg = 5;</code>
      */
     public boolean hasAvg() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional double avg = 5;</code>
@@ -5628,7 +5813,7 @@ public final class DataProtos {
      * <code>optional double std = 6;</code>
      */
     public boolean hasStd() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional double std = 6;</code>
@@ -5643,7 +5828,7 @@ public final class DataProtos {
      * <code>optional uint32 xbn = 7;</code>
      */
     public boolean hasXbn() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
      * <code>optional uint32 xbn = 7;</code>
@@ -5658,7 +5843,7 @@ public final class DataProtos {
      * <code>optional float orient_x = 8;</code>
      */
     public boolean hasOrientX() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000800) == 0x00000800);
     }
     /**
      * <code>optional float orient_x = 8;</code>
@@ -5673,7 +5858,7 @@ public final class DataProtos {
      * <code>optional float orient_y = 9;</code>
      */
     public boolean hasOrientY() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00001000) == 0x00001000);
     }
     /**
      * <code>optional float orient_y = 9;</code>
@@ -5688,7 +5873,7 @@ public final class DataProtos {
      * <code>optional float orient_z = 10;</code>
      */
     public boolean hasOrientZ() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00002000) == 0x00002000);
     }
     /**
      * <code>optional float orient_z = 10;</code>
@@ -5700,6 +5885,7 @@ public final class DataProtos {
     private void initFields() {
       timestamp_ = 0L;
       timestampNano_ = 0L;
+      timestampNtp_ = 0L;
       gpsLat_ = 0D;
       gpsLon_ = 0D;
       gpsAltitude_ = 0D;
@@ -5729,44 +5915,47 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeUInt64(1, timestamp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeDouble(2, gpsLat_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeDouble(3, gpsLon_);
       }
       for (int i = 0; i < pixels_.size(); i++) {
         output.writeMessage(4, pixels_.get(i));
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeDouble(5, avg_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeDouble(6, std_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeUInt32(7, xbn_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeFloat(8, orientX_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         output.writeFloat(9, orientY_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeFloat(10, orientZ_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeDouble(11, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeFloat(12, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeUInt64(13, gpsFixtime_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeUInt64(14, timestampNano_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(15, timestampNtp_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -5781,11 +5970,11 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(1, timestamp_);
       }
-      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(2, gpsLat_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(3, gpsLon_);
       }
@@ -5793,45 +5982,49 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, pixels_.get(i));
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(5, avg_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(6, std_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(7, xbn_);
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(8, orientX_);
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(9, orientY_);
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(10, orientZ_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(11, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(12, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(13, gpsFixtime_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(14, timestampNano_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(15, timestampNtp_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -5955,34 +6148,36 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000001);
         timestampNano_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
-        gpsLat_ = 0D;
+        timestampNtp_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
-        gpsLon_ = 0D;
+        gpsLat_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000008);
-        gpsAltitude_ = 0D;
+        gpsLon_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000010);
-        gpsAccuracy_ = 0F;
+        gpsAltitude_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000020);
-        gpsFixtime_ = 0L;
+        gpsAccuracy_ = 0F;
         bitField0_ = (bitField0_ & ~0x00000040);
+        gpsFixtime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000080);
         if (pixelsBuilder_ == null) {
           pixels_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000080);
+          bitField0_ = (bitField0_ & ~0x00000100);
         } else {
           pixelsBuilder_.clear();
         }
         avg_ = 0D;
-        bitField0_ = (bitField0_ & ~0x00000100);
-        std_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000200);
-        xbn_ = 0;
+        std_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000400);
-        orientX_ = 0F;
+        xbn_ = 0;
         bitField0_ = (bitField0_ & ~0x00000800);
-        orientY_ = 0F;
+        orientX_ = 0F;
         bitField0_ = (bitField0_ & ~0x00001000);
-        orientZ_ = 0F;
+        orientY_ = 0F;
         bitField0_ = (bitField0_ & ~0x00002000);
+        orientZ_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00004000);
         return this;
       }
 
@@ -6022,54 +6217,58 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.gpsLat_ = gpsLat_;
+        result.timestampNtp_ = timestampNtp_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.gpsLon_ = gpsLon_;
+        result.gpsLat_ = gpsLat_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.gpsAltitude_ = gpsAltitude_;
+        result.gpsLon_ = gpsLon_;
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000020;
         }
-        result.gpsAccuracy_ = gpsAccuracy_;
+        result.gpsAltitude_ = gpsAltitude_;
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
           to_bitField0_ |= 0x00000040;
         }
+        result.gpsAccuracy_ = gpsAccuracy_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000080;
+        }
         result.gpsFixtime_ = gpsFixtime_;
         if (pixelsBuilder_ == null) {
-          if (((bitField0_ & 0x00000080) == 0x00000080)) {
+          if (((bitField0_ & 0x00000100) == 0x00000100)) {
             pixels_ = java.util.Collections.unmodifiableList(pixels_);
-            bitField0_ = (bitField0_ & ~0x00000080);
+            bitField0_ = (bitField0_ & ~0x00000100);
           }
           result.pixels_ = pixels_;
         } else {
           result.pixels_ = pixelsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
-          to_bitField0_ |= 0x00000080;
-        }
-        result.avg_ = avg_;
         if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.std_ = std_;
+        result.avg_ = avg_;
         if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
           to_bitField0_ |= 0x00000200;
         }
-        result.xbn_ = xbn_;
+        result.std_ = std_;
         if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
           to_bitField0_ |= 0x00000400;
         }
-        result.orientX_ = orientX_;
+        result.xbn_ = xbn_;
         if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
           to_bitField0_ |= 0x00000800;
         }
-        result.orientY_ = orientY_;
+        result.orientX_ = orientX_;
         if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
           to_bitField0_ |= 0x00001000;
+        }
+        result.orientY_ = orientY_;
+        if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+          to_bitField0_ |= 0x00002000;
         }
         result.orientZ_ = orientZ_;
         result.bitField0_ = to_bitField0_;
@@ -6094,6 +6293,9 @@ public final class DataProtos {
         if (other.hasTimestampNano()) {
           setTimestampNano(other.getTimestampNano());
         }
+        if (other.hasTimestampNtp()) {
+          setTimestampNtp(other.getTimestampNtp());
+        }
         if (other.hasGpsLat()) {
           setGpsLat(other.getGpsLat());
         }
@@ -6113,7 +6315,7 @@ public final class DataProtos {
           if (!other.pixels_.isEmpty()) {
             if (pixels_.isEmpty()) {
               pixels_ = other.pixels_;
-              bitField0_ = (bitField0_ & ~0x00000080);
+              bitField0_ = (bitField0_ & ~0x00000100);
             } else {
               ensurePixelsIsMutable();
               pixels_.addAll(other.pixels_);
@@ -6126,7 +6328,7 @@ public final class DataProtos {
               pixelsBuilder_.dispose();
               pixelsBuilder_ = null;
               pixels_ = other.pixels_;
-              bitField0_ = (bitField0_ & ~0x00000080);
+              bitField0_ = (bitField0_ & ~0x00000100);
               pixelsBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getPixelsFieldBuilder() : null;
@@ -6244,12 +6446,44 @@ public final class DataProtos {
         return this;
       }
 
+      private long timestampNtp_ ;
+      /**
+       * <code>optional uint64 timestamp_ntp = 15;</code>
+       */
+      public boolean hasTimestampNtp() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint64 timestamp_ntp = 15;</code>
+       */
+      public long getTimestampNtp() {
+        return timestampNtp_;
+      }
+      /**
+       * <code>optional uint64 timestamp_ntp = 15;</code>
+       */
+      public Builder setTimestampNtp(long value) {
+        bitField0_ |= 0x00000004;
+        timestampNtp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 timestamp_ntp = 15;</code>
+       */
+      public Builder clearTimestampNtp() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestampNtp_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private double gpsLat_ ;
       /**
        * <code>optional double gps_lat = 2;</code>
        */
       public boolean hasGpsLat() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional double gps_lat = 2;</code>
@@ -6261,7 +6495,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 2;</code>
        */
       public Builder setGpsLat(double value) {
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000008;
         gpsLat_ = value;
         onChanged();
         return this;
@@ -6270,7 +6504,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 2;</code>
        */
       public Builder clearGpsLat() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000008);
         gpsLat_ = 0D;
         onChanged();
         return this;
@@ -6281,7 +6515,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public boolean hasGpsLon() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
        * <code>optional double gps_lon = 3;</code>
@@ -6293,7 +6527,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public Builder setGpsLon(double value) {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         gpsLon_ = value;
         onChanged();
         return this;
@@ -6302,7 +6536,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public Builder clearGpsLon() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         gpsLon_ = 0D;
         onChanged();
         return this;
@@ -6313,7 +6547,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public boolean hasGpsAltitude() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional double gps_altitude = 11;</code>
@@ -6325,7 +6559,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public Builder setGpsAltitude(double value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         gpsAltitude_ = value;
         onChanged();
         return this;
@@ -6334,7 +6568,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public Builder clearGpsAltitude() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         gpsAltitude_ = 0D;
         onChanged();
         return this;
@@ -6345,7 +6579,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public boolean hasGpsAccuracy() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional float gps_accuracy = 12;</code>
@@ -6357,7 +6591,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public Builder setGpsAccuracy(float value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         gpsAccuracy_ = value;
         onChanged();
         return this;
@@ -6366,7 +6600,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public Builder clearGpsAccuracy() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         gpsAccuracy_ = 0F;
         onChanged();
         return this;
@@ -6377,7 +6611,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public boolean hasGpsFixtime() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <code>optional uint64 gps_fixtime = 13;</code>
@@ -6389,7 +6623,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public Builder setGpsFixtime(long value) {
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         gpsFixtime_ = value;
         onChanged();
         return this;
@@ -6398,7 +6632,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public Builder clearGpsFixtime() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         gpsFixtime_ = 0L;
         onChanged();
         return this;
@@ -6407,9 +6641,9 @@ public final class DataProtos {
       private java.util.List<edu.uci.crayfis.DataProtos.Pixel> pixels_ =
         java.util.Collections.emptyList();
       private void ensurePixelsIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
           pixels_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.Pixel>(pixels_);
-          bitField0_ |= 0x00000080;
+          bitField0_ |= 0x00000100;
          }
       }
 
@@ -6559,7 +6793,7 @@ public final class DataProtos {
       public Builder clearPixels() {
         if (pixelsBuilder_ == null) {
           pixels_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000080);
+          bitField0_ = (bitField0_ & ~0x00000100);
           onChanged();
         } else {
           pixelsBuilder_.clear();
@@ -6636,7 +6870,7 @@ public final class DataProtos {
           pixelsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               edu.uci.crayfis.DataProtos.Pixel, edu.uci.crayfis.DataProtos.Pixel.Builder, edu.uci.crayfis.DataProtos.PixelOrBuilder>(
                   pixels_,
-                  ((bitField0_ & 0x00000080) == 0x00000080),
+                  ((bitField0_ & 0x00000100) == 0x00000100),
                   getParentForChildren(),
                   isClean());
           pixels_ = null;
@@ -6649,7 +6883,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public boolean hasAvg() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional double avg = 5;</code>
@@ -6661,7 +6895,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public Builder setAvg(double value) {
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         avg_ = value;
         onChanged();
         return this;
@@ -6670,7 +6904,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public Builder clearAvg() {
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000200);
         avg_ = 0D;
         onChanged();
         return this;
@@ -6681,7 +6915,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public boolean hasStd() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional double std = 6;</code>
@@ -6693,7 +6927,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public Builder setStd(double value) {
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00000400;
         std_ = value;
         onChanged();
         return this;
@@ -6702,7 +6936,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public Builder clearStd() {
-        bitField0_ = (bitField0_ & ~0x00000200);
+        bitField0_ = (bitField0_ & ~0x00000400);
         std_ = 0D;
         onChanged();
         return this;
@@ -6713,7 +6947,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public boolean hasXbn() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional uint32 xbn = 7;</code>
@@ -6725,7 +6959,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public Builder setXbn(int value) {
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000800;
         xbn_ = value;
         onChanged();
         return this;
@@ -6734,7 +6968,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public Builder clearXbn() {
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000800);
         xbn_ = 0;
         onChanged();
         return this;
@@ -6745,7 +6979,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public boolean hasOrientX() {
-        return ((bitField0_ & 0x00000800) == 0x00000800);
+        return ((bitField0_ & 0x00001000) == 0x00001000);
       }
       /**
        * <code>optional float orient_x = 8;</code>
@@ -6757,7 +6991,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public Builder setOrientX(float value) {
-        bitField0_ |= 0x00000800;
+        bitField0_ |= 0x00001000;
         orientX_ = value;
         onChanged();
         return this;
@@ -6766,7 +7000,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public Builder clearOrientX() {
-        bitField0_ = (bitField0_ & ~0x00000800);
+        bitField0_ = (bitField0_ & ~0x00001000);
         orientX_ = 0F;
         onChanged();
         return this;
@@ -6777,7 +7011,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public boolean hasOrientY() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00002000) == 0x00002000);
       }
       /**
        * <code>optional float orient_y = 9;</code>
@@ -6789,7 +7023,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public Builder setOrientY(float value) {
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00002000;
         orientY_ = value;
         onChanged();
         return this;
@@ -6798,7 +7032,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public Builder clearOrientY() {
-        bitField0_ = (bitField0_ & ~0x00001000);
+        bitField0_ = (bitField0_ & ~0x00002000);
         orientY_ = 0F;
         onChanged();
         return this;
@@ -6809,7 +7043,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public boolean hasOrientZ() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00004000) == 0x00004000);
       }
       /**
        * <code>optional float orient_z = 10;</code>
@@ -6821,7 +7055,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public Builder setOrientZ(float value) {
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00004000;
         orientZ_ = value;
         onChanged();
         return this;
@@ -6830,7 +7064,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public Builder clearOrientZ() {
-        bitField0_ = (bitField0_ & ~0x00002000);
+        bitField0_ = (bitField0_ & ~0x00004000);
         orientZ_ = 0F;
         onChanged();
         return this;
@@ -8807,6 +9041,1190 @@ public final class DataProtos {
     // @@protoc_insertion_point(class_scope:crayfis.CalibrationResult)
   }
 
+  public interface CrayonMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:crayfis.CrayonMessage)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional bytes payload = 1;</code>
+     */
+    boolean hasPayload();
+    /**
+     * <code>optional bytes payload = 1;</code>
+     */
+    com.google.protobuf.ByteString getPayload();
+
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    boolean hasRunId();
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    java.lang.String getRunId();
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getRunIdBytes();
+
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    boolean hasDeviceId();
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
+
+    /**
+     * <code>optional uint32 user_id = 4;</code>
+     */
+    boolean hasUserId();
+    /**
+     * <code>optional uint32 user_id = 4;</code>
+     */
+    int getUserId();
+
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    boolean hasAppCode();
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    java.lang.String getAppCode();
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getAppCodeBytes();
+
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    boolean hasRemoteAddr();
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    java.lang.String getRemoteAddr();
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    com.google.protobuf.ByteString
+        getRemoteAddrBytes();
+
+    /**
+     * <code>optional uint32 submit_time = 7;</code>
+     */
+    boolean hasSubmitTime();
+    /**
+     * <code>optional uint32 submit_time = 7;</code>
+     */
+    int getSubmitTime();
+  }
+  /**
+   * Protobuf type {@code crayfis.CrayonMessage}
+   */
+  public static final class CrayonMessage extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:crayfis.CrayonMessage)
+      CrayonMessageOrBuilder {
+    // Use CrayonMessage.newBuilder() to construct.
+    private CrayonMessage(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private CrayonMessage(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final CrayonMessage defaultInstance;
+    public static CrayonMessage getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public CrayonMessage getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CrayonMessage(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              payload_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              runId_ = bs;
+              break;
+            }
+            case 26: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000004;
+              deviceId_ = bs;
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              userId_ = input.readUInt32();
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              appCode_ = bs;
+              break;
+            }
+            case 50: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000020;
+              remoteAddr_ = bs;
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000040;
+              submitTime_ = input.readUInt32();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_CrayonMessage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.uci.crayfis.DataProtos.CrayonMessage.class, edu.uci.crayfis.DataProtos.CrayonMessage.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<CrayonMessage> PARSER =
+        new com.google.protobuf.AbstractParser<CrayonMessage>() {
+      public CrayonMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new CrayonMessage(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CrayonMessage> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int PAYLOAD_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString payload_;
+    /**
+     * <code>optional bytes payload = 1;</code>
+     */
+    public boolean hasPayload() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional bytes payload = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPayload() {
+      return payload_;
+    }
+
+    public static final int RUN_ID_FIELD_NUMBER = 2;
+    private java.lang.Object runId_;
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    public boolean hasRunId() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    public java.lang.String getRunId() {
+      java.lang.Object ref = runId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          runId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string run_id = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRunIdBytes() {
+      java.lang.Object ref = runId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        runId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int DEVICE_ID_FIELD_NUMBER = 3;
+    private java.lang.Object deviceId_;
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    public boolean hasDeviceId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int USER_ID_FIELD_NUMBER = 4;
+    private int userId_;
+    /**
+     * <code>optional uint32 user_id = 4;</code>
+     */
+    public boolean hasUserId() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint32 user_id = 4;</code>
+     */
+    public int getUserId() {
+      return userId_;
+    }
+
+    public static final int APP_CODE_FIELD_NUMBER = 5;
+    private java.lang.Object appCode_;
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    public boolean hasAppCode() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    public java.lang.String getAppCode() {
+      java.lang.Object ref = appCode_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          appCode_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string app_code = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getAppCodeBytes() {
+      java.lang.Object ref = appCode_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        appCode_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int REMOTE_ADDR_FIELD_NUMBER = 6;
+    private java.lang.Object remoteAddr_;
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    public boolean hasRemoteAddr() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    public java.lang.String getRemoteAddr() {
+      java.lang.Object ref = remoteAddr_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          remoteAddr_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string remote_addr = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRemoteAddrBytes() {
+      java.lang.Object ref = remoteAddr_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        remoteAddr_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int SUBMIT_TIME_FIELD_NUMBER = 7;
+    private int submitTime_;
+    /**
+     * <code>optional uint32 submit_time = 7;</code>
+     */
+    public boolean hasSubmitTime() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional uint32 submit_time = 7;</code>
+     */
+    public int getSubmitTime() {
+      return submitTime_;
+    }
+
+    private void initFields() {
+      payload_ = com.google.protobuf.ByteString.EMPTY;
+      runId_ = "";
+      deviceId_ = "";
+      userId_ = 0;
+      appCode_ = "";
+      remoteAddr_ = "";
+      submitTime_ = 0;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, payload_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, getRunIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt32(4, userId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, getAppCodeBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeBytes(6, getRemoteAddrBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt32(7, submitTime_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, payload_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, getRunIdBytes());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, getDeviceIdBytes());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(4, userId_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, getAppCodeBytes());
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(6, getRemoteAddrBytes());
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, submitTime_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.CrayonMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.uci.crayfis.DataProtos.CrayonMessage prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code crayfis.CrayonMessage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:crayfis.CrayonMessage)
+        edu.uci.crayfis.DataProtos.CrayonMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CrayonMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.uci.crayfis.DataProtos.CrayonMessage.class, edu.uci.crayfis.DataProtos.CrayonMessage.Builder.class);
+      }
+
+      // Construct using edu.uci.crayfis.DataProtos.CrayonMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        payload_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        runId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        deviceId_ = "";
+        bitField0_ = (bitField0_ & ~0x00000004);
+        userId_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        appCode_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
+        remoteAddr_ = "";
+        bitField0_ = (bitField0_ & ~0x00000020);
+        submitTime_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000040);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
+      }
+
+      public edu.uci.crayfis.DataProtos.CrayonMessage getDefaultInstanceForType() {
+        return edu.uci.crayfis.DataProtos.CrayonMessage.getDefaultInstance();
+      }
+
+      public edu.uci.crayfis.DataProtos.CrayonMessage build() {
+        edu.uci.crayfis.DataProtos.CrayonMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.uci.crayfis.DataProtos.CrayonMessage buildPartial() {
+        edu.uci.crayfis.DataProtos.CrayonMessage result = new edu.uci.crayfis.DataProtos.CrayonMessage(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.payload_ = payload_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.runId_ = runId_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.deviceId_ = deviceId_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.userId_ = userId_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.appCode_ = appCode_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.remoteAddr_ = remoteAddr_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.submitTime_ = submitTime_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.uci.crayfis.DataProtos.CrayonMessage) {
+          return mergeFrom((edu.uci.crayfis.DataProtos.CrayonMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.uci.crayfis.DataProtos.CrayonMessage other) {
+        if (other == edu.uci.crayfis.DataProtos.CrayonMessage.getDefaultInstance()) return this;
+        if (other.hasPayload()) {
+          setPayload(other.getPayload());
+        }
+        if (other.hasRunId()) {
+          bitField0_ |= 0x00000002;
+          runId_ = other.runId_;
+          onChanged();
+        }
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000004;
+          deviceId_ = other.deviceId_;
+          onChanged();
+        }
+        if (other.hasUserId()) {
+          setUserId(other.getUserId());
+        }
+        if (other.hasAppCode()) {
+          bitField0_ |= 0x00000010;
+          appCode_ = other.appCode_;
+          onChanged();
+        }
+        if (other.hasRemoteAddr()) {
+          bitField0_ |= 0x00000020;
+          remoteAddr_ = other.remoteAddr_;
+          onChanged();
+        }
+        if (other.hasSubmitTime()) {
+          setSubmitTime(other.getSubmitTime());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.uci.crayfis.DataProtos.CrayonMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.uci.crayfis.DataProtos.CrayonMessage) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString payload_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes payload = 1;</code>
+       */
+      public boolean hasPayload() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bytes payload = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPayload() {
+        return payload_;
+      }
+      /**
+       * <code>optional bytes payload = 1;</code>
+       */
+      public Builder setPayload(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        payload_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes payload = 1;</code>
+       */
+      public Builder clearPayload() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        payload_ = getDefaultInstance().getPayload();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object runId_ = "";
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public boolean hasRunId() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public java.lang.String getRunId() {
+        java.lang.Object ref = runId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            runId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRunIdBytes() {
+        java.lang.Object ref = runId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          runId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public Builder setRunId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        runId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public Builder clearRunId() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        runId_ = getDefaultInstance().getRunId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string run_id = 2;</code>
+       */
+      public Builder setRunIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        runId_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object deviceId_ = "";
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public boolean hasDeviceId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            deviceId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public Builder clearDeviceId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        deviceId_ = getDefaultInstance().getDeviceId();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string device_id = 3;</code>
+       */
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        deviceId_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int userId_ ;
+      /**
+       * <code>optional uint32 user_id = 4;</code>
+       */
+      public boolean hasUserId() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional uint32 user_id = 4;</code>
+       */
+      public int getUserId() {
+        return userId_;
+      }
+      /**
+       * <code>optional uint32 user_id = 4;</code>
+       */
+      public Builder setUserId(int value) {
+        bitField0_ |= 0x00000008;
+        userId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 user_id = 4;</code>
+       */
+      public Builder clearUserId() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        userId_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object appCode_ = "";
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public boolean hasAppCode() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public java.lang.String getAppCode() {
+        java.lang.Object ref = appCode_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            appCode_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getAppCodeBytes() {
+        java.lang.Object ref = appCode_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          appCode_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public Builder setAppCode(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        appCode_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public Builder clearAppCode() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        appCode_ = getDefaultInstance().getAppCode();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string app_code = 5;</code>
+       */
+      public Builder setAppCodeBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        appCode_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object remoteAddr_ = "";
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public boolean hasRemoteAddr() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public java.lang.String getRemoteAddr() {
+        java.lang.Object ref = remoteAddr_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            remoteAddr_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public com.google.protobuf.ByteString
+          getRemoteAddrBytes() {
+        java.lang.Object ref = remoteAddr_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          remoteAddr_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public Builder setRemoteAddr(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        remoteAddr_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public Builder clearRemoteAddr() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        remoteAddr_ = getDefaultInstance().getRemoteAddr();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string remote_addr = 6;</code>
+       */
+      public Builder setRemoteAddrBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000020;
+        remoteAddr_ = value;
+        onChanged();
+        return this;
+      }
+
+      private int submitTime_ ;
+      /**
+       * <code>optional uint32 submit_time = 7;</code>
+       */
+      public boolean hasSubmitTime() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional uint32 submit_time = 7;</code>
+       */
+      public int getSubmitTime() {
+        return submitTime_;
+      }
+      /**
+       * <code>optional uint32 submit_time = 7;</code>
+       */
+      public Builder setSubmitTime(int value) {
+        bitField0_ |= 0x00000040;
+        submitTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 submit_time = 7;</code>
+       */
+      public Builder clearSubmitTime() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        submitTime_ = 0;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:crayfis.CrayonMessage)
+    }
+
+    static {
+      defaultInstance = new CrayonMessage(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:crayfis.CrayonMessage)
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_crayfis_DataChunk_descriptor;
   private static
@@ -8837,6 +10255,11 @@ public final class DataProtos {
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_crayfis_CalibrationResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_crayfis_CrayonMessage_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_crayfis_CrayonMessage_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8854,35 +10277,40 @@ public final class DataProtos {
       "nfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nst" +
       "art_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 \001(\t\022\021\n" +
       "\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(\t\022\025\n\rc" +
-      "amera_params\030\007 \001(\t\"\243\004\n\rExposureBlock\022\016\n\006" +
+      "amera_params\030\007 \001(\t\"\321\004\n\rExposureBlock\022\016\n\006" +
       "run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_",
       "time\030\003 \001(\004\022\027\n\017start_time_nano\030\026 \001(\004\022\025\n\re" +
-      "nd_time_nano\030\027 \001(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007g" +
-      "ps_lon\030\005 \001(\001\022\024\n\014gps_altitude\030\023 \001(\001\022\024\n\014gp" +
-      "s_accuracy\030\024 \001(\002\022\023\n\013gps_fixtime\030\025 \001(\004\022/\n" +
-      "\tdaq_state\030\006 \001(\0162\034.crayfis.ExposureBlock" +
-      ".State\022\036\n\006events\030\007 \003(\0132\016.crayfis.Event\022\021" +
-      "\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\024\n\014" +
-      "L1_processed\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(\r" +
-      "\022\026\n\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pass\030\r \001(" +
-      "\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L",
-      "2_skip\030\020 \001(\r\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001" +
-      "(\010\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010" +
-      "\n\004DATA\020\002\"\222\002\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\026\n" +
-      "\016timestamp_nano\030\016 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017" +
-      "\n\007gps_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n" +
-      "\014gps_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004" +
-      "\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030" +
-      "\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orien" +
-      "t_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orient_z\030" +
-      "\n \001(\002\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003",
-      "val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001" +
-      "(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021CalibrationResult\022" +
-      "\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010e" +
-      "nd_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014his" +
-      "t_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025" +
-      "\n\rhist_numpixel\030\007 \003(\rB\035\n\017edu.uci.crayfis" +
-      "B\nDataProtos"
+      "nd_time_nano\030\027 \001(\004\022\026\n\016start_time_ntp\030\030 \001" +
+      "(\004\022\024\n\014end_time_ntp\030\031 \001(\004\022\017\n\007gps_lat\030\004 \001(" +
+      "\001\022\017\n\007gps_lon\030\005 \001(\001\022\024\n\014gps_altitude\030\023 \001(\001" +
+      "\022\024\n\014gps_accuracy\030\024 \001(\002\022\023\n\013gps_fixtime\030\025 " +
+      "\001(\004\022/\n\tdaq_state\030\006 \001(\0162\034.crayfis.Exposur" +
+      "eBlock.State\022\036\n\006events\030\007 \003(\0132\016.crayfis.E" +
+      "vent\022\021\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001" +
+      "(\005\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2_processed" +
+      "\030\013 \001(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pas",
+      "s\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(" +
+      "\r\022\017\n\007L2_skip\030\020 \001(\r\022\013\n\003xbn\030\021 \001(\r\022\017\n\007abort" +
+      "ed\030\022 \001(\010\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATI" +
+      "ON\020\001\022\010\n\004DATA\020\002\"\251\002\n\005Event\022\021\n\ttimestamp\030\001 " +
+      "\001(\004\022\026\n\016timestamp_nano\030\016 \001(\004\022\025\n\rtimestamp" +
+      "_ntp\030\017 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003" +
+      " \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014gps_accura" +
+      "cy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022\036\n\006pixels\030" +
+      "\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg\030\005 \001(\001\022\013\n\003st" +
+      "d\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020",
+      "\n\010orient_y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\"Z\n\005Pi" +
+      "xel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020" +
+      "\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5" +
+      "\030\006 \001(\002\"\241\001\n\021CalibrationResult\022\016\n\006run_id\030\001" +
+      " \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001" +
+      "(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005" +
+      " \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_nump" +
+      "ixel\030\007 \003(\r\"\220\001\n\rCrayonMessage\022\017\n\007payload\030" +
+      "\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t" +
+      "\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013r",
+      "emote_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n" +
+      "\017edu.uci.crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8913,13 +10341,13 @@ public final class DataProtos {
     internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_ExposureBlock_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "DaqState", "Events", "L1Thresh", "L2Thresh", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", "Xbn", "Aborted", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "DaqState", "Events", "L1Thresh", "L2Thresh", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", "Xbn", "Aborted", });
     internal_static_crayfis_Event_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_crayfis_Event_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_Event_descriptor,
-        new java.lang.String[] { "Timestamp", "TimestampNano", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "Pixels", "Avg", "Std", "Xbn", "OrientX", "OrientY", "OrientZ", });
+        new java.lang.String[] { "Timestamp", "TimestampNano", "TimestampNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "Pixels", "Avg", "Std", "Xbn", "OrientX", "OrientY", "OrientZ", });
     internal_static_crayfis_Pixel_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_crayfis_Pixel_fieldAccessorTable = new
@@ -8932,6 +10360,12 @@ public final class DataProtos {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_CalibrationResult_descriptor,
         new java.lang.String[] { "RunId", "StartTime", "EndTime", "HistPixel", "HistL2Pixel", "HistMaxpixel", "HistNumpixel", });
+    internal_static_crayfis_CrayonMessage_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_crayfis_CrayonMessage_descriptor,
+        new java.lang.String[] { "Payload", "RunId", "DeviceId", "UserId", "AppCode", "RemoteAddr", "SubmitTime", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

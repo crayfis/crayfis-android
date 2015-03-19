@@ -38,8 +38,20 @@ import java.net.InetAddress;
  * }
  * </pre>
  */
-public class SntpClient extends Thread
+public class SntpClient
 {
+
+    private static SntpClient mInstance = null;
+
+    public static SntpClient getInstance()
+    {
+        if (mInstance==null)
+        {
+            mInstance = new SntpClient();
+        }
+        return mInstance;
+    }
+
     private static final String TAG = "SntpClient";
 
     private static final int REFERENCE_TIME_OFFSET = 16;
@@ -133,40 +145,6 @@ public class SntpClient extends Thread
         return true;
     }
 
-    // true if a request has been made to stop the thread
-    volatile boolean stopRequested = false;
-    // true if the thread is running and can process more data
-    volatile boolean running = true;
-
-
-
-    /**
-     * Blocks until the thread has stopped
-     */
-    public void stopThread() {
-        stopRequested = true;
-        while (running) {
-            interrupt();
-            Thread.yield();
-        }
-    }
-
-    @Override
-    public void run()
-    {
-        while (!stopRequested) {
-            try {
-                // Grab a frame buffer from the queue, blocking if none
-                // is available.
-                requestTime( "pool.ntp.org",0);
-            }
-            catch (Exception ex) {
-                // Interrupted, possibly by app shutdown?
-            }
-        }
-        running = false;
-
-    }
 
     /**
      * Returns the estimate of the current time, relative to the time computed from the NTP transaction.

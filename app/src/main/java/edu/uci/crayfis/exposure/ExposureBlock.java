@@ -1,5 +1,6 @@
 package edu.uci.crayfis.exposure;
 
+import edu.uci.crayfis.SntpClient;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -23,6 +24,9 @@ public class ExposureBlock implements Parcelable {
 
     public long start_time_nano;
     public long end_time_nano;
+
+    public long start_time_ntp;
+    public long end_time_ntp;
 	
 	public Location start_loc;
 	
@@ -61,6 +65,8 @@ public class ExposureBlock implements Parcelable {
         end_time = parcel.readLong();
         start_time_nano = parcel.readLong();
         end_time_nano = parcel.readLong();
+        start_time_ntp = parcel.readLong();
+        end_time_ntp = parcel.readLong();
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
         frames_dropped = parcel.readLong();
         L1_thresh = parcel.readInt();
@@ -91,6 +97,8 @@ public class ExposureBlock implements Parcelable {
         dest.writeLong(end_time);
         dest.writeLong(start_time_nano);
         dest.writeLong(end_time_nano);
+        dest.writeLong(start_time_ntp);
+        dest.writeLong(end_time_ntp);
         dest.writeParcelable(start_loc, flags);
         dest.writeLong(frames_dropped);
         dest.writeInt(L1_thresh);
@@ -112,6 +120,7 @@ public class ExposureBlock implements Parcelable {
     public void reset() {
         start_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
 		start_time = System.currentTimeMillis();
+        start_time_ntp = SntpClient.getInstance().getNtpTime();
 		frames_dropped = 0;
 		L1_processed = L1_pass = L1_skip = 0;
 		L2_processed = L2_pass = L2_skip = 0;
@@ -122,6 +131,7 @@ public class ExposureBlock implements Parcelable {
 		frozen = true;
 		end_time = System.currentTimeMillis();
         end_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
+        end_time_ntp = SntpClient.getInstance().getNtpTime();
 	}
 	
 	public long age() {
@@ -196,6 +206,9 @@ public class ExposureBlock implements Parcelable {
 
         buf.setStartTimeNano(start_time_nano);
         buf.setEndTimeNano(end_time_nano);
+
+        buf.setStartTimeNtp(start_time_ntp);
+        buf.setEndTimeNtp(end_time_ntp);
 		
 		buf.setRunId(run_id.getLeastSignificantBits());
 		

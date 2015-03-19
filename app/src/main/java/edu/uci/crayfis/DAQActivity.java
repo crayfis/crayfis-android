@@ -197,7 +197,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	private L2Processor l2thread;
 
     // Thread for NTP updates
-    private SntpClient ntpThread;
+    private SntpUpdateThread ntpThread;
 
 	// class to find particles in frames
 	private ParticleReco mParticleReco;
@@ -988,6 +988,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
 
+        mSntpClient = SntpClient.getInstance();
+
 		// once all the hardware is set up and the output manager is running,
 		// we can generate and commit the runconfig
 		if (run_config == null) {
@@ -1114,7 +1116,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 l2thread = new L2Processor(this, previewSize);
                 l2thread.start();
 
-                ntpThread = new SntpClient();
+                ntpThread = new SntpUpdateThread();
                 ntpThread.start();
             }
 
@@ -1236,6 +1238,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private boolean fix_threshold=false;
 
+    private SntpClient mSntpClient = null;
 
 	/**
 	 * Called each time a new image arrives in the data stream.
@@ -1249,7 +1252,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         // FIXME: can we do better than this, perhaps at Camera API level?
         long acq_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
         long acq_time = System.currentTimeMillis();
-        long acq_time_ntp = ntpThread.getNtpTime();
+        long acq_time_ntp = mSntpClient.getNtpTime();
         long diff = acq_time - acq_time_ntp;
 
         //CFLog.d(" Frame times millis = "+acq_time+ " ntp = "+acq_time_ntp+" diff = "+diff);
@@ -1672,6 +1675,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             last_location_warning = System.currentTimeMillis();
                         }
                     }
+
+
 
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
                         showUpdateURL(CONFIG.getUpdateURL());
