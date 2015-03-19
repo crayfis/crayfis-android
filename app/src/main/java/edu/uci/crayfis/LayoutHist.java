@@ -17,7 +17,6 @@ import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.particle.ParticleReco;
 
 import com.jjoe64.graphview.BarGraphView;
-import com.jjoe64.graphview.LineGraphView;
 
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphViewDataInterface;
@@ -25,12 +24,9 @@ import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 import com.jjoe64.graphview.ValueDependentColor;
 
-import edu.uci.crayfis.widget.DataView;
-
 public class LayoutHist extends Fragment{
 
 
-    public static DataView mDataView;
 
 
     private class ValueDependentColorX implements ValueDependentColor
@@ -147,7 +143,6 @@ public class LayoutHist extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.hist, null);
 
-        mDataView = (DataView) root.findViewById(R.id.data_view);
 
 
         int novals[] = new int[256];

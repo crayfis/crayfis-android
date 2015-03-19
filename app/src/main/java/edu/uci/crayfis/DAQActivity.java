@@ -1608,8 +1608,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                                     .build();
 
 
-                            if (LayoutHist.mDataView != null) {
-                                LayoutHist.mDataView.setStatus(dstatus);
+                            if (LayoutData.mDataView != null) {
+                                LayoutData.mDataView.setStatus(dstatus);
                             }
                         }
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);

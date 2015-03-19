@@ -2,18 +2,9 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
 
-    <edu.uci.crayfis.widget.DataView
-        android:id="@+id/data_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:typeface="monospace"
-        android:gravity="center_horizontal"
-        android:textColor="@android:color/white"
-        tools:text=" Frames:0\n Candidates:0 "/>
+
 
     <LinearLayout
         android:orientation="vertical"
