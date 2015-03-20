@@ -60,7 +60,7 @@
     <string name="pixel_hits">Pixel hits:</string>
     <string name="max_pixel">Max pixel:</string>
     <string name="date">Date:</string>
-    <string name="location_unavailable">Location unavailable</string>
+    <string name="location_unavailable">Location unavailable. CRAYFIS needs to know the location of your device. Please check your location settings.</string>
     <string name="taking_data">Taking data!</string>
     <string name="calibration">Measuring levels</string>
     <string name="network_unavailable">Network unavailable</string>

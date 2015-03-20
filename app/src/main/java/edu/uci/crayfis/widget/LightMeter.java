@@ -53,14 +53,16 @@ public class LightMeter extends View {
 
 
     private Paint textPaint = new Paint();
+    private Paint textPaint2 = new Paint();
 
+    private Paint textPaint3 = new Paint();
 
 
     //Animation
 
     //The number of milliseconds to wait inbetween each draw
     private int delayMillis = 0;
-    int progress = 0;
+    int level = 0;
 
     //Other
     private String text = "text";
@@ -136,6 +138,16 @@ public class LightMeter extends View {
         textPaint.setAntiAlias(true);
         textPaint.setTextSize(textSize);
 
+        textPaint2.setColor(textColor);
+        textPaint2.setStyle(Style.FILL);
+        textPaint2.setAntiAlias(true);
+        textPaint2.setTextSize(textSize);
+
+        textPaint3.setColor(textColor);
+        textPaint3.setStyle(Style.FILL);
+        textPaint3.setAntiAlias(true);
+        textPaint3.setTextSize(textSize);
+
 
     }
 
@@ -169,16 +181,25 @@ public class LightMeter extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        String text = "Light Level: Low (good)";
-        int color = 0xFF00AA00;
-        if (!isGood)
-        {
-            text = "Light Level: High (poor)";
-            color = 0xFFFF0000;
-        }
+        int barlength = (int)((layout_width-paddingLeft-paddingRight)*(level/255.0));
+
+
+        //  0xFF000000 is opaque black
+        //  show more green for good (255-barlength = 255 for barlength=0)
+        //  show more red for bad (barlength=255)
+        int color = 0xFF000000 | ( (255-barlength) << 8) | ((barlength) << 16);
+
+
         textPaint.setColor(color);
+        textPaint2.setColor(0xFFFF0000);
+        textPaint3.setColor(0xFF00AA00);
         barPaint.setColor(color);
-        canvas.drawText(text,paddingLeft,paddingTop+textSize,textPaint);
+        canvas.drawText("Low light (good)",paddingLeft,paddingTop+textSize,textPaint3);
+        String high_text = "High light (bad)";
+        canvas.drawText(high_text,layout_width-paddingRight-(int)((textSize*high_text.length())*0.5),
+                paddingTop+textSize,textPaint2);
+        canvas.drawText("Lightmeter",layout_width/2-textSize*2,paddingTop+textSize,textPaint);
+
 
         canvas.drawLine(paddingLeft,
                 paddingTop+textSize+paddingTop+barWidth,
@@ -186,7 +207,6 @@ public class LightMeter extends View {
                 paddingTop+textSize+paddingTop+barWidth,
                 barPaintGray);
 
-        int barlength = (int)((layout_width-paddingLeft-paddingRight)*(progress/255.0));
        // CFLog.d(" level = "+progress+" = "+(progress/255.0)+"% drawing line length "+barlength+" from "+paddingLeft+" to "+(paddingLeft+barlength));
         canvas.drawLine(paddingLeft,
                     paddingTop+textSize+paddingTop+barWidth,
@@ -208,12 +228,12 @@ public class LightMeter extends View {
      * Set the progress to a specific value
      */
     public void setLevel(int i) {
-        progress = i;
+        level = i;
         //CFLog.d("Light meter level = "+i);
         postInvalidate();
     }
 
-    public int getLevel() { return progress; }
+    public int getLevel() { return level; }
 
     private boolean isGood=true;
     public void setGood(boolean good)

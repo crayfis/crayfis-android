@@ -1513,7 +1513,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( sleep_mode == false
-                        && (last_user_interaction - System.currentTimeMillis()) < -10e3
+                        && (last_user_interaction - System.currentTimeMillis()) < -30e3
                         && (application.getApplicationState() == CFApplication.State.DATA)
                         ) // wait 10s after going into DATA mode
                 {
