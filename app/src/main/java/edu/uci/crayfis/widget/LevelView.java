@@ -96,8 +96,13 @@ public class LevelView extends ImageView {
         if (new_level != current_level)
         {
             current_level = new_level;
-            level_icon = level_iconr[current_level].createScaledBitmap(level_iconr[current_level],
-                            getWidth(),(int)(getHeight()*0.9),false);
+            try {
+                level_icon = level_iconr[current_level].createScaledBitmap(level_iconr[current_level],
+                        getWidth(), (int) (getHeight() * 0.9), false);
+            } catch (Exception e)
+            {
+                // non-essential. Just don't crash.
+            }
             if (current_level+1 < nLevels) {
                 next_icon = level_iconr[current_level+1].createScaledBitmap(level_iconr[current_level+1], (int)(getHeight()*0.1),(int)(getHeight()*0.1), false);
             } else { next_icon = null; }

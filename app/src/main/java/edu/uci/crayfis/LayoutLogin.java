@@ -20,11 +20,15 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 
+import android.webkit.JavascriptInterface;
+
 
 import edu.uci.crayfis.util.CFLog;
 
 
 public class LayoutLogin extends Fragment {
+
+
 
 
     private static LayoutLogin mInstance =null;
@@ -71,6 +75,8 @@ public class LayoutLogin extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
     {
+
+
 
         super.onCreate(savedInstanceState);
 
@@ -152,14 +158,21 @@ public class LayoutLogin extends Fragment {
         });
 
         browserView.setWebViewClient( new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return false;
+            }
+                                          @Override
                                           public void onPageFinished(WebView view, String url)
                                           {
                                               CFLog.d("CRAYFIS has now loaded" + url);
                                               if (url.contains("monitor/dashboard")) {
+
                                                   view.loadUrl("javascript:console.log('MAGIC'+document.getElementsByTagName('html')[0].innerHTML);");
                                               }
                                           }
                                       });
+
 
         //Removes both vertical and horizontal scroll bars
         browserView.setVerticalScrollBarEnabled(false);

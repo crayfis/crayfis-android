@@ -622,7 +622,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
-		b.setCameraParams(mCamera.getParameters().flatten());
+        b.setCameraParams(mCamera.getParameters().flatten());
+
+
+
 
         /* get a bunch of hw build info */
         String hw_params = "";
@@ -1409,8 +1412,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private double updateFPS() {
         long now = System.currentTimeMillis();
-        synchronized(frame_times) {
-            if (frame_times != null) {
+        if (frame_times != null) {
+          synchronized(frame_times) {
                 int nframes = frame_times.size();
                 last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
                 return last_fps;
@@ -1491,7 +1494,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
                     if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, getResources().getString(R.string.network_unavailable));
+                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Error: "+getResources().getString(R.string.network_unavailable));
                 } else if (!UploadExposureTask.sPermitUpload.get()) {
                     if (LayoutData.mMessageView != null)
                         LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
@@ -1655,6 +1658,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
                                             + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+last_fps+" target eff="+target_L1_eff+"\n"
                                             + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                            + "Image dimensions = "+previewSize.height+"x"+previewSize.width + "\n"
                                             + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                             + "Upload server = " + upload_url + "\n"
                                             + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
@@ -1666,7 +1670,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (location_valid(CFApplication.getLastKnownLocation()) == false)
                     {
                         if (LayoutData.mMessageView != null)
-                            LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() +
+                            LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() + "\n Error: "+
                                     getResources().getString(R.string.location_unavailable));
                         if (application.getApplicationState() == CFApplication.State.DATA
                             && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
