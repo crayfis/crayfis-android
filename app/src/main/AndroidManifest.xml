@@ -25,6 +25,7 @@
         android:name=".CFApplication">
         <activity
             android:name="edu.uci.crayfis.MainActivity"
+            android:launchMode="singleTask"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/app_name">
             <intent-filter>
@@ -36,6 +37,12 @@
         <receiver android:name="edu.uci.crayfis.MyBroadcastReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
+                <action android:name="android.intent.action.BATTERY_OKAY"/>
+            </intent-filter>
+        </receiver>
+        <receiver android:name="edu.uci.crayfis.DAQActivity$BatteryLowReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BATTERY_LOW"/>
             </intent-filter>
         </receiver>
         <receiver android:name="edu.uci.crayfis.MyDisconnectReceiver">
@@ -50,6 +57,7 @@
         <activity
             android:name="edu.uci.crayfis.DAQActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             android:theme="@style/ActionBar"/>
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"

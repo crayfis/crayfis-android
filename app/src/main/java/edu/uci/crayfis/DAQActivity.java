@@ -214,8 +214,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 
-	// received message when power is disconnected -- should end run
-	public class MyDisconnectReceiver extends BroadcastReceiver {
+	// received message when battery is low -- should end run
+	public class BatteryLowReceiver extends BroadcastReceiver {
 
 		@Override
 		public void onReceive(Context arg0, Intent arg1) {

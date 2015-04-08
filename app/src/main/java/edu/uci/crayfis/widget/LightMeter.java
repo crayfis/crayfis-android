@@ -196,7 +196,7 @@ public class LightMeter extends View {
         barPaint.setColor(color);
         canvas.drawText("Low  (good)",paddingLeft,paddingTop+textSize,textPaint3);
         String high_text = "High  (bad)";
-        canvas.drawText(high_text,layout_width-paddingRight-(int)((textSize*high_text.length())*0.3),
+        canvas.drawText(high_text,layout_width-paddingRight-(int)((textSize*high_text.length())*0.5),
                 paddingTop+textSize,textPaint2);
         canvas.drawText("Lightmeter",layout_width/2-textSize*2,paddingTop+textSize,textPaint);
 
