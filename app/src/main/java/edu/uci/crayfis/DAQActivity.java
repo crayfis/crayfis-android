@@ -217,7 +217,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	// received message when battery is low -- should end run
 	public class BatteryLowReceiver extends BroadcastReceiver {
 
-        BatteryLowReceiver()
+        public BatteryLowReceiver()
         {
 
         }
