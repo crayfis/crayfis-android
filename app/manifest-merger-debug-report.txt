@@ -77,74 +77,92 @@ MERGED from com.android.support:support-v4:21.0.0:16:5
 activity#edu.uci.crayfis.MainActivity
 ADDED from AndroidManifest.xml:26:9
 	android:label
-		ADDED from AndroidManifest.xml:29:13
+		ADDED from AndroidManifest.xml:30:13
 	android:configChanges
-		ADDED from AndroidManifest.xml:28:13
+		ADDED from AndroidManifest.xml:29:13
 	android:name
 		ADDED from AndroidManifest.xml:27:13
+	android:launchMode
+		ADDED from AndroidManifest.xml:28:13
 intent-filter#android.intent.action.MAIN+android.intent.category.LAUNCHER
-ADDED from AndroidManifest.xml:30:13
+ADDED from AndroidManifest.xml:31:13
 action#android.intent.action.MAIN
-ADDED from AndroidManifest.xml:31:17
-	android:name
-		ADDED from AndroidManifest.xml:31:25
-category#android.intent.category.LAUNCHER
 ADDED from AndroidManifest.xml:32:17
 	android:name
-		ADDED from AndroidManifest.xml:32:27
+		ADDED from AndroidManifest.xml:32:25
+category#android.intent.category.LAUNCHER
+ADDED from AndroidManifest.xml:33:17
+	android:name
+		ADDED from AndroidManifest.xml:33:27
 receiver#edu.uci.crayfis.MyBroadcastReceiver
-ADDED from AndroidManifest.xml:36:9
+ADDED from AndroidManifest.xml:37:9
 	android:name
-		ADDED from AndroidManifest.xml:36:19
-intent-filter#android.intent.action.ACTION_POWER_CONNECTED
-ADDED from AndroidManifest.xml:37:13
+		ADDED from AndroidManifest.xml:37:19
+intent-filter#android.intent.action.ACTION_POWER_CONNECTED+android.intent.action.BATTERY_OKAY
+ADDED from AndroidManifest.xml:38:13
 action#android.intent.action.ACTION_POWER_CONNECTED
-ADDED from AndroidManifest.xml:38:17
+ADDED from AndroidManifest.xml:39:17
 	android:name
-		ADDED from AndroidManifest.xml:38:25
+		ADDED from AndroidManifest.xml:39:25
+action#android.intent.action.BATTERY_OKAY
+ADDED from AndroidManifest.xml:40:17
+	android:name
+		ADDED from AndroidManifest.xml:40:25
+receiver#edu.uci.crayfis.DAQActivity$BatteryLowReceiver
+ADDED from AndroidManifest.xml:43:9
+	android:name
+		ADDED from AndroidManifest.xml:43:19
+intent-filter#android.intent.action.BATTERY_LOW
+ADDED from AndroidManifest.xml:44:13
+action#android.intent.action.BATTERY_LOW
+ADDED from AndroidManifest.xml:45:17
+	android:name
+		ADDED from AndroidManifest.xml:45:25
 receiver#edu.uci.crayfis.MyDisconnectReceiver
-ADDED from AndroidManifest.xml:41:9
+ADDED from AndroidManifest.xml:48:9
 	android:name
-		ADDED from AndroidManifest.xml:41:19
+		ADDED from AndroidManifest.xml:48:19
 intent-filter#android.intent.action.ACTION_POWER_DISCONNECTED
-ADDED from AndroidManifest.xml:42:13
+ADDED from AndroidManifest.xml:49:13
 action#android.intent.action.ACTION_POWER_DISCONNECTED
-ADDED from AndroidManifest.xml:43:17
+ADDED from AndroidManifest.xml:50:17
 	android:name
-		ADDED from AndroidManifest.xml:43:25
+		ADDED from AndroidManifest.xml:50:25
 service#edu.uci.crayfis.server.UploadExposureService
-ADDED from AndroidManifest.xml:47:9
-	android:exported
-		ADDED from AndroidManifest.xml:48:18
-	android:name
-		ADDED from AndroidManifest.xml:47:18
-activity#edu.uci.crayfis.DAQActivity
-ADDED from AndroidManifest.xml:50:9
-	android:screenOrientation
-		ADDED from AndroidManifest.xml:52:13
-	android:theme
-		ADDED from AndroidManifest.xml:53:13
-	android:name
-		ADDED from AndroidManifest.xml:51:13
-activity#edu.uci.crayfis.UserSettingActivity
 ADDED from AndroidManifest.xml:54:9
-	android:screenOrientation
-		ADDED from AndroidManifest.xml:56:13
+	android:exported
+		ADDED from AndroidManifest.xml:55:18
 	android:name
-		ADDED from AndroidManifest.xml:55:13
+		ADDED from AndroidManifest.xml:54:18
+activity#edu.uci.crayfis.DAQActivity
+ADDED from AndroidManifest.xml:57:9
+	android:screenOrientation
+		ADDED from AndroidManifest.xml:59:13
+	android:theme
+		ADDED from AndroidManifest.xml:61:13
+	android:name
+		ADDED from AndroidManifest.xml:58:13
+	android:launchMode
+		ADDED from AndroidManifest.xml:60:13
+activity#edu.uci.crayfis.UserSettingActivity
+ADDED from AndroidManifest.xml:62:9
+	android:screenOrientation
+		ADDED from AndroidManifest.xml:64:13
+	android:name
+		ADDED from AndroidManifest.xml:63:13
 meta-data#com.google.android.gms.version
-ADDED from AndroidManifest.xml:58:9
+ADDED from AndroidManifest.xml:66:9
 MERGED from com.google.android.gms:play-services:6.5.87:21:9
 	android:name
-		ADDED from AndroidManifest.xml:58:20
+		ADDED from AndroidManifest.xml:66:20
 	android:value
-		ADDED from AndroidManifest.xml:59:13
+		ADDED from AndroidManifest.xml:67:13
 meta-data#com.crashlytics.ApiKey
-ADDED from AndroidManifest.xml:61:9
+ADDED from AndroidManifest.xml:69:9
 	android:name
-		ADDED from AndroidManifest.xml:62:13
+		ADDED from AndroidManifest.xml:70:13
 	android:value
-		ADDED from AndroidManifest.xml:63:13
+		ADDED from AndroidManifest.xml:71:13
 uses-sdk
 INJECTED from AndroidManifest.xml:0:0 reason: use-sdk injection requested
 MERGED from com.android.support:support-v4:21.0.0:15:5
