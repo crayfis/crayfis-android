@@ -226,7 +226,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		@Override
 		public void onReceive(Context arg0, Intent arg1) {
 			// TODO Auto-generated method stub
-			DAQActivity.this.onPause();
+            CFLog.d(" received low battery message");
+            Toast.makeText(DAQActivity.this, "Your device batter is too low. Quitting.",Toast.LENGTH_LONG).show();
+
+            DAQActivity.this.onPause();
 			DAQActivity.this.finish();
 		}
 
@@ -974,15 +977,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
-    MyBroadcastReceiver mReceiver = new MyBroadcastReceiver();
+    BatteryLowReceiver mReceiver = new BatteryLowReceiver();
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-        final String SOME_ACTION = "android.intent.action.BATTERY_LOW";
-
-        IntentFilter intentFilter = new IntentFilter(SOME_ACTION);
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_LOW);
         registerReceiver(mReceiver, intentFilter);
 
 		if (!wl.isHeld()) wl.acquire();
