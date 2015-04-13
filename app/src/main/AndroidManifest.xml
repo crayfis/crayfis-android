@@ -40,11 +40,7 @@
                 <action android:name="android.intent.action.BATTERY_OKAY"/>
             </intent-filter>
         </receiver>
-        <receiver android:name="edu.uci.crayfis.DAQActivity$BatteryLowReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.BATTERY_LOW"/>
-            </intent-filter>
-        </receiver>
+
         <receiver android:name="edu.uci.crayfis.MyDisconnectReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>

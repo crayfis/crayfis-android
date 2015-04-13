@@ -215,13 +215,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 	// received message when battery is low -- should end run
-	public class BatteryLowReceiver extends BroadcastReceiver {
+	public  class BatteryLowReceiver extends BroadcastReceiver {
 
         public BatteryLowReceiver()
         {
 
         }
-
 
 
 		@Override
@@ -975,9 +974,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
+    MyBroadcastReceiver mReceiver = new MyBroadcastReceiver();
+
 	@Override
 	protected void onResume() {
 		super.onResume();
+
+        final String SOME_ACTION = "android.intent.action.BATTERY_LOW";
+
+        IntentFilter intentFilter = new IntentFilter(SOME_ACTION);
+        registerReceiver(mReceiver, intentFilter);
 
 		if (!wl.isHeld()) wl.acquire();
         CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
@@ -1018,6 +1024,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+        unregisterReceiver(mReceiver);
 
         mUiUpdateTimer.cancel();
 
