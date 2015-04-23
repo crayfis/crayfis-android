@@ -19,6 +19,8 @@ package edu.uci.crayfis;
 
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 
+import android.os.BatteryManager;
+
 import android.os.Build;
 import android.provider.Settings;
 
@@ -147,10 +149,14 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	char[] labels = new char[256];
 	// settings
 
-	public static final int targetPreviewWidth = 320;
-	public static final int targetPreviewHeight = 240;
+	public static  int targetPreviewWidth = 320;
+	public static  int targetPreviewHeight = 240;
 
-	DataProtos.RunConfig run_config = null;
+    public final float battery_stop_threshold = (float)0.75;
+    public final float battery_start_threshold = (float)0.90;
+
+
+    DataProtos.RunConfig run_config = null;
 
 	// to keep track of height/width
 	private Camera.Size previewSize;
@@ -214,26 +220,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
 
-	// received message when battery is low -- should end run
-	public  class BatteryLowReceiver extends BroadcastReceiver {
-
-        public BatteryLowReceiver()
-        {
-
-        }
-
-
-		@Override
-		public void onReceive(Context arg0, Intent arg1) {
-			// TODO Auto-generated method stub
-            CFLog.d(" received low battery message");
-            Toast.makeText(DAQActivity.this, "Your device batter is too low. Quitting.",Toast.LENGTH_LONG).show();
-
-            DAQActivity.this.onPause();
-			DAQActivity.this.finish();
-		}
-
-	}
 
     // FIXME This is coupled with OutputManager, might not be needed now that it's going through CFConfig, investigate later.
  	public void updateSettings(JSONObject json) {
@@ -601,14 +587,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
      * @throws IllegalFsmStateException
      */
 	private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-		switch(previousState) {
+        unSetupCamera();
+
+        switch(previousState) {
             case CALIBRATION:
             case STABILIZATION:
                 // for calibration or stabilization, mark the block as aborted
                 xbManager.abortExposureBlock();
                 break;
             case DATA:
-                // for data, just close out the current XB
+                // for data, stop taking data to let battery charge
                 xbManager.newExposureBlock();
                 break;
             default:
@@ -878,6 +866,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         }
 
 		starttime = System.currentTimeMillis();
+        last_battery_check_time = 0; // this will trigger measuring the battery level the first time
+        batteryPct = -1; // indicate no data yet
         last_user_interaction = starttime;
         /////////
         newLocation(new Location("BLANK"),false);
@@ -917,6 +907,27 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
     }
+
+    private void unSetupCamera()
+    {
+        CFLog.d(" DAQActivity: unsetup camera called. mCamera ="+mCamera);
+
+        // stop the camera preview and all processing
+        if (mCamera != null) {
+            mPreview.setCamera(null);
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+
+            // clear out any (old) buffers
+            l2thread.clearQueue();
+
+            CFLog.d(" DAQActivity: unsetup camera");
+        }
+    }
+
+
     @Override
     protected void onStop()
     {
@@ -932,23 +943,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         CFLog.i("DAQActivity Suspending!");
 
-        // stop the camera preview and all processing
-        if (mCamera != null) {
-            mPreview.setCamera(null);
-            mCamera.setPreviewCallback(null);
-            mCamera.stopPreview();
-            mCamera.release();
-            mCamera = null;
+        unSetupCamera();
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
-            // clear out any (old) buffers
-            l2thread.clearQueue();
-
-            // If the app is being paused, we don't want that
-            // counting towards the current exposure block.
-            // So close it out cleaning by moving to the IDLE state.
-            // FIXME This may not be valid if things are running in the background.
-            ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
-        }
         // give back brightness control
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
 
@@ -977,14 +974,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
 	}
 
-    BatteryLowReceiver mReceiver = new BatteryLowReceiver();
+
+
+
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 
-        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_LOW);
-        registerReceiver(mReceiver, intentFilter);
+
+
+
 
 		if (!wl.isHeld()) wl.acquire();
         CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
@@ -1002,7 +1002,26 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
-		// configure the camera parameters and start it acquiring frames.
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String desired_res = sharedPrefs.getString("prefResolution","Low");
+        if (desired_res.equals("Low"))
+        {
+            targetPreviewWidth=320;
+            targetPreviewHeight=240;
+        }
+        if (desired_res.equals("Medium"))
+        {
+            targetPreviewWidth=640;
+            targetPreviewHeight=480;
+        }
+        if (desired_res.equals("High"))
+        {
+            targetPreviewWidth=1920;
+            targetPreviewHeight=1080;
+        }
+
+
+        // configure the camera parameters and start it acquiring frames.
 		setUpAndConfigureCamera();
 
         mSntpClient = SntpClient.getInstance();
@@ -1026,8 +1045,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	protected void onPause() {
 		super.onPause();
 
-        unregisterReceiver(mReceiver);
-
         mUiUpdateTimer.cancel();
 
         CFLog.d("DAQActivity onPause: wake lock held?"+wl.isHeld());
@@ -1038,23 +1055,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		CFLog.i("DAQActivity Suspending!");
 
-		// stop the camera preview and all processing
-		if (mCamera != null) {
-			mPreview.setCamera(null);
-			mCamera.setPreviewCallback(null);
-			mCamera.stopPreview();
-			mCamera.release();
-			mCamera = null;
+        unSetupCamera();
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
-			// clear out any (old) buffers
-			l2thread.clearQueue();
 
-			// If the app is being paused, we don't want that
-			// counting towards the current exposure block.
-			// So close it out cleaning by moving to the IDLE state.
-            // FIXME This may not be valid if things are running in the background.
-            ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
-		}
+
 
 	}
 
@@ -1259,6 +1264,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     private SntpClient mSntpClient = null;
 
+
+    private final long battery_check_wait = 10000; // ms
+    private long last_battery_check_time;
+    private float batteryPct;
+
 	/**
 	 * Called each time a new image arrives in the data stream.
 	 */
@@ -1267,12 +1277,20 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		// NB: since we are using NV21 format, we will be discarding some bytes at
 		// the end of the input array (since we only need to grayscale output)
 
+
+
+
+
+
         // record the (approximate) acquisition time
         // FIXME: can we do better than this, perhaps at Camera API level?
         long acq_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
         long acq_time = System.currentTimeMillis();
         long acq_time_ntp = mSntpClient.getNtpTime();
         long diff = acq_time - acq_time_ntp;
+
+
+
 
         //CFLog.d(" Frame times millis = "+acq_time+ " ntp = "+acq_time_ntp+" diff = "+diff);
 
@@ -1533,11 +1551,40 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( sleep_mode == false
                         && (last_user_interaction - System.currentTimeMillis()) < -30e3
-                        && (application.getApplicationState() == CFApplication.State.DATA)
-                        ) // wait 10s after going into DATA mode
+                        && (application.getApplicationState() == CFApplication.State.DATA
+                            || application.getApplicationState() == CFApplication.State.IDLE)
+                        ) // wait 10s after going into DATA or IDLE mode
                 {
                     goToSleep();
 
+                }
+
+                if (System.currentTimeMillis() - last_battery_check_time > battery_check_wait )
+                {
+                    IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                    Intent batteryStatus = context.registerReceiver(null, ifilter);
+
+                    int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                    int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+                    batteryPct = level / (float)scale;
+                    last_battery_check_time = System.currentTimeMillis();
+                }
+
+                if (batteryPct < battery_stop_threshold
+                        && application.getApplicationState()!=edu.uci.crayfis.CFApplication.State.IDLE)
+                {
+                    CFLog.d(" Battery too low, going to IDLE mode.");
+                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+
+                }
+
+                if (application.getApplicationState()==edu.uci.crayfis.CFApplication.State.IDLE
+                        && batteryPct > battery_start_threshold)
+                {
+                    CFLog.d(" Battery ok now, returning to run mode.");
+                    setUpAndConfigureCamera();
+                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
                 }
 
                 // turn on developer options if it has been selected
@@ -1546,6 +1593,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
+
 
                 try {
 
@@ -1560,7 +1608,21 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                     }
 
+                    if (application.getApplicationState() == CFApplication.State.IDLE)
+                    {
+                        if (LayoutData.mProgressWheel != null) {
+                            LayoutData.mProgressWheel.setText("Low battery /"+(int)(batteryPct*100)+"%/");
+                            LayoutData.mProgressWheel.setTextSize(22);
 
+                            LayoutData.mProgressWheel.setTextColor(Color.WHITE);
+                            LayoutData.mProgressWheel.setBarColor(Color.LTGRAY);
+
+                            int progress = (int) (360 * batteryPct);
+                            LayoutData.mProgressWheel.setProgress(progress);
+                            LayoutData.mProgressWheel.stopGrowing();
+                            LayoutData.mProgressWheel.doNotShowBackground();
+                        }
+                    }
 
 
                     if (application.getApplicationState() == CFApplication.State.STABILIZATION)
@@ -1667,14 +1729,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     }
                     String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 
+                    updateFPS();
+
                     if (mLayoutDeveloper != null) {
                         if (mLayoutDeveloper.mAppBuildView != null)
                             mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
                         if (mLayoutDeveloper.mTextView != null)
                             mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+last_fps+" target eff="+target_L1_eff+"\n"
+                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                             + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                                            + "Image dimensions = "+previewSize.height+"x"+previewSize.width + "\n"
+                                            + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
+                                            + "Image dimensions = "+previewSize.height+"x"+previewSize.width + "("+sharedPrefs.getString("prefResolution","Low")+") \n"
                                             + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                             + "Upload server = " + upload_url + "\n"
                                             + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"

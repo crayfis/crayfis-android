@@ -62,4 +62,12 @@
         android:title="@string/settings_thresh_title">
     </CheckBoxPreference> <!-- expert only -->
 
+    <ListPreference
+        android:key="prefResolution"
+        android:defaultValue="0"
+        android:entries="@array/pref_resolution"
+        android:summary="Resolution"
+        android:entryValues="@array/pref_resolution"
+        android:title="Camera Resolution" />
+
 </PreferenceScreen>
