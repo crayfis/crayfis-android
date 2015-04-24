@@ -152,8 +152,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	public static  int targetPreviewWidth = 320;
 	public static  int targetPreviewHeight = 240;
 
-    public final float battery_stop_threshold = (float)0.75;
-    public final float battery_start_threshold = (float)0.90;
+    public final float battery_stop_threshold = (float)0.20;
+    public final float battery_start_threshold = (float)0.80;
 
 
     DataProtos.RunConfig run_config = null;
@@ -993,14 +993,16 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		if (sens == null) {
 			sens = accelSensor;
 		}
+        CFLog.d(" register sensors");
 		mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
 		mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
-		if (mCamera != null)
+        CFLog.d(" on resume camera = "+mCamera);
+
+        if (mCamera != null)
 			throw new RuntimeException(
 					"Bug, camera should not be initialized already");
 
-        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
         String desired_res = sharedPrefs.getString("prefResolution","Low");
@@ -1019,10 +1021,13 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             targetPreviewWidth=1920;
             targetPreviewHeight=1080;
         }
+        CFLog.d(" Trigger stabilization state");
+        // this will also trigger setting up the camera
+        setUpAndConfigureCamera();
+
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
 
-        // configure the camera parameters and start it acquiring frames.
-		setUpAndConfigureCamera();
 
         mSntpClient = SntpClient.getInstance();
 
@@ -1584,6 +1589,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                 {
                     CFLog.d(" Battery ok now, returning to run mode.");
                     setUpAndConfigureCamera();
+
                     ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
                 }
 
@@ -1611,7 +1617,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.IDLE)
                     {
                         if (LayoutData.mProgressWheel != null) {
-                            LayoutData.mProgressWheel.setText("Low battery /"+(int)(batteryPct*100)+"%/");
+                            LayoutData.mProgressWheel.setText("Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%");
                             LayoutData.mProgressWheel.setTextSize(22);
 
                             LayoutData.mProgressWheel.setTextColor(Color.WHITE);
