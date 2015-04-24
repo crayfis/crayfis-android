@@ -1454,7 +1454,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         if (frame_times != null) {
           synchronized(frame_times) {
                 int nframes = frame_times.size();
-                last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+                if (nframes>0) {
+                    last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+                }
                 return last_fps;
             }
         }
