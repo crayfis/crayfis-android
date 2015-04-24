@@ -1021,9 +1021,10 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             targetPreviewWidth=1920;
             targetPreviewHeight=1080;
         }
-        CFLog.d(" Trigger stabilization state");
+        CFLog.d(" Setup camera");
         // this will also trigger setting up the camera
         setUpAndConfigureCamera();
+        CFLog.d(" Trigger stabilization state");
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
@@ -1116,16 +1117,18 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	 */
 	private void setUpAndConfigureCamera() {
 		// Open and configure the camera
+        CFLog.d("setUpAndConfigureCamera()");
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
             userErrorMessage(getResources().getString(R.string.camera_error),true);
 
         }
+        CFLog.d("Camera opened camera="+mCamera);
         try {
 
             Camera.Parameters param= mCamera.getParameters();
-                CFLog.d("params: Camera params are" + param.flatten());
+            CFLog.d("params: Camera params are" + param.flatten());
 
             // Select the preview size closest to 320x240
             // Smaller images are recommended because some computer vision
