@@ -17,32 +17,13 @@
 
 package edu.uci.crayfis;
 
-import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
-
-import android.os.BatteryManager;
-
-import android.os.Build;
-import android.provider.Settings;
-
-import android.view.Window;
-
-import android.view.WindowManager;
-
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.text.Html;
-import android.support.v4.view.ViewPager;
-
-import java.lang.OutOfMemoryError;
-
-import android.view.View;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -51,21 +32,31 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
-import android.text.Html;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -94,16 +85,15 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
+import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
-import edu.uci.crayfis.widget.StatusView;
-
-import edu.uci.crayfis.LayoutLevels;
 
 //import android.location.LocationListener;
 
@@ -113,7 +103,7 @@ import edu.uci.crayfis.LayoutLevels;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener,
+public class DAQActivity extends AppCompatActivity implements Camera.PreviewCallback, SensorEventListener,
         ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private ViewPager _mViewPager;
@@ -209,8 +199,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	private ParticleReco mParticleReco;
 
 	Context context;
+    private ActionBarDrawerToggle mActionBarDrawerToggle;
 
-	public void clickedSettings() {
+    public void clickedSettings() {
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
@@ -829,10 +820,19 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
-        setContentView(R.layout.video);
+        setContentView(R.layout.activity_daq);
 
 
+        //FIXME: Jodi - This is not the best place for this
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
 
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
+        ((DrawerLayout) findViewById(R.id.drawer_layout)).setDrawerListener(mActionBarDrawerToggle);
+        ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
         _mViewPager = (ViewPager) findViewById(R.id.viewPager);
         _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
@@ -898,6 +898,12 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
     @Override
+    protected void onPostCreate(final Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mActionBarDrawerToggle.syncState();
+    }
+
+    @Override
     protected void onStart()
     {
         super.onStart();
@@ -908,8 +914,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     }
 
-    private void unSetupCamera()
-    {
+    private void unSetupCamera() {
         CFLog.d(" DAQActivity: unsetup camera called. mCamera ="+mCamera);
 
         // stop the camera preview and all processing
@@ -929,8 +934,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
         CFLog.d("DAQActivity onStop: wake lock held?"+wl.isHeld());
 
@@ -947,7 +951,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
         // give back brightness control
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
 
 
     }
@@ -1077,6 +1081,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        // Check if the drawer toggle has already handled the click.  The hamburger icon is an option item.
+        if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
         switch(item.getItemId()) {
             case R.id.menu_settings:
                 clickedSettings();

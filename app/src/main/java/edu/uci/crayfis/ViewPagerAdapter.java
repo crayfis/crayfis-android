@@ -4,14 +4,15 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/18/14.
  */
 
-import edu.uci.crayfis.util.CFLog;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
-        import android.support.v4.app.FragmentManager;
-        import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentPagerAdapter;
 
+/**
+ * @deprecated Use NavDrawerAdapter
+ */
+@Deprecated
 public class ViewPagerAdapter extends FragmentPagerAdapter {
     private Context _context;
 

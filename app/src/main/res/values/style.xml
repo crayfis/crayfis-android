@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="ActionBar" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:windowBackground">@android:color/black</item>
+    <style name="CrayfisApp" parent="Theme.AppCompat">
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="colorPrimary">@android:color/white</item>
+        <item name="colorPrimaryDark">@android:color/black</item>
     </style>
-
 </resources>
