@@ -1,6 +1,7 @@
 package edu.uci.crayfis.navdrawer;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
+import edu.uci.crayfis.LayoutBlack;
 import edu.uci.crayfis.LayoutData;
 import edu.uci.crayfis.LayoutDeveloper;
 import edu.uci.crayfis.LayoutFeedback;
@@ -35,12 +37,14 @@ public final class NavHelper {
      * @param activity {@link AppCompatActivity}.
      * @param fragment The {@link Fragment}.
      */
-    public static void setFragment(@NonNull final AppCompatActivity activity, @NonNull final Fragment fragment) {
+    public static void setFragment(@NonNull final AppCompatActivity activity, @NonNull final Fragment fragment,
+                                   @Nullable final CharSequence title) {
         final ViewGroup container = (ViewGroup) activity.findViewById(R.id.fragment_container);
         if (container != null) {
             activity.getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragment_container, fragment)
                     .commit();
+            activity.setTitle(title);
         }
     }
 
@@ -48,7 +52,7 @@ public final class NavHelper {
      * Helper for handling a navigation drawer click.
      *
      * The view must be tagged with {@link edu.uci.crayfis.navdrawer.NavDrawerAdapter.Type} for this to do anything.
-     * This will make a call to {@link #setFragment(AppCompatActivity, Fragment)} on a successful match.
+     * This will make a call to {@link #setFragment(AppCompatActivity, Fragment, CharSequence)} on a successful match.
      *
      * @param activity {@link AppCompatActivity}
      * @param navItem {@link Fragment}
@@ -63,6 +67,9 @@ public final class NavHelper {
             switch (type) {
                 case DEVELOPER:
                     newFragment = LayoutDeveloper.getInstance();
+                    break;
+                case LIVE_VIEW:
+                    newFragment = LayoutBlack.getInstance();
                     break;
                 case STATUS:
                     newFragment = LayoutData.getInstance();
@@ -92,7 +99,8 @@ public final class NavHelper {
             if (newFragment == null) {
                 CFLog.e("Unhandled navigation type " + type);
             } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
-                setFragment(activity, newFragment);
+                final String[] titles = activity.getResources().getStringArray(R.array.pager_titles);
+                setFragment(activity, newFragment, titles[type.getIndex()]);
             }
         }
     }

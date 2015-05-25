@@ -46,6 +46,16 @@ public final class NavDrawerAdapter extends ArrayAdapter<Object> {
             }
             return null;
         }
+
+        /**
+         * Get the index of this type.  Typically this is used to index the string array for page titles.
+         *
+         * @return The index of this page.
+         */
+        public int getIndex() {
+            //FIXME: When developer mode is toggleable, this needs to return n-1 when developer mode is off.
+            return mIndex;
+        }
     }
 
     private String[] mTitles;

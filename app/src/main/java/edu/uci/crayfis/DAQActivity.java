@@ -813,7 +813,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         //FIXME: Jodi - This is not the best place for this
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayShowTitleEnabled(false);
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
 
@@ -830,7 +829,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         });
         ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
-        NavHelper.setFragment(this, LayoutData.getInstance());
+        final String[] titles = getResources().getStringArray(R.array.pager_titles);
+        NavHelper.setFragment(this, LayoutData.getInstance(), titles[NavDrawerAdapter.Type.STATUS.getIndex()]);
+
+
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
 
