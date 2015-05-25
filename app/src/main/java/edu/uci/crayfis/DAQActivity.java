@@ -809,28 +809,35 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         setContentView(R.layout.activity_daq);
 
-
+        //FIXME
         //FIXME: Jodi - This is not the best place for this
+        //FIXME
+        
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
 
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).setDrawerListener(mActionBarDrawerToggle);
+        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
+        drawerLayout.setDrawerListener(listener);
         final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
         navItems.setAdapter(new NavDrawerAdapter(this));
         navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
-                NavHelper.doNavClick(DAQActivity.this, view);
+                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
             }
         });
         ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
         final String[] titles = getResources().getStringArray(R.array.pager_titles);
         NavHelper.setFragment(this, LayoutData.getInstance(), titles[NavDrawerAdapter.Type.STATUS.getIndex()]);
+
+        //FIXME
+        //FIXME
+        //FIXME
 
 
 		// Create our Preview view and set it as the content of our activity.

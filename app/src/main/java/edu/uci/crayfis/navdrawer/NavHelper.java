@@ -2,7 +2,9 @@ package edu.uci.crayfis.navdrawer;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,8 +58,10 @@ public final class NavHelper {
      *
      * @param activity {@link AppCompatActivity}
      * @param navItem {@link Fragment}
+     * @param drawerListener Optional {@link edu.uci.crayfis.navdrawer.NavHelper.NavDrawerListener}.  If set, the fragment will be set after the drawer closes.
      */
-    public static void doNavClick(@NonNull final AppCompatActivity activity, @NonNull final View navItem) {
+    public static void doNavClick(@NonNull final AppCompatActivity activity, @NonNull final View navItem,
+                                  @Nullable final NavDrawerListener drawerListener, @Nullable final DrawerLayout drawerLayout) {
         final NavDrawerAdapter.Type type = (NavDrawerAdapter.Type) navItem.getTag();
         if (type != null) {
             final List fragments = activity.getSupportFragmentManager().getFragments();
@@ -100,7 +104,94 @@ public final class NavHelper {
                 CFLog.e("Unhandled navigation type " + type);
             } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
                 final String[] titles = activity.getResources().getStringArray(R.array.pager_titles);
-                setFragment(activity, newFragment, titles[type.getIndex()]);
+                final String title = titles[type.getIndex()];
+                if (drawerListener != null && drawerLayout != null) {
+                    drawerListener.setFragmentOnClose(activity, newFragment, title);
+                    drawerLayout.closeDrawers();
+                } else {
+                    setFragment(activity, newFragment, title);
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Implementation of {@link android.support.v4.widget.DrawerLayout.DrawerListener} that will set the fragment
+     * after closing.
+     */
+    public static final class NavDrawerListener implements DrawerLayout.DrawerListener {
+
+        @Nullable
+        private final ActionBarDrawerToggle mActionBarDrawerToggle;
+
+        @Nullable
+        private NavWrapper onCloseFragment;
+
+        public NavDrawerListener(@Nullable ActionBarDrawerToggle actionBarDrawerToggle) {
+            mActionBarDrawerToggle = actionBarDrawerToggle;
+        }
+
+        @Override
+        public void onDrawerSlide(final View drawerView, final float slideOffset) {
+            if (mActionBarDrawerToggle != null) {
+                mActionBarDrawerToggle.onDrawerSlide(drawerView, slideOffset);
+            }
+        }
+
+        @Override
+        public void onDrawerOpened(final View drawerView) {
+            if (mActionBarDrawerToggle != null) {
+                mActionBarDrawerToggle.onDrawerOpened(drawerView);
+            }
+        }
+
+        @Override
+        public void onDrawerClosed(final View drawerView) {
+            if (mActionBarDrawerToggle != null) {
+                mActionBarDrawerToggle.onDrawerClosed(drawerView);
+            }
+
+            if (onCloseFragment != null) {
+                setFragment(onCloseFragment.app_compat_activity, onCloseFragment.fragment, onCloseFragment.title);
+                onCloseFragment = null;
+            }
+        }
+
+        @Override
+        public void onDrawerStateChanged(final int newState) {
+            if (mActionBarDrawerToggle != null) {
+                mActionBarDrawerToggle.onDrawerStateChanged(newState);
+            }
+        }
+
+        /**
+         * Set the fragment to load when the drawer is closed.
+         *
+         * This should be done through a click handler on a navigation drawer item.
+         *
+         * @param appCompatActivity The {@link AppCompatActivity}
+         * @param fragment The {@link Fragment}
+         * @param title The optional title.
+         */
+        public void setFragmentOnClose(@NonNull final AppCompatActivity appCompatActivity, @NonNull final Fragment fragment,
+                                       @Nullable final CharSequence title) {
+            onCloseFragment = new NavWrapper(appCompatActivity, fragment, title);
+        }
+
+        /**
+         * Private POJO wrapper to use in {@link #onDrawerClosed(View)}.
+         */
+        private static final class NavWrapper {
+            private final AppCompatActivity app_compat_activity;
+            private final Fragment fragment;
+            private final CharSequence title;
+
+
+            private NavWrapper(final AppCompatActivity app_compat_activity, final Fragment fragment, final CharSequence title) {
+                this.app_compat_activity = app_compat_activity;
+                this.fragment = fragment;
+                this.title = title;
             }
         }
     }
