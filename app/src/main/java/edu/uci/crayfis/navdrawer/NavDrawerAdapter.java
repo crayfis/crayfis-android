@@ -1,6 +1,7 @@
 package edu.uci.crayfis.navdrawer;
 
 import android.content.Context;
+import android.support.annotation.Nullable;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,38 @@ import edu.uci.crayfis.R;
  */
 //TODO: The arrays are not translated.
 public final class NavDrawerAdapter extends ArrayAdapter<Object> {
+
+    /**
+     * The navigation type, used to tag the nav drawer entry.
+     */
+    public enum Type {
+        DEVELOPER(0),
+        LIVE_VIEW(1),
+        STATUS(2),
+        YOUR_LEVEL(3),
+        DATA(4),
+        NETWORK_MAP(5),
+        YOUR_ACCOUNT(6),
+        DOSIMETER(7),
+        FEEDBACK(8),
+        GALLERY(9);
+
+        private final int mIndex;
+
+        Type(final int index) {
+            mIndex = index;
+        }
+
+        @Nullable
+        public static Type getByIndex(final int index) {
+            for (final Type type : values()) {
+                if (type.mIndex == index) {
+                    return type;
+                }
+            }
+            return null;
+        }
+    }
 
     private String[] mTitles;
 
@@ -32,12 +65,22 @@ public final class NavDrawerAdapter extends ArrayAdapter<Object> {
         return 10;
     }
 
+    /**
+     * Get the view for the drawer.
+     * 
+     * These views are tagged with their type
+     * @param position
+     * @param convertView
+     * @param parent
+     * @return
+     */
     @Override
     public View getView(final int position, final View convertView, final ViewGroup parent) {
         final TextView rtn = (convertView != null && convertView instanceof TextView)
                 ? (TextView) convertView
                 : new TextView(new ContextThemeWrapper(getContext(), R.style.NavDrawerItem), null, 0);
         rtn.setText(mTitles[position]);
+        rtn.setTag(Type.getByIndex(position));
         return rtn;
     }
 }

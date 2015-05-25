@@ -39,22 +39,20 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.PagerTabStrip;
-import android.support.v4.view.ViewPager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -86,6 +84,7 @@ import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
+import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
@@ -105,11 +104,6 @@ import edu.uci.crayfis.widget.MessageView;
  */
 public class DAQActivity extends AppCompatActivity implements Camera.PreviewCallback, SensorEventListener,
         ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
-
-    private ViewPager _mViewPager;
-    private ViewPagerAdapter _adapter;
-
-    private PagerTabStrip strip;
 
     private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private static LayoutData mLayoutData = LayoutData.getInstance();
@@ -283,22 +277,14 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     private int cands_before_sleeping=0;
     public void goToSleep()
     {
-        previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
-        //CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
-        _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
         getSupportActionBar().hide();
 
         try {
             screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
            // CFLog.d(" saving screen brightness of "+screen_brightness);
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
         findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
-
-        strip.setTextColor(Color.BLACK);
-        strip.setTabIndicatorColor(Color.BLACK);
-        strip.setBackgroundColor(Color.BLACK);
-
 
         sleep_mode=true;
         sleeping_since = System.currentTimeMillis();
@@ -318,53 +304,54 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 		final TextView tx1 = new TextView(this);
 
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
-  		  tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
-                  +getResources().getString(R.string.help_data)+"\n\n"+
-                  getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-				+ s);
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
-                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s
-                           );
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-
-                    + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LOGIN)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LEADER)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DEVELOPER)
-        tx1.setText(getResources().getString(R.string.crayfis_about)+
-                "\n"+getResources().getString(R.string.toast_devel)+"\n"+
-                getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
+        // TODO: Jodi - Move these into the fragments or something....
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
+//  		  tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
+//                  +getResources().getString(R.string.help_data)+"\n\n"+
+//                  getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//				+ s);
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
+//                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s
+//                           );
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//
+//                    + s);
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LOGIN)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LEADER)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DEVELOPER)
+//        tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                "\n"+getResources().getString(R.string.toast_devel)+"\n"+
+//                getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                + s);
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
@@ -380,7 +367,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         // switch to feedback item
-                        _mViewPager.setCurrentItem(ViewPagerAdapter.FEEDBACK);
+                        // TODO: Jodi - Go to the feedback fragment.
                     }
                 })
 				.setView(tx1).show();
@@ -832,16 +819,18 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
         ((DrawerLayout) findViewById(R.id.drawer_layout)).setDrawerListener(mActionBarDrawerToggle);
+        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
+        navItems.setAdapter(new NavDrawerAdapter(this));
+        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
+                NavHelper.doNavClick(DAQActivity.this, view);
+            }
+        });
         ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
-        _mViewPager = (ViewPager) findViewById(R.id.viewPager);
-        _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
-        _mViewPager.setAdapter(_adapter);
-        _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
-
-
-
-
+        NavHelper.setFragment(this, LayoutData.getInstance());
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
 
@@ -870,31 +859,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         batteryPct = -1; // indicate no data yet
         last_user_interaction = starttime;
         /////////
-        newLocation(new Location("BLANK"),false);
+        newLocation(new Location("BLANK"), false);
         buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
         // backup location if Google play isn't working or installed
         mLastLocationDeprecated = getLocationDeprecated();
-        newLocation(mLastLocationDeprecated,true);
+        newLocation(mLastLocationDeprecated, true);
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-        strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
-        strip.setDrawFullUnderline(false);
-        strip.setTabIndicatorColor(Color.RED);
-        strip.setBackgroundColor(Color.WHITE);
-        strip.setNonPrimaryAlpha(0.5f);
-        strip.setTextSpacing(25);
-        strip.setTextColor(Color.BLACK);
-        strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
-
-
-      
-
-
 	}
 
     @Override
@@ -1254,13 +1229,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             if (screen_brightness<=150) screen_brightness=150;
           //  CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
 
-            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
+            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
 
             findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
-            _mViewPager.setCurrentItem(previous_item);
-            strip.setTextColor(Color.BLACK);
-            strip.setBackgroundColor(Color.WHITE);
-            strip.setTabIndicatorColor(Color.RED);
             sleep_mode=false;
 
             long current_time = System.currentTimeMillis();
@@ -1609,8 +1580,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                if (_adapter != null)
-                    _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
+                // TODO: Jodi - Update the navdrawer with the developer option.
+//                if (_adapter != null)
+//                    _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 

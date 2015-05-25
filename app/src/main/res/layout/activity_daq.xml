@@ -18,29 +18,11 @@
             android:background="?attr/colorPrimaryDark"
             android:minHeight="?attr/actionBarSize"/>
 
-        <FrameLayout
-            android:id="@+id/camera_preview"
-            android:layout_width="fill_parent"
-            android:layout_height="2dp"
-            android:background="@android:color/transparent">
 
-            <android.support.v4.view.ViewPager
-                android:id="@+id/viewPager"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
-
-                <android.support.v4.view.PagerTabStrip
-                    android:id="@+id/pts_main"
-                    android:layout_width="match_parent"
-                    android:layout_height="20dp"
-                    android:layout_gravity="bottom"
-                    android:background="#000000"
-                    android:padding="2dp"/>
-
-            </android.support.v4.view.ViewPager>
-
-        </FrameLayout>
-
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/fragment_container"/>
     </LinearLayout>
 
     <LinearLayout
@@ -51,6 +33,12 @@
         android:background="@android:color/black"
         android:clickable="true"
         android:orientation="vertical">
+
+        <FrameLayout
+            android:id="@+id/camera_preview"
+            android:layout_width="fill_parent"
+            android:layout_height="2dp"
+            android:background="@android:color/transparent"/>
 
         <ImageView
             android:layout_width="match_parent"
