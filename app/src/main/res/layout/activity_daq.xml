@@ -41,13 +41,12 @@
             android:background="@android:color/transparent"/>
 
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="#000000"
+            android:scaleType="centerInside"
             android:adjustViewBounds="true"
-            android:background="@android:color/white"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_logo"/>
-
+            android:src="@drawable/crayfish_white" />
         <ListView
             android:id="@+id/nav_list_view"
             android:layout_width="match_parent"
