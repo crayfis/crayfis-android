@@ -15,9 +15,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimaryDark"
-            android:minHeight="?attr/actionBarSize"/>
-
+            android:background="?attr/colorPrimary"/>
 
             <FrameLayout
                 android:layout_width="match_parent"
@@ -30,22 +28,22 @@
         android:layout_height="match_parent"
         android:layout_gravity="left|start"
         android:layout_marginTop="?attr/actionBarSize"
-        android:background="@android:color/black"
+        android:background="?attr/colorPrimary"
         android:clickable="true"
         android:orientation="vertical">
 
         <FrameLayout
             android:id="@+id/camera_preview"
             android:layout_width="fill_parent"
-            android:layout_height="2dp"
+            android:layout_height="0dp"
             android:background="@android:color/transparent"/>
 
         <ImageView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:background="#000000"
             android:scaleType="centerInside"
             android:adjustViewBounds="true"
+            android:background="?attr/colorPrimaryDark"
             android:src="@drawable/crayfish_white" />
         <ListView
             android:id="@+id/nav_list_view"

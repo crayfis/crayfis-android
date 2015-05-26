@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="palette_very_dark">#ff212121</color>
+    <color name="palette_dark">#ff424242</color>
+    <color name="palette_semi_dark">#ff616161</color>
+    <color name="palette_light">#ff757575</color>
+    <color name="palette_white">#fffafafa</color>
+</resources>

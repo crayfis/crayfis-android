@@ -48,6 +48,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -284,7 +285,15 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
            // CFLog.d(" saving screen brightness of "+screen_brightness);
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
-        findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
+        NavHelper.setFragment(this, LayoutBlack.getInstance(), null);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            // Newer devices allow us to completely hide the soft control buttons.
+            // Doesn't matter what view is used here, we just need the methods in the View class.
+            final View view = findViewById(R.id.fragment_container);
+            view.setOnSystemUiVisibilityChangeListener(new UiVisibilityListener());
+            view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
 
         sleep_mode=true;
         sleeping_since = System.currentTimeMillis();
@@ -812,7 +821,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         //FIXME
         //FIXME: Jodi - This is not the best place for this
         //FIXME
-        
+
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -1229,7 +1238,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     {
         last_user_interaction=System.currentTimeMillis();
        // CFLog.d(" The UserActivity at time= "+last_user_interaction);
-        if (sleep_mode==true)
+        if (sleep_mode)
         {
             //wake up
             getSupportActionBar().show();
@@ -1249,10 +1258,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             if (time_sleeping > 5.0)
             {
                 Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
-
-
             }
 
+            ((DrawerLayout) findViewById(R.id.drawer_layout)).openDrawer(Gravity.LEFT);
         }
     }
 
@@ -1778,5 +1786,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         public void run() {
             runOnUiThread(RUNNABLE);
         }
-    };
+    }
+
+    //FIXME: THIS CLASS IS WAY TOO BIG
+    private final class UiVisibilityListener implements View.OnSystemUiVisibilityChangeListener {
+
+        @Override
+        public void onSystemUiVisibilityChange(final int visibility) {
+            if (visibility == 0) {
+                // This is so the user doesn't have to double tap the screen to get back to normal.
+                onUserInteraction();
+            }
+        }
+    }
 }
