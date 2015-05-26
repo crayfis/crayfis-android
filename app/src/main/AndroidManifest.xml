@@ -59,6 +59,7 @@
             android:name="edu.uci.crayfis.DAQActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/CrayfisApp"/>
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"

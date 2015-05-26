@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -74,11 +73,7 @@ public class MainActivity extends Activity  {
 		}
 
 		if (firstRun) {
-            //Remove notification bar
-            this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
 			setContentView(R.layout.main);
-
 
             TextView whattodo = (TextView)findViewById(R.id.what_to_do);
             whattodo.setMovementMethod(new ScrollingMovementMethod());

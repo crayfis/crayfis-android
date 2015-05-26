@@ -53,6 +53,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -278,6 +279,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     private int cands_before_sleeping=0;
     public void goToSleep()
     {
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().hide();
 
         try {
@@ -1240,6 +1242,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         {
             //wake up
             getSupportActionBar().show();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
