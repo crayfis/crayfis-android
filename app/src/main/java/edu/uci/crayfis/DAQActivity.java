@@ -800,6 +800,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             if (files[i].getName().endsWith(".bin")) {
                 new UploadExposureTask((CFApplication) getApplication(),
                         new UploadExposureService.ServerInfo(this), files[i]);
+                foundFiles++;
             }
         }
 
