@@ -39,6 +39,7 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -286,7 +287,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
         NavHelper.setFragment(this, LayoutBlack.getInstance(), null);
-
+        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
+        
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             // Newer devices allow us to completely hide the soft control buttons.
             // Doesn't matter what view is used here, we just need the methods in the View class.
@@ -313,54 +315,63 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 		final TextView tx1 = new TextView(this);
 
-        // TODO: Jodi - Move these into the fragments or something....
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
-//  		  tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
-//                  +getResources().getString(R.string.help_data)+"\n\n"+
-//                  getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//				+ s);
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
-//                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s
-//                           );
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//
-//                    + s);
-//
+        // FIXME: Jodi - There has to be a better way, but this works.... Move these into the fragments or something....
+        final List fragments = getSupportFragmentManager().getFragments();
+        if (fragments.size() == 0) {
+            return;
+        }
+
+        final Fragment activeFragment = (Fragment) fragments.get(0);
+        if (activeFragment instanceof LayoutData) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
+                    +getResources().getString(R.string.help_data)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutHist) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
+                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                            + s
+            );
+        } else if (activeFragment instanceof LayoutTime) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+
+                    + s);
+        } else if (activeFragment instanceof LayoutLogin) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutLeader) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutDeveloper) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_devel)+"\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutBlack) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else {
+            tx1.setText("No more further information available at this time.");
+        }
+
+
 //        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
 //            tx1.setText(getResources().getString(R.string.crayfis_about)+
 //                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
 //                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
 //                    + s);
 //
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LOGIN)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s);
-//
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LEADER)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s);
-//
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DEVELOPER)
-//        tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                "\n"+getResources().getString(R.string.toast_devel)+"\n"+
-//                getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                + s);
 //
 //        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s);
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
@@ -375,8 +386,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 				})
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        // switch to feedback item
-                        // TODO: Jodi - Go to the feedback fragment.
+                        final String[] titles = getResources().getStringArray(R.array.pager_titles);
+                        // FIXME: Jodi - Move the title retrieval into NavHelper
+                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(), titles[NavDrawerAdapter.Type.FEEDBACK.getIndex()]);
                     }
                 })
 				.setView(tx1).show();
