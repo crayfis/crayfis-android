@@ -53,7 +53,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -822,9 +821,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		editor.clear();
 		editor.commit();
 		*/
-
-        //Remove notification bar
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_daq);
         configureToolbar();
