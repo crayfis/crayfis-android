@@ -823,44 +823,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		editor.commit();
 		*/
 
-
-
         //Remove notification bar
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-
         setContentView(R.layout.activity_daq);
-
-        //FIXME
-        //FIXME: Jodi - This is not the best place for this
-        //FIXME
-
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
-
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
-        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
-        drawerLayout.setDrawerListener(listener);
-        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
-        navItems.setAdapter(new NavDrawerAdapter(this));
-        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
-            }
-        });
-        ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
-
-        final String[] titles = getResources().getStringArray(R.array.pager_titles);
-        NavHelper.setFragment(this, LayoutData.getInstance(), titles[NavDrawerAdapter.Type.STATUS.getIndex()]);
-
-        //FIXME
-        //FIXME
-        //FIXME
-
+        configureToolbar();
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
@@ -902,6 +869,30 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 	}
+
+    private void configureToolbar() {
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
+        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
+        drawerLayout.setDrawerListener(listener);
+        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
+        navItems.setAdapter(new NavDrawerAdapter(this));
+        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
+            }
+        });
+        ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
+
+        final String[] titles = getResources().getStringArray(R.array.pager_titles);
+        NavHelper.setFragment(this, LayoutData.getInstance(), titles[NavDrawerAdapter.Type.STATUS.getIndex()]);
+    }
 
     @Override
     protected void onPostCreate(final Bundle savedInstanceState) {
