@@ -112,6 +112,8 @@ public final class NavHelper {
                     setFragment(activity, newFragment, title);
                 }
 
+            } else if (drawerLayout != null) {
+                drawerLayout.closeDrawers();
             }
         }
     }

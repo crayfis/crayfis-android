@@ -49,7 +49,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -288,7 +287,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
-        NavHelper.setFragment(this, LayoutBlack.getInstance(), null);
+        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.LIVE_VIEW);
+        NavHelper.setFragment(this, LayoutBlack.getInstance(), title);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             // Newer devices allow us to completely hide the soft control buttons.
@@ -1260,8 +1260,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             {
                 Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
             }
-
-            ((DrawerLayout) findViewById(R.id.drawer_layout)).openDrawer(Gravity.LEFT);
         }
     }
 
