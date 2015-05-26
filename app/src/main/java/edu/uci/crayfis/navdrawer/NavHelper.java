@@ -1,10 +1,11 @@
 package edu.uci.crayfis.navdrawer;
 
+import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,8 +104,7 @@ public final class NavHelper {
             if (newFragment == null) {
                 CFLog.e("Unhandled navigation type " + type);
             } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
-                final String[] titles = activity.getResources().getStringArray(R.array.pager_titles);
-                final String title = titles[type.getIndex()];
+                final String title = NavHelper.getNavTitle(activity.getResources(), type);
                 if (drawerListener != null && drawerLayout != null) {
                     drawerListener.setFragmentOnClose(activity, newFragment, title);
                     drawerLayout.closeDrawers();
@@ -114,6 +114,23 @@ public final class NavHelper {
 
             }
         }
+    }
+
+    /**
+     * Get the navigation title for the given {@code type}.
+     *
+     * @param resources Resources
+     * @param type {@link edu.uci.crayfis.navdrawer.NavDrawerAdapter.Type}
+     * @return The title or {@code null} if not found.
+     */
+    @Nullable
+    public static String getNavTitle(@NonNull final Resources resources, @NonNull final NavDrawerAdapter.Type type) {
+        final String[] titles = resources.getStringArray(R.array.pager_titles);
+        final int idx = type.getIndex();
+        if (idx > titles.length) {
+            return null;
+        }
+        return titles[idx];
     }
 
     /**

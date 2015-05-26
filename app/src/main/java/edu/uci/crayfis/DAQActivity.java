@@ -385,9 +385,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 				})
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        final String[] titles = getResources().getStringArray(R.array.pager_titles);
-                        // FIXME: Jodi - Move the title retrieval into NavHelper
-                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(), titles[NavDrawerAdapter.Type.FEEDBACK.getIndex()]);
+                        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.FEEDBACK);
+                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(), title);
                     }
                 })
 				.setView(tx1).show();
@@ -886,8 +885,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         });
         ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
-        final String[] titles = getResources().getStringArray(R.array.pager_titles);
-        NavHelper.setFragment(this, LayoutData.getInstance(), titles[NavDrawerAdapter.Type.STATUS.getIndex()]);
+        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.STATUS);
+        NavHelper.setFragment(this, LayoutData.getInstance(), title);
     }
 
     @Override
@@ -1230,7 +1229,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	}
 
     private long last_user_interaction=0;
-    private int previous_item = ViewPagerAdapter.STATUS;
     private boolean sleep_mode = false;
     private int screen_brightness = 0;
     @Override
