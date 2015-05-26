@@ -286,9 +286,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
            // CFLog.d(" saving screen brightness of "+screen_brightness);
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
-        NavHelper.setFragment(this, LayoutBlack.getInstance(), null);
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
-        
+        NavHelper.setFragment(this, LayoutBlack.getInstance(), null);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             // Newer devices allow us to completely hide the soft control buttons.
             // Doesn't matter what view is used here, we just need the methods in the View class.

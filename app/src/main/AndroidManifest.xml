@@ -23,7 +23,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:allowBackup="false"
-        android:name=".CFApplication">
+        android:name=".CFApplication"
+        android:theme="@style/CrayfisApp">
         <activity
             android:name="edu.uci.crayfis.MainActivity"
             android:launchMode="singleTask"

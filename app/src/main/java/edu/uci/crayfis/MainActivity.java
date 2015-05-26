@@ -105,7 +105,6 @@ public class MainActivity extends Activity  {
 		//See if we already have user ID saved
 		//Because then no need to login again
 		//if((ID != "") && !badID) {
-			// If user ID already inputted, just start running
 			Intent intent = new Intent(MainActivity.this, DAQActivity.class);
 			startActivity(intent);
 			//and quit
