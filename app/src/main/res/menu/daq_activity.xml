@@ -7,10 +7,8 @@
         android:title="@string/menu_sleep"/>
     <item android:id="@+id/menu_about"
           crayfis:showAsAction="never"
-          android:icon="@drawable/ic_action_about"
           android:title="@string/menu_about"/>
     <item android:id="@+id/menu_settings"
           crayfis:showAsAction="never"
-          android:icon="@drawable/ic_action_settings"
           android:title="@string/menu_settings"/>
 </menu>
