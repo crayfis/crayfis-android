@@ -1,6 +1,5 @@
 package edu.uci.crayfis.navdrawer;
 
-import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -104,35 +103,17 @@ public final class NavHelper {
             if (newFragment == null) {
                 CFLog.e("Unhandled navigation type " + type);
             } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
-                final String title = NavHelper.getNavTitle(activity.getResources(), type);
                 if (drawerListener != null && drawerLayout != null) {
-                    drawerListener.setFragmentOnClose(activity, newFragment, title);
+                    drawerListener.setFragmentOnClose(activity, newFragment, type.getTitle());
                     drawerLayout.closeDrawers();
                 } else {
-                    setFragment(activity, newFragment, title);
+                    setFragment(activity, newFragment, type.getTitle());
                 }
 
             } else if (drawerLayout != null) {
                 drawerLayout.closeDrawers();
             }
         }
-    }
-
-    /**
-     * Get the navigation title for the given {@code type}.
-     *
-     * @param resources Resources
-     * @param type {@link edu.uci.crayfis.navdrawer.NavDrawerAdapter.Type}
-     * @return The title or {@code null} if not found.
-     */
-    @Nullable
-    public static String getNavTitle(@NonNull final Resources resources, @NonNull final NavDrawerAdapter.Type type) {
-        final String[] titles = resources.getStringArray(R.array.pager_titles);
-        final int idx = type.getIndex();
-        if (idx > titles.length) {
-            return null;
-        }
-        return titles[idx];
     }
 
     /**

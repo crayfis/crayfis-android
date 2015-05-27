@@ -287,8 +287,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
-        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.LIVE_VIEW);
-        NavHelper.setFragment(this, LayoutBlack.getInstance(), title);
+        NavHelper.setFragment(this, LayoutBlack.getInstance(), NavDrawerAdapter.Type.LIVE_VIEW.getTitle());
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
             // Newer devices allow us to completely hide the soft control buttons.
@@ -387,8 +386,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 				})
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.FEEDBACK);
-                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(), title);
+                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(),
+                                NavDrawerAdapter.Type.FEEDBACK.getTitle());
                     }
                 })
 				.setView(tx1).show();
@@ -824,7 +823,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		*/
 
         setContentView(R.layout.activity_daq);
-        configureToolbar();
+        configureNaviation();
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
@@ -867,7 +866,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 	}
 
-    private void configureToolbar() {
+    /**
+     * Configure the toolbar and navigation drawer.
+     */
+    private void configureNaviation() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
@@ -885,10 +887,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
             }
         });
-        ((ListView) findViewById(R.id.nav_list_view)).setAdapter(new NavDrawerAdapter(this));
 
-        final String title = NavHelper.getNavTitle(getResources(), NavDrawerAdapter.Type.STATUS);
-        NavHelper.setFragment(this, LayoutData.getInstance(), title);
+        final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
+        navItems.setAdapter(navItemsAdapter);
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+                navItemsAdapter.notifyDataSetChanged();
+            }
+        });
+        NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
     }
 
     @Override
