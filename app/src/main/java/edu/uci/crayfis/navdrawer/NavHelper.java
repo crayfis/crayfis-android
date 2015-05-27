@@ -15,6 +15,7 @@ import edu.uci.crayfis.LayoutBlack;
 import edu.uci.crayfis.LayoutData;
 import edu.uci.crayfis.LayoutDeveloper;
 import edu.uci.crayfis.LayoutFeedback;
+import edu.uci.crayfis.LayoutGallery;
 import edu.uci.crayfis.LayoutHist;
 import edu.uci.crayfis.LayoutLeader;
 import edu.uci.crayfis.LayoutLevels;
@@ -95,6 +96,9 @@ public final class NavHelper {
                     break;
                 case FEEDBACK:
                     newFragment = LayoutFeedback.getInstance();
+                    break;
+                case GALLERY:
+                    newFragment = LayoutGallery.getInstance();
                     break;
                 default:
                     newFragment = null;
