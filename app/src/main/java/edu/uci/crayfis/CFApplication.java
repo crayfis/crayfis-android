@@ -17,7 +17,6 @@ import android.support.v4.content.LocalBroadcastManager;
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
-import android.hardware.Camera;
 
 import edu.uci.crayfis.server.UploadExposureService;
 
@@ -29,6 +28,8 @@ public class CFApplication extends Application {
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
+    // TODO: This should be a configurable value in the preferences.
+    public static final int SLEEP_TIMEOUT_MS = 60000;
 
     private static final String SHARED_PREFS_NAME = "global";
     private State mApplicationState;

@@ -1252,6 +1252,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             //wake up
             getSupportActionBar().show();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
@@ -1564,11 +1565,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if ( sleep_mode == false
-                        && (last_user_interaction - System.currentTimeMillis()) < -30e3
+                if ( !sleep_mode
+                        && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
                         && (application.getApplicationState() == CFApplication.State.DATA
                             || application.getApplicationState() == CFApplication.State.IDLE)
-                        ) // wait 10s after going into DATA or IDLE mode
+                        ) // wait 1m after going into DATA or IDLE mode
                 {
                     goToSleep();
 
