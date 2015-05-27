@@ -54,7 +54,6 @@ public final class NavDrawerAdapter extends ArrayAdapter<NavDrawerAdapter.Type> 
          * @return The title of this navigation type.
          */
         public String getTitle() {
-            //FIXME: When developer mode is toggleable, this needs to return n-1 when developer mode is off.
             return mTitle;
         }
     }
