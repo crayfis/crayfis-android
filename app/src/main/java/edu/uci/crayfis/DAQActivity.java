@@ -1627,7 +1627,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     {
                         if (LayoutData.mProgressWheel != null) {
                             LayoutData.mProgressWheel.setText("Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%");
-                            LayoutData.mProgressWheel.setTextSize(22);
 
                             LayoutData.mProgressWheel.setTextColor(Color.WHITE);
                             LayoutData.mProgressWheel.setBarColor(Color.LTGRAY);
@@ -1644,7 +1643,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     {
                         if (LayoutData.mProgressWheel != null) {
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
-                            LayoutData.mProgressWheel.setTextSize(22);
 
                             LayoutData.mProgressWheel.setTextColor(Color.RED);
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
@@ -1661,8 +1659,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         if (LayoutData.mProgressWheel != null) {
 
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-                            LayoutData.mProgressWheel.setTextSize(27);
-
 
                             LayoutData.mProgressWheel.setTextColor(Color.RED);
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
@@ -1680,10 +1676,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.DATA)
                     {
                         if (LayoutData.mProgressWheel != null) {
-
-                            LayoutData.mProgressWheel.setTextSize(30);
-
-
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
                             LayoutData.mProgressWheel.setTextColor(0xFF00AA00);
                             LayoutData.mProgressWheel.setBarColor(0xFF00AA00);

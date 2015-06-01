@@ -4,12 +4,11 @@ package edu.uci.crayfis.widget;
  * Created by danielwhiteson on 11/19/14.
  */
 
-import edu.uci.crayfis.util.CFLog;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Style;
-import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -76,6 +75,13 @@ public class LightMeter extends View {
     public LightMeter(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        final Resources resources = getResources();
+        barWidth = resources.getDimensionPixelSize(R.dimen.light_meter_bar_width);
+        textSize = resources.getDimensionPixelSize(R.dimen.light_meter_text_size);
+        paddingTop = resources.getDimensionPixelSize(R.dimen.light_meter_padding_top);
+        paddingLeft = resources.getDimensionPixelSize(R.dimen.light_meter_padding_left);
+        paddingRight = resources.getDimensionPixelSize(R.dimen.light_meter_padding_right);
+        paddingBottom = resources.getDimensionPixelSize(R.dimen.light_meter_padding_bottom);
     }
 
 

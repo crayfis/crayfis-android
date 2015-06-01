@@ -13,7 +13,7 @@
         android:layout_height="250dp"
         ProgressWheel:text=" "
         ProgressWheel:textColor="#FFF"
-        ProgressWheel:textSize="20sp"
+        ProgressWheel:textSize="@dimen/progress_wheel_text_size"
         ProgressWheel:rimColor="#FFF"
         ProgressWheel:barLength="60dp"
         ProgressWheel:barColor="#FF0000"
@@ -29,7 +29,7 @@
 
     <edu.uci.crayfis.widget.MessageView
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="wrap_content"
         android:gravity="center"
         android:id="@+id/message_view"/>
 
@@ -37,7 +37,7 @@
         android:id="@+id/data_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
+        android:textSize="@dimen/abc_text_size_small_material"
         android:typeface="monospace"
         android:gravity="center_horizontal"
         android:textColor="@android:color/white"

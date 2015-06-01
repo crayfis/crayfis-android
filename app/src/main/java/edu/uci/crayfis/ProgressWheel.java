@@ -4,19 +4,18 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/19/14.
  */
 
+import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-
-import android.content.Context;
-        import android.content.res.TypedArray;
-        import android.graphics.Canvas;
-        import android.graphics.Paint;
-        import android.graphics.Paint.Style;
-        import android.graphics.RectF;
-
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Paint.Style;
+import android.graphics.RectF;
 import android.graphics.Shader;
-        import android.util.AttributeSet;
-        import android.view.View;
+import android.util.AttributeSet;
+import android.view.View;
 
 
 /**
@@ -38,14 +37,14 @@ public class ProgressWheel extends View {
     private int barLength = 60;
     private int barWidth = 20;
     private int rimWidth = 20;
-    private int textSize = 20;
+
     private float contourSize = 0;
 
-    //Padding (with defaults)
-    private int paddingTop = 5;
-    private int paddingBottom = 5;
-    private int paddingLeft = 5;
-    private int paddingRight = 5;
+    private int textSize;
+    private int paddingTop;
+    private int paddingBottom;
+    private int paddingLeft;
+    private int paddingRight;
 
     //Colors (with defaults)
     private int barColor = 0xAA000000;
@@ -105,6 +104,12 @@ public class ProgressWheel extends View {
 
         backgroundr = BitmapFactory.decodeResource(getResources(), R.drawable.earth_cr);
 
+        final Resources resources = getResources();
+        textSize = resources.getDimensionPixelSize(R.dimen.progress_wheel_text_size);
+        paddingTop = resources.getDimensionPixelSize(R.dimen.progress_wheel_padding_top);
+        paddingLeft = resources.getDimensionPixelSize(R.dimen.progress_wheel_padding_left);
+        paddingRight = resources.getDimensionPixelSize(R.dimen.progress_wheel_padding_right);
+        paddingBottom = resources.getDimensionPixelSize(R.dimen.progress_wheel_padding_bottom);
     }
 
     //----------------------------------
