@@ -89,7 +89,6 @@ public class ProgressWheel extends View {
     Bitmap backgroundr;
     Bitmap background = null;
 
-
     /**
      * The constructor for the ProgressWheel
      *
@@ -119,12 +118,10 @@ public class ProgressWheel extends View {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // The first thing that happen is that we call the superclass
-        // implementation of onMeasure. The reason for that is that measuring
-        // can be quite a complex process and calling the super method is a
-        // convenient way to get most of this complexity handled.
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
+        // Calculate our height based on a 16:9 aspect ratio.  The source image (earth_cr) is 25:14 but hey, close enough.
+        final int viewWidth = MeasureSpec.getSize(widthMeasureSpec);
+        final int viewHeight = (viewWidth / 16) * 9;
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(viewHeight, MeasureSpec.EXACTLY));
     }
 
     /**
