@@ -36,12 +36,7 @@
     <edu.uci.crayfis.widget.DataView
         android:id="@+id/data_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/abc_text_size_small_material"
-        android:typeface="monospace"
-        android:gravity="center_horizontal"
-        android:textColor="@android:color/white"
-        tools:text=" Frames:0\n Candidates:0 "/>
+        android:layout_height="wrap_content"/>
 
 
 

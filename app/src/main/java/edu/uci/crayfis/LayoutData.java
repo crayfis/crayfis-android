@@ -11,15 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import edu.uci.crayfis.widget.DataView;
-import edu.uci.crayfis.widget.MessageView;
-import edu.uci.crayfis.widget.StatusView;
-import edu.uci.crayfis.widget.LightMeter;
-
-import edu.uci.crayfis.util.CFLog;
-import android.text.method.ScrollingMovementMethod;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.widget.DataView;
+import edu.uci.crayfis.widget.LightMeter;
+import edu.uci.crayfis.widget.MessageView;
 
 
 public class LayoutData extends Fragment{
@@ -74,7 +70,7 @@ public class LayoutData extends Fragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.data, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.data, container, false);
 
         mDataView = (DataView) root.findViewById(R.id.data_view);
 
