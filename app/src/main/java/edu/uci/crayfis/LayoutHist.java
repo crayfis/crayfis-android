@@ -5,6 +5,7 @@ package edu.uci.crayfis;
  */
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,16 +14,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.particle.ParticleReco;
-
 import com.jjoe64.graphview.BarGraphView;
-
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.GraphViewSeries;
 import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
+import com.jjoe64.graphview.GraphViewStyle;
 import com.jjoe64.graphview.ValueDependentColor;
+
+import edu.uci.crayfis.particle.ParticleReco;
 
 public class LayoutHist extends Fragment{
 
@@ -141,35 +141,31 @@ public class LayoutHist extends Fragment{
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.hist, null);
+        mGraph = new BarGraphView(container.getContext(),(String) null);
 
+        final ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(container.getLayoutParams());
+        params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+        final Resources resources = getResources();
+        mGraph.setLayoutParams(params);
+        final int padding = resources.getDimensionPixelSize(R.dimen.standard_margin);
+        mGraph.setPadding(padding, padding, padding, padding);
 
-
-        int novals[] = new int[256];
-        for (int i=0;i<256;i++) novals[i]=0;
-
-        /// test graphing
-        Context context = getActivity();
-
-        mGraph = new BarGraphView(context," ");
-        mGraph.setManualYAxisBounds(100., 0.);
-        String labels[] = new String[3];
-        labels[0] = "blah";
+        mGraph.setManualYAxisBounds(100, 0);
         mGraph.setHorizontalLabels( getResources().getStringArray(R.array.hist_bins));
-        //mGraph.setVerticalLabels(new String[] {"100k","10k","1k","100","10","1"});
-        mGraph.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
-        mGraph.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
-        mGraph.getGraphViewStyle().setTextSize(15);
-        //mGraph.getGraphViewStyle().setNumVerticalLabels(2);
+
+        final GraphViewStyle graphViewStyle = mGraph.getGraphViewStyle();
+        graphViewStyle.setHorizontalLabelsColor(resources.getColor(R.color.palette_white));
+        graphViewStyle.setVerticalLabelsColor(resources.getColor(R.color.palette_white));
+        graphViewStyle.setTextSize(resources.getDimensionPixelSize(R.dimen.hist_text_size));
+
         GraphViewSeriesStyle mGraphSeriesStyle = new GraphViewSeriesStyle();
         mGraphSeriesStyle.setValueDependentColor(new ValueDependentColorX());
-        mGraphSeries =     new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(novals));
+        mGraphSeries = new GraphViewSeries("aaa",mGraphSeriesStyle    ,make_graph_data(new int[256]));
         mGraph.setScalable(false);
         mGraph.addSeries(mGraphSeries);
 
-        root.addView(mGraph);
-
-        return root;
+        return mGraph;
     }
 
 }

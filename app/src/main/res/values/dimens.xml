@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item type="dimen" name="standard_margin">8dp</item>
+    <item type="dimen" name="standard_margin">16dp</item>
 
     <dimen name="progress_wheel_text_size">@dimen/abc_text_size_small_material</dimen>
     <dimen name="progress_wheel_padding_top">5dp</dimen>
@@ -14,4 +14,7 @@
     <dimen name="light_meter_padding_left">@dimen/standard_margin</dimen>
     <dimen name="light_meter_padding_right">@dimen/standard_margin</dimen>
     <dimen name="light_meter_padding_bottom">@dimen/standard_margin</dimen>
+
+    <dimen name="hist_text_size">@dimen/abc_text_size_small_material</dimen>
+
 </resources>
