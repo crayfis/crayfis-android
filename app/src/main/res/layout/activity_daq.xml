@@ -45,6 +45,14 @@
             android:adjustViewBounds="true"
             android:background="?attr/colorPrimaryDark"
             android:src="@drawable/crayfish_white" />
+
+        <edu.uci.crayfis.user.UserStatusView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/standard_margin"
+            android:id="@+id/user_status"
+            android:background="?attr/colorPrimaryDark"/>
+
         <ListView
             android:id="@+id/nav_list_view"
             android:layout_width="match_parent"

@@ -888,6 +888,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             }
         });
 
+        // When the device is not registered, this should take the user to the log in page.
+        findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (CFConfig.getInstance().getAccountName() == null) {
+                    NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
+                    drawerLayout.closeDrawers();
+                }
+            }
+        });
+
         final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
         navItems.setAdapter(navItemsAdapter);
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1614,13 +1625,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                     if (LayoutData.mLightMeter != null) {
                         LayoutData.updateData();
-                    }
-
-                    if (LayoutLevels.mStatusView != null)
-                    {
-                        LayoutLevels.mStatusView.setStatus((int) (1.0e-3 * xbManager.getExposureTime()),
-                                (int) (getFPS()));
-
                     }
 
                     if (application.getApplicationState() == CFApplication.State.IDLE)
