@@ -20,7 +20,7 @@
             style="@style/TextViewSmall"
             android:layout_toRightOf="@id/user_status_avatar"
             android:id="@+id/user_status_text"
-            android:text="Current status\nNext Level"
+            android:textSize="@dimen/text_size_very_small"
             android:layout_centerVertical="true"/>
     </RelativeLayout>
 

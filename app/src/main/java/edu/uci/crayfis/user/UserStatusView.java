@@ -48,8 +48,9 @@ public class UserStatusView extends RelativeLayout {
 
     private void setContentFromUser() {
         final CFConfig cfConfig = CFConfig.getInstance();
+        final String accountName = cfConfig.getAccountName();
 
-        if (cfConfig.getAccountName() == null) {
+        if (accountName == null) {
             mUserUnregistered.setVisibility(View.VISIBLE);
             mUserRegistered.setVisibility(View.GONE);
             // FIXME: This needs to pop in the user log in fragment.
@@ -64,13 +65,15 @@ public class UserStatusView extends RelativeLayout {
             mUserStatusAvatar.setImageResource(userStatus.getIconResource());
             final String status;
             if (nextLevel != null) {
-                status = String.format("%s points - %s\n(%s until %s)",
+                status = String.format("%s\n%s points - %s\n(%s until %s)",
+                        accountName,
                         currentPoints,
                         userStatus.getTitle(),
                         ViewUtil.formatDecimal(nextLevel.getPoints() - userStatus.getPoints()),
                         nextLevel.getTitle());
             } else {
-                status = String.format("%s points - %s",
+                status = String.format("%s\n%s points - %s",
+                        accountName,
                         currentPoints,
                         userStatus.getTitle());
             }
