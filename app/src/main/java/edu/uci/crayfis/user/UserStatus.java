@@ -11,9 +11,9 @@ import edu.uci.crayfis.R;
 public enum UserStatus {
 
     // These must be sorted by score or else the wrong status will be returned.
-    UNREGISTERED("Unregistered", 0, R.drawable.welcome),
-    BEGINER("Beginer", 100, R.drawable.baby),
-    AMATEUR("Amateur", 1000, R.drawable.astronomer),
+    AMATEUR("Amateur", 0, R.drawable.welcome),
+    INTERMEDIATE("Intermediate", 100, R.drawable.baby),
+    ADVANCED("Advanced", 1000, R.drawable.astronomer),
     ASTROPHYSICIST("Astrophysicist", 10000, R.drawable.astrophysicist),
     CARL_SAGAN("Expert", 100000000, R.drawable.expert);
 
