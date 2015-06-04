@@ -1620,6 +1620,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 
+                // Originally, the updating of the LevelView was done here.  This seems like a good place to also
+                // make sure that UserStatusView gets updated with any new counts.
+                final View userStatus = findViewById(R.id.user_status);
+                if (userStatus != null) {
+                    userStatus.postInvalidate();
+                }
 
                 try {
 
