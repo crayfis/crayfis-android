@@ -21,4 +21,9 @@ public final class ViewUtil {
     public static String formatDecimal(final int decimal) {
         return POINT_FORMATTER.format(decimal);
     }
+
+    public static String formatDecimal(final long decimal) {
+        return POINT_FORMATTER.format(decimal);
+    }
+
 }

@@ -7,6 +7,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import edu.uci.crayfis.R;
+import edu.uci.crayfis.ViewUtil;
 
 /**
  * Show the user the status of the application.
@@ -42,9 +43,9 @@ public final class DataView extends LinearLayout {
      * @param status The status.
      */
     public void setStatus(@NonNull final Status status) {
-        mFramesScanned.setText(String.valueOf(status.getTotalFrames()));
-        mPixelsScanned.setText(String.valueOf(status.getTotalPixels()));
-        mCandidates.setText(String.valueOf(status.getTotalEvents()));
+        mFramesScanned.setText(ViewUtil.formatDecimal(status.getTotalFrames()));
+        mPixelsScanned.setText(ViewUtil.formatDecimal(status.getTotalPixels()));
+        mCandidates.setText(ViewUtil.formatDecimal(status.getTotalEvents()));
     }
 
     /**
