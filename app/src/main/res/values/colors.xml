@@ -5,4 +5,11 @@
     <color name="palette_semi_dark">#ff616161</color>
     <color name="palette_light">#ff757575</color>
     <color name="palette_white">#fffafafa</color>
+    <color name="palette_dark_white">#ffF5F5F5</color>
+    <color name="palette_headline">#ff00ACC1</color>
+
+    <color name="warning_background">@color/palette_light</color>
+    <color name="warning_header_text">@color/palette_white</color>
+    <color name="warning_header_background">@color/palette_very_dark</color>
+    <color name="warning_footer_background">@color/palette_semi_dark</color>
 </resources>
