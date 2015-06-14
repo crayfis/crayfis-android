@@ -13,6 +13,9 @@ import edu.uci.crayfis.R;
  *
  * This can be thought of as a dialog but instead takes up the full screen and does not provide a toolbar or navigation
  * drawer.  When the user clicks continue, this finishes with {@link android.app.Activity#RESULT_OK}.
+ *
+ * When this is displayed, data collection will stop.  Since the user is likely to pick up the phone when the notification
+ * displays, data collection can not happen anyway.
  */
 public class UserNotificationActivity extends AppCompatActivity implements UserNotificationFragment.OnContinueClickListener {
 

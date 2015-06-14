@@ -7,6 +7,7 @@
     <color name="palette_white">#fffafafa</color>
     <color name="palette_dark_white">#ffF5F5F5</color>
     <color name="palette_headline">#ff00ACC1</color>
+    <color name="palette_yellow">#ffFFEB3B</color>
 
     <color name="warning_background">@color/palette_light</color>
     <color name="warning_header_text">@color/palette_white</color>

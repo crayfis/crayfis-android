@@ -1,6 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="@drawable/earth_background">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:indeterminateOnly="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="0dp"
+        android:layout_marginBottom="@dimen/standard_margin"/>
+
+    <TextView
+        android:id="@+id/data_collection_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_margin="@dimen/standard_margin"
+        android:text="Data Collection Status"
+        android:textColor="@color/palette_yellow"
+        android:textSize="@dimen/text_size_headline"
+        android:layout_below="@id/progress_bar"/>
+
+    <TextView
+        android:id="@+id/data_collection_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/data_collection_status"
+        android:layout_margin="@dimen/standard_margin"
+        android:gravity="center_horizontal"
+        android:text="Data collection status message."
+        android:textSize="@dimen/text_size_description"/>
 
 </RelativeLayout>

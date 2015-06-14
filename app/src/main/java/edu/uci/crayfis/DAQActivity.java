@@ -91,6 +91,7 @@ import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
@@ -908,7 +909,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 navItemsAdapter.notifyDataSetChanged();
             }
         });
-        NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
     }
 
     @Override
