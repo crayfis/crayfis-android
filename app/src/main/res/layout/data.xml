@@ -6,14 +6,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
 
+    <!-- The height of this widget is calculdated in code. -->
     <edu.uci.crayfis.ProgressWheel
         android:id="@+id/pw_spinner"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:gravity="center_horizontal"
-        android:layout_height="250dp"
+        android:layout_height="0dp"
         ProgressWheel:text=" "
         ProgressWheel:textColor="#FFF"
-        ProgressWheel:textSize="20sp"
+        ProgressWheel:textSize="@dimen/progress_wheel_text_size"
         ProgressWheel:rimColor="#FFF"
         ProgressWheel:barLength="60dp"
         ProgressWheel:barColor="#FF0000"
@@ -29,19 +30,15 @@
 
     <edu.uci.crayfis.widget.MessageView
         android:layout_width="match_parent"
-        android:layout_height="24dp"
+        android:layout_height="wrap_content"
         android:gravity="center"
-        android:id="@+id/message_view"/>
+        android:id="@+id/message_view"
+        android:layout_marginBottom="@dimen/standard_margin"/>
 
     <edu.uci.crayfis.widget.DataView
         android:id="@+id/data_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:typeface="monospace"
-        android:gravity="center_horizontal"
-        android:textColor="@android:color/white"
-        tools:text=" Frames:0\n Candidates:0 "/>
+        android:layout_height="wrap_content"/>
 
 
 

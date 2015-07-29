@@ -18,7 +18,6 @@ import edu.uci.crayfis.LayoutFeedback;
 import edu.uci.crayfis.LayoutGallery;
 import edu.uci.crayfis.LayoutHist;
 import edu.uci.crayfis.LayoutLeader;
-import edu.uci.crayfis.LayoutLevels;
 import edu.uci.crayfis.LayoutLogin;
 import edu.uci.crayfis.LayoutTime;
 import edu.uci.crayfis.R;
@@ -78,9 +77,6 @@ public final class NavHelper {
                     break;
                 case STATUS:
                     newFragment = LayoutData.getInstance();
-                    break;
-                case YOUR_LEVEL:
-                    newFragment = LayoutLevels.getInstance();
                     break;
                 case DATA:
                     newFragment = LayoutHist.getInstance();

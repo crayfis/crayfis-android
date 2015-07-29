@@ -4,6 +4,7 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 1/5/15.
  */
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -12,16 +13,12 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
-import android.webkit.ConsoleMessage;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
-
-import android.webkit.JavascriptInterface;
-
 
 import edu.uci.crayfis.util.CFLog;
 
@@ -134,15 +131,29 @@ public class LayoutLogin extends Fragment {
                         CFLog.d(" CRAYFIS got user name = " + username);
                     } catch (Exception e) {}
 
+                    // FIXME I'm pretty sure this is not saving in the global preferences.
+                    //
+                    // Global preferences were based on DAQActivity functionality, they should be migrated
+                    // to the default shared preferences like here.
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 
                     if (code.length()==6)
                     {
                         sharedPrefs.edit().putString("prefUserID",code).apply();
-                        Context act = getActivity();
-                        if (act != null )
-                            Toast.makeText(act, R.string.login_notice+" "+username+" "+R.string.login_notice_code+" "+code,
-                                Toast.LENGTH_SHORT).show();
+                        Activity act = getActivity();
+                        if (act != null ) {
+                            CFConfig.getInstance().setAccountName(code);
+                            ((CFApplication) act.getApplication()).savePreferences();
+
+                            Toast.makeText(act, R.string.login_notice + " " + username + " " + R.string.login_notice_code + " " + code,
+                                    Toast.LENGTH_SHORT).show();
+                            final View userStatus = act.findViewById(R.id.user_status);
+                            if (userStatus != null) {
+                                userStatus.postInvalidate();
+                            }
+                        }
+
+
                     }
 
                     return true;

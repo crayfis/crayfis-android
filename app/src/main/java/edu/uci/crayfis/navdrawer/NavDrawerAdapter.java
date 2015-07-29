@@ -34,7 +34,6 @@ public final class NavDrawerAdapter extends ArrayAdapter<NavDrawerAdapter.Type> 
         DEVELOPER("Developer"),
         LIVE_VIEW("Live View"),
         STATUS("Status"),
-        YOUR_LEVEL("Your Level"),
         DATA("Data"),
         NETWORK_MAP("Network Map"),
         YOUR_ACCOUNT("Your Account"),
@@ -61,7 +60,6 @@ public final class NavDrawerAdapter extends ArrayAdapter<NavDrawerAdapter.Type> 
     private static final Type[] BASE_NAV_ENTRIES = new Type[] {
             Type.LIVE_VIEW,
             Type.STATUS,
-            Type.YOUR_LEVEL,
             Type.DATA,
             Type.NETWORK_MAP,
             Type.YOUR_ACCOUNT,

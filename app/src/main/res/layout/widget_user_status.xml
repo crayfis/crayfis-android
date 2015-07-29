@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/user_status_registered"
+        android:visibility="gone">
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:id="@+id/user_status_avatar"
+            android:src="@drawable/astronomer"
+            android:layout_alignParentLeft="true"
+            android:layout_marginRight="@dimen/standard_margin"/>
+
+        <TextView
+            style="@style/TextViewSmall"
+            android:layout_toRightOf="@id/user_status_avatar"
+            android:id="@+id/user_status_text"
+            android:textSize="@dimen/text_size_very_small"
+            android:layout_centerVertical="true"/>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/user_status_unregistered"
+        android:orientation="horizontal">
+        <TextView
+            style="@style/TextViewSmall"
+            android:layout_toRightOf="@id/user_status_avatar"
+            android:text="Tap to register this device to earn credits for prizes and be an author on scientific papers!"
+            android:gravity="center_horizontal"/>
+    </LinearLayout>
+
+</RelativeLayout>

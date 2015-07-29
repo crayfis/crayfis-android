@@ -888,6 +888,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             }
         });
 
+        // When the device is not registered, this should take the user to the log in page.
+        findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (CFConfig.getInstance().getAccountName() == null) {
+                    NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
+                    drawerLayout.closeDrawers();
+                }
+            }
+        });
+
         final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
         navItems.setAdapter(navItemsAdapter);
         final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1609,6 +1620,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 
+                // Originally, the updating of the LevelView was done here.  This seems like a good place to also
+                // make sure that UserStatusView gets updated with any new counts.
+                final View userStatus = findViewById(R.id.user_status);
+                if (userStatus != null) {
+                    userStatus.postInvalidate();
+                }
 
                 try {
 
@@ -1616,18 +1633,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         LayoutData.updateData();
                     }
 
-                    if (LayoutLevels.mStatusView != null)
-                    {
-                        LayoutLevels.mStatusView.setStatus((int) (1.0e-3 * xbManager.getExposureTime()),
-                                (int) (getFPS()));
-
-                    }
-
                     if (application.getApplicationState() == CFApplication.State.IDLE)
                     {
                         if (LayoutData.mProgressWheel != null) {
                             LayoutData.mProgressWheel.setText("Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%");
-                            LayoutData.mProgressWheel.setTextSize(22);
 
                             LayoutData.mProgressWheel.setTextColor(Color.WHITE);
                             LayoutData.mProgressWheel.setBarColor(Color.LTGRAY);
@@ -1644,7 +1653,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     {
                         if (LayoutData.mProgressWheel != null) {
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
-                            LayoutData.mProgressWheel.setTextSize(22);
 
                             LayoutData.mProgressWheel.setTextColor(Color.RED);
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
@@ -1661,8 +1669,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         if (LayoutData.mProgressWheel != null) {
 
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-                            LayoutData.mProgressWheel.setTextSize(27);
-
 
                             LayoutData.mProgressWheel.setTextColor(Color.RED);
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
@@ -1680,10 +1686,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.DATA)
                     {
                         if (LayoutData.mProgressWheel != null) {
-
-                            LayoutData.mProgressWheel.setTextSize(30);
-
-
                             LayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
                             LayoutData.mProgressWheel.setTextColor(0xFF00AA00);
                             LayoutData.mProgressWheel.setBarColor(0xFF00AA00);

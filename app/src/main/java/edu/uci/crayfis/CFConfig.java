@@ -249,7 +249,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
 
-    public String getAccountName() { return mAccountName; }
+    public void setAccountName(@Nullable final String accountName) {
+        mAccountName = accountName;
+    }
+
+    public String getAccountName() {
+        return mAccountName;
+    }
+
     public float getAccountScore() { return mAccountScore; }
     public String getUpdateURL() { return mUpdateURL; }
 

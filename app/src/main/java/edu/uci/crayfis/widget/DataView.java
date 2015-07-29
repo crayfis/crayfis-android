@@ -1,33 +1,40 @@
 package edu.uci.crayfis.widget;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.ViewUtil;
 
 /**
  * Show the user the status of the application.
  */
-public final class DataView extends TextView {
+public final class DataView extends LinearLayout {
 
-    private static final CFConfig CONFIG = CFConfig.getInstance();
+    private TextView mFramesScanned;
+    private TextView mPixelsScanned;
+    private TextView mCandidates;
 
     public DataView(final Context context) {
-        super(context);
+        this(context, null);
     }
 
     public DataView(final Context context, final AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public DataView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
+        inflate(context, R.layout.widget_data_view, this);
+        mFramesScanned = (TextView) findViewById(R.id.frames_scanned);
+        mFramesScanned.setText("0");
+        mPixelsScanned = (TextView) findViewById(R.id.pixels_scanned);
+        mPixelsScanned.setText("0");
+        mCandidates = (TextView) findViewById(R.id.candidates);
+        mCandidates.setText("0");
     }
 
     /**
@@ -36,23 +43,10 @@ public final class DataView extends TextView {
      * @param status The status.
      */
     public void setStatus(@NonNull final Status status) {
-        final long totalFrames = status.getTotalFrames();
-        final long totalPixels = status.getTotalPixels();
-
-        final int totalCandidates = status.getTotalEvents();
-        /*
-                final String text = String.format("Frames scanned: %s\nFrames selected: %s\n Candidates: %s",
-                        totalFrames,
-                        totalEvents,
-                        totalCandidates);
-                        */
-                final String text = String.format("Frames scanned: %s\nPixels scanned: %s\nCandidates: %s",
-                        totalFrames,totalPixels,totalCandidates);
-                setText(text);
-
-        }
-
-
+        mFramesScanned.setText(ViewUtil.formatDecimal(status.getTotalFrames()));
+        mPixelsScanned.setText(ViewUtil.formatDecimal(status.getTotalPixels()));
+        mCandidates.setText(ViewUtil.formatDecimal(status.getTotalEvents()));
+    }
 
     /**
      * General status values for the application.  Create a new instance through
@@ -61,13 +55,10 @@ public final class DataView extends TextView {
     public static final class Status {
 
         private final long mTotalFrames;
-
         private final int mTotalEvents;
         private final long mTotalPixels;
 
-        private Status(
-                       final int totalEvents, final long totalPixels, final long totalFrames) {
-
+        private Status(final int totalEvents, final long totalPixels, final long totalFrames) {
             mTotalFrames = totalFrames;
             mTotalEvents = totalEvents;
             mTotalPixels = totalPixels;
