@@ -4,13 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/imageView3"
-        android:layout_width="fill_parent"
-        android:layout_height="40dp"
-        android:background="#000000"
-        android:src="@drawable/crayfish_white" />
-
     <edu.uci.crayfis.widget.StatusView
         android:id="@+id/status_view"
         android:layout_width="match_parent"

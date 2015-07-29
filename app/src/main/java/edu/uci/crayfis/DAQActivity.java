@@ -17,32 +17,13 @@
 
 package edu.uci.crayfis;
 
-import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
-
-import android.os.BatteryManager;
-
-import android.os.Build;
-import android.provider.Settings;
-
-import android.view.Window;
-
-import android.view.WindowManager;
-
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-import android.text.Html;
-import android.support.v4.view.ViewPager;
-
-import java.lang.OutOfMemoryError;
-
-import android.view.View;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Sensor;
@@ -51,21 +32,30 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v4.view.PagerTabStrip;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
-import android.text.Html;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
-import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -94,16 +84,16 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
+import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
+import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataView;
 import edu.uci.crayfis.widget.MessageView;
-import edu.uci.crayfis.widget.StatusView;
-
-import edu.uci.crayfis.LayoutLevels;
 
 //import android.location.LocationListener;
 
@@ -113,13 +103,8 @@ import edu.uci.crayfis.LayoutLevels;
  * hits "Run" from the start screen. Here we manage the threads that acquire,
  * process, and upload the pixel data.
  */
-public class DAQActivity extends ActionBarActivity implements Camera.PreviewCallback, SensorEventListener,
+public class DAQActivity extends AppCompatActivity implements Camera.PreviewCallback, SensorEventListener,
         ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
-
-    private ViewPager _mViewPager;
-    private ViewPagerAdapter _adapter;
-
-    private PagerTabStrip strip;
 
     private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private static LayoutData mLayoutData = LayoutData.getInstance();
@@ -209,8 +194,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	private ParticleReco mParticleReco;
 
 	Context context;
+    private ActionBarDrawerToggle mActionBarDrawerToggle;
 
-	public void clickedSettings() {
+    public void clickedSettings() {
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
@@ -292,22 +278,24 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     private int cands_before_sleeping=0;
     public void goToSleep()
     {
-        previous_item = _mViewPager.getCurrentItem()+1; // FIXME: why do we need this +1?
-        //CFLog.d(" Now g to INACTIVE pane due to user inactivity and dimming and invisibling.");
-        _mViewPager.setCurrentItem(ViewPagerAdapter.INACTIVE);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getSupportActionBar().hide();
 
         try {
             screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
            // CFLog.d(" saving screen brightness of "+screen_brightness);
         } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 0);
-        findViewById(R.id.camera_preview).setVisibility(View.INVISIBLE);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
+        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
+        NavHelper.setFragment(this, LayoutBlack.getInstance(), NavDrawerAdapter.Type.LIVE_VIEW.getTitle());
 
-        strip.setTextColor(Color.BLACK);
-        strip.setTabIndicatorColor(Color.BLACK);
-        strip.setBackgroundColor(Color.BLACK);
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+            // Newer devices allow us to completely hide the soft control buttons.
+            // Doesn't matter what view is used here, we just need the methods in the View class.
+            final View view = findViewById(R.id.fragment_container);
+            view.setOnSystemUiVisibilityChangeListener(new UiVisibilityListener());
+            view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
 
         sleep_mode=true;
         sleeping_since = System.currentTimeMillis();
@@ -327,53 +315,63 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 		final TextView tx1 = new TextView(this);
 
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.STATUS)
-  		  tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
-                  +getResources().getString(R.string.help_data)+"\n\n"+
-                  getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-				+ s);
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DATA)
+        // FIXME: Jodi - There has to be a better way, but this works.... Move these into the fragments or something....
+        final List fragments = getSupportFragmentManager().getFragments();
+        if (fragments.size() == 0) {
+            return;
+        }
+
+        final Fragment activeFragment = (Fragment) fragments.get(0);
+        if (activeFragment instanceof LayoutData) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
+                    +getResources().getString(R.string.help_data)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutHist) {
             tx1.setText(getResources().getString(R.string.crayfis_about)+
                             "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
                             getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s
-                           );
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DOSIMETER)
+                            + s
+            );
+        } else if (activeFragment instanceof LayoutTime) {
             tx1.setText(getResources().getString(R.string.crayfis_about)+
                     "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
                     getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
 
                     + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LOGIN)
+        } else if (activeFragment instanceof LayoutLogin) {
             tx1.setText(getResources().getString(R.string.crayfis_about)+
                     "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
                     getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
                     + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.LEADER)
+        } else if (activeFragment instanceof LayoutLeader) {
             tx1.setText(getResources().getString(R.string.crayfis_about)+
                     "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
                     getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
                     + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.DEVELOPER)
-        tx1.setText(getResources().getString(R.string.crayfis_about)+
-                "\n"+getResources().getString(R.string.toast_devel)+"\n"+
-                getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                + s);
-
-        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
+        } else if (activeFragment instanceof LayoutDeveloper) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_devel)+"\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutBlack) {
             tx1.setText(getResources().getString(R.string.crayfis_about)+
                     "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
                     getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
                     + s);
+        } else {
+            tx1.setText("No more further information available at this time.");
+        }
+
+
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
+//
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
 
 		tx1.setAutoLinkMask(RESULT_OK);
 		tx1.setMovementMethod(LinkMovementMethod.getInstance());
@@ -388,8 +386,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 				})
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        // switch to feedback item
-                        _mViewPager.setCurrentItem(ViewPagerAdapter.FEEDBACK);
+                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(),
+                                NavDrawerAdapter.Type.FEEDBACK.getTitle());
                     }
                 })
 				.setView(tx1).show();
@@ -801,6 +799,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             if (files[i].getName().endsWith(".bin")) {
                 new UploadExposureTask((CFApplication) getApplication(),
                         new UploadExposureService.ServerInfo(this), files[i]);
+                foundFiles++;
             }
         }
 
@@ -823,24 +822,8 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 		editor.commit();
 		*/
 
-
-
-        //Remove notification bar
-        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-
-
-        setContentView(R.layout.video);
-
-
-
-
-        _mViewPager = (ViewPager) findViewById(R.id.viewPager);
-        _adapter = new ViewPagerAdapter(getApplicationContext(),getSupportFragmentManager());
-        _mViewPager.setAdapter(_adapter);
-        _mViewPager.setCurrentItem(ViewPagerAdapter.STATUS);
-
-
-
+        setContentView(R.layout.activity_daq);
+        configureNaviation();
 
 		// Create our Preview view and set it as the content of our activity.
 		mPreview = new CameraPreviewView(this, this, true);
@@ -870,32 +853,58 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         batteryPct = -1; // indicate no data yet
         last_user_interaction = starttime;
         /////////
-        newLocation(new Location("BLANK"),false);
+        newLocation(new Location("BLANK"), false);
         buildGoogleApiClient(); // connect() and disconnect() called in onStart() and onStop()
 
         // backup location if Google play isn't working or installed
         mLastLocationDeprecated = getLocationDeprecated();
-        newLocation(mLastLocationDeprecated,true);
+        newLocation(mLastLocationDeprecated, true);
 
 		xbManager = ExposureBlockManager.getInstance(this);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-        strip = PagerTabStrip.class.cast(findViewById(R.id.pts_main));
-        strip.setDrawFullUnderline(false);
-        strip.setTabIndicatorColor(Color.RED);
-        strip.setBackgroundColor(Color.WHITE);
-        strip.setNonPrimaryAlpha(0.5f);
-        strip.setTextSpacing(25);
-        strip.setTextColor(Color.BLACK);
-        strip.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 10);
-
-
-      
-
-
 	}
+
+    /**
+     * Configure the toolbar and navigation drawer.
+     */
+    private void configureNaviation() {
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
+        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
+        drawerLayout.setDrawerListener(listener);
+        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
+        navItems.setAdapter(new NavDrawerAdapter(this));
+        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
+            }
+        });
+
+        final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
+        navItems.setAdapter(navItemsAdapter);
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+                navItemsAdapter.notifyDataSetChanged();
+            }
+        });
+        NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+    }
+
+    @Override
+    protected void onPostCreate(final Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mActionBarDrawerToggle.syncState();
+    }
 
     @Override
     protected void onStart()
@@ -908,8 +917,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     }
 
-    private void unSetupCamera()
-    {
+    private void unSetupCamera() {
         CFLog.d(" DAQActivity: unsetup camera called. mCamera ="+mCamera);
 
         // stop the camera preview and all processing
@@ -929,8 +937,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
     @Override
-    protected void onStop()
-    {
+    protected void onStop() {
         super.onStop();
         CFLog.d("DAQActivity onStop: wake lock held?"+wl.isHeld());
 
@@ -947,7 +954,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
         // give back brightness control
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
 
 
     }
@@ -1077,6 +1084,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
+        // Check if the drawer toggle has already handled the click.  The hamburger icon is an option item.
+        if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
         switch(item.getItemId()) {
             case R.id.menu_settings:
                 clickedSettings();
@@ -1228,7 +1240,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 	}
 
     private long last_user_interaction=0;
-    private int previous_item = ViewPagerAdapter.STATUS;
     private boolean sleep_mode = false;
     private int screen_brightness = 0;
     @Override
@@ -1236,22 +1247,20 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
     {
         last_user_interaction=System.currentTimeMillis();
        // CFLog.d(" The UserActivity at time= "+last_user_interaction);
-        if (sleep_mode==true)
+        if (sleep_mode)
         {
             //wake up
             getSupportActionBar().show();
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
           //  CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
 
-            Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
+            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
 
             findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
-            _mViewPager.setCurrentItem(previous_item);
-            strip.setTextColor(Color.BLACK);
-            strip.setBackgroundColor(Color.WHITE);
-            strip.setTabIndicatorColor(Color.RED);
             sleep_mode=false;
 
             long current_time = System.currentTimeMillis();
@@ -1260,10 +1269,7 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
             if (time_sleeping > 5.0)
             {
                 Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
-
-
             }
-
         }
     }
 
@@ -1559,11 +1565,11 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if ( sleep_mode == false
-                        && (last_user_interaction - System.currentTimeMillis()) < -30e3
+                if ( !sleep_mode
+                        && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
                         && (application.getApplicationState() == CFApplication.State.DATA
                             || application.getApplicationState() == CFApplication.State.IDLE)
-                        ) // wait 10s after going into DATA or IDLE mode
+                        ) // wait 1m after going into DATA or IDLE mode
                 {
                     goToSleep();
 
@@ -1600,8 +1606,6 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                if (_adapter != null)
-                    _adapter.setDeveloperMode(sharedPrefs.getBoolean("prefEnableGallery", false));
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
                 // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
 
@@ -1788,5 +1792,17 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         public void run() {
             runOnUiThread(RUNNABLE);
         }
-    };
+    }
+
+    //FIXME: THIS CLASS IS WAY TOO BIG
+    private final class UiVisibilityListener implements View.OnSystemUiVisibilityChangeListener {
+
+        @Override
+        public void onSystemUiVisibilityChange(final int visibility) {
+            if (visibility == 0) {
+                // This is so the user doesn't have to double tap the screen to get back to normal.
+                onUserInteraction();
+            }
+        }
+    }
 }

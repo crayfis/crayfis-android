@@ -5,19 +5,16 @@ package edu.uci.crayfis;
  */
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.ConsoleMessage;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
 import edu.uci.crayfis.util.CFLog;
 
@@ -64,6 +61,17 @@ public class LayoutFeedback extends Fragment {
         //Creation of the Webview found in the XML Layout file
         browserView = (WebView)root.findViewById(R.id.webkit_feedback);
         browserView.setWebViewClient(new WebViewClient());
+        browserView.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(final View v, final int keyCode, final KeyEvent event) {
+                if (browserView.canGoBack()) {
+                    browserView.goBack();
+                    return true;
+                }
+                return false;
+            }
+        });
+
         mProgressBar = (ProgressBar)root.findViewById(R.id.webprogress_feedback);
         mProgressBar.setVisibility(View.VISIBLE);
 

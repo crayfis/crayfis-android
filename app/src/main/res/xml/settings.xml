@@ -49,7 +49,7 @@
 
     <CheckBoxPreference
         android:defaultValue="false"
-        android:key="prefEnableGallery"
+        android:key="@string/prefEnableGallery"
         android:summary="@string/settings_gallery_summary"
         android:title="@string/settings_gallery_title">
     </CheckBoxPreference>

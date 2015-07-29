@@ -4,32 +4,30 @@ package edu.uci.crayfis;
  * Created by danielwhiteson on 11/19/14.
  */
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.GridView;
-import android.widget.TextView;
-import android.widget.Button;
-
-import android.util.TypedValue;
-import android.content.res.Resources;
-
-import edu.uci.crayfis.util.CFLog;
-import android.widget.Toast;
 import android.view.ViewGroup;
-import java.util.ArrayList;
-import edu.uci.crayfis.gallery.Utils;
-
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
-import edu.uci.crayfis.gallery.GridViewImageAdapter;
+import java.util.ArrayList;
 
+import edu.uci.crayfis.gallery.GridViewImageAdapter;
 import edu.uci.crayfis.gallery.SavedImage;
+import edu.uci.crayfis.gallery.Utils;
+import edu.uci.crayfis.util.CFLog;
 
 public class LayoutGallery extends Fragment {
 
@@ -134,9 +132,15 @@ public class LayoutGallery extends Fragment {
             public void onClick(View v) {
                 CFLog.d("Layout Gallery: deleting images!");
                 int num = utils.deleteImages();
-                Context act = getActivity();
-                if (act != null) Toast.makeText(act, R.string.Deleted+num+R.string.small_images,
-                        Toast.LENGTH_SHORT).show();
+                Activity act = getActivity();
+                final Resources resources = getResources();
+                if (act != null && !act.isFinishing()) {
+                    final String msg = String.format("%s %d %s",
+                            resources.getString(R.string.Deleted),
+                            num,
+                            resources.getString(R.string.small_images));
+                    Toast.makeText(act, msg, Toast.LENGTH_SHORT).show();
+                }
                 //images = utils.getSavedImages();
 
             }

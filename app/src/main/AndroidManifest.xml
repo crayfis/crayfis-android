@@ -23,7 +23,8 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:allowBackup="false"
-        android:name=".CFApplication">
+        android:name=".CFApplication"
+        android:theme="@style/CrayfisApp">
         <activity
             android:name="edu.uci.crayfis.MainActivity"
             android:launchMode="singleTask"
@@ -58,7 +59,8 @@
             android:name="edu.uci.crayfis.DAQActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
-            android:theme="@style/ActionBar"/>
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/CrayfisApp"/>
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"
             android:screenOrientation="portrait"/>
