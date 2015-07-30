@@ -28,9 +28,6 @@ public class ParticleReco {
     public long time;
     public Location location;
 
-    //public static float default_max_pix_frac = (float)0.15;
-    //private float max_pix_frac;
-
     private static ParticleReco sInstance;
 
     /**
@@ -45,17 +42,9 @@ public class ParticleReco {
         return sInstance;
     }
 
-    public static synchronized void setPreviewSize(@NonNull final Camera.Size inPreviewSize) {
-        ParticleReco.previewSize = inPreviewSize;
-    }
-
     private ParticleReco() {
         good_quality = false;
         clearHistograms();
-    }
-
-    public int getTotalPixels() {
-        return previewSize.height * previewSize.width;
     }
 
     public static class RecoEvent implements Parcelable {
@@ -289,8 +278,6 @@ public class ParticleReco {
     public static final int stepW = 10;
     public static final int stepH = 10;
 
-    public static Camera.Size previewSize = null;
-
     public RecoEvent buildEvent(RawCameraFrame frame) {
         event_count++;
 
@@ -311,8 +298,8 @@ public class ParticleReco {
 
         float percent_hit = 0;
 
-        int width = previewSize.width;
-        int height = previewSize.height;
+        int width = frame.getSize().width;
+        int height = frame.getSize().height;
 
         int npixels = 0;
         int npixels_hit = 0;
@@ -396,8 +383,8 @@ public class ParticleReco {
             }
 
 
-            int width = previewSize.width;
-            int height = previewSize.height;
+            int width = frame.getSize().width;
+            int height = frame.getSize().height;
             int max_val = 0;
             int num_pix = 0;
             int tot_pix=0;

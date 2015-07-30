@@ -1166,9 +1166,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 // if we don't already have a particleReco object setup,
                 // do that now that we know the camera size.
                 mParticleReco = ParticleReco.getInstance();
-                mParticleReco.setPreviewSize(previewSize);
                 mLayoutBlack.previewSize = previewSize;
-                l2thread = new L2Processor(this, previewSize);
+                l2thread = new L2Processor(this);
                 l2thread.start();
 
                 ntpThread = new SntpUpdateThread();
@@ -1207,6 +1206,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 mCamera.setParameters(param);
             }
 
+            // update the current application settings to reflect new camera size.
+            CFApplication.setCameraSize(mCamera.getParameters().getPreviewSize());
+
             // Create an instance of Camera
             CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
@@ -1215,13 +1217,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
             }
 
-
-
         try {
-        mPreview.setCamera(mCamera);
-          }  catch (Exception e) {
-           userErrorMessage(getResources().getString(R.string.camera_error),true);
-           }
+            // install the camera on the preview so we can start sampling images
+            mPreview.setCamera(mCamera);
+        }  catch (Exception e) {
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
+        }
         CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
@@ -1751,18 +1752,25 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (mLayoutDeveloper != null) {
                         if (mLayoutDeveloper.mAppBuildView != null)
                             mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
-                        if (mLayoutDeveloper.mTextView != null)
-                            mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
-                                            + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                                            + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
-                                            + "Image dimensions = "+previewSize.height+"x"+previewSize.width + "("+sharedPrefs.getString("prefResolution","Low")+") \n"
-                                            + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
-                                            + "Upload server = " + upload_url + "\n"
-                                            + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
-                                            + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                                            + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n"
-                            );
+
+                        final Camera.Size cameraSize = CFApplication.getCameraSize();
+
+                        if (mLayoutDeveloper.mTextView != null) {
+                            String devtxt = "@@ Developer View @@\n"
+                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                    + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
+                                    + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                    + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
+                            if (cameraSize != null) {
+                                devtxt += "Image dimensions = " + cameraSize.height + "x" + cameraSize.width + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
+                            }
+                            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
+                                    + "Upload server = " + upload_url + "\n"
+                                    + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
+                                    + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+                                    + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
+                            mLayoutDeveloper.mTextView.setText(devtxt);
+                        }
                     }
 
                     if (location_valid(CFApplication.getLastKnownLocation()) == false)

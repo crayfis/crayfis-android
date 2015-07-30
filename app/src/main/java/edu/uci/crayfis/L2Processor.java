@@ -85,11 +85,10 @@ class L2Processor extends Thread {
      *
      * @param context Any {@link android.content.Context}, only a reference to {@link CFApplication} will be kept.
      */
-    public L2Processor(@NonNull final Context context, @NonNull final Camera.Size cameraSize) {
+    public L2Processor(@NonNull final Context context) {
         APPLICATION = (CFApplication) context.getApplicationContext();
         XB_MANAGER = ExposureBlockManager.getInstance(context);
         PARTICLE_RECO = ParticleReco.getInstance();
-        PARTICLE_RECO.setPreviewSize(cameraSize);
         mUtils = new Utils(context);
     }
 
@@ -205,7 +204,8 @@ class L2Processor extends Thread {
                 }
 
                 // check whether there are too many L2 pixels in this event
-                if (pixels.size() > CONFIG.getQualityPixFraction() * PARTICLE_RECO.getTotalPixels()) {
+                final int total_pixels = frame.getSize().height * frame.getSize().width;
+                if (pixels.size() > CONFIG.getQualityPixFraction() * total_pixels) {
                     // oops! too many pixels in this frame. trigger recalibration.
                     // TODO: consider: should we be recalibrating or just dropping the frame here?
                     APPLICATION.setApplicationState(CFApplication.State.STABILIZATION);
@@ -259,8 +259,8 @@ class L2Processor extends Thread {
                     if (save_images && max > CONFIG.getL2Threshold()*1.2)
                     try {
 
-                        SavedImage si = new SavedImage(event.pixels, max, PARTICLE_RECO.previewSize.width
-                                , PARTICLE_RECO.previewSize.height, frame.getAcquiredTime());
+                        SavedImage si = new SavedImage(event.pixels, max, frame.getSize().width,
+                                frame.getSize().height, frame.getAcquiredTime());
                         CFLog.d(" image="+si+" utils = "+mUtils);
                         mUtils.saveImage(si);
 
