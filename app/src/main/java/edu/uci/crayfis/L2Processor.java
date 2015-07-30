@@ -71,7 +71,6 @@ class L2Processor extends Thread {
     private final ParticleReco PARTICLE_RECO;
 
     private long L2counter = 0;
-    //private long mCalibrationStop;
 
     // true if a request has been made to stop the thread
     volatile boolean stopRequested = false;
@@ -270,20 +269,6 @@ class L2Processor extends Thread {
                     }
                 }
             }
-
-
-
-            // If we're calibrating, check if we've processed enough
-            // frames to decide on the threshold(s) and go back to
-            // data-taking mode.
-            /*
-            if (APPLICATION.getApplicationState() == CFApplication.State.CALIBRATION
-                    && PARTICLE_RECO.event_count >= CONFIG.getCalibrationSampleFrames()) {
-                // mark the time of the last event from the run.
-                mCalibrationStop = frame.getAcquiredTime();
-                APPLICATION.setApplicationState(CFApplication.State.DATA);
-            }
-            */
         }
         running = false;
     }
@@ -295,12 +280,6 @@ class L2Processor extends Thread {
     public int getTotalEvents() {
         return mTotalEvents;
     }
-
-    /*
-    public long getCalibrationStop() {
-        return mCalibrationStop;
-    }
-    */
 
     public void setFixedThreshold(boolean fixedThreshold) {
         mFixedThreshold = fixedThreshold;

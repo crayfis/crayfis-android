@@ -892,7 +892,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                if (CFConfig.getInstance().getAccountName() == null) {
+                if (CONFIG.getAccountName() == null) {
                     NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
                     drawerLayout.closeDrawers();
                 }
@@ -1553,8 +1553,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
+                final CFApplication application = (CFApplication) getApplication();
 
-                if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
+                if (! application.isNetworkAvailable()) {
                     if (LayoutData.mMessageView != null)
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Error: "+getResources().getString(R.string.network_unavailable));
                 } else if (!UploadExposureTask.sPermitUpload.get()) {
@@ -1568,13 +1569,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (LayoutData.mMessageView != null )
                         LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.ignored)+" " + ignoredFrames);
                 } else {
-                    if (LayoutData.mMessageView != null )
+                    if (LayoutData.mMessageView != null)
 
                         LayoutData.mMessageView.setMessage(null, null);
                 }
-
-                final CFApplication application = (CFApplication) getApplication();
-
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( !sleep_mode
@@ -1603,7 +1601,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         && application.getApplicationState()!=edu.uci.crayfis.CFApplication.State.IDLE)
                 {
                     CFLog.d(" Battery too low, going to IDLE mode.");
-                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+                    application.setApplicationState(CFApplication.State.IDLE);
 
                 }
 
@@ -1613,7 +1611,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     CFLog.d(" Battery ok now, returning to run mode.");
                     setUpAndConfigureCamera();
 
-                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
+                    application.setApplicationState(CFApplication.State.STABILIZATION);
                 }
 
                 // turn on developer options if it has been selected
@@ -1751,7 +1749,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                     if (mLayoutDeveloper != null) {
                         if (mLayoutDeveloper.mAppBuildView != null)
-                            mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
+                            mLayoutDeveloper.mAppBuildView.setAppBuild(application.getBuildInformation());
 
                         final Camera.Size cameraSize = CFApplication.getCameraSize();
 
