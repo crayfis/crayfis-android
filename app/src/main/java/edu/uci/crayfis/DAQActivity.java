@@ -802,8 +802,9 @@ public class DAQActivity extends ActionBarActivity implements Camera.PreviewCall
         int foundFiles = 0;
         for (int i = 0; i < files.length && foundFiles < 5; i++) {
             if (files[i].getName().endsWith(".bin")) {
+                CFLog.i("Uploading file: " + files[i].getName());
                 new UploadExposureTask((CFApplication) getApplication(),
-                        new UploadExposureService.ServerInfo(this), files[i]);
+                        new UploadExposureService.ServerInfo(this), files[i]).execute();
             }
         }
 
