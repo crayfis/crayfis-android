@@ -23,7 +23,7 @@ public class RawCameraFrame {
     private float[] mOrientation;
     private Camera.Size mSize;
     private int mPixMax;
-    private int length;
+    private int mLength;
 
     /**
      * Create a new instance.
@@ -44,11 +44,7 @@ public class RawCameraFrame {
         mSize = size;
         mPixMax = -1;
 
-        length = mSize.height * mSize.width;
-
-        // just in case
-        if (length > mBytes.length) length = mBytes.length;
-       // CFLog.d(" RCF length = "+length);
+        mLength = mSize.height * mSize.width;
     }
 
     /**
@@ -129,7 +125,7 @@ public class RawCameraFrame {
             return mPixMax;
         }
 
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < mLength; i++) {
             int val = mBytes[i] & 0xFF;
             if (val > mPixMax) mPixMax = val;
         }

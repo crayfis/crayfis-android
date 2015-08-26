@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -36,6 +37,8 @@ public class CFApplication extends Application {
 
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
+
+    private static Camera.Size mCameraSize;
 
     private AppBuild mAppBuild;
 
@@ -120,6 +123,13 @@ public class CFApplication extends Application {
 
     public static void setLastKnownLocation(Location lastKnownLocation) {
         mLastKnownLocation = lastKnownLocation;
+    }
+
+    public static Camera.Size getCameraSize() {
+        return mCameraSize;
+    }
+    public static void setCameraSize(Camera.Size size) {
+        mCameraSize = size;
     }
 
     public static long getStartTimeNano() { return mStartTimeNano; }

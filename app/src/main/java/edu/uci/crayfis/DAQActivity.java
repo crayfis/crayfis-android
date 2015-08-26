@@ -799,7 +799,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         for (int i = 0; i < files.length && foundFiles < 5; i++) {
             if (files[i].getName().endsWith(".bin")) {
                 new UploadExposureTask((CFApplication) getApplication(),
-                        new UploadExposureService.ServerInfo(this), files[i]);
+                        new UploadExposureService.ServerInfo(this), files[i])
+                        .execute();
                 foundFiles++;
             }
         }
@@ -893,7 +894,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                if (CFConfig.getInstance().getAccountName() == null) {
+                if (CONFIG.getAccountName() == null) {
                     NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
                     drawerLayout.closeDrawers();
                 }
@@ -1167,9 +1168,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 // if we don't already have a particleReco object setup,
                 // do that now that we know the camera size.
                 mParticleReco = ParticleReco.getInstance();
-                mParticleReco.setPreviewSize(previewSize);
                 mLayoutBlack.previewSize = previewSize;
-                l2thread = new L2Processor(this, previewSize);
+                l2thread = new L2Processor(this);
                 l2thread.start();
 
                 ntpThread = new SntpUpdateThread();
@@ -1208,6 +1208,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 mCamera.setParameters(param);
             }
 
+            // update the current application settings to reflect new camera size.
+            CFApplication.setCameraSize(mCamera.getParameters().getPreviewSize());
+
             // Create an instance of Camera
             CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 
@@ -1216,13 +1219,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
             }
 
-
-
         try {
-        mPreview.setCamera(mCamera);
-          }  catch (Exception e) {
-           userErrorMessage(getResources().getString(R.string.camera_error),true);
-           }
+            // install the camera on the preview so we can start sampling images
+            mPreview.setCamera(mCamera);
+        }  catch (Exception e) {
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
+        }
         CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
@@ -1553,8 +1555,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         private final Runnable RUNNABLE = new Runnable() {
             @Override
             public void run() {
+                final CFApplication application = (CFApplication) getApplication();
 
-                if (! ((CFApplication) getApplicationContext()).isNetworkAvailable()) {
+                if (! application.isNetworkAvailable()) {
                     if (LayoutData.mMessageView != null)
                         LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Error: "+getResources().getString(R.string.network_unavailable));
                 } else if (!UploadExposureTask.sPermitUpload.get()) {
@@ -1568,13 +1571,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (LayoutData.mMessageView != null )
                         LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.ignored)+" " + ignoredFrames);
                 } else {
-                    if (LayoutData.mMessageView != null )
+                    if (LayoutData.mMessageView != null)
 
                         LayoutData.mMessageView.setMessage(null, null);
                 }
-
-                final CFApplication application = (CFApplication) getApplication();
-
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( !sleep_mode
@@ -1603,7 +1603,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         && application.getApplicationState()!=edu.uci.crayfis.CFApplication.State.IDLE)
                 {
                     CFLog.d(" Battery too low, going to IDLE mode.");
-                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+                    application.setApplicationState(CFApplication.State.IDLE);
 
                 }
 
@@ -1613,7 +1613,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     CFLog.d(" Battery ok now, returning to run mode.");
                     setUpAndConfigureCamera();
 
-                    ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
+                    application.setApplicationState(CFApplication.State.STABILIZATION);
                 }
 
                 // turn on developer options if it has been selected
@@ -1751,19 +1751,26 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                     if (mLayoutDeveloper != null) {
                         if (mLayoutDeveloper.mAppBuildView != null)
-                            mLayoutDeveloper.mAppBuildView.setAppBuild(((CFApplication) getApplication()).getBuildInformation());
-                        if (mLayoutDeveloper.mTextView != null)
-                            mLayoutDeveloper.mTextView.setText("@@ Developer View @@\n L1 Threshold:"
-                                            + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n" + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
-                                            + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                                            + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
-                                            + "Image dimensions = "+previewSize.height+"x"+previewSize.width + "("+sharedPrefs.getString("prefResolution","Low")+") \n"
-                                            + "L1 hist = "+L1cal.getHistogram().toString()+"\n"
-                                            + "Upload server = " + upload_url + "\n"
-                                            + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
-                                            + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                                            + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n"
-                            );
+                            mLayoutDeveloper.mAppBuildView.setAppBuild(application.getBuildInformation());
+
+                        final Camera.Size cameraSize = CFApplication.getCameraSize();
+
+                        if (mLayoutDeveloper.mTextView != null) {
+                            String devtxt = "@@ Developer View @@\n"
+                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                    + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
+                                    + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                                    + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
+                            if (cameraSize != null) {
+                                devtxt += "Image dimensions = " + cameraSize.height + "x" + cameraSize.width + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
+                            }
+                            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
+                                    + "Upload server = " + upload_url + "\n"
+                                    + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
+                                    + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+                                    + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
+                            mLayoutDeveloper.mTextView.setText(devtxt);
+                        }
                     }
 
                     if (location_valid(CFApplication.getLastKnownLocation()) == false)

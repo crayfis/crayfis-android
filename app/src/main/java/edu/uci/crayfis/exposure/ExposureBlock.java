@@ -1,6 +1,8 @@
 package edu.uci.crayfis.exposure;
 
 import edu.uci.crayfis.SntpClient;
+
+import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -16,7 +18,7 @@ import edu.uci.crayfis.util.CFLog;
 
 public class ExposureBlock implements Parcelable {
 	public static final String TAG = "ExposureBlock";
-	
+
 	public UUID run_id;
 
 	public long start_time;
@@ -29,6 +31,9 @@ public class ExposureBlock implements Parcelable {
     public long end_time_ntp;
 	
 	public Location start_loc;
+
+	public int res_x = 0;
+	public int res_y = 0;
 	
 	public long frames_dropped;
 	
@@ -68,6 +73,8 @@ public class ExposureBlock implements Parcelable {
         start_time_ntp = parcel.readLong();
         end_time_ntp = parcel.readLong();
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
+        res_x = parcel.readInt();
+        res_y = parcel.readInt();
         frames_dropped = parcel.readLong();
         L1_thresh = parcel.readInt();
         L2_thresh = parcel.readInt();
@@ -100,6 +107,8 @@ public class ExposureBlock implements Parcelable {
         dest.writeLong(start_time_ntp);
         dest.writeLong(end_time_ntp);
         dest.writeParcelable(start_loc, flags);
+        dest.writeInt(res_x);
+        dest.writeInt(res_y);
         dest.writeLong(frames_dropped);
         dest.writeInt(L1_thresh);
         dest.writeInt(L2_thresh);
@@ -200,7 +209,12 @@ public class ExposureBlock implements Parcelable {
         if (start_loc.hasAltitude()) {
             buf.setGpsAltitude(start_loc.getAltitude());
         }
-		
+
+		if (res_x > 0 || res_y > 0) {
+			buf.setResX(res_x);
+			buf.setResY(res_y);
+		}
+
 		buf.setStartTime(start_time);
 		buf.setEndTime(end_time);
 

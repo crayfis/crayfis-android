@@ -99,6 +99,8 @@ public final class ExposureBlockManager {
         current_xb.start_loc = new Location(CFApplication.getLastKnownLocation());
         current_xb.daq_state = APPLICATION.getApplicationState();
         current_xb.run_id = APPLICATION.getBuildInformation().getRunId();
+        current_xb.res_x = APPLICATION.getCameraSize().width;
+        current_xb.res_y = APPLICATION.getCameraSize().height;
     }
 
     public synchronized void abortExposureBlock() {
