@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,6 +76,10 @@ public class UserNotificationFragment extends Fragment {
         } else {
             message.setText(mMessage);
         }
+
+        // Right now, this is just for the intro message but handy to keep incase other messages have
+        // links in it.
+        Linkify.addLinks(message, Linkify.ALL);
 
         rtn.findViewById(R.id.continue_btn).setOnClickListener(new View.OnClickListener() {
             @Override
