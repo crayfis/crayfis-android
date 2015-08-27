@@ -1266,7 +1266,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             //wake up
             getSupportActionBar().show();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+            NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
