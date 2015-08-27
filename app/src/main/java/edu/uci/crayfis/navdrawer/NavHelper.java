@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import java.util.List;
 
 import edu.uci.crayfis.LayoutBlack;
-import edu.uci.crayfis.LayoutData;
 import edu.uci.crayfis.LayoutDeveloper;
 import edu.uci.crayfis.LayoutFeedback;
 import edu.uci.crayfis.LayoutGallery;
@@ -21,6 +20,7 @@ import edu.uci.crayfis.LayoutLeader;
 import edu.uci.crayfis.LayoutLogin;
 import edu.uci.crayfis.LayoutTime;
 import edu.uci.crayfis.R;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -76,7 +76,7 @@ public final class NavHelper {
                     newFragment = LayoutBlack.getInstance();
                     break;
                 case STATUS:
-                    newFragment = LayoutData.getInstance();
+                    newFragment = DataCollectionFragment.getInstance();
                     break;
                 case DATA:
                     newFragment = LayoutHist.getInstance();
