@@ -17,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.server.UploadExposureTask;
@@ -174,7 +175,12 @@ public class DataCollectionFragment extends CFFragment {
         public void run() {
             // TODO Add no location.
 
-            final CFApplication application = (CFApplication) getActivity().getApplication();
+            final Activity activity = getActivity();
+            if (!CFUtil.isActivityValid(activity)) {
+                return;
+            }
+
+            final CFApplication application = (CFApplication) activity.getApplication();
 
             if (DAQActivity.L2busy > 0) {
                 final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, DAQActivity.L2busy, DAQActivity.L2busy);
