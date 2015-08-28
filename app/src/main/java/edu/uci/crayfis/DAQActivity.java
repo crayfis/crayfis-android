@@ -94,7 +94,6 @@ import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataView;
-import edu.uci.crayfis.widget.MessageView;
 
 //import android.location.LocationListener;
 
@@ -232,26 +231,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             CFLog.e("Failed to parse server response: " + e.getMessage());
         }
 	}
-
-    private static boolean locationWarningGiven = false;
-
-    public void locationWarning() {
-        if (!locationWarningGiven) {
-            final TextView tx1 = new TextView(this);
-            tx1.setText(getResources().getString(R.string.location_warning));
-            tx1.setTextColor(Color.WHITE);
-            tx1.setBackgroundColor(Color.BLACK);
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(getResources().getString(R.string.location_warn_title)).setCancelable(false)
-                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                        }
-                    })
-
-                    .setView(tx1).show();
-            locationWarningGiven = true;
-        }
-    }
 
     private String last_update_URL = "";
     public void showUpdateURL(String url)
@@ -1754,21 +1733,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mTextView.setText(devtxt);
                         }
                     }
-
-                    if (location_valid(CFApplication.getLastKnownLocation()) == false)
-                    {
-                        if (LayoutData.mMessageView != null)
-                            LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() + "\n Error: "+
-                                    getResources().getString(R.string.location_unavailable));
-                        if (application.getApplicationState() == CFApplication.State.DATA
-                            && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
-                        {
-                            locationWarning();
-                            last_location_warning = System.currentTimeMillis();
-                        }
-                    }
-
-
 
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
                         showUpdateURL(CONFIG.getUpdateURL());

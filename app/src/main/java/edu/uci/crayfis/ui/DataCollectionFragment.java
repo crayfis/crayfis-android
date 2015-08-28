@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -126,6 +127,18 @@ public class DataCollectionFragment extends CFFragment {
     }
 
     /**
+     * Check if the location is valid.
+     *
+     * @param location {@link Location}
+     * @return Whether the location is valid or not.
+     */
+    private boolean isLocationValid(@Nullable final Location location) {
+        return (location != null
+                && java.lang.Math.abs(location.getLongitude())>0.1
+                && java.lang.Math.abs(location.getLatitude())>0.1);
+    }
+
+    /**
      * Set the error message.
      *
      * @param message The message or {@code null} to hide the error view.
@@ -166,7 +179,9 @@ public class DataCollectionFragment extends CFFragment {
             if (DAQActivity.L2busy > 0) {
                 final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, DAQActivity.L2busy, DAQActivity.L2busy);
                 setErrorMessage(getResources().getString(R.string.ignored) + " " + ignoredFrames);
-            } else if (! application.isNetworkAvailable()) {
+            } else if (!isLocationValid(CFApplication.getLastKnownLocation())) {
+                setErrorMessage(R.string.location_warning);
+            } else if (!application.isNetworkAvailable()) {
                 setErrorMessage(R.string.network_unavailable);
             } else if (!UploadExposureTask.sValidId.get()) {
                     setErrorMessage(R.string.bad_user_code);
