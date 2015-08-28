@@ -158,7 +158,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 	// keep track of how often we had to drop a frame at L1
 	// because the L2 queue was full.
-	private int L2busy = 0;
+    // FIXME This is wrong to be static.
+	public static int L2busy = 0;
 
 	private ExposureBlockManager xbManager;
 
@@ -1556,25 +1557,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             @Override
             public void run() {
                 final CFApplication application = (CFApplication) getApplication();
-
-                if (! application.isNetworkAvailable()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Error: "+getResources().getString(R.string.network_unavailable));
-                } else if (!UploadExposureTask.sPermitUpload.get()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
-                } else if (!UploadExposureTask.sValidId.get()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.bad_user_code));
-                } else if (L2busy > 0) {
-                    final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    if (LayoutData.mMessageView != null )
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.ignored)+" " + ignoredFrames);
-                } else {
-                    if (LayoutData.mMessageView != null)
-
-                        LayoutData.mMessageView.setMessage(null, null);
-                }
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( !sleep_mode

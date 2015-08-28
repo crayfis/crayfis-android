@@ -34,4 +34,16 @@
         android:text="Data collection status message."
         android:textSize="@dimen/text_size_description"/>
 
+    <TextView
+        android:id="@+id/data_collection_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:padding="@dimen/standard_margin"
+        android:gravity="center_horizontal"
+        android:textColor="@color/error_text_color"
+        android:background="@color/error_background"
+        android:text="Data collection error."
+        android:textSize="@dimen/text_size_description"/>
+
 </RelativeLayout>
