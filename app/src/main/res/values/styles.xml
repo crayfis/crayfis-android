@@ -75,5 +75,34 @@
         <item name="android:layout_alignParentRight">true</item>
     </style>
 
+    <style name="ErrorMessageTextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/standard_margin</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textColor">@color/error_text_color</item>
+        <item name="android:background">@color/error_background</item>
+        <item name="android:textSize">@dimen/text_size_description</item>
+    </style>
+
+    <style name="DataCollectionFragment"/>
+
+    <style name="DataCollectionFragment.Status">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:layout_margin">@dimen/standard_margin</item>
+        <item name="android:textColor">@color/palette_yellow</item>
+        <item name="android:textSize">@dimen/text_size_headline</item>
+    </style>
+
+    <style name="DataCollectionFragment.Message">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">@dimen/standard_margin</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textSize">@dimen/text_size_description</item>
+    </style>
+
 
 </resources>

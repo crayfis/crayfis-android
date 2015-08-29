@@ -15,35 +15,17 @@
 
     <TextView
         android:id="@+id/data_collection_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_margin="@dimen/standard_margin"
-        android:text="Data Collection Status"
-        android:textColor="@color/palette_yellow"
-        android:textSize="@dimen/text_size_headline"
-        android:layout_below="@id/progress_bar"/>
+        android:layout_below="@id/progress_bar"
+        style="@style/DataCollectionFragment.Status"/>
 
     <TextView
         android:id="@+id/data_collection_message"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_below="@id/data_collection_status"
-        android:layout_margin="@dimen/standard_margin"
-        android:gravity="center_horizontal"
-        android:text="Data collection status message."
-        android:textSize="@dimen/text_size_description"/>
+        style="@style/DataCollectionFragment.Message"/>
 
     <TextView
         android:id="@+id/data_collection_error"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:padding="@dimen/standard_margin"
-        android:gravity="center_horizontal"
-        android:textColor="@color/error_text_color"
-        android:background="@color/error_background"
-        android:text="Data collection error."
-        android:textSize="@dimen/text_size_description"/>
+        style="@style/ErrorMessageTextView"/>
 
 </RelativeLayout>
