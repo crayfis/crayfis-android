@@ -107,7 +107,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
-    private static LayoutData mLayoutData = LayoutData.getInstance();
     private static LayoutHist mLayoutHist = LayoutHist.getInstance();
     private static LayoutTime mLayoutTime = LayoutTime.getInstance();
     private static LayoutDeveloper mLayoutDeveloper = LayoutDeveloper.getInstance();

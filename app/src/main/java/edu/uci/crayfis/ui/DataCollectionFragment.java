@@ -76,19 +76,25 @@ public class DataCollectionFragment extends CFFragment {
         final CFApplication.State appState = ((CFApplication) activity.getApplication()).getApplicationState();
         switch(appState) {
             case STABILIZATION:
+                mStatus.setText(R.string.stabilization);
+                mProgressBar.setVisibility(View.VISIBLE);
+                mStatusMessage.setVisibility(View.GONE);
+                mDataCollectionStats.setVisibility(View.GONE);
+                break;
             case CALIBRATION:
-                mStatus.setText("Calibrating...");
+                mStatus.setText(R.string.calibration);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
             case DATA:
-                mStatus.setText("Collecting Data");
+                mStatus.setText(R.string.taking_data);
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.VISIBLE);
-                setStatusMessage(null);
+                mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
+                // FIXME "Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%"
                 mStatus.setText("Idle");
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
