@@ -93,7 +93,7 @@ import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.DataView;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 //import android.location.LocationListener;
 
@@ -1661,17 +1661,14 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 
                         if (mParticleReco != null) {
-                            final DataView.Status dstatus = new DataView.Status.Builder()
+                            final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
                                     .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
                                     .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
                                     .setTotalFrames(L1counter_data)
                                     .build();
-
-
-                            if (LayoutData.mDataView != null) {
-                                LayoutData.mDataView.setStatus(dstatus);
-                            }
+                            CFApplication.setCollectionStatus(dstatus);
                         }
+
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {

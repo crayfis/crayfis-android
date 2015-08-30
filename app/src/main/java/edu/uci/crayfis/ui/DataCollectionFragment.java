@@ -21,6 +21,7 @@ import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * Fragment for showing current data collection status.
@@ -29,6 +30,7 @@ public class DataCollectionFragment extends CFFragment {
 
     private TextView mStatus;
     private TextView mStatusMessage;
+    private DataCollectionStatsView mDataCollectionStats;
     private TextView mErrorMessage;
     private ProgressBar mProgressBar;
     private StateChangeReceiver mStateChangeReceiver;
@@ -58,6 +60,7 @@ public class DataCollectionFragment extends CFFragment {
         mStatus = (TextView) rtn.findViewById(R.id.data_collection_status);
         mProgressBar = (ProgressBar) rtn.findViewById(R.id.progress_bar);
         mStatusMessage = (TextView) rtn.findViewById(R.id.data_collection_message);
+        mDataCollectionStats = (DataCollectionStatsView) rtn.findViewById(R.id.data_collection_stats);
         mErrorMessage = (TextView) rtn.findViewById(R.id.data_collection_error);
         updateStatus();
         startUiUpdate(new UiUpdateRunnable());
@@ -77,16 +80,18 @@ public class DataCollectionFragment extends CFFragment {
                 mStatus.setText("Calibrating...");
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
+                mDataCollectionStats.setVisibility(View.GONE);
                 break;
             case DATA:
                 mStatus.setText("Collecting Data");
                 mProgressBar.setVisibility(View.INVISIBLE);
-                //TODO: Show the stats
-                setStatusMessage("TODO: Show the stats.");
+                mDataCollectionStats.setVisibility(View.VISIBLE);
+                setStatusMessage(null);
                 break;
             case IDLE:
                 mStatus.setText("Idle");
                 mProgressBar.setVisibility(View.INVISIBLE);
+                mDataCollectionStats.setVisibility(View.GONE);
                 //TODO: Explain why the app is idle.
                 setStatusMessage("TODO: Explain why the app is idle.");
                 break;
@@ -94,11 +99,13 @@ public class DataCollectionFragment extends CFFragment {
                 mStatus.setText("Initializing...");
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
+                mDataCollectionStats.setVisibility(View.GONE);
                 break;
             default:
                 mStatus.setText("Unknown State");
                 mProgressBar.setVisibility(View.INVISIBLE);
                 setStatusMessage("An unknown state has occurred.");
+                mDataCollectionStats.setVisibility(View.GONE);
         }
     }
 
@@ -181,7 +188,6 @@ public class DataCollectionFragment extends CFFragment {
             }
 
             final CFApplication application = (CFApplication) activity.getApplication();
-
             if (DAQActivity.L2busy > 0) {
                 final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, DAQActivity.L2busy, DAQActivity.L2busy);
                 setErrorMessage(getResources().getString(R.string.ignored) + " " + ignoredFrames);
@@ -195,6 +201,13 @@ public class DataCollectionFragment extends CFFragment {
                 setErrorMessage(R.string.server_overload);
             } else {
                 setErrorMessage(0);
+            }
+
+            if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
+                final DataCollectionStatsView.Status status = CFApplication.getCollectionStatus();
+                if (status != null) {
+                    mDataCollectionStats.setStatus(status);
+                }
             }
         }
     }

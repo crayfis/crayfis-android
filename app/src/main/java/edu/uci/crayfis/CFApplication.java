@@ -13,6 +13,7 @@ import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.crashlytics.android.Crashlytics;
@@ -20,6 +21,7 @@ import com.crashlytics.android.Crashlytics;
 import java.util.UUID;
 
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -33,12 +35,15 @@ public class CFApplication extends Application {
     public static final int SLEEP_TIMEOUT_MS = 60000;
 
     private static final String SHARED_PREFS_NAME = "global";
-    private State mApplicationState;
-
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
-
     private static Camera.Size mCameraSize;
+
+    // FIXME This is a hack.
+    // The way things are coupled in DAQActivity, exposing fields that can create the Status is worse than this.
+    private static DataCollectionStatsView.Status sStatus;
+
+    private State mApplicationState;
 
     private AppBuild mAppBuild;
 
@@ -134,6 +139,15 @@ public class CFApplication extends Application {
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
+
+    public static void setCollectionStatus(@NonNull final DataCollectionStatsView.Status status) {
+        sStatus = status;
+    }
+
+    @Nullable
+    public static DataCollectionStatsView.Status getCollectionStatus() {
+        return sStatus;
+    }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);

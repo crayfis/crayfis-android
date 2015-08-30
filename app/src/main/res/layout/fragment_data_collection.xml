@@ -23,6 +23,12 @@
         android:layout_below="@id/data_collection_status"
         style="@style/DataCollectionFragment.Message"/>
 
+    <edu.uci.crayfis.widget.DataCollectionStatsView
+        android:id="@+id/data_collection_stats"
+        android:layout_below="@id/data_collection_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <TextView
         android:id="@+id/data_collection_error"
         android:layout_alignParentBottom="true"

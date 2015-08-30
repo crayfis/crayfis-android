@@ -35,8 +35,8 @@
         android:id="@+id/message_view"
         android:layout_marginBottom="@dimen/standard_margin"/>
 
-    <edu.uci.crayfis.widget.DataView
-        android:id="@+id/data_view"
+    <edu.uci.crayfis.widget.DataCollectionStatsView
+        android:id="@+id/data_collection_stats"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
