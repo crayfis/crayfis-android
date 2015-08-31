@@ -43,9 +43,9 @@ public final class DataCollectionStatsView extends LinearLayout {
      * @param status The status.
      */
     public void setStatus(@NonNull final Status status) {
-        mFramesScanned.setText(ViewUtil.formatDecimal(status.getTotalFrames()));
-        mPixelsScanned.setText(ViewUtil.formatDecimal(status.getTotalPixels()));
-        mCandidates.setText(String.valueOf(status.getTotalEvents()));
+        mFramesScanned.setText(ViewUtil.formatDecimalScientific(status.getTotalFrames()));
+        mPixelsScanned.setText(ViewUtil.formatDecimalScientific(status.getTotalPixels()));
+        mCandidates.setText(ViewUtil.formatDecimal(status.getTotalEvents()));
     }
 
     /**
