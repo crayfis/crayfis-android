@@ -40,16 +40,8 @@ public class DataCollectionFragment extends CFFragment {
     }
 
     @Override
-    public void onAttach(final Activity activity) {
-        super.onAttach(activity);
-        mStateChangeReceiver = new StateChangeReceiver();
-        LocalBroadcastManager.getInstance(activity).registerReceiver(mStateChangeReceiver,
-                new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         LocalBroadcastManager.getInstance(getActivity()).unregisterReceiver(mStateChangeReceiver);
     }
 
@@ -62,8 +54,16 @@ public class DataCollectionFragment extends CFFragment {
         mStatusMessage = (TextView) rtn.findViewById(R.id.data_collection_message);
         mDataCollectionStats = (DataCollectionStatsView) rtn.findViewById(R.id.data_collection_stats);
         mErrorMessage = (TextView) rtn.findViewById(R.id.data_collection_error);
+
+        // There is a small window of opportunity where the receiver is not registered in time for
+        // the transition to data collection.  The user may be stuck viewing a screen that says
+        // it's calibrating.
+        mStateChangeReceiver = new StateChangeReceiver();
+        LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mStateChangeReceiver,
+                new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
         updateStatus();
         startUiUpdate(new UiUpdateRunnable());
+
         return rtn;
     }
 
