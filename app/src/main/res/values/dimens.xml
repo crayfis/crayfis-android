@@ -2,7 +2,8 @@
 <resources>
     <item type="dimen" name="standard_margin">16dp</item>
     <dimen name="text_size_very_small">10sp</dimen>
-
+    <dimen name="text_size_headline">@dimen/abc_text_size_headline_material</dimen>
+    <dimen name="text_size_description">@dimen/abc_text_size_medium_material</dimen>
     <dimen name="progress_wheel_text_size">@dimen/abc_text_size_small_material</dimen>
     <dimen name="progress_wheel_padding_top">5dp</dimen>
     <dimen name="progress_wheel_padding_left">5dp</dimen>
@@ -17,5 +18,4 @@
     <dimen name="light_meter_padding_bottom">@dimen/standard_margin</dimen>
 
     <dimen name="hist_text_size">@dimen/abc_text_size_small_material</dimen>
-
 </resources>

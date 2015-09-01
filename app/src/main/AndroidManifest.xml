@@ -61,6 +61,10 @@
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/CrayfisApp"/>
+
+        <activity android:name=".usernotif.UserNotificationActivity"
+                  android:screenOrientation="portrait"/>
+
         <activity
             android:name="edu.uci.crayfis.UserSettingActivity"
             android:screenOrientation="portrait"/>

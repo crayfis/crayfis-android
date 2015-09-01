@@ -91,9 +91,9 @@ import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.DataView;
-import edu.uci.crayfis.widget.MessageView;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 //import android.location.LocationListener;
 
@@ -107,7 +107,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         ConnectionCallbacks, OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     private static LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
-    private static LayoutData mLayoutData = LayoutData.getInstance();
     private static LayoutHist mLayoutHist = LayoutHist.getInstance();
     private static LayoutTime mLayoutTime = LayoutTime.getInstance();
     private static LayoutDeveloper mLayoutDeveloper = LayoutDeveloper.getInstance();
@@ -157,7 +156,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 	// keep track of how often we had to drop a frame at L1
 	// because the L2 queue was full.
-	private int L2busy = 0;
+    // FIXME This is wrong to be static.
+	public static int L2busy = 0;
 
 	private ExposureBlockManager xbManager;
 
@@ -230,26 +230,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             CFLog.e("Failed to parse server response: " + e.getMessage());
         }
 	}
-
-    private static boolean locationWarningGiven = false;
-
-    public void locationWarning() {
-        if (!locationWarningGiven) {
-            final TextView tx1 = new TextView(this);
-            tx1.setText(getResources().getString(R.string.location_warning));
-            tx1.setTextColor(Color.WHITE);
-            tx1.setBackgroundColor(Color.BLACK);
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(getResources().getString(R.string.location_warn_title)).setCancelable(false)
-                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                        }
-                    })
-
-                    .setView(tx1).show();
-            locationWarningGiven = true;
-        }
-    }
 
     private String last_update_URL = "";
     public void showUpdateURL(String url)
@@ -909,7 +889,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 navItemsAdapter.notifyDataSetChanged();
             }
         });
-        NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
     }
 
     @Override
@@ -1265,7 +1245,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             //wake up
             getSupportActionBar().show();
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            NavHelper.setFragment(this, LayoutData.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+            NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
 
             // if we somehow didn't capture the old brightness, don't set it to zero
             if (screen_brightness<=150) screen_brightness=150;
@@ -1556,25 +1536,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             public void run() {
                 final CFApplication application = (CFApplication) getApplication();
 
-                if (! application.isNetworkAvailable()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, "Error: "+getResources().getString(R.string.network_unavailable));
-                } else if (!UploadExposureTask.sPermitUpload.get()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.server_overload));
-                } else if (!UploadExposureTask.sValidId.get()) {
-                    if (LayoutData.mMessageView != null)
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.bad_user_code));
-                } else if (L2busy > 0) {
-                    final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, L2busy, L2busy);
-                    if (LayoutData.mMessageView != null )
-                        LayoutData.mMessageView.setMessage(MessageView.Level.WARNING, getResources().getString(R.string.ignored)+" " + ignoredFrames);
-                } else {
-                    if (LayoutData.mMessageView != null)
-
-                        LayoutData.mMessageView.setMessage(null, null);
-                }
-
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
                 if ( !sleep_mode
                         && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
@@ -1699,17 +1660,14 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 
                         if (mParticleReco != null) {
-                            final DataView.Status dstatus = new DataView.Status.Builder()
+                            final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
                                     .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
                                     .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
                                     .setTotalFrames(L1counter_data)
                                     .build();
-
-
-                            if (LayoutData.mDataView != null) {
-                                LayoutData.mDataView.setStatus(dstatus);
-                            }
+                            CFApplication.setCollectionStatus(dstatus);
                         }
+
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {
@@ -1771,21 +1729,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                             mLayoutDeveloper.mTextView.setText(devtxt);
                         }
                     }
-
-                    if (location_valid(CFApplication.getLastKnownLocation()) == false)
-                    {
-                        if (LayoutData.mMessageView != null)
-                            LayoutData.mMessageView.setMessage(MessageView.Level.ERROR, LayoutData.mMessageView.getText() + "\n Error: "+
-                                    getResources().getString(R.string.location_unavailable));
-                        if (application.getApplicationState() == CFApplication.State.DATA
-                            && ( System.currentTimeMillis() - last_location_warning > 300e3)) // every 5 mins
-                        {
-                            locationWarning();
-                            last_location_warning = System.currentTimeMillis();
-                        }
-                    }
-
-
 
                     if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
                         showUpdateURL(CONFIG.getUpdateURL());

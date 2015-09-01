@@ -21,15 +21,11 @@ package edu.uci.crayfis;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.text.method.ScrollingMovementMethod;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 
+import edu.uci.crayfis.usernotif.UserNotificationActivity;
 import edu.uci.crayfis.util.CFLog;
 
 
@@ -40,11 +36,12 @@ import edu.uci.crayfis.util.CFLog;
  * @author Peter Abeles
  */
 public class MainActivity extends Activity  {
-	
-	public String build_version = null;
-	public String userID = null;
 
-	
+	private static final int REQUEST_CODE_WELCOME = 1;
+	private static final int REQUEST_CODE_HOW_TO = 2;
+
+	public String build_version = null;
+
 	public void onRestart()
 	{
 		super.onRestart();
@@ -62,39 +59,12 @@ public class MainActivity extends Activity  {
 
 		//Pull the existing shared preferences and set editor
 		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		final Editor editor = sharedprefs.edit();
-		//Check if userID already inputted, and if not, go to sign in page
-		String ID = sharedprefs.getString("prefUserID", "");
-		boolean badID = sharedprefs.getBoolean("badID", false);
 		boolean firstRun = sharedprefs.getBoolean("firstRun", true);
 		if (firstRun) {
-			editor.putBoolean("firstRun", false);
-			editor.apply();
-		}
-
-		if (firstRun) {
-			setContentView(R.layout.main);
-
-            TextView whattodo = (TextView)findViewById(R.id.what_to_do);
-            whattodo.setMovementMethod(new ScrollingMovementMethod());
-
-            final Button button2 = (Button)findViewById(R.id.run_without_user_id);
-			button2.setOnClickListener(new View.OnClickListener() {
-				
-				@Override
-				public void onClick(View v) {
-					//This is so that if they have entered in an invalid user ID before, but
-					//then just decide to run it locally, it will reset the userID to empty
-					editor.putString("prefUserID", "");
-					
-					// now start running
-					Intent intent = new Intent(MainActivity.this, DAQActivity.class);
-					startActivity(intent);
-
-					// now quit
-					MainActivity.this.finish();					
-				}
-			});
+			final Intent intent = new Intent(this, UserNotificationActivity.class);
+			intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
+			intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
+			startActivityForResult(intent, REQUEST_CODE_WELCOME);
 		}
 		else {
 		//See if we already have user ID saved
@@ -106,5 +76,31 @@ public class MainActivity extends Activity  {
 			MainActivity.this.finish();
 		}
 	}
-    
+
+	@Override
+	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (resultCode != RESULT_OK) {
+			finish();
+		} else {
+			if (requestCode == REQUEST_CODE_WELCOME) {
+				final Intent intent = new Intent(this, UserNotificationActivity.class);
+				intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
+				intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+				startActivityForResult(intent, REQUEST_CODE_HOW_TO);
+			} else {
+				//This is so that if they have entered in an invalid user ID before, but
+				//then just decide to run it locally, it will reset the userID to empty
+				SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+				final SharedPreferences.Editor editor = sharedprefs.edit();
+				editor.putBoolean("firstRun", false);
+				editor.commit();
+
+				// now start running
+				Intent intent = new Intent(this, DAQActivity.class);
+				startActivity(intent);
+				finish();
+			}
+		}
+	}
 }

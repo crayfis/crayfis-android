@@ -8,6 +8,7 @@
         <item name="colorPrimaryDark">@color/palette_very_dark</item>
         <item name="android:textColorPrimary">@color/palette_white</item>
         <item name="android:windowBackground">@color/palette_very_dark</item>
+        <item name="android:textColorPrimaryInverse">@color/palette_very_dark</item>
     </style>
 
     <style name="NavDrawerItem">
@@ -23,4 +24,85 @@
         <item name="android:textSize">@dimen/abc_text_size_small_material</item>
         <item name="android:textColor">?android:attr/textColorPrimary</item>
     </style>
+
+    <style name="TextViewDescription">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_size_description</item>
+        <item name="android:textColor">?android:attr/textColorPrimary</item>
+    </style>
+
+    <style name="TextViewHeadline">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">@dimen/text_size_headline</item>
+        <item name="android:textColor">@color/palette_headline</item>
+    </style>
+
+    <style name="UserNotification">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">@color/warning_background</item>
+    </style>
+
+    <style name="UserNotification.Header" parent="TextViewHeadline">
+        <item name="android:padding">@dimen/standard_margin</item>
+        <item name="android:layout_marginBottom">@dimen/standard_margin</item>
+        <item name="android:textColor">@color/warning_header_text</item>
+        <item name="android:background">@color/palette_semi_dark</item>
+    </style>
+
+    <style name="UserNotifcation.Message" parent="TextViewDescription">
+        <item name="android:layout_below">@id/warning_header</item>
+        <item name="android:layout_centerHorizontal">true</item>
+        <item name="android:padding">@dimen/standard_margin</item>
+        <item name="android:textColor">@color/palette_white</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="UserNotification.FooterContainer">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:background">@color/warning_footer_background</item>
+        <item name="android:layout_alignParentBottom">true</item>
+    </style>
+
+    <style name="UserNotification.Continue" parent="Base.Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/standard_margin</item>
+        <item name="android:layout_alignParentRight">true</item>
+    </style>
+
+    <style name="ErrorMessageTextView">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:padding">@dimen/standard_margin</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textColor">@color/error_text_color</item>
+        <item name="android:background">@color/error_background</item>
+        <item name="android:textSize">@dimen/text_size_description</item>
+    </style>
+
+    <style name="DataCollectionFragment"/>
+
+    <style name="DataCollectionFragment.Status">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:layout_margin">@dimen/standard_margin</item>
+        <item name="android:textColor">@color/palette_yellow</item>
+        <item name="android:textSize">@dimen/text_size_headline</item>
+    </style>
+
+    <style name="DataCollectionFragment.Message">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">@dimen/standard_margin</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:textSize">@dimen/text_size_description</item>
+    </style>
+
+
 </resources>

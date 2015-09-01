@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/earth_background">
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:indeterminateOnly="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="0dp"
+        android:layout_marginBottom="@dimen/standard_margin"/>
+
+    <TextView
+        android:id="@+id/data_collection_status"
+        android:layout_below="@id/progress_bar"
+        style="@style/DataCollectionFragment.Status"/>
+
+    <TextView
+        android:id="@+id/data_collection_message"
+        android:layout_below="@id/data_collection_status"
+        style="@style/DataCollectionFragment.Message"/>
+
+    <edu.uci.crayfis.widget.DataCollectionStatsView
+        android:id="@+id/data_collection_stats"
+        android:layout_below="@id/data_collection_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/data_collection_error"
+        android:layout_alignParentBottom="true"
+        style="@style/ErrorMessageTextView"/>
+
+</RelativeLayout>

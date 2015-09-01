@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
  */
 public final class ViewUtil {
 
+    private static final DecimalFormat POINT_FORMATTER_SCIENTIFIC = new DecimalFormat("0.0E+0");
     private static final DecimalFormat POINT_FORMATTER = new DecimalFormat("#");
 
     static {
@@ -18,12 +19,43 @@ public final class ViewUtil {
 
     }
 
-    public static String formatDecimal(final int decimal) {
-        return POINT_FORMATTER.format(decimal);
+    /**
+     * Get the scientific notation for the given value.
+     *
+     * @param value The input value.
+     * @return Formatted scientific notiation.
+     */
+    public static String formatDecimalScientific(final int value) {
+        return POINT_FORMATTER_SCIENTIFIC.format(value);
     }
 
-    public static String formatDecimal(final long decimal) {
-        return POINT_FORMATTER.format(decimal);
+    /**
+     * Get the scientific notation for the given value.
+     *
+     * @param value The input value.
+     * @return Formatted scientific notiation.
+     */
+    public static String formatDecimalScientific(final long value) {
+        return POINT_FORMATTER_SCIENTIFIC.format(value);
     }
 
+    /**
+     * Get the comma separated value notation for the given value.
+     *
+     * @param value The input value.
+     * @return Formatted value.
+     */
+    public static String formatDecimal(final int value) {
+        return POINT_FORMATTER.format(value);
+    }
+
+    /**
+     * Get the comma separated value notation for the given value.
+     *
+     * @param value The input value.
+     * @return Formatted value.
+     */
+    public static String formatDecimal(final long value) {
+        return POINT_FORMATTER.format(value);
+    }
 }

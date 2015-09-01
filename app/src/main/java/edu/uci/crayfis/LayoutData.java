@@ -13,7 +13,7 @@ import android.widget.Toast;
 
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.particle.ParticleReco;
-import edu.uci.crayfis.widget.DataView;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 import edu.uci.crayfis.widget.LightMeter;
 import edu.uci.crayfis.widget.MessageView;
 
@@ -24,7 +24,7 @@ public class LayoutData extends Fragment{
     public static MessageView mMessageView;
     public static LightMeter mLightMeter;
     public static ProgressWheel mProgressWheel;
-    public static DataView mDataView;
+    public static DataCollectionStatsView mDataView;
 
 
     private static LayoutData mInstance =null;
@@ -72,7 +72,7 @@ public class LayoutData extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
         ViewGroup root = (ViewGroup) inflater.inflate(R.layout.data, container, false);
 
-        mDataView = (DataView) root.findViewById(R.id.data_view);
+        mDataView = (DataCollectionStatsView) root.findViewById(R.id.data_collection_stats);
 
         mProgressWheel = (ProgressWheel) root.findViewById(R.id.pw_spinner);
         mLightMeter = (LightMeter) root.findViewById(R.id.lightmeter);
