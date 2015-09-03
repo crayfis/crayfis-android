@@ -262,10 +262,13 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         getSupportActionBar().hide();
 
         try {
-            screen_brightness = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            screen_brightness = getWindow().getAttributes().screenBrightness;
            // CFLog.d(" saving screen brightness of "+screen_brightness);
-        } catch (Exception e) { CFLog.d(" Unable to find screen brightness"); screen_brightness=200;}
-        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, 0);
+        } catch (Exception e) {
+            CFLog.d(" Unable to find screen brightness");
+            screen_brightness = -1;
+        }
+
         ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
         NavHelper.setFragment(this, LayoutBlack.getInstance(), NavDrawerAdapter.Type.LIVE_VIEW.getTitle());
 
@@ -1234,7 +1237,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     private long last_user_interaction=0;
     private boolean sleep_mode = false;
-    private int screen_brightness = 0;
+    private float screen_brightness = 0;
     @Override
     public void onUserInteraction()
     {
@@ -1247,11 +1250,14 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
             NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
 
-            // if we somehow didn't capture the old brightness, don't set it to zero
-            if (screen_brightness<=150) screen_brightness=150;
           //  CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
 
-            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS, screen_brightness);
+            // Set the screen brightness to what we have saved.  We should have retrieved a value less than
+            // 0, meaning the user themselves set their screen brightness.  Failure on that, let's err on the side
+            // of caution and not blind them at 3am.  0 means super dark, not off.
+            WindowManager.LayoutParams settings = getWindow().getAttributes();
+            settings.screenBrightness = screen_brightness > 0 ? 0 : screen_brightness;
+            getWindow().setAttributes(settings);
 
             findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
             sleep_mode=false;
