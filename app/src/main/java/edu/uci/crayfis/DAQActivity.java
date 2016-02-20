@@ -1585,7 +1585,13 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
                 l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
-                // fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
+
+                // FIXME: this is an ugly hack but I don't know how to do it better.
+                // There is probably some way to have a callback to set these values at the time that
+                // settings actually change, rather than just checking it every time in the UI
+                // update thread >:|
+                fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
+                l2thread.setFixedThreshold(fix_threshold);
 
                 // Originally, the updating of the LevelView was done here.  This seems like a good place to also
                 // make sure that UserStatusView gets updated with any new counts.
@@ -1720,7 +1726,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                         if (mLayoutDeveloper.mTextView != null) {
                             String devtxt = "@@ Developer View @@\n"
-                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + "\n"
+                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (fix_threshold ? "*" : "") + "\n"
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                                     + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
