@@ -19,6 +19,7 @@
 package edu.uci.crayfis.camera;
 
 import android.content.Context;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -43,11 +44,13 @@ public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callba
 	Camera mCamera;
 	Camera.PreviewCallback previewCallback;
 	boolean hidden;
+	int n_cycle;
 
-	public CameraPreviewView(Context context, Camera.PreviewCallback previewCallback, boolean hidden) {
+	public CameraPreviewView(Context context, Camera.PreviewCallback previewCallback, boolean hidden, int n_cycle) {
 		super(context);
 		this.previewCallback = previewCallback;
 		this.hidden = hidden;
+		this.n_cycle = n_cycle;
 
 		mSurfaceView = new SurfaceView(context);
 		addView(mSurfaceView);
@@ -66,13 +69,29 @@ public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callba
 			
 			try {
 	            mCamera.setPreviewDisplay(mHolder);
-				mCamera.setPreviewCallback(previewCallback);
+				if (n_cycle > 0) {
+					mCamera.setPreviewCallbackWithBuffer(previewCallback);
+
+
+					for (int i = 0; i < n_cycle; ++i) {
+						mCamera.addCallbackBuffer(createPreviewBuffer());
+					}
+				} else {
+					mCamera.setPreviewCallback(previewCallback);
+				}
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
 			
 			mCamera.startPreview();
 		}
+	}
+
+	public byte[] createPreviewBuffer() {
+		Camera.Parameters params = mCamera.getParameters();
+		Camera.Size sz = params.getPreviewSize();
+		int bsize = sz.height*sz.width* ImageFormat.getBitsPerPixel(params.getPreviewFormat())/8;
+		return new byte[bsize+1];
 	}
 
 	@Override
@@ -171,7 +190,11 @@ public class CameraPreviewView extends ViewGroup implements SurfaceHolder.Callba
 		// start preview with new settings
 		try {
 			mCamera.setPreviewDisplay(mHolder);
-			mCamera.setPreviewCallback(previewCallback);
+			if (n_cycle>0) {
+				mCamera.setPreviewCallbackWithBuffer(previewCallback);
+			} else {
+				mCamera.setPreviewCallback(previewCallback);
+			}
 			mCamera.startPreview();
 			CFLog.d("DAQActivity No error starting camera preview! ");
 		} catch (Exception e){
