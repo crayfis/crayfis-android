@@ -209,10 +209,6 @@ public class L2Task implements Runnable {
         event.location = mFrame.getLocation();
         event.orientation = mFrame.getOrientation();
 
-        // get mean background level
-        double background = 0;
-        double variance = 0;
-
         // first we measure the background and variance, but to save time only do it for every
         // stepW or stepH-th pixel
         final int width = mFrame.getSize().width;
@@ -228,27 +224,14 @@ public class L2Task implements Runnable {
 
         final byte[] bytes = mFrame.getBytes();
 
-        // TODO: see if we can do this more efficiently
-        // (there is a one-pass algorithm but it may not be stable)
-
-        // calculate mean background value
-        for (int ix = 0; ix < width; ix += stepW) {
-            for (int iy = 0; iy < height; iy+=stepH) {
-                int val = bytes[ix+width*iy]&0xFF;
-                background += (float)val;
-                npixels++;
-            }
-        }
-        if (npixels > 0) {
-            background /= (double) npixels;
-        }
-
-        // calculate variance
+        // calculate variance of the background
+        double variance = 0;
+        double avg = mFrame.getPixAvg();
         for (int ix=0;ix < width;ix+= stepW)
             for (int iy=0;iy<height;iy+=stepH)
             {
                 int val = bytes[ix+width*iy]&0xFF;
-                variance += (val-background)*(val - background);
+                variance += (val-avg)*(val - avg);
             }
         if (npixels>0) {
             variance = Math.sqrt(variance / ((double) npixels));
@@ -256,14 +239,14 @@ public class L2Task implements Runnable {
 
         // is the data good?
         // TODO: investigate what makes sense here!
-        boolean good_quality = (background < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
+        boolean good_quality = (avg < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
-        event.background = background;
+        event.background = avg;
         event.variance = variance;
         event.quality = good_quality;
 
         ExposureBlock xb = mFrame.getExposureBlock();
-        xb.total_background += background;
+        xb.total_background += avg;
         xb.total_std += variance;
 
         return event;
@@ -279,16 +262,16 @@ public class L2Task implements Runnable {
 
         ExposureBlock xb = mFrame.getExposureBlock();
 
-        // recalculate the average w/ full pixel stats
-        double average = 0.;
-
+        // recalculate the variance w/ full stats
+        double variance = 0.;
+        double avg = mFrame.getPixAvg();
         boolean fail = false;
         for (int ix = 0; ix < width; ix++) {
             for (int iy = 0; iy < height; iy++) {
                 // NB: cast (signed) byte to integer for meaningful comparisons!
                 int val = bytes[ix + width * iy] & 0xFF;
 
-                average += val;
+                variance += (val-avg)*(val - avg);
 
                 if (val > xb.L2_thresh) {
                     if (fail) {
@@ -349,9 +332,10 @@ public class L2Task implements Runnable {
             }
         }
 
-        average /= (double)(width*height);
-        // update the average for the event
-        mEvent.background = average;
+        // update event with the "variance" computed from full pixel statistics.
+        variance /= (double)(width*height);
+        variance = Math.sqrt(variance);
+        mEvent.variance = variance;
 
         return pixels;
     }

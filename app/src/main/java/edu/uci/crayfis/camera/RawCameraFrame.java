@@ -26,6 +26,7 @@ public class RawCameraFrame {
     private Camera.Parameters mParams;
     private Camera.Size mSize;
     private int mPixMax;
+    private double mPixAvg = -1;
     private int mLength;
     private boolean mBufferOutstanding = true;
 
@@ -171,21 +172,44 @@ public class RawCameraFrame {
     public Camera.Parameters getParams() { return mParams; }
     public Camera.Size getSize() { return mSize; }
 
-    public int getPixMax() {
-        if (mPixMax >= 0) {
-            return mPixMax;
-        }
-
+    private void calculateStatistics() {
         synchronized (mBytes) {
+            if (mPixMax >= 0) {
+                // somebody beat us to it! nothing to do.
+                return;
+            }
+
+            // TODO: consider implementing one-pass variance calculation here as well
+            // (although it may suffer from numerical instabilities)
             int max = mPixMax;
+            long sum = 0;
             for (int i = 0; i < mLength; i++) {
-                max = Math.max(max, mBytes[i] & 0xFF);
+                int val = mBytes[i]&0xFF;
+                max = Math.max(max, val);
+                sum += val;
                 //int val = mBytes[i] & 0xFF;
                 //if (val > mPixMax) mPixMax = val;
             }
             mPixMax = max;
+            mPixAvg = (double)sum / mLength;
         }
+    }
 
-        return mPixMax;
+    public int getPixMax() {
+        if (mPixMax >= 0) {
+            return mPixMax;
+        } else {
+            calculateStatistics();
+            return mPixMax;
+        }
+    }
+
+    public double getPixAvg() {
+        if (mPixAvg >= 0) {
+            return mPixAvg;
+        } else {
+            calculateStatistics();
+            return mPixAvg;
+        }
     }
 }
