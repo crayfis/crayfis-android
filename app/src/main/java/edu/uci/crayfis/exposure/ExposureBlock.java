@@ -53,11 +53,15 @@ public class ExposureBlock implements Parcelable {
 	
 	// the exposure block number within the given run
 	public int xbn;
-		
+
 	public CFApplication.State daq_state;
 	
 	public boolean frozen = false;
 	public boolean aborted = false;
+
+    // keep track of the (average) frame statistics as well
+    public double total_background = 0.0;
+    public double total_std = 0.0;
 	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
