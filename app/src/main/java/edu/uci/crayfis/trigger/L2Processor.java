@@ -1,20 +1,11 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.trigger;
 
-import android.graphics.Bitmap;
-import android.graphics.Color;
-import android.graphics.Bitmap.Config;
 import android.content.Context;
-import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
-import android.os.Environment;
-import com.crashlytics.android.Crashlytics;
 
-import android.graphics.YuvImage;
-import android.graphics.Rect;
-import android.graphics.ImageFormat;
-import java.io.ByteArrayOutputStream;
+import com.crashlytics.android.Crashlytics;
 
 
 import java.lang.ref.WeakReference;
@@ -22,10 +13,8 @@ import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import java.io.File;
-import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
-
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.gallery.Utils;
 import edu.uci.crayfis.gallery.SavedImage;
 
@@ -42,7 +31,10 @@ import edu.uci.crayfis.util.CFLog;
 /**
  * External thread used to do more time consuming image processing
  */
-class L2Processor extends Thread {
+public class L2Processor extends Thread {
+
+    public static final int L2_MAX_PIX = 30;
+    public static final boolean DO_BRIGHTEST = true;
 
     // Maximum number of raw camera frames to allow on the L2Queue
     private static final int L2Queue_maxFrames = 5;
@@ -51,13 +43,13 @@ class L2Processor extends Thread {
     // max amount of time to wait on L2Queue (seconds)
     int L2Timeout = 1;
 
-    private static final int L2_maxdisplay = 100;
-    ArrayBlockingQueue<RecoEvent> display_pixels = new ArrayBlockingQueue<RecoEvent>(L2_maxdisplay);
+    private static final int L2_MAXDISPLAY = 100;
+    private ArrayBlockingQueue<RecoEvent> mDisplayPixels = new ArrayBlockingQueue<>(L2_MAXDISPLAY);
 
 
     // ----8< --------
 
-    boolean save_images=false;
+    private boolean mSaveImages =false;
 
     private Utils mUtils;
 
@@ -117,6 +109,10 @@ class L2Processor extends Thread {
         if (view != null) {
             mViewWeakReference = new WeakReference<View>(view);
         }
+    }
+
+    public void setmSaveImages(boolean saveImages) {
+        mSaveImages = saveImages;
     }
 
     @Override
@@ -226,10 +222,10 @@ class L2Processor extends Thread {
             event.pixels = pixels;
 
             // and to the display list
-            //CFLog.d(" L2thread offering event to queue size="+display_pixels.size());
-            if (display_pixels.size()< L2_maxdisplay)
-                display_pixels.offer(event);
-            //CFLog.d(" L2thread offered event to queue size="+display_pixels.size());
+            //CFLog.d(" L2thread offering event to queue size="+mDisplayPixels.size());
+            if (mDisplayPixels.size()< L2_MAXDISPLAY)
+                mDisplayPixels.offer(event);
+            //CFLog.d(" L2thread offered event to queue size="+mDisplayPixels.size());
 
             if (APPLICATION.getApplicationState() == CFApplication.State.DATA) {
                 // keep track of the running totals for acquired
@@ -255,7 +251,7 @@ class L2Processor extends Thread {
                         RecoPixel pix = event.pixels.get(i);
                         if (pix.val > max) max = pix.val;
                     }
-                    if (save_images && max > CONFIG.getL2Threshold()*1.2)
+                    if (mSaveImages && max > CONFIG.getL2Threshold()*1.2)
                     try {
 
                         SavedImage si = new SavedImage(event.pixels, max, frame.getSize().width,
@@ -280,6 +276,8 @@ class L2Processor extends Thread {
     public int getTotalEvents() {
         return mTotalEvents;
     }
+
+    public ArrayBlockingQueue<RecoEvent> getDisplayPixels() { return mDisplayPixels; }
 
     public void setFixedThreshold(boolean fixedThreshold) {
         mFixedThreshold = fixedThreshold;

@@ -91,6 +91,8 @@ import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
@@ -143,6 +145,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     public static final int N_CYCLE_BUFFERS = 10;
 
+    // TODO: make this configurable in the settings (and via remote command)
+    public static final L1Processor.L1TriggerType L1_TRIGGER_TYPE = L1Processor.L1TriggerType.DEFAULT;
 
     DataProtos.RunConfig run_config = null;
 
@@ -762,7 +766,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         CFApplication application = (CFApplication) getApplication();
 
-        mL1Processor = new L1Processor(application, (N_CYCLE_BUFFERS>0));
+        mL1Processor = new L1Processor(L1_TRIGGER_TYPE, application, (N_CYCLE_BUFFERS>0));
 
         /*
         TODO: Flush the UploadExposureService queue.
@@ -1685,7 +1689,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
+                l2thread.setmSaveImages(sharedPrefs.getBoolean("prefEnableGallery", false));
 
                 // FIXME: this is an ugly hack but I don't know how to do it better.
                 // There is probably some way to have a callback to set these values at the time that
@@ -1784,7 +1788,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {
-                                RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
+                                RecoEvent ev = l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
                                 if (ev != null) {
                                     //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
                                     mLayoutBlack.addEvent(ev);
@@ -1827,6 +1831,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                         if (mLayoutDeveloper.mTextView != null) {
                             String devtxt = "@@ Developer View @@\n"
+                                    + "State: " + application.getApplicationState() + "\n"
+                                    + "Total frames: " + mL1Processor.mL1Count + "\n"
                                     + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (fix_threshold ? "*" : "") + "\n"
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
