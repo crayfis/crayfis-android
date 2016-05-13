@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
+import edu.uci.crayfis.util.CFLog;
 
 public class L2Processor {
     public enum L2TriggerType {
@@ -19,15 +20,26 @@ public class L2Processor {
     public int mL2Count = 0;
 
     public L2Processor(L2TriggerType triggerType, CFApplication application) {
+        // TODO: it will make more sense to have the triggerType assigned to the XB and then get it from there.
         mTriggerType = triggerType;
         mApplication = application;
 
-        // TODO: does the CFApplication cast back to the identical Context used elsewhere?
+        // TODO: does the CFApplication cast back to the identical Context used elsewhere? check this.
         XB_MANAGER = ExposureBlockManager.getInstance(application);
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
-        return new L2Task(frame, this);
+        Runnable task;
+        switch (mTriggerType) {
+            case DEFAULT:
+                task = new L2Task(frame, this);
+                break;
+            default:
+                CFLog.w("Unimplemented L2 trigger type selected! Falling back to default.");
+                task = new L2Task(frame, this);
+                break;
+        }
+        return task;
     }
 
     public void submitFrame(RawCameraFrame frame) {
