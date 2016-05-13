@@ -34,7 +34,7 @@ public class CFApplication extends Application {
     // TODO: This should be a configurable value in the preferences.
     public static final int SLEEP_TIMEOUT_MS = 60000;
 
-    private static final String SHARED_PREFS_NAME = "global";
+    //private static final String SHARED_PREFS_NAME = "global";
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
     private static Camera.Size mCameraSize;
@@ -53,11 +53,14 @@ public class CFApplication extends Application {
 
         Crashlytics.start(this);
 
-        SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        //SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final CFConfig config = CFConfig.getInstance();
-        localPrefs.registerOnSharedPreferenceChangeListener(config);
+        //localPrefs.registerOnSharedPreferenceChangeListener(config);
+        defaultPrefs.registerOnSharedPreferenceChangeListener(config);
         // FIXME This is not needed when dependency injection is done, this can be handled in the constructor.
-        config.onSharedPreferenceChanged(localPrefs, null);
+        //config.onSharedPreferenceChanged(localPrefs, null);
+        config.onSharedPreferenceChanged(defaultPrefs, null);
 
         setApplicationState(State.INIT);
 
@@ -70,7 +73,8 @@ public class CFApplication extends Application {
      * Save the current preferences.
      */
     public void savePreferences() {
-        final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        //final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        final SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CFConfig.getInstance().save(localPrefs);
     }
 

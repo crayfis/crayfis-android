@@ -1,8 +1,9 @@
 package edu.uci.crayfis.exposure;
 
-import java.util.ConcurrentModificationException;
+import java.util.ArrayList;
 import android.content.Context;
 import android.location.Location;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.Iterator;
@@ -24,6 +25,8 @@ public final class ExposureBlockManager {
     private int mTotalXBs = 0;
     private int mCommittedXBs = 0;
 
+    private final Handler mFlushHandler;
+
     // This is where the current xb is kept. The DAQActivity must access
     // the current exposure block through the public methods here.
     private ExposureBlock current_xb;
@@ -34,8 +37,6 @@ public final class ExposureBlockManager {
     private LinkedList<ExposureBlock> retired_blocks = new LinkedList<ExposureBlock>();
 
     private long safe_time = 0;
-
-    private long committed_exposure;
 
     private static ExposureBlockManager sInstance;
 
@@ -54,33 +55,25 @@ public final class ExposureBlockManager {
 
     private ExposureBlockManager(@NonNull final Context context) {
         APPLICATION = (CFApplication) context.getApplicationContext();
+
+        mFlushHandler = new Handler();
     }
 
     // Atomically check whether the current XB is to old, and if so,
     // create a new one. Then return the current block in either case.
     public synchronized ExposureBlock getCurrentExposureBlock() {
         if (current_xb == null) {
-// FIXME Had to add this call after creating the state broadcast, timing error?
+            // FIXME Had to add this call after creating the state broadcast, timing error?
+            CFLog.e("Oops! In getCurrentExposureBlock(), current_xb = null");
             newExposureBlock();
         }
 
         // check and see whether this XB is too old
-        if (current_xb.age() > CONFIG.getExposureBlockPeriod() * 1000) {
+        if (current_xb.nanoAge() > ((long)CONFIG.getExposureBlockPeriod() * 1000000000L)) {
             newExposureBlock();
         }
 
         return current_xb;
-    }
-
-    // Return an estimate of the exposure time in committed + current
-    // exposure blocks.
-    public synchronized long getExposureTime() {
-// FIXME Had to add this null check after creating the state broadcast, timing error?
-        if (current_xb != null && current_xb.daq_state == CFApplication.State.DATA) {
-            return committed_exposure + current_xb.age();
-        } else {
-            return committed_exposure;
-        }
     }
 
     public synchronized void newExposureBlock() {
@@ -89,7 +82,7 @@ public final class ExposureBlockManager {
             retireExposureBlock(current_xb);
         }
 
-        CFLog.i("DAQActivity Starting new exposure block!");
+        CFLog.i("Starting new exposure block! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock();
         mTotalXBs++;
 
@@ -101,6 +94,23 @@ public final class ExposureBlockManager {
         current_xb.run_id = APPLICATION.getBuildInformation().getRunId();
         current_xb.res_x = APPLICATION.getCameraSize().width;
         current_xb.res_y = APPLICATION.getCameraSize().height;
+
+        scheduleFlush();
+    }
+
+    private void scheduleFlush() {
+        scheduleFlush(1000);
+    }
+    private void scheduleFlush(long delay) {
+        // set a background thread to call flushCommittedBlocks() (e.g. so that we don't have
+        // to do it in a trigger or UI thread.
+        mFlushHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                flushCommittedBlocks();
+            }
+        },
+        delay);
     }
 
     public synchronized void abortExposureBlock() {
@@ -118,12 +128,6 @@ public final class ExposureBlockManager {
         }
 
         retired_blocks.add(xb);
-
-        // if this is a DATA block, add its age to the commited
-        // exposure time.
-        if (xb.daq_state == CFApplication.State.DATA) {
-            committed_exposure += xb.age();
-        }
     }
 
     public void updateSafeTime(long time) {
@@ -140,17 +144,22 @@ public final class ExposureBlockManager {
             return;
         }
 
-        // DW bandaid to avoid crashing here
-        boolean failed=false;
-        for (Iterator<ExposureBlock> it = retired_blocks.iterator(); !failed && it.hasNext(); ) {
-            try {
+        ArrayList<ExposureBlock> toRemove = new ArrayList<>();
+        synchronized (retired_blocks) {
+            for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
                 ExposureBlock xb = it.next();
-                if (xb.end_time < safe_time) {
-                    // okay, it's safe to commit this block now.
+                if (xb.end_time_nano < safe_time) {
+                    // okay, it's safe to commit this block now. add it to the list of XBs
+                    // to dispatch, and then do that outside the synch block.
+                    toRemove.add(xb);
                     it.remove();
-                    UploadExposureService.submitExposureBlock(APPLICATION, xb);
                 }
-            } catch (ConcurrentModificationException e) { failed=true;}
+            }
+        }
+
+        for (ExposureBlock xb : toRemove) {
+            // submit the retired XB's to be uploaded.
+            UploadExposureService.submitExposureBlock(APPLICATION, xb);
         }
     }
 

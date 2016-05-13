@@ -1,10 +1,11 @@
 package edu.uci.crayfis.camera;
 
-import edu.uci.crayfis.util.CFLog;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.location.Location;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.util.CFLog;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -14,17 +15,19 @@ import edu.uci.crayfis.exposure.ExposureBlock;
  */
 public class RawCameraFrame {
 
-    private final byte[] mBytes;
+    private byte[] mBytes;
     private final long mAcquiredTime;
-    private final long mNanoTime;
+    private final long mAcquiredTimeNano;
     private final long mAcquiredTimeNTP;
     private final ExposureBlock mExposureBlock;
     private Location mLocation;
     private float[] mOrientation;
+    private Camera mCamera;
     private Camera.Parameters mParams;
     private Camera.Size mSize;
     private int mPixMax;
     private int mLength;
+    private boolean mBufferOutstanding = true;
 
     /**
      * Create a new instance.
@@ -35,14 +38,16 @@ public class RawCameraFrame {
      * @param orient The orientation of the device.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,ExposureBlock exposureBlock, float[] orient, Camera camera) {
+    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,
+                          ExposureBlock exposureBlock, float[] orient, Camera camera) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
-        mNanoTime = nanoTime;
+        mAcquiredTimeNano = nanoTime;
         mAcquiredTimeNTP = timestamp_ntp;
         mExposureBlock = exposureBlock;
         mOrientation = orient.clone();
-        mParams = camera.getParameters();
+        mCamera = camera;
+        mParams = mCamera.getParameters();
         mSize = mParams.getPreviewSize();
         mPixMax = -1;
 
@@ -55,7 +60,50 @@ public class RawCameraFrame {
      * @return byte[]
      */
     public byte[] getBytes() {
+        // FIXME: Need to worry about thread-safety on these bytes for frames that get retired.
         return mBytes;
+    }
+
+    private byte[] createPreviewBuffer() {
+        Camera.Size sz = mParams.getPreviewSize();
+        int imgsize = sz.height*sz.width;
+        int formatsize = ImageFormat.getBitsPerPixel(mParams.getPreviewFormat());
+        int bsize = imgsize * formatsize / 8;
+        CFLog.i("Creating new preview buffer; imgsize = " + imgsize + " formatsize = " + formatsize + " bsize = " + bsize);
+        return new byte[bsize+1];
+    }
+
+    public void retire() {
+        synchronized (mBytes) {
+            if (!mBufferOutstanding) {
+                return;
+            }
+            mCamera.addCallbackBuffer(mBytes);
+            mBufferOutstanding = false;
+            mBytes = null;
+        }
+    }
+
+    public void claim() {
+        // FIXME/TODO: add a check to ensure we have enough memory to allocate a new buffer
+        synchronized (mBytes) {
+            if (!mBufferOutstanding) {
+                return;
+            }
+            mCamera.addCallbackBuffer(createPreviewBuffer());
+            mBufferOutstanding = false;
+        }
+    }
+
+    public boolean isOutstanding() {
+        try {
+            synchronized (mBytes) {
+                return mBufferOutstanding;
+            }
+        } catch (NullPointerException e) {
+            // mBytes is null, so we certainly don't have a buffer!
+            return false;
+        }
     }
 
     /**
@@ -81,7 +129,7 @@ public class RawCameraFrame {
      *
      * @return long
      */
-    public long getNanoTime() { return mNanoTime; }
+    public long getAcquiredTimeNano() { return mAcquiredTimeNano; }
 
     /**
      * Get the {@link edu.uci.crayfis.exposure.ExposureBlock}
@@ -128,10 +176,14 @@ public class RawCameraFrame {
             return mPixMax;
         }
 
-        for (int i = 0; i < mLength; i++) {
-            mPixMax = Math.max(mPixMax, mBytes[i]&0xFF);
-            //int val = mBytes[i] & 0xFF;
-            //if (val > mPixMax) mPixMax = val;
+        synchronized (mBytes) {
+            int max = mPixMax;
+            for (int i = 0; i < mLength; i++) {
+                max = Math.max(max, mBytes[i] & 0xFF);
+                //int val = mBytes[i] & 0xFF;
+                //if (val > mPixMax) mPixMax = val;
+            }
+            mPixMax = max;
         }
 
         return mPixMax;

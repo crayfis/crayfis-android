@@ -21,7 +21,7 @@ public class L1Processor {
         DEFAULT,
     }
 
-    public CFApplication mApplication = null;
+    public final CFApplication mApplication;
     private boolean mRecycle = false;
 
     public L1Calibrator mL1Cal = null;

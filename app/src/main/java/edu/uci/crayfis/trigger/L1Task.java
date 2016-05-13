@@ -29,30 +29,7 @@ class L1Task implements Runnable {
         mL2Processor = mL1Processor.mL2Processor;
     }
 
-    private byte[] createPreviewBuffer() {
-        Camera.Parameters params = mFrame.getParams();
-        Camera.Size sz = params.getPreviewSize();
-        int imgsize = sz.height*sz.width;
-        int formatsize = ImageFormat.getBitsPerPixel(params.getPreviewFormat());
-        int bsize = imgsize * formatsize / 8;
-        CFLog.i("Creating new preview buffer; imgsize = " + imgsize + " formatsize = " + formatsize + " bsize = " + bsize);
-        return new byte[bsize+1];
-    }
 
-    protected void retireFrame() {
-        if (! mFrameOutstanding) { return; }
-        if (! mRecycle) { return; }
-        mCamera.addCallbackBuffer(mFrame.getBytes());
-        mFrame = null;
-        mFrameOutstanding = false;
-    }
-
-    protected void claimFrame() {
-        if (! mFrameOutstanding) { return; }
-        if (! mRecycle) { return; }
-        mCamera.addCallbackBuffer(createPreviewBuffer());
-        mFrameOutstanding = false;
-    }
 
     protected boolean processInitial() {
         // show the frame to the L1 calibrator
@@ -70,7 +47,7 @@ class L1Task implements Runnable {
             mApplication.setApplicationState(CFApplication.State.DATA);
         }
 
-        retireFrame();
+        mFrame.retire();
         return true;
     }
 
@@ -80,56 +57,45 @@ class L1Task implements Runnable {
         if (count > mL1Processor.CONFIG.getStabilizationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
-        retireFrame();
+        mFrame.retire();
         return true;
     }
 
     protected boolean processIdle() {
         // Not sure why we're still acquiring frames in IDLE mode...
         CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
-        retireFrame();
+        mFrame.retire();
         return true;
     }
 
     protected boolean processData() {
-        if (mL2Processor.getRemainingCapacity() > 0) {
-            // check if we pass the L1 threshold
-            boolean pass = false;
+        // check if we pass the L1 threshold
+        boolean pass = false;
 
-            ExposureBlock xb = mFrame.getExposureBlock();
+        ExposureBlock xb = mFrame.getExposureBlock();
 
-            int max = mFrame.getPixMax();
-            if (max > xb.L1_thresh) {
-                // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-                // have changed.
-                pass = true;
-            }
+        int max = mFrame.getPixMax();
+        if (max > xb.L1_thresh) {
+            // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
+            // have changed.
+            pass = true;
+        }
 
-            if (pass) {
-                xb.L1_pass++;
+        if (pass) {
+            xb.L1_pass++;
 
-                // add a new buffer to the queue to make up for this one which
-                // will not return
-                claimFrame();
+            // add a new buffer to the queue to make up for this one which
+            // will not return
+            // TODO: make sure we check that there's enough memory to allocate a frame!
+            mFrame.claim();
 
-                // this frame has passed the L1 threshold, put it on the
-                // L2 processing queue.
-                boolean queue_accept = mL2Processor.submitToQueue(mFrame);
-
-                if (!queue_accept) {
-                    // oops! the queue is full... this frame will be dropped.
-                    CFLog.e("DAQActivity Could not add frame to L2 Queue!");
-                    //L2busy++;
-                }
-            } else {
-                // didn't pass. recycle the buffer.
-                xb.L1_skip++;
-                retireFrame();
-            }
+            // this frame has passed the L1 threshold, put it on the
+            // L2 processing queue.
+            mL2Processor.submitFrame(mFrame);
         } else {
-            // oops.
-            CFLog.e("L2 queue is busy!");
-            retireFrame();
+            // didn't pass. recycle the buffer.
+            xb.L1_skip++;
+            mFrame.retire();
         }
 
         return false;
@@ -158,7 +124,7 @@ class L1Task implements Runnable {
                 break;
             default:
                 CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
-                retireFrame();
+                mFrame.retire();
                 stopProcessing = true;
                 break;
         }
@@ -176,7 +142,7 @@ class L1Task implements Runnable {
 
         processFrame();
 
-        if (mFrameOutstanding) {
+        if (mFrame.isOutstanding()) {
             CFLog.w("Frame still outstanding after running L1Task!");
         } else {
             mL1Processor.mBufferBalance--;
