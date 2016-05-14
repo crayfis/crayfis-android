@@ -75,6 +75,10 @@ class L1Task implements Runnable {
         ExposureBlock xb = mFrame.getExposureBlock();
 
         int max = mFrame.getPixMax();
+
+        xb.total_background += mFrame.getPixAvg();
+        xb.total_max += mFrame.getPixMax();
+
         if (max > xb.L1_thresh) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.

@@ -1322,7 +1322,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             }
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano,acq_time_ntp , xb, orientation, camera);
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano, acq_time_ntp,
+                    xb, orientation, camera);
             frame.setLocation(CFApplication.getLastKnownLocation());
 
             // submit the frame to the L1Processor (it will handle recycling the buffers)
@@ -1622,6 +1623,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                             if (cameraSize != null) {
                                 devtxt += "Image dimensions = " + cameraSize.height + "x" + cameraSize.width + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
                             }
+                            ExposureBlock xb = xbManager.getCurrentExposureBlock();
+                            devtxt += "xb avg: " + xb.getPixAverage() + " max: " + xb.getPixMax() + "\n";
                             devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                     + "Upload server = " + upload_url + "\n"
                                     + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"

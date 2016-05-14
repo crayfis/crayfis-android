@@ -8,6 +8,7 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.trigger.L1Task;
 import edu.uci.crayfis.util.CFLog;
 
@@ -22,7 +23,7 @@ public class L1Processor {
     }
 
     public final CFApplication mApplication;
-    private boolean mRecycle = false;
+    public final ExposureBlockManager XB_MANAGER;
 
     public L1Calibrator mL1Cal = null;
     public int mL1Count = 0;
@@ -40,9 +41,11 @@ public class L1Processor {
     public L1Processor(L1TriggerType triggerType, CFApplication application, boolean recycle) {
         mApplication = application;
         mTriggerType = triggerType;
-        mRecycle = recycle;
 
         mL1Cal = L1Calibrator.getInstance();
+
+        // TODO: does the CFApplication cast back to the identical Context used elsewhere? check this.
+        XB_MANAGER = ExposureBlockManager.getInstance(mApplication);
     }
 
     public void setL2Processor(L2Processor l2) {
@@ -66,5 +69,9 @@ public class L1Processor {
     public void submitFrame(RawCameraFrame frame, Camera camera) {
         mBufferBalance++;
         AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame, camera));
+
+        // also, update the XB manager's safe time (so it knows which old XBs
+        // it can commit.
+        XB_MANAGER.updateSafeTime(frame.getAcquiredTimeNano());
     }
 }

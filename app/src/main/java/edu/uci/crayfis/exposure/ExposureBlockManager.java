@@ -22,6 +22,10 @@ public final class ExposureBlockManager {
     private final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication APPLICATION;
 
+    // grace period relative to the last known "safe time" to allow XB's after they're closed
+    // before they are submitted for upload [ms]
+    public final long SAFE_TIME_BUFFER = 2500;
+
     private int mTotalXBs = 0;
     private int mCommittedXBs = 0;
 
@@ -148,7 +152,7 @@ public final class ExposureBlockManager {
         synchronized (retired_blocks) {
             for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
                 ExposureBlock xb = it.next();
-                if (xb.end_time_nano < safe_time) {
+                if (xb.end_time_nano < (safe_time - SAFE_TIME_BUFFER*1000000L)) {
                     // okay, it's safe to commit this block now. add it to the list of XBs
                     // to dispatch, and then do that outside the synch block.
                     toRemove.add(xb);
@@ -166,7 +170,7 @@ public final class ExposureBlockManager {
     public void flushCommittedBlocks(boolean force) {
         // If force == true, immediately flush all blocks.
         if (force) {
-            updateSafeTime(System.currentTimeMillis());
+            updateSafeTime(System.nanoTime()-APPLICATION.getStartTimeNano());
         }
         flushCommittedBlocks();
     }

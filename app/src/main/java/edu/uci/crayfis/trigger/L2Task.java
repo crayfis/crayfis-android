@@ -245,10 +245,6 @@ public class L2Task implements Runnable {
         event.variance = variance;
         event.quality = good_quality;
 
-        ExposureBlock xb = mFrame.getExposureBlock();
-        xb.total_background += avg;
-        xb.total_std += variance;
-
         return event;
     }
 

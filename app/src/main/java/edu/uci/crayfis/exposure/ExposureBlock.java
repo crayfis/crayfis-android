@@ -2,7 +2,6 @@ package edu.uci.crayfis.exposure;
 
 import edu.uci.crayfis.SntpClient;
 
-import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -61,7 +60,7 @@ public class ExposureBlock implements Parcelable {
 
     // keep track of the (average) frame statistics as well
     public double total_background = 0.0;
-    public double total_std = 0.0;
+    public double total_max = 0.0;
 	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
@@ -131,7 +130,9 @@ public class ExposureBlock implements Parcelable {
         dest.writeSerializable(daq_state);
         dest.writeInt(frozen ? 1 : 0);
         dest.writeInt(aborted ? 1 : 0);
-        dest.writeTypedList(events);
+        synchronized (events) {
+            dest.writeTypedList(events);
+        }
     }
 
     public void reset() {
@@ -166,7 +167,9 @@ public class ExposureBlock implements Parcelable {
 			return;
 		}
 		event.xbn = xbn;
-		events.add(event);
+        synchronized (events) {
+            events.add(event);
+        }
 		
 		int npix = 0;
 		if (event.pixels != null) {
@@ -255,6 +258,24 @@ public class ExposureBlock implements Parcelable {
 		DataProtos.ExposureBlock buf = buildProto();
 		return buf.toByteArray();
 	}
+
+    public double getPixAverage() {
+        long nevt = L1_processed;
+        if (nevt > 0) {
+            return total_background / nevt;
+        } else {
+            return 0;
+        }
+    }
+
+    public double getPixMax() {
+        long nevt = L1_processed;
+        if (nevt > 0) {
+            return total_max / nevt;
+        } else {
+            return 0;
+        }
+    }
 
     public static final Creator<ExposureBlock> CREATOR = new Creator<ExposureBlock>() {
         @Override
