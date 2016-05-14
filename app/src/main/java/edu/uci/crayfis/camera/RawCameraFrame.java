@@ -21,6 +21,7 @@ public class RawCameraFrame {
     private final ExposureBlock mExposureBlock;
     private Location mLocation;
     private float[] mOrientation;
+    private Camera.Parameters mParams;
     private Camera.Size mSize;
     private int mPixMax;
     private int mLength;
@@ -32,16 +33,17 @@ public class RawCameraFrame {
      * @param timestamp The time in milliseconds.
      * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}
      * @param orient The orientation of the device.
-     * @param size The pixel dimensions of the frame
+     * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,ExposureBlock exposureBlock, float[] orient, Camera.Size size) {
+    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,ExposureBlock exposureBlock, float[] orient, Camera camera) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
         mNanoTime = nanoTime;
         mAcquiredTimeNTP = timestamp_ntp;
         mExposureBlock = exposureBlock;
         mOrientation = orient.clone();
-        mSize = size;
+        mParams = camera.getParameters();
+        mSize = mParams.getPreviewSize();
         mPixMax = -1;
 
         mLength = mSize.height * mSize.width;
@@ -118,6 +120,7 @@ public class RawCameraFrame {
         return mOrientation;
     }
 
+    public Camera.Parameters getParams() { return mParams; }
     public Camera.Size getSize() { return mSize; }
 
     public int getPixMax() {
@@ -126,8 +129,9 @@ public class RawCameraFrame {
         }
 
         for (int i = 0; i < mLength; i++) {
-            int val = mBytes[i] & 0xFF;
-            if (val > mPixMax) mPixMax = val;
+            mPixMax = Math.max(mPixMax, mBytes[i]&0xFF);
+            //int val = mBytes[i] & 0xFF;
+            //if (val > mPixMax) mPixMax = val;
         }
 
         return mPixMax;

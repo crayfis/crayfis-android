@@ -29,15 +29,24 @@ public class L1Calibrator {
     public static FrameHistory<Integer> getMaxPixels() { return max_pixels; }
 
     public static void clear() {
-        max_pixels.clear();
+        synchronized (max_pixels) {
+            max_pixels.clear();
+        }
     }
 
     public static void AddFrame(RawCameraFrame frame) {
-        max_pixels.add_value(frame.getPixMax());
+        int frame_max = frame.getPixMax();
+        synchronized (max_pixels) {
+            max_pixels.add_value(frame_max);
+        }
     }
 
     public static Histogram getHistogram() {
-        return max_pixels.getHistogram(256);
+        Histogram h;
+        synchronized (max_pixels) {
+            h = max_pixels.getHistogram(256);
+        }
+        return h;
     }
 
     /**

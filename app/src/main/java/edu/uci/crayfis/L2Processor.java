@@ -45,7 +45,7 @@ import edu.uci.crayfis.util.CFLog;
 class L2Processor extends Thread {
 
     // Maximum number of raw camera frames to allow on the L2Queue
-    private static final int L2Queue_maxFrames = 2;
+    private static final int L2Queue_maxFrames = 5;
     // Queue for frames to be processed by the L2 thread
     ArrayBlockingQueue<RawCameraFrame> L2Queue = new ArrayBlockingQueue<RawCameraFrame>(L2Queue_maxFrames);
     // max amount of time to wait on L2Queue (seconds)
