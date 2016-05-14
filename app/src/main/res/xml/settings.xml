@@ -57,7 +57,7 @@
     <!-- Expert use only -->
     <CheckBoxPreference
         android:defaultValue="false"
-        android:key="prefFixThreshold"
+        android:key="trigger_lock"
         android:summary="@string/settings_thresh_summary"
         android:title="@string/settings_thresh_title">
     </CheckBoxPreference> <!-- expert only -->

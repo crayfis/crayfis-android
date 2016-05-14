@@ -6,7 +6,6 @@ package edu.uci.crayfis.particle;
  *
  */
 
-import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -284,7 +283,7 @@ public class ParticleReco {
         RecoEvent event = new RecoEvent();
 
         event.time = frame.getAcquiredTime();
-        event.time_nano = frame.getNanoTime();
+        event.time_nano = frame.getAcquiredTimeNano();
         event.time_ntp = frame.getAcquiredTimeNTP();
         event.location = frame.getLocation();
         event.orientation = frame.getOrientation();

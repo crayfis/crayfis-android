@@ -2,7 +2,6 @@ package edu.uci.crayfis.exposure;
 
 import edu.uci.crayfis.SntpClient;
 
-import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -13,7 +12,7 @@ import java.util.UUID;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
-import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
+import edu.uci.crayfis.trigger.L2Task.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
 
 public class ExposureBlock implements Parcelable {
@@ -24,6 +23,7 @@ public class ExposureBlock implements Parcelable {
 	public long start_time;
 	public long end_time;
 
+	public final long nano_offset;
     public long start_time_nano;
     public long end_time_nano;
 
@@ -52,15 +52,20 @@ public class ExposureBlock implements Parcelable {
 	
 	// the exposure block number within the given run
 	public int xbn;
-		
+
 	public CFApplication.State daq_state;
 	
 	public boolean frozen = false;
 	public boolean aborted = false;
+
+    // keep track of the (average) frame statistics as well
+    public double total_background = 0.0;
+    public double total_max = 0.0;
 	
 	private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 	
 	public ExposureBlock() {
+		nano_offset = CFApplication.getStartTimeNano();
 		reset();
 	}
 
@@ -68,6 +73,7 @@ public class ExposureBlock implements Parcelable {
         run_id = (UUID) parcel.readSerializable();
         start_time = parcel.readLong();
         end_time = parcel.readLong();
+		nano_offset = parcel.readLong();
         start_time_nano = parcel.readLong();
         end_time_nano = parcel.readLong();
         start_time_ntp = parcel.readLong();
@@ -102,6 +108,7 @@ public class ExposureBlock implements Parcelable {
         dest.writeSerializable(run_id);
         dest.writeLong(start_time);
         dest.writeLong(end_time);
+		dest.writeLong(nano_offset);
         dest.writeLong(start_time_nano);
         dest.writeLong(end_time_nano);
         dest.writeLong(start_time_ntp);
@@ -123,11 +130,13 @@ public class ExposureBlock implements Parcelable {
         dest.writeSerializable(daq_state);
         dest.writeInt(frozen ? 1 : 0);
         dest.writeInt(aborted ? 1 : 0);
-        dest.writeTypedList(events);
+        synchronized (events) {
+            dest.writeTypedList(events);
+        }
     }
 
     public void reset() {
-        start_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
+        start_time_nano = System.nanoTime() - nano_offset;
 		start_time = System.currentTimeMillis();
         start_time_ntp = SntpClient.getInstance().getNtpTime();
 		frames_dropped = 0;
@@ -139,17 +148,16 @@ public class ExposureBlock implements Parcelable {
 	public void freeze() {
 		frozen = true;
 		end_time = System.currentTimeMillis();
-        end_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
+        end_time_nano = System.nanoTime() - nano_offset;
         end_time_ntp = SntpClient.getInstance().getNtpTime();
 	}
 	
-	public long age() {
-        // FIXME: should we use the nanotime(s) here? Beware corner case where the nanotime counter wraps around, though!
+	public long nanoAge() {
 		if (frozen) {
-			return end_time - start_time;
+			return end_time_nano - start_time_nano;
 		}
 		else {
-			return System.currentTimeMillis() - start_time;
+			return (System.nanoTime()-nano_offset) - start_time_nano;
 		}
 	}
 	
@@ -159,7 +167,9 @@ public class ExposureBlock implements Parcelable {
 			return;
 		}
 		event.xbn = xbn;
-		events.add(event);
+        synchronized (events) {
+            events.add(event);
+        }
 		
 		int npix = 0;
 		if (event.pixels != null) {
@@ -248,6 +258,24 @@ public class ExposureBlock implements Parcelable {
 		DataProtos.ExposureBlock buf = buildProto();
 		return buf.toByteArray();
 	}
+
+    public double getPixAverage() {
+        long nevt = L1_processed;
+        if (nevt > 0) {
+            return total_background / nevt;
+        } else {
+            return 0;
+        }
+    }
+
+    public double getPixMax() {
+        long nevt = L1_processed;
+        if (nevt > 0) {
+            return total_max / nevt;
+        } else {
+            return 0;
+        }
+    }
 
     public static final Creator<ExposureBlock> CREATOR = new Creator<ExposureBlock>() {
         @Override

@@ -29,7 +29,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_ACCOUNT_SCORE = "account_score";
     private static final String KEY_UPDATE_URL = "update_url";
-
+    private static final String KEY_TRIGGER_LOCK = "trigger_lock";
 
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
@@ -51,6 +51,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final String DEFAULT_UPDATE_URL = "";
+    private static final boolean DEFAULT_TRIGGER_LOCK = false;
 
     private int mL1Threshold;
     private int mL2Threshold;
@@ -69,6 +70,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mAccountName;
     private float mAccountScore;
     private String mUpdateURL;
+    private boolean mTriggerLock;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -89,6 +91,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
         mUpdateURL = DEFAULT_UPDATE_URL;
+        mTriggerLock = DEFAULT_TRIGGER_LOCK;
     }
 
     /**
@@ -260,6 +263,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public float getAccountScore() { return mAccountScore; }
     public String getUpdateURL() { return mUpdateURL; }
 
+    /***
+     * Ask whether the trigger lock is engaged.
+     * @return True if the trigger is locked, else false.
+     */
+    public boolean getTriggerLock() { return mTriggerLock; }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
@@ -278,7 +287,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME,DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
         mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL,DEFAULT_UPDATE_URL);
-
+        mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
     }
 
     /**
