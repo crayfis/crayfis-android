@@ -90,6 +90,11 @@ class L1Task implements Runnable {
 
             mKeepFrame = true;
 
+            // add a new buffer to the queue to make up for this one which
+            // will not return
+            // TODO: make sure we check that there's enough memory to allocate a frame!
+            mFrame.claim();
+
             // this frame has passed the L1 threshold, put it on the
             // L2 processing queue.
             mL2Processor.submitFrame(mFrame);
@@ -141,14 +146,7 @@ class L1Task implements Runnable {
 
         processFrame();
 
-        if (mKeepFrame) {
-            // this frame has been passed on to L2. claim the buffer for now.
-
-            // add a new buffer to the queue to make up for this one which
-            // will not return
-            // TODO: make sure we check that there's enough memory to allocate a frame!
-            mFrame.claim();
-        } else {
+        if (!mKeepFrame) {
             // we are done with this frame. retire the buffer and also clear it from the XB.
             mFrame.retire();
             mFrame.clear();

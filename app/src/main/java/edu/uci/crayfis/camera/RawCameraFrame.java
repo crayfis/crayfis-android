@@ -3,6 +3,7 @@ package edu.uci.crayfis.camera;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.location.Location;
+import android.support.annotation.NonNull;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -25,7 +26,7 @@ public class RawCameraFrame {
     private int mPixMax;
     private double mPixAvg = -1;
     private int mLength;
-    private boolean mBufferOutstanding = true;
+    private Boolean mBufferOutstanding = true;
     private ExposureBlock mExposureBlock;
 
     /**
@@ -35,7 +36,7 @@ public class RawCameraFrame {
      * @param timestamp The time at which the image was recieved by our app.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(byte[] bytes, AcquisitionTime timestamp, Camera camera) {
+    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
         mCamera = camera;
@@ -61,12 +62,12 @@ public class RawCameraFrame {
         int imgsize = sz.height*sz.width;
         int formatsize = ImageFormat.getBitsPerPixel(mParams.getPreviewFormat());
         int bsize = imgsize * formatsize / 8;
-        CFLog.i("Creating new preview buffer; imgsize = " + imgsize + " formatsize = " + formatsize + " bsize = " + bsize);
+        CFLog.d("Creating new preview buffer; imgsize = " + imgsize + " formatsize = " + formatsize + " bsize = " + bsize);
         return new byte[bsize+1];
     }
 
     public void retire() {
-        synchronized (mBytes) {
+        synchronized (mBufferOutstanding) {
             if (!mBufferOutstanding) {
                 return;
             }
@@ -78,7 +79,7 @@ public class RawCameraFrame {
 
     public void claim() {
         // FIXME/TODO: add a check to ensure we have enough memory to allocate a new buffer
-        synchronized (mBytes) {
+        synchronized (mBufferOutstanding) {
             if (!mBufferOutstanding) {
                 return;
             }
@@ -89,9 +90,12 @@ public class RawCameraFrame {
 
     // notify the XB that we are totally done processing this frame.
     public void clear() {
-        mExposureBlock.clearFrame(this);
-        // make sure we null the image buffer so that its memory can be freed.
-        mBytes = null;
+        synchronized (mBufferOutstanding) {
+            assert mBufferOutstanding == false;
+            mExposureBlock.clearFrame(this);
+            // make sure we null the image buffer so that its memory can be freed.
+            mBytes = null;
+        }
     }
 
     public boolean isOutstanding() {
