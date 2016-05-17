@@ -41,7 +41,6 @@ public class L2TaskMaxN extends L2Task {
             }
 
             npix = cfg_npix;
-            CFLog.i("Setting npix = " + npix + " at L2.");
         }
 
         @Override
@@ -54,7 +53,7 @@ public class L2TaskMaxN extends L2Task {
     private final int mNpix;
 
     L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
-        super(l2processor, frame);
+        super(l2processor, frame, null);
         mNpix = npix;
     }
 
@@ -85,7 +84,7 @@ public class L2TaskMaxN extends L2Task {
         // recalculate the variance w/ full stats
         double variance = 0.;
         double avg = mFrame.getPixAvg();
-        boolean fail = false;
+        int thresh = xb.L2_threshold+1;
         for (int ix = 0; ix < width; ix++) {
             for (int iy = 0; iy < height; iy++) {
                 // NB: cast (signed) byte to integer for meaningful comparisons!
@@ -93,17 +92,12 @@ public class L2TaskMaxN extends L2Task {
 
                 variance += (val-avg)*(val - avg);
 
-                if (val > xb.L2_threshold) {
-                    if (fail) {
-                        mEvent.npix_dropped++;
-                        continue;
-                    }
+                if (val >= thresh) {
                     // okay, found a pixel above threshold!
-                    if (pixels.size() >= mNpix) {
-                        if (pixels.size() > 2*mNpix) {
-                            prunePixels(pixels, mNpix);
-                        }
-                        if (val > pixels.get(pixels.size()-1).val) {
+                    if (pixels.size() > mNpix) {
+                        prunePixels(pixels, mNpix);
+                        thresh = pixels.get(pixels.size()-1).val;
+                        if (val < thresh) {
                             continue;
                         }
                     }

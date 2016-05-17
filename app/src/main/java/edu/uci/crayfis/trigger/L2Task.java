@@ -23,13 +23,36 @@ public class L2Task implements Runnable {
     private final CFApplication mApplication;
 
     public static class Config extends L2Config {
+        public static final int DEFAULT_NPIX = 500;
+
+        public final int npix;
         Config(String name, String cfg) {
             super(name, cfg);
+
+            // FIXME: there's probably an easier/more generic way to parse simple key-val pairs.
+            int cfg_npix = DEFAULT_NPIX;
+            for (String c : cfg.split(";")) {
+                String[] kv = c.split("=");
+                if (kv.length != 2) continue;
+                String key = kv[0];
+                String value = kv[1];
+
+                if (key.equals("npix")) {
+                    try {
+                        cfg_npix = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        CFLog.w("Couldn't parse npix argument for L2 configuraion!");
+                        continue;
+                    }
+                }
+            }
+
+            npix = cfg_npix;
         }
 
         @Override
         public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
-            return new L2Task(l2Processor, frame);
+            return new L2Task(l2Processor, frame, this);
         }
     }
 
@@ -38,11 +61,15 @@ public class L2Task implements Runnable {
 
     RecoEvent mEvent = null;
 
-    L2Task(L2Processor l2processor, RawCameraFrame frame) {
+    final L2Config mConfig;
+
+    L2Task(L2Processor l2processor, RawCameraFrame frame, L2Config config) {
         mFrame = frame;
         mL2Processor = l2processor;
 
         mApplication = mL2Processor.mApplication;
+
+        mConfig = config;
     }
 
     public static class RecoEvent implements Parcelable {
@@ -278,7 +305,8 @@ public class L2Task implements Runnable {
         double variance = 0.;
         double avg = mFrame.getPixAvg();
         boolean fail = false;
-        for (int ix = 0; ix < width; ix++) {
+        boolean quitReco = false;
+        for (int ix = 0; ix < width && !quitReco; ix++) {
             for (int iy = 0; iy < height; iy++) {
                 // NB: cast (signed) byte to integer for meaningful comparisons!
                 int val = bytes[ix + width * iy] & 0xFF;
@@ -340,14 +368,21 @@ public class L2Task implements Runnable {
                     p.near_max = nearMax;
 
                     pixels.add(p);
+
+                    if (pixels.size() >= ((Config)mConfig).npix) {
+                        quitReco = true;
+                        break;
+                    }
                 }
             }
         }
 
-        // update event with the "variance" computed from full pixel statistics.
-        variance /= (double)(width*height);
-        variance = Math.sqrt(variance);
-        mEvent.variance = variance;
+        if (!quitReco) {
+            // update event with the "variance" computed from full pixel statistics.
+            variance /= (double) (width * height);
+            variance = Math.sqrt(variance);
+            mEvent.variance = variance;
+        }
 
         return pixels;
     }
