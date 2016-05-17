@@ -140,10 +140,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     public static final int N_CYCLE_BUFFERS = 10;
 
-    // TODO: make this configurable in the settings (and via remote command)
-    public static final L1Processor.L1TriggerType L1_TRIGGER_TYPE = L1Processor.L1TriggerType.DEFAULT;
-    public static final L2Processor.L2TriggerType L2_TRIGGER_TYPE = L2Processor.L2TriggerType.DEFAULT;
-
     DataProtos.RunConfig run_config = null;
 
 	// to keep track of height/width
@@ -1582,7 +1578,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         if (mLayoutDeveloper.mTextView != null) {
                             String devtxt = "@@ Developer View @@\n"
                                     + "State: " + application.getApplicationState() + "\n"
-                                    + "L2 trig: " + CONFIG.getL2TriggerType() + "\n"
+                                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                                     + "total frames - L1: " + mL1Processor.mL1Count + " (L2: " + mL2Processor.mL2Count + ")\n"
                                     + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"

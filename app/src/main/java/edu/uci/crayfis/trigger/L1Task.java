@@ -1,8 +1,5 @@
 package edu.uci.crayfis.trigger;
 
-import android.graphics.ImageFormat;
-import android.hardware.Camera;
-
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -12,6 +9,17 @@ import edu.uci.crayfis.util.CFLog;
  * Created by cshimmin on 5/12/16.
  */
 class L1Task implements Runnable {
+    public static class Config extends L1Config {
+        Config(String name, String cfg) {
+            super(name, cfg);
+        }
+
+        @Override
+        public L1Task makeTask(L1Processor l1Processor, RawCameraFrame frame) {
+            return new L1Task(l1Processor, frame);
+        }
+    }
+
     private L1Processor mL1Processor = null;
     private L2Processor mL2Processor = null;
     private RawCameraFrame mFrame = null;
@@ -27,8 +35,6 @@ class L1Task implements Runnable {
         mApplication = mL1Processor.mApplication;
         mL2Processor = mL1Processor.mL2Processor;
     }
-
-
 
     protected boolean processInitial() {
         // show the frame to the L1 calibrator

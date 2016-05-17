@@ -22,12 +22,23 @@ public class L2Task implements Runnable {
     private static final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication mApplication;
 
+    public static class Config extends L2Config {
+        Config(String name, String cfg) {
+            super(name, cfg);
+        }
+
+        @Override
+        public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
+            return new L2Task(l2Processor, frame);
+        }
+    }
+
     RawCameraFrame mFrame = null;
     L2Processor mL2Processor = null;
 
     RecoEvent mEvent = null;
 
-    L2Task(RawCameraFrame frame, L2Processor l2processor) {
+    L2Task(L2Processor l2processor, RawCameraFrame frame) {
         mFrame = frame;
         mL2Processor = l2processor;
 

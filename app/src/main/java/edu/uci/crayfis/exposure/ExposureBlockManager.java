@@ -99,8 +99,8 @@ public final class ExposureBlockManager {
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
-                CONFIG.getL1TriggerType(),
-                CONFIG.getL2TriggerType(),
+                CONFIG.getL1Trigger(),
+                CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
                 new Location(CFApplication.getLastKnownLocation()),
                 state, APPLICATION.getCameraSize());

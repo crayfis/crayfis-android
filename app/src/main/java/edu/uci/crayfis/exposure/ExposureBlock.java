@@ -14,7 +14,9 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.trigger.L1Config;
 import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Config;
 import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.trigger.L2Task.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
@@ -34,10 +36,10 @@ public class ExposureBlock implements Parcelable {
 	
 	public long frames_dropped;
 
-    public final L1Processor.L1TriggerType L1_trigger_type;
-    public final L2Processor.L2TriggerType L2_trigger_type;
+    public final L1Config L1_trigger_config;
+    public final L2Config L2_trigger_config;
 
-	public final int L1_threshold;
+    public final int L1_threshold;
 	public final int L2_threshold;
 
     private long L1_processed;
@@ -74,8 +76,8 @@ public class ExposureBlock implements Parcelable {
     private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 
     public ExposureBlock(int xbn, UUID run_id,
-                         L1Processor.L1TriggerType L1_trigger_type,
-                         L2Processor.L2TriggerType L2_trigger_type,
+                         String L1_config,
+                         String L2_config,
                          int L1_threshold, int L2_threshold,
                          Location start_loc,
                          CFApplication.State daq_state, Camera.Size sz) {
@@ -83,8 +85,8 @@ public class ExposureBlock implements Parcelable {
 
         this.xbn = xbn;
         this.run_id = run_id;
-        this.L1_trigger_type = L1_trigger_type;
-        this.L2_trigger_type = L2_trigger_type;
+        this.L1_trigger_config = L1Config.makeConfig(L1_config);
+        this.L2_trigger_config = L2Config.makeConfig(L2_config);
         this.L1_threshold = L1_threshold;
         this.L2_threshold = L2_threshold;
         this.start_loc = start_loc;
@@ -106,8 +108,8 @@ public class ExposureBlock implements Parcelable {
         res_x = parcel.readInt();
         res_y = parcel.readInt();
         frames_dropped = parcel.readLong();
-        L1_trigger_type = (L1Processor.L1TriggerType) parcel.readSerializable();
-        L2_trigger_type = (L2Processor.L2TriggerType) parcel.readSerializable();
+        L1_trigger_config = L1Config.makeConfig(parcel.readString());
+        L2_trigger_config = L2Config.makeConfig(parcel.readString());
         L1_threshold = parcel.readInt();
         L2_threshold = parcel.readInt();
         L1_processed = parcel.readLong();
@@ -138,8 +140,8 @@ public class ExposureBlock implements Parcelable {
         dest.writeInt(res_x);
         dest.writeInt(res_y);
         dest.writeLong(frames_dropped);
-        dest.writeSerializable(L1_trigger_type);
-        dest.writeSerializable(L2_trigger_type);
+        dest.writeString(L1_trigger_config.toString());
+        dest.writeString(L2_trigger_config.toString());
         dest.writeInt(L1_threshold);
         dest.writeInt(L2_threshold);
         dest.writeLong(L1_processed);
