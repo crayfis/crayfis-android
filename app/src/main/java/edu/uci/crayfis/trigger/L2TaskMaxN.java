@@ -103,7 +103,7 @@ public class L2TaskMaxN extends L2Task {
                         if (pixels.size() > 2*mNpix) {
                             prunePixels(pixels, mNpix);
                         }
-                        if (val > pixels.get(pixels.size()).val) {
+                        if (val > pixels.get(pixels.size()-1).val) {
                             continue;
                         }
                     }
