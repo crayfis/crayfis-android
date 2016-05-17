@@ -1399,9 +1399,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             @Override
             public void run() {
                 final CFApplication application = (CFApplication) getApplication();
+                SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(application);
+                boolean disable_sleep = localPrefs.getBoolean("prefDisableScreenSaver", false);
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if ( !sleep_mode
+                if (!disable_sleep && !sleep_mode
                         && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
                         && (application.getApplicationState() == CFApplication.State.DATA
                             || application.getApplicationState() == CFApplication.State.IDLE)

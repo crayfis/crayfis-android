@@ -22,6 +22,9 @@
     <string name="settings_thresh_title">Fix thresholds</string>
     <string name="settings_thresh_summary">Expert use only!</string>
 
+    <string name="settings_disable_screensaver">Disable screensaver</string>
+    <string name="settings_disable_screensaver_summary">Disable the animated screensaver (may increase battery usage)</string>
+
     <string name="settings_code_summary">Generated from the CRAYFIS website</string>
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Enable gallery</string>
