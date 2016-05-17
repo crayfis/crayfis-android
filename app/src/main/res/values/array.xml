@@ -35,7 +35,8 @@
     <string-array name="pref_resolution">
         <item>Low</item>
         <item>Medium</item>
-        <item>High</item>
+        <item>720p</item>
+        <item>1080p</item>
     </string-array>
     <string-array name="pref_startwait">
         <item>0 </item>

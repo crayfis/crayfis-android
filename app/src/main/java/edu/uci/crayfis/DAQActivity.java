@@ -975,7 +975,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             targetPreviewWidth=640;
             targetPreviewHeight=480;
         }
-        if (desired_res.equals("High"))
+        if (desired_res.equals("720p"))
+        {
+            targetPreviewWidth=1280;
+            targetPreviewHeight=720;
+        }
+        if (desired_res.equals("1080p"))
         {
             targetPreviewWidth=1920;
             targetPreviewHeight=1080;
@@ -1587,7 +1592,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                                     + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
                             if (cameraSize != null) {
-                                devtxt += "Image dimensions = " + cameraSize.height + "x" + cameraSize.width + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
+                                devtxt += "Image dimensions = " + cameraSize.width + "x" + cameraSize.height + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
                             }
                             ExposureBlock xb = xbManager.getCurrentExposureBlock();
                             devtxt += "xb avg: " + xb.getPixAverage() + " max: " + xb.getPixMax() + "\n";
