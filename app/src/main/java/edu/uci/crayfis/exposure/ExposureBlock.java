@@ -281,11 +281,13 @@ public class ExposureBlock implements Parcelable {
 		buf.setL1Processed((int) L1_processed);
 		buf.setL1Skip((int) L1_skip);
 		buf.setL1Thresh(L1_threshold);
+        buf.setL1Conf(L1_trigger_config.toString());
 		
 		buf.setL2Pass((int) L2_pass);
 		buf.setL2Processed((int) L2_processed);
 		buf.setL2Skip((int) L2_skip);
 		buf.setL2Thresh(L2_threshold);
+        buf.setL2Conf(L2_trigger_config.toString());
 		
 		buf.setGpsLat(start_loc.getLatitude());
 		buf.setGpsLon(start_loc.getLongitude());
