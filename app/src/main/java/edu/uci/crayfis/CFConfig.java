@@ -5,6 +5,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import edu.uci.crayfis.server.ServerCommand;
+import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Processor;
+import edu.uci.crayfis.util.CFLog;
 
 /**
  * Global configuration class.
@@ -13,6 +16,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final CFConfig INSTANCE = new CFConfig();
 
+    private static final String KEY_L1_TRIGGER_TYPE = "L1_trig";
+    private static final String KEY_L2_TRIGGER_TYPE = "L2_trig";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
@@ -34,6 +39,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
+    private static final String DEFAULT_L1_TRIGGER_TYPE = "default";
+    private static final String DEFAULT_L2_TRIGGER_TYPE = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
@@ -53,6 +60,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
 
+    private String mL1TriggerType;
+    private String mL2TriggerType;
     private int mL1Threshold;
     private int mL2Threshold;
     private int mCalibrationSampleFrames;
@@ -74,6 +83,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
+        mL1TriggerType = DEFAULT_L1_TRIGGER_TYPE;
+        mL2TriggerType = DEFAULT_L2_TRIGGER_TYPE;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
@@ -92,6 +103,22 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
         mUpdateURL = DEFAULT_UPDATE_URL;
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
+    }
+
+    public L1Processor.L1TriggerType getL1TriggerType() {
+        if (L1Processor.L1_TRIGGER_TYPE_MAP.containsKey(mL1TriggerType)) {
+            return L1Processor.L1_TRIGGER_TYPE_MAP.get(mL1TriggerType);
+        } else {
+            return L1Processor.L1_TRIGGER_TYPE_MAP.get(DEFAULT_L1_TRIGGER_TYPE);
+        }
+    }
+
+    public L2Processor.L2TriggerType getL2TriggerType() {
+        if (L2Processor.L2_TRIGGER_TYPE_MAP.containsKey(mL2TriggerType)) {
+            return L2Processor.L2_TRIGGER_TYPE_MAP.get(mL2TriggerType);
+        } else {
+            return L2Processor.L2_TRIGGER_TYPE_MAP.get(DEFAULT_L2_TRIGGER_TYPE);
+        }
     }
 
     /**
@@ -271,6 +298,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        mL1TriggerType = sharedPreferences.getString(KEY_L1_TRIGGER_TYPE, DEFAULT_L1_TRIGGER_TYPE);
+        mL2TriggerType = sharedPreferences.getString(KEY_L2_TRIGGER_TYPE, DEFAULT_L2_TRIGGER_TYPE);
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
         mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
@@ -297,6 +326,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
         if (serverCommand == null) return;
+        CFLog.i("GOT command from server!");
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
         }
@@ -343,10 +373,18 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getUpdateURL() != null) {
             mUpdateURL = serverCommand.getUpdateURL();
         }
+        if (serverCommand.getL1TriggerType() != null) {
+            mL1TriggerType = serverCommand.getL1TriggerType();
+        }
+        if (serverCommand.getL2TriggerType() != null) {
+            mL2TriggerType = serverCommand.getL2TriggerType();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
         sharedPreferences.edit()
+                .putString(KEY_L1_TRIGGER_TYPE, mL1TriggerType)
+                .putString(KEY_L2_TRIGGER_TYPE, mL2TriggerType)
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)
                 .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)

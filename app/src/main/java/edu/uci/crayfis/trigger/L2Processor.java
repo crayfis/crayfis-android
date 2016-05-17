@@ -2,31 +2,43 @@ package edu.uci.crayfis.trigger;
 
 import android.os.AsyncTask;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 public class L2Processor {
+    public static final Map<String, L2TriggerType> L2_TRIGGER_TYPE_MAP = new HashMap<String, L2TriggerType>()  {
+        {
+            put("default", L2TriggerType.DEFAULT);
+            put("maxn", L2TriggerType.MAXN);
+        }
+    };
+
     public enum L2TriggerType {
-        DEFAULT,
+        DEFAULT, MAXN,
     }
 
-    public L2TriggerType mTriggerType = null;
     public final CFApplication mApplication;
 
     public int mL2Count = 0;
 
-    public L2Processor(L2TriggerType triggerType, CFApplication application) {
+    public L2Processor(CFApplication application) {
         // TODO: it will make more sense to have the triggerType assigned to the XB and then get it from there.
-        mTriggerType = triggerType;
         mApplication = application;
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
         Runnable task;
-        switch (mTriggerType) {
+        switch (frame.getExposureBlock().L2_trigger_type) {
             case DEFAULT:
                 task = new L2Task(frame, this);
+                break;
+            case MAXN:
+                task = new L2TaskMaxN(frame, this);
+                CFLog.i("Creating a MAXN l2 task!!!!");
                 break;
             default:
                 CFLog.w("Unimplemented L2 trigger type selected! Falling back to default.");

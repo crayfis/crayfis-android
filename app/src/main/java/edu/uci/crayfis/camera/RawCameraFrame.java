@@ -16,10 +16,7 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
-    private final long mAcquiredTime;
-    private final long mAcquiredTimeNano;
-    private final long mAcquiredTimeNTP;
-    private final ExposureBlock mExposureBlock;
+    private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
     private Camera mCamera;
@@ -29,24 +26,18 @@ public class RawCameraFrame {
     private double mPixAvg = -1;
     private int mLength;
     private boolean mBufferOutstanding = true;
+    private ExposureBlock mExposureBlock;
 
     /**
      * Create a new instance.
      *
      * @param bytes Raw bytes from the camera.
-     * @param timestamp The time in milliseconds.
-     * @param exposureBlock The {@link edu.uci.crayfis.exposure.ExposureBlock}
-     * @param orient The orientation of the device.
+     * @param timestamp The time at which the image was recieved by our app.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(byte[] bytes, long timestamp, long nanoTime, long timestamp_ntp,
-                          ExposureBlock exposureBlock, float[] orient, Camera camera) {
+    public RawCameraFrame(byte[] bytes, AcquisitionTime timestamp, Camera camera) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
-        mAcquiredTimeNano = nanoTime;
-        mAcquiredTimeNTP = timestamp_ntp;
-        mExposureBlock = exposureBlock;
-        mOrientation = orient.clone();
         mCamera = camera;
         mParams = mCamera.getParameters();
         mSize = mParams.getPreviewSize();
@@ -96,6 +87,13 @@ public class RawCameraFrame {
         }
     }
 
+    // notify the XB that we are totally done processing this frame.
+    public void clear() {
+        mExposureBlock.clearFrame(this);
+        // make sure we null the image buffer so that its memory can be freed.
+        mBytes = null;
+    }
+
     public boolean isOutstanding() {
         try {
             synchronized (mBytes) {
@@ -113,7 +111,7 @@ public class RawCameraFrame {
      * @return long
      */
     public long getAcquiredTimeNTP() {
-        return mAcquiredTimeNTP;
+        return mAcquiredTime.NTP;
     }
 
 
@@ -122,7 +120,7 @@ public class RawCameraFrame {
             * @return long
     */
     public long getAcquiredTime() {
-        return mAcquiredTime;
+        return mAcquiredTime.Sys;
     }
 
     /**
@@ -130,16 +128,7 @@ public class RawCameraFrame {
      *
      * @return long
      */
-    public long getAcquiredTimeNano() { return mAcquiredTimeNano; }
-
-    /**
-     * Get the {@link edu.uci.crayfis.exposure.ExposureBlock}
-     *
-     * @return {@link edu.uci.crayfis.exposure.ExposureBlock}
-     */
-    public ExposureBlock getExposureBlock() {
-        return mExposureBlock;
-    }
+    public long getAcquiredTimeNano() { return mAcquiredTime.Nano; }
 
     /**
      * Get the location for this.
@@ -169,8 +158,16 @@ public class RawCameraFrame {
         return mOrientation;
     }
 
+    public void setOrientation(float[] orient) {
+        mOrientation = orient.clone();
+    }
+
+    public Camera getCamera() { return mCamera; }
     public Camera.Parameters getParams() { return mParams; }
     public Camera.Size getSize() { return mSize; }
+
+    public ExposureBlock getExposureBlock() { return mExposureBlock; }
+    public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
     private void calculateStatistics() {
         synchronized (mBytes) {

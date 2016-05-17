@@ -4,10 +4,14 @@ import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.trigger.L1Task;
 import edu.uci.crayfis.util.CFLog;
@@ -18,12 +22,17 @@ import edu.uci.crayfis.util.CFLog;
 
 public class L1Processor {
 
+    public static final Map<String, L1TriggerType> L1_TRIGGER_TYPE_MAP = new HashMap<String, L1TriggerType>()  {
+        {
+            put("default", L1TriggerType.DEFAULT);
+        }
+    };
+
     public enum L1TriggerType {
         DEFAULT,
     }
 
     public final CFApplication mApplication;
-    public final ExposureBlockManager XB_MANAGER;
 
     public L1Calibrator mL1Cal = null;
     public int mL1Count = 0;
@@ -38,40 +47,32 @@ public class L1Processor {
 
     public L1TriggerType mTriggerType = null;
 
-    public L1Processor(L1TriggerType triggerType, CFApplication application, boolean recycle) {
+    public L1Processor(CFApplication application) {
         mApplication = application;
-        mTriggerType = triggerType;
 
         mL1Cal = L1Calibrator.getInstance();
-
-        // TODO: does the CFApplication cast back to the identical Context used elsewhere? check this.
-        XB_MANAGER = ExposureBlockManager.getInstance(mApplication);
     }
 
     public void setL2Processor(L2Processor l2) {
         mL2Processor = l2;
     }
 
-    private Runnable makeTask(RawCameraFrame frame, Camera camera) {
+    private Runnable makeTask(RawCameraFrame frame) {
         Runnable task = null;
-        switch (mTriggerType) {
+        switch (frame.getExposureBlock().L1_trigger_type) {
             case DEFAULT:
-                task = new L1Task(this, frame, camera);
+                task = new L1Task(this, frame);
                 break;
             default:
                 CFLog.e("Unimplemented trigger type selected!! Falling back to default.");
-                task = new L1Task(this, frame, camera);
+                task = new L1Task(this, frame);
                 break;
         }
         return task;
     }
 
-    public void submitFrame(RawCameraFrame frame, Camera camera) {
+    public void submitFrame(RawCameraFrame frame) {
         mBufferBalance++;
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame, camera));
-
-        // also, update the XB manager's safe time (so it knows which old XBs
-        // it can commit.
-        XB_MANAGER.updateSafeTime(frame.getAcquiredTimeNano());
+        AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
     }
 }

@@ -245,6 +245,11 @@ public class L2Task implements Runnable {
         event.variance = variance;
         event.quality = good_quality;
 
+        if (!event.quality) {
+            CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + avg);
+            CFLog.w("var req: " + CONFIG.getQualityBgVariance() + ", obs: " + variance);
+        }
+
         return event;
     }
 
@@ -269,7 +274,7 @@ public class L2Task implements Runnable {
 
                 variance += (val-avg)*(val - avg);
 
-                if (val > xb.L2_thresh) {
+                if (val > xb.L2_threshold) {
                     if (fail) {
                         mEvent.npix_dropped++;
                         continue;
@@ -375,6 +380,8 @@ public class L2Task implements Runnable {
 
         // Finally, add the event to the proper exposure block
         xb.addEvent(mEvent);
+        // And notify the XB that we are done processing this frame.
+        mFrame.clear();
 
         // TODO: inspect pixels for "image saving" feature
     }

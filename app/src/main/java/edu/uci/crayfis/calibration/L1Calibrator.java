@@ -6,7 +6,7 @@ import edu.uci.crayfis.util.CFLog;
 public class L1Calibrator {
     private static FrameHistory<Integer> max_pixels;
 
-    private final int n_frames = 1000;
+    private int n_frames = 1000;
 
     private L1Calibrator() {
         max_pixels = new FrameHistory<Integer>(n_frames);
@@ -72,6 +72,11 @@ public class L1Calibrator {
             //CFLog.d(" L1Calibrator. Thresh="+thresh);
             return thresh;
         }
+    }
+
+    public void resize(int n) {
+        n_frames = n;
+        max_pixels.resize(n);
     }
 
 }
