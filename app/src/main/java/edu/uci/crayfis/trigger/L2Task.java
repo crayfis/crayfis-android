@@ -220,18 +220,18 @@ public class L2Task implements Runnable {
         final int stepW = 10;
         final int stepH = 10;
 
-        int npixels = 0;
-
         final byte[] bytes = mFrame.getBytes();
 
         // calculate variance of the background
         double variance = 0;
         double avg = mFrame.getPixAvg();
+        int npixels = 0;
         for (int ix=0;ix < width;ix+= stepW)
             for (int iy=0;iy<height;iy+=stepH)
             {
                 int val = bytes[ix+width*iy]&0xFF;
                 variance += (val-avg)*(val - avg);
+                npixels++;
             }
         if (npixels>0) {
             variance = Math.sqrt(variance / ((double) npixels));
