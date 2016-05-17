@@ -65,10 +65,6 @@ import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.util.List;
@@ -88,7 +84,6 @@ import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
-import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.trigger.L1Processor;
@@ -96,9 +91,6 @@ import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
-
-//import android.location.LocationListener;
-
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -209,35 +201,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
-	}
-
-
-
-
-
-
-    // FIXME This is coupled with OutputManager, might not be needed now that it's going through CFConfig, investigate later.
- 	public void updateSettings(JSONObject json) {
- 		if (json == null) {
- 			return;
- 		}
-
-        try {
-            final ServerCommand serverCommand = new Gson().fromJson(json.toString(), ServerCommand.class);
-            CONFIG.updateFromServer(serverCommand);
-            ((CFApplication) getApplication()).savePreferences();
-
-            if (serverCommand.shouldRestartEBManager()) {
-                xbManager.newExposureBlock();
-            }
-
-            if (serverCommand.shouldRecalibrate()) {
-                CFLog.i("DAQActivity SERVER commands us to recalibrate.");
-                ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
-            }
-        } catch (JsonSyntaxException e) {
-            CFLog.e("Failed to parse server response: " + e.getMessage());
-        }
 	}
 
     private String last_update_URL = "";
