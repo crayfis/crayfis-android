@@ -22,12 +22,23 @@ public class L2Task implements Runnable {
     private static final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication mApplication;
 
+    public static class Config extends L2Config {
+        Config(String name, String cfg) {
+            super(name, cfg);
+        }
+
+        @Override
+        public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
+            return new L2Task(l2Processor, frame);
+        }
+    }
+
     RawCameraFrame mFrame = null;
     L2Processor mL2Processor = null;
 
     RecoEvent mEvent = null;
 
-    L2Task(RawCameraFrame frame, L2Processor l2processor) {
+    L2Task(L2Processor l2processor, RawCameraFrame frame) {
         mFrame = frame;
         mL2Processor = l2processor;
 
@@ -220,18 +231,18 @@ public class L2Task implements Runnable {
         final int stepW = 10;
         final int stepH = 10;
 
-        int npixels = 0;
-
         final byte[] bytes = mFrame.getBytes();
 
         // calculate variance of the background
         double variance = 0;
         double avg = mFrame.getPixAvg();
+        int npixels = 0;
         for (int ix=0;ix < width;ix+= stepW)
             for (int iy=0;iy<height;iy+=stepH)
             {
                 int val = bytes[ix+width*iy]&0xFF;
                 variance += (val-avg)*(val - avg);
+                npixels++;
             }
         if (npixels>0) {
             variance = Math.sqrt(variance / ((double) npixels));
@@ -244,6 +255,11 @@ public class L2Task implements Runnable {
         event.background = avg;
         event.variance = variance;
         event.quality = good_quality;
+
+        if (!event.quality) {
+            CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + avg);
+            CFLog.w("var req: " + CONFIG.getQualityBgVariance() + ", obs: " + variance);
+        }
 
         return event;
     }
@@ -269,7 +285,7 @@ public class L2Task implements Runnable {
 
                 variance += (val-avg)*(val - avg);
 
-                if (val > xb.L2_thresh) {
+                if (val > xb.L2_threshold) {
                     if (fail) {
                         mEvent.npix_dropped++;
                         continue;
@@ -375,6 +391,8 @@ public class L2Task implements Runnable {
 
         // Finally, add the event to the proper exposure block
         xb.addEvent(mEvent);
+        // And notify the XB that we are done processing this frame.
+        mFrame.clear();
 
         // TODO: inspect pixels for "image saving" feature
     }

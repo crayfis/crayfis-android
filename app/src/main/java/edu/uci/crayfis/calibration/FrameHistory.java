@@ -21,6 +21,15 @@ public class FrameHistory<E extends Number> {
         return values.size();
     }
 
+    public void resize(int n) {
+        if (n >= n_frames) return;
+        synchronized (values) {
+            while (values.size() >= n_frames) {
+                values.poll();
+            }
+        }
+    }
+
     public void add_value(E value) {
         synchronized(values) {
             if (values.size() >= n_frames) {
