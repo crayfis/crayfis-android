@@ -17,6 +17,7 @@ public class ServerCommand {
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
+    @SerializedName("set_trig_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
@@ -89,6 +90,9 @@ public class ServerCommand {
 
     @Nullable
     public String getL2Trigger() { return mL2Trigger; };
+
+    @Nullable
+    public Boolean getTriggerLock() { return mTriggerLock; };
 
     /**
      * Get the events per minute.

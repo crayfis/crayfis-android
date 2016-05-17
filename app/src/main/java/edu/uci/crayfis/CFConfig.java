@@ -371,6 +371,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getL2Trigger() != null) {
             mL2Trigger = serverCommand.getL2Trigger();
         }
+        if (serverCommand.getTriggerLock() != null) {
+            mTriggerLock = serverCommand.getTriggerLock();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
@@ -392,6 +395,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putString(KEY_UPDATE_URL,mUpdateURL)
+                .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .apply();
     }
 }

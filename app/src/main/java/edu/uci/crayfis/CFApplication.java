@@ -20,6 +20,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
@@ -76,6 +77,13 @@ public class CFApplication extends Application {
         //final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         final SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CFConfig.getInstance().save(localPrefs);
+    }
+
+    public void onServerCommandRecieved(ServerCommand sc) {
+        if (sc.shouldRecalibrate()) {
+            // recieved a command from the server to enter calibration loop!
+            setApplicationState(State.STABILIZATION);
+        }
     }
 
     /**

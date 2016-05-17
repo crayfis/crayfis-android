@@ -183,8 +183,10 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
         CFConfig.getInstance().updateFromServer(serverCommand);
         mApplication.savePreferences();
+        mApplication.onServerCommandRecieved(serverCommand);
 
         CFLog.i("Connected! Status = " + serverResponseCode);
+        CFLog.d("Received json response:\n" + sb.toString());
 
         // and now disconnect
         c.disconnect();
