@@ -20,6 +20,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
@@ -34,7 +35,7 @@ public class CFApplication extends Application {
     // TODO: This should be a configurable value in the preferences.
     public static final int SLEEP_TIMEOUT_MS = 60000;
 
-    private static final String SHARED_PREFS_NAME = "global";
+    //private static final String SHARED_PREFS_NAME = "global";
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
     private static Camera.Size mCameraSize;
@@ -53,11 +54,14 @@ public class CFApplication extends Application {
 
         Crashlytics.start(this);
 
-        SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        //SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         final CFConfig config = CFConfig.getInstance();
-        localPrefs.registerOnSharedPreferenceChangeListener(config);
+        //localPrefs.registerOnSharedPreferenceChangeListener(config);
+        defaultPrefs.registerOnSharedPreferenceChangeListener(config);
         // FIXME This is not needed when dependency injection is done, this can be handled in the constructor.
-        config.onSharedPreferenceChanged(localPrefs, null);
+        //config.onSharedPreferenceChanged(localPrefs, null);
+        config.onSharedPreferenceChanged(defaultPrefs, null);
 
         setApplicationState(State.INIT);
 
@@ -70,8 +74,20 @@ public class CFApplication extends Application {
      * Save the current preferences.
      */
     public void savePreferences() {
-        final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        //final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
+        final SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CFConfig.getInstance().save(localPrefs);
+    }
+
+    public void onServerCommandRecieved(ServerCommand sc) {
+        if (sc.shouldRecalibrate()) {
+            // recieved a command from the server to enter calibration loop!
+            setApplicationState(State.STABILIZATION);
+        }
+        if (sc.getResolution() != null) {
+            // go to the recalibrate state, so that the camera can be setup with the new resolution.
+            setApplicationState(State.RECONFIGURE);
+        }
     }
 
     /**
@@ -130,9 +146,11 @@ public class CFApplication extends Application {
         mLastKnownLocation = lastKnownLocation;
     }
 
+
     public static Camera.Size getCameraSize() {
         return mCameraSize;
     }
+
     public static void setCameraSize(Camera.Size size) {
         mCameraSize = size;
     }
@@ -251,6 +269,7 @@ public class CFApplication extends Application {
         CALIBRATION,
         DATA,
         STABILIZATION,
-        IDLE
+        IDLE,
+        RECONFIGURE,
     }
 }

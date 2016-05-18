@@ -15,6 +15,9 @@ public class ServerCommand {
 
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
+    @SerializedName("set_L1_trig") private String mL1Trigger;
+    @SerializedName("set_L2_trig") private String mL2Trigger;
+    @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
@@ -30,6 +33,7 @@ public class ServerCommand {
     @SerializedName("account_name") private String mAccountName;
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("update_url") private String mUpdateURL;
+    @SerializedName("set_target_resolution") private String mResolution;
 
 
     /**
@@ -81,6 +85,15 @@ public class ServerCommand {
     public Integer getL2Threshold() {
         return mL2Threshold;
     }
+
+    @Nullable
+    public String getL1Trigger() { return mL1Trigger; };
+
+    @Nullable
+    public String getL2Trigger() { return mL2Trigger; };
+
+    @Nullable
+    public Boolean getTriggerLock() { return mTriggerLock; };
 
     /**
      * Get the events per minute.
@@ -173,19 +186,6 @@ public class ServerCommand {
     }
 
     /**
-     * Check if the {@link edu.uci.crayfis.exposure.ExposureBlockManager} should be restarted or not.
-     *
-     * @return {@code true} if it should be restarted, {@code false} if not.
-     */
-    public boolean shouldRestartEBManager() {
-        return mL1Threshold != null ||
-                mL2Threshold != null ||
-                mQualityPixFrac != null ||
-                mQualityBgAverage != null ||
-                mQualityBgVariance != null;
-    }
-
-    /**
      * Check if the app should recalibrate or not.
      *
      * @return {@code true} if it should, {@code false} if not.
@@ -212,5 +212,10 @@ public class ServerCommand {
     @Nullable
     public String getDeviceNickname() {
         return (mDeviceNickname == null || mDeviceNickname.isEmpty()) ? null : mDeviceNickname;
+    }
+
+    @Nullable
+    public String getResolution() {
+        return mResolution;
     }
 }

@@ -4,7 +4,9 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.server.ServerCommand;
+import edu.uci.crayfis.util.CFLog;
 
 /**
  * Global configuration class.
@@ -13,6 +15,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final CFConfig INSTANCE = new CFConfig();
 
+    private static final String KEY_L1_TRIGGER = "L1_trigger";
+    private static final String KEY_L2_TRIGGER = "L2_trigger";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
@@ -29,11 +33,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_ACCOUNT_SCORE = "account_score";
     private static final String KEY_UPDATE_URL = "update_url";
-
+    private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
+    private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
 
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
+    private static final String DEFAULT_L1_TRIGGER = "default";
+    private static final String DEFAULT_L2_TRIGGER = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
@@ -51,7 +58,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final String DEFAULT_UPDATE_URL = "";
+    private static final boolean DEFAULT_TRIGGER_LOCK = false;
+    private static final String DEFAULT_TARGET_RESOLUTION_STR = "low";
 
+    private String mL1Trigger;
+    private String mL2Trigger;
     private int mL1Threshold;
     private int mL2Threshold;
     private int mCalibrationSampleFrames;
@@ -69,9 +80,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mAccountName;
     private float mAccountScore;
     private String mUpdateURL;
+    private boolean mTriggerLock;
+    private String mTargetResolutionStr;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
+        mL1Trigger = DEFAULT_L1_TRIGGER;
+        mL2Trigger = DEFAULT_L2_TRIGGER;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
@@ -89,6 +104,16 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
         mUpdateURL = DEFAULT_UPDATE_URL;
+        mTriggerLock = DEFAULT_TRIGGER_LOCK;
+        mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
+    }
+
+    public String getL1Trigger() {
+        return mL1Trigger;
+    }
+
+    public String getL2Trigger() {
+        return mL2Trigger;
     }
 
     /**
@@ -260,8 +285,19 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public float getAccountScore() { return mAccountScore; }
     public String getUpdateURL() { return mUpdateURL; }
 
+    /***
+     * Ask whether the trigger lock is engaged.
+     * @return True if the trigger is locked, else false.
+     */
+    public boolean getTriggerLock() { return mTriggerLock; }
+
+    @Nullable
+    public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        mL1Trigger = sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER);
+        mL2Trigger = sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER);
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
         mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
@@ -275,10 +311,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCacheUploadInterval = sharedPreferences.getInt(KEY_CACHE_UPLOAD_INTERVAL, DEFAULT_CACHE_UPLOAD_INTERVAL);
         mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
-        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME,DEFAULT_ACCOUNT_NAME);
-        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE,DEFAULT_ACCOUNT_SCORE);
-        mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL,DEFAULT_UPDATE_URL);
-
+        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
+        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
+        mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL, DEFAULT_UPDATE_URL);
+        mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
+        mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
     }
 
     /**
@@ -288,6 +325,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
         if (serverCommand == null) return;
+        CFLog.i("GOT command from server!");
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
         }
@@ -334,10 +372,24 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getUpdateURL() != null) {
             mUpdateURL = serverCommand.getUpdateURL();
         }
+        if (serverCommand.getL1Trigger() != null) {
+            mL1Trigger = serverCommand.getL1Trigger();
+        }
+        if (serverCommand.getL2Trigger() != null) {
+            mL2Trigger = serverCommand.getL2Trigger();
+        }
+        if (serverCommand.getTriggerLock() != null) {
+            mTriggerLock = serverCommand.getTriggerLock();
+        }
+        if (serverCommand.getResolution() != null) {
+            mTargetResolutionStr = serverCommand.getResolution();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
         sharedPreferences.edit()
+                .putString(KEY_L1_TRIGGER, mL1Trigger)
+                .putString(KEY_L2_TRIGGER, mL2Trigger)
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)
                 .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
@@ -353,6 +405,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putString(KEY_UPDATE_URL,mUpdateURL)
+                .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
+                .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
                 .apply();
     }
 }

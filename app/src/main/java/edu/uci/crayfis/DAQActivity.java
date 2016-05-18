@@ -65,22 +65,19 @@ import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks;
 import com.google.android.gms.common.api.GoogleApiClient.OnConnectionFailedListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-
-import org.json.JSONObject;
 
 import java.io.File;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
@@ -88,15 +85,13 @@ import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
-import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
-
-//import android.location.LocationListener;
-
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -118,6 +113,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	private Camera mCamera;
 	private CameraPreviewView mPreview;
 
+    // helper that dispatches L1 inputs to be processed by the L1 trigger.
+    private L1Processor mL1Processor = null;
+    // helper that dispatches L2 inputs to be processed by the L2 trigger.
+    private L2Processor mL2Processor = null;
+
 
     private Timer mUiUpdateTimer;
 
@@ -133,12 +133,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	char[] labels = new char[256];
 	// settings
 
-	public static  int targetPreviewWidth = 320;
-	public static  int targetPreviewHeight = 240;
-
     public final float battery_stop_threshold = (float)0.20;
     public final float battery_start_threshold = (float)0.80;
 
+    public static final int N_CYCLE_BUFFERS = 10;
 
     DataProtos.RunConfig run_config = null;
 
@@ -161,13 +159,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 	private ExposureBlockManager xbManager;
 
-    private L1Calibrator L1cal;
+    private L1Calibrator L1cal = null;
 	private long L1counter = 0;
     private long L1counter_data = 0;
 
     private FrameHistory<Long> frame_times;
-
-	private long calibration_start;
 
 	// counter for stabilization mode
 	private int stabilization_counter;
@@ -184,9 +180,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     // store value of most recently calculated FPS
     private double last_fps = 0;
 
-	// Thread where image data is processed for L2
-	private L2Processor l2thread;
-
     // Thread for NTP updates
     private SntpUpdateThread ntpThread;
 
@@ -200,35 +193,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
-	}
-
-
-
-
-
-
-    // FIXME This is coupled with OutputManager, might not be needed now that it's going through CFConfig, investigate later.
- 	public void updateSettings(JSONObject json) {
- 		if (json == null) {
- 			return;
- 		}
-
-        try {
-            final ServerCommand serverCommand = new Gson().fromJson(json.toString(), ServerCommand.class);
-            CONFIG.updateFromServer(serverCommand);
-            ((CFApplication) getApplication()).savePreferences();
-
-            if (serverCommand.shouldRestartEBManager()) {
-                xbManager.newExposureBlock();
-            }
-
-            if (serverCommand.shouldRecalibrate()) {
-                CFLog.i("DAQActivity SERVER commands us to recalibrate.");
-                ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
-            }
-        } catch (JsonSyntaxException e) {
-            CFLog.e("Failed to parse server response: " + e.getMessage());
-        }
 	}
 
     private String last_update_URL = "";
@@ -282,7 +246,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         sleep_mode=true;
         sleeping_since = System.currentTimeMillis();
-        cands_before_sleeping = l2thread.getTotalEvents();
+        cands_before_sleeping = mL2Processor.mL2Count;
     }
 
     public void clickedSleep()
@@ -418,18 +382,43 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		// is after stabilizaton.
 		switch (previousState) {
             case STABILIZATION:
-                mParticleReco.reset();
                 L1cal.clear();
-                synchronized(frame_times) {
-                    frame_times.clear();
-                }
-                calibration_start = System.currentTimeMillis();
-                xbManager.newExposureBlock();
+                frame_times.clear();
+                xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
         }
 	}
+
+    private void doStateTransitionReconfigure(@NonNull final CFApplication.State previousState) {
+        // Note: we can enter reconfigure from any state
+
+        switch (previousState) {
+            case DATA:
+            case CALIBRATION:
+                // make sure that calibration and data XB's get marked as aborted.
+                xbManager.abortExposureBlock();
+                break;
+            default:
+                // just invalidate any existing XB by creating a "dummy" block
+                xbManager.newExposureBlock(CFApplication.State.RECONFIGURE);
+                break;
+        }
+
+        // tear down and then reconfigure the camera
+        unSetupCamera();
+        setUpAndConfigureCamera();
+
+        final CFApplication app = (CFApplication)getApplicationContext();
+        // if we were idling, go back to that state.
+        if (previousState == CFApplication.State.IDLE) {
+            app.setApplicationState(CFApplication.State.IDLE);
+        } else {
+            // otherwise, re-enter the calibration loop.
+            app.setApplicationState(CFApplication.State.STABILIZATION);
+        }
+    }
 
     // last time we warned about the location
     private long last_location_warning=0;
@@ -448,44 +437,27 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         // start the user interaction clock
         last_user_interaction = System.currentTimeMillis();
         switch (previousState) {
+            /*
             case INIT:
-                l2thread.setFixedThreshold(true);
-                xbManager.newExposureBlock();
+                //l2thread.setFixedThreshold(true);
+                xbManager.newExposureBlock(CFApplication.State.DATA);
 
                 break;
+            */
             case CALIBRATION:
-                //long calibration_time = l2thread.getCalibrationStop() - calibration_start;
-                //int target_events = (int) (CONFIG.getTargetEventsPerMinute() * calibration_time * 1e-3 / 60.0);
-
-                //CFLog.i("Calibration: Processed " + mParticleReco.event_count + " frames in " + (int) (calibration_time * 1e-3) + " s; target events = " + target_events);
-
-
                 int new_thresh = calculateL1Threshold();
                 // build the calibration result object
                 DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
-                /*
-                // (ugh, why can't primitive arrays be Iterable??)
-                for (double v : mParticleReco.h_pixel) {
-                    cal.addHistPixel((int) v);
-                }
-                for (double v : mParticleReco.h_l2pixel) {
-                    cal.addHistL2Pixel((int) v);
-                }
-                */
+
                 for (int v : L1cal.getHistogram()) {
                     cal.addHistMaxpixel(v);
                 }
-                /*
-                for (double v : mParticleReco.h_numpixel) {
-                    cal.addHistNumpixel((int) v);
-                }
-                */
+
                 // and commit it to the output stream
                 CFLog.i("DAQActivity Committing new calibration result.");
                 UploadExposureService.submitCalibrationResult(this, cal.build());
 
                 // update the thresholds
-                //new_thresh = mParticleReco.calculateThresholdByEvents(target_events);
                 CFLog.i("DAQActivity Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
                 CONFIG.setL1Threshold(new_thresh);
 
@@ -501,7 +473,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 }
 
                 // Finally, set the state and start a new xb
-                xbManager.newExposureBlock();
+                xbManager.newExposureBlock(CFApplication.State.DATA);
 
                 break;
             default:
@@ -509,6 +481,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         }
 
 	}
+
     double target_L1_eff;
     public int calculateL1Threshold() {
         double fps = updateFPS();
@@ -529,22 +502,25 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		switch(previousState) {
             case INIT:
             case IDLE:
+            case RECONFIGURE:
                 // This is the first state transisiton of the app. Go straight into stabilization
                 // so the calibratoin will be clean.
+                /*
                 if (l2thread != null)
                 {
                 l2thread.setFixedThreshold(false);
                 l2thread.clearQueue();
                 }
+                */
                 stabilization_counter = 0;
                 calibration_counter = 0;
-                xbManager.newExposureBlock();
+                xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
                 break;
 
             // coming out of calibration and data should be the same.
             case CALIBRATION:
             case DATA:
-                l2thread.clearQueue();
+                //l2thread.clearQueue();
                 stabilization_counter = 0;
                 calibration_counter = 0;
                 xbManager.abortExposureBlock();
@@ -572,13 +548,13 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         switch(previousState) {
             case CALIBRATION:
-            case STABILIZATION:
-                // for calibration or stabilization, mark the block as aborted
+            case DATA:
+                // for calibration or data, mark the block as aborted
                 xbManager.abortExposureBlock();
                 break;
-            case DATA:
+            case STABILIZATION:
                 // for data, stop taking data to let battery charge
-                xbManager.newExposureBlock();
+                xbManager.newExposureBlock(CFApplication.State.IDLE);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
@@ -756,6 +732,12 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        CFApplication application = (CFApplication) getApplication();
+
+        mL2Processor = new L2Processor(application);
+        mL1Processor = new L1Processor(application);
+        mL1Processor.setL2Processor(mL2Processor);
+
         /*
         TODO: Flush the UploadExposureService queue.
 
@@ -765,7 +747,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         convenient to the user.
          */
 
-        mAppBuild = ((CFApplication) getApplication()).getBuildInformation();
+        mAppBuild = application.getBuildInformation();
 
         CFLog.d("  Yet more newer system settings stuff ");
 
@@ -810,7 +792,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         configureNaviation();
 
 		// Create our Preview view and set it as the content of our activity.
-		mPreview = new CameraPreviewView(this, this, true);
+		mPreview = new CameraPreviewView(this, this, true, N_CYCLE_BUFFERS);
 
         CFLog.d("DAQActivity: Camera preview view is "+mPreview);
 
@@ -918,13 +900,18 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         // stop the camera preview and all processing
         if (mCamera != null) {
             mPreview.setCamera(null);
-            mCamera.setPreviewCallback(null);
+            if (N_CYCLE_BUFFERS>0) {
+                mCamera.setPreviewCallbackWithBuffer(null);
+            } else {
+                mCamera.setPreviewCallback(null);
+            }
             mCamera.stopPreview();
             mCamera.release();
             mCamera = null;
 
             // clear out any (old) buffers
-            l2thread.clearQueue();
+            //l2thread.clearQueue();
+            // FIXME: should we abort any AsyncTasks in the L1/L2 queue that haven't executed yet?
 
             CFLog.d(" DAQActivity: unsetup camera");
         }
@@ -949,7 +936,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
         // give back brightness control
-        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE,screen_brightness_mode);
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
 
 
     }
@@ -967,8 +954,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		xbManager.flushCommittedBlocks(true);
 
 		// stop the image processing thread.
-		l2thread.stopThread();
-		l2thread = null;
+		//l2thread.stopThread();
+		//l2thread = null;
+        // FIXME: should we abort any AsyncTasks in the L1/L2 queue that haven't executed yet?
 
         ntpThread.stopThread();
         ntpThread = null;
@@ -1007,22 +995,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String desired_res = sharedPrefs.getString("prefResolution","Low");
-        if (desired_res.equals("Low"))
-        {
-            targetPreviewWidth=320;
-            targetPreviewHeight=240;
-        }
-        if (desired_res.equals("Medium"))
-        {
-            targetPreviewWidth=640;
-            targetPreviewHeight=480;
-        }
-        if (desired_res.equals("High"))
-        {
-            targetPreviewWidth=1920;
-            targetPreviewHeight=1080;
-        }
+
         CFLog.d(" Setup camera");
         // this will also trigger setting up the camera
         setUpAndConfigureCamera();
@@ -1055,13 +1028,13 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         mUiUpdateTimer.cancel();
 
-        CFLog.d("DAQActivity onPause: wake lock held?"+wl.isHeld());
+        CFLog.d("DAQActivity onPause: wake lock held?" + wl.isHeld());
 
 
-		mSensorManager.unregisterListener(this);
+        mSensorManager.unregisterListener(this);
 
 
-		CFLog.i("DAQActivity Suspending!");
+        CFLog.i("DAQActivity Suspending!");
 
         unSetupCamera();
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
@@ -1137,23 +1110,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             Camera.Parameters param= mCamera.getParameters();
             CFLog.d("params: Camera params are" + param.flatten());
 
-            // Select the preview size closest to 320x240
-            // Smaller images are recommended because some computer vision
-            // operations are very expensive
-            List<Camera.Size> sizes = param.getSupportedPreviewSizes();
-            // previewSize = sizes.get(closest(sizes,640,480));
-            previewSize = sizes.get(closest(sizes, targetPreviewWidth, targetPreviewHeight));
-            // Camera.Size previewSize = sizes.get(closest(sizes,176,144));
-            CFLog.d(" preview size="+previewSize);
+            previewSize = CONFIG.getTargetResolution().getClosestSize(mCamera);
+            CFLog.i("selected preview size="+previewSize);
 
-            if (mParticleReco == null) {
-                // if we don't already have a particleReco object setup,
-                // do that now that we know the camera size.
-                mParticleReco = ParticleReco.getInstance();
-                mLayoutBlack.previewSize = previewSize;
-                l2thread = new L2Processor(this);
-                l2thread.start();
-
+            if (ntpThread == null) {
+                // FIXME: why do we do this in SetupAndConfigureCamera()? Why not onCreate or onResume?
                 ntpThread = new SntpUpdateThread();
                 ntpThread.start();
             }
@@ -1210,31 +1171,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
-	/**
-	 * Goes through the size list and selects the one which is the closest
-	 * specified size
-	 */
-	public static int closest(List<Camera.Size> sizes, int width, int height) {
-		int best = -1;
-		int bestScore = Integer.MAX_VALUE;
-
-		for (int i = 0; i < sizes.size(); i++) {
-			Camera.Size s = sizes.get(i);
-
-			CFLog.d("setup: size is w=" + s.width + " x " + s.height);
-			int dx = s.width - width;
-			int dy = s.height - height;
-
-			int score = dx * dx + dy * dy;
-			if (score < bestScore) {
-				best = i;
-				bestScore = score;
-			}
-		}
-
-		return best;
-	}
-
     private long last_user_interaction=0;
     private boolean sleep_mode = false;
     private float screen_brightness = 0;
@@ -1264,7 +1200,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
             long current_time = System.currentTimeMillis();
             float time_sleeping = (current_time-sleeping_since)*(float)1e-3;
-            int cand_sleeping = l2thread.getTotalEvents()-cands_before_sleeping;
+            int cand_sleeping = mL2Processor.mL2Count-cands_before_sleeping;
             if (time_sleeping > 5.0)
             {
                 Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
@@ -1272,8 +1208,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         }
     }
 
-
-    private boolean fix_threshold=false;
 
     private SntpClient mSntpClient = null;
 
@@ -1286,26 +1220,10 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	 * Called each time a new image arrives in the data stream.
 	 */
 	@Override
-	public void onPreviewFrame(byte[] bytes, Camera camera) {
-		// NB: since we are using NV21 format, we will be discarding some bytes at
-		// the end of the input array (since we only need to grayscale output)
-
-
-
-
-
-
+    public void onPreviewFrame(byte[] bytes, Camera camera) {
         // record the (approximate) acquisition time
         // FIXME: can we do better than this, perhaps at Camera API level?
-        long acq_time_nano = System.nanoTime() - CFApplication.getStartTimeNano();
-        long acq_time = System.currentTimeMillis();
-        long acq_time_ntp = mSntpClient.getNtpTime();
-        long diff = acq_time - acq_time_ntp;
-
-
-
-
-        //CFLog.d(" Frame times millis = "+acq_time+ " ntp = "+acq_time_ntp+" diff = "+diff);
+        AcquisitionTime acq_time = new AcquisitionTime();
 
         // sanity check
         if (bytes == null) return;
@@ -1314,161 +1232,79 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             // get a reference to the current xb, so it doesn't change from underneath us
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
-            // next, bump the number of L1 events seen by this xb.
-            L1counter++;
-            xb.L1_processed++;
-
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, acq_time_nano,acq_time_ntp , xb, orientation, camera.getParameters().getPreviewSize());
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera);
             frame.setLocation(CFApplication.getLastKnownLocation());
+            frame.setOrientation(orientation);
 
-            // show the frame to the L1 calibrator
-            L1cal.AddFrame(frame);
-            // and track the acquisition times for FPS calculation
+            // try to assign the frame to the current XB
+            boolean assigned = xb.assignFrame(frame);
+
+            L1counter++;
+
+            // track the acquisition times for FPS calculation
             synchronized(frame_times) {
-                frame_times.add_value(acq_time);
+                frame_times.add_value(acq_time.Nano);
             }
-            // update the FPS calculation periodically
+            // update the FPS and Calibration calculation periodically
             if (L1counter % fps_update_interval == 0) {
                 double fps = updateFPS();
-                //CFLog.d("DAQActivity new fps = "+fps+" at time = "+acq_time);
 
+                if (!CONFIG.getTriggerLock() && xb.daq_state == CFApplication.State.DATA) {
+                    updateCalibration();
+                }
             }
 
-            final CFApplication application = (CFApplication) getApplication();
-            if (application.getApplicationState() == CFApplication.State.CALIBRATION) {
-                // if we are in (L1) calibration mode, there's no need to do anything else with this
-                // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-                calibration_counter++;
-
-                if (calibration_counter > CONFIG.getCalibrationSampleFrames()) {
-                    application.setApplicationState(CFApplication.State.DATA);
-                }
-                return;
-
-            /*
-			// In calbration mode, there's no need for L1 trigger; just go straight to L2
-			boolean queue_accept = l2thread.submitToQueue(frame);
-
-			if (! queue_accept) {
-				// oops! the queue is full... this frame will be dropped.
-				CFLog.e("DAQActivity Could not add frame to L2 Queue!");
-				L2busy++;
-			}
-
-			return;
-			*/
-            }
-
-            if (application.getApplicationState() == CFApplication.State.STABILIZATION) {
-                // If we're in stabilization mode, just drop frames until we've skipped enough
-                stabilization_counter++;
-                if (stabilization_counter > CONFIG.getStabilizationSampleFrames()) {
-                    application.setApplicationState(CFApplication.State.CALIBRATION);
-                }
+            // if we failed to assign the block to the XB, just drop it.
+            if (!assigned) {
+                // FIXME: can we maybe do something smarter here, like try to get the next XB?
+                CFLog.e("Cannot assign frame to current XB! Dropping frame.");
+                frame.retire();
                 return;
             }
 
-            if (application.getApplicationState() == CFApplication.State.IDLE) {
-                // Not sure why we're still acquiring frames in IDLE mode...
-                CFLog.w("DAQActivity Frames still being recieved in IDLE mode");
-                return;
-            }
+            // If we made it here, we can submit the XB to the L1Processor.
+            // It will pop the assigned frame from the XB's internal list, and will also handle
+            // recycling the buffers.
+            frame.setExposureBlock(xb);
+            mL1Processor.submitFrame(frame);
 
-            L1counter_data++;
-
-
-            // periodically check if the L1 calibration has drifted
-            if (L1counter % fps_update_interval == 0 && !fix_threshold) {
-                int new_l1 = calculateL1Threshold();
-                int new_l2 = new_l1 - 1;
-                if (new_l2 < 2) {
-                    new_l2 = 2;
-                }
-
-                if (new_l1 != CONFIG.getL1Threshold()) {
-                    // the L1 threshold is drifting! set the new threshold and trigger a new XB.
-                    CONFIG.setL1Threshold(new_l1);
-                    CONFIG.setL2Threshold(new_l2);
-                    xbManager.newExposureBlock();
-                    CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
-                    CFLog.i("Triggering new XB.");
-
-
-                }
-            }
-
-            // prescale
-            // Jodi - removed L1prescale as it never changed.
-            if (L1counter % 1 == 0) {
-                // make sure there's room on the queue
-                if (l2thread.getRemainingCapacity() > 0) {
-                    // check if we pass the L1 threshold
-                    boolean pass = false;
-                /*
-				int length = previewSize.width * previewSize.height;
-                int max=-1;
-				for (int i = 0; i < length; i++) {
-					// make sure we promote the (signed) byte to int for comparison!
-                    if ( (bytes[i] & 0xFF) > max) { max = (bytes[i] & 0xFF); }
-                    if ( (bytes[i] & 0xFF) > CONFIG.getL1Threshold()) {
-						// Okay, found a pixel above threshold. No need to continue
-						// looping.
-						pass = true;
-						break;
-					}
-				}
-				*/
-                    int max = frame.getPixMax();
-                    if (max > xb.L1_thresh) {
-                        // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-                        // have changed.
-                        pass = true;
-                    }
-                    if (pass) {
-                        xb.L1_pass++;
-
-                        // this frame has passed the L1 threshold, put it on the
-                        // L2 processing queue.
-                        boolean queue_accept = l2thread.submitToQueue(frame);
-
-                        if (!queue_accept) {
-                            // oops! the queue is full... this frame will be dropped.
-                            CFLog.e("DAQActivity Could not add frame to L2 Queue!");
-                            L2busy++;
-                        }
-                    }
-                } else {
-                    // no room on the L2 queue! We'll have to skip this frame.
-                    xb.L1_skip++;
-                }
-
-            }
-
-
-            // Can only do trivial amounts of image processing inside this function
-            // or else bad stuff happens.
-            // To work around this issue most of the processing has been pushed onto
-            // a thread and the call below
-            // tells the thread to wake up and process another image
-
-        } catch (Exception e)
-        { // dont' crash, jsut drop frame
+        } catch (Exception e) {
+            // don't crash
         }
-	}
+    }
 
     private double updateFPS() {
-        long now = System.currentTimeMillis();
+        long now = System.nanoTime() - CFApplication.getStartTimeNano();
         if (frame_times != null) {
           synchronized(frame_times) {
                 int nframes = frame_times.size();
                 if (nframes>0) {
-                    last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000;
+                    last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000000000L;
                 }
                 return last_fps;
             }
         }
         return 0.0;
+    }
+
+    private void updateCalibration() {
+        int new_l1 = calculateL1Threshold();
+        int new_l2 = new_l1 - 1;
+        if (new_l2 < 2) {
+            new_l2 = 2;
+        }
+
+        if (new_l1 != CONFIG.getL1Threshold()) {
+            // the L1 threshold is drifting! set the new threshold and trigger a new XB.
+            CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
+            CONFIG.setL1Threshold(new_l1);
+            CONFIG.setL2Threshold(new_l2);
+
+            CFLog.i("Triggering new XB.");
+            //xbManager.newExposureBlock();
+            xbManager.abortExposureBlock();
+        }
     }
 
     public double getFPS() {
@@ -1526,6 +1362,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     doStateTransitionIdle(previous);
                 } else if (current == CFApplication.State.CALIBRATION) {
                     doStateTransitionCalibration(previous);
+                } else if (current == CFApplication.State.RECONFIGURE) {
+                    doStateTransitionReconfigure(previous);
                 }
             }
         }
@@ -1541,9 +1379,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             @Override
             public void run() {
                 final CFApplication application = (CFApplication) getApplication();
+                SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(application);
+                boolean disable_sleep = localPrefs.getBoolean("prefDisableScreenSaver", false);
 
                 //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if ( !sleep_mode
+                if (!disable_sleep && !sleep_mode
                         && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
                         && (application.getApplicationState() == CFApplication.State.DATA
                             || application.getApplicationState() == CFApplication.State.IDLE)
@@ -1584,14 +1424,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                l2thread.save_images = sharedPrefs.getBoolean("prefEnableGallery", false);
-
-                // FIXME: this is an ugly hack but I don't know how to do it better.
-                // There is probably some way to have a callback to set these values at the time that
-                // settings actually change, rather than just checking it every time in the UI
-                // update thread >:|
-                fix_threshold = sharedPrefs.getBoolean("prefFixThreshold", false); // expert only
-                l2thread.setFixedThreshold(fix_threshold);
+                //l2thread.setmSaveImages(sharedPrefs.getBoolean("prefEnableGallery", false));
 
                 // Originally, the updating of the LevelView was done here.  This seems like a good place to also
                 // make sure that UserStatusView gets updated with any new counts.
@@ -1683,7 +1516,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {
-                                RecoEvent ev = l2thread.display_pixels.poll(10, TimeUnit.MILLISECONDS);
+                                RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
                                 if (ev != null) {
                                     //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
                                     mLayoutBlack.addEvent(ev);
@@ -1726,13 +1559,19 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                         if (mLayoutDeveloper.mTextView != null) {
                             String devtxt = "@@ Developer View @@\n"
-                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (fix_threshold ? "*" : "") + "\n"
+                                    + "State: " + application.getApplicationState() + "\n"
+                                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
+                                    + "total frames - L1: " + mL1Processor.mL1Count + " (L2: " + mL2Processor.mL2Count + ")\n"
+                                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                                     + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
                             if (cameraSize != null) {
-                                devtxt += "Image dimensions = " + cameraSize.height + "x" + cameraSize.width + "(" + sharedPrefs.getString("prefResolution", "Low") + ") \n";
+                                ResolutionSpec targetRes = CONFIG.getTargetResolution();
+                                devtxt += "Image dimensions = " + cameraSize.width + "x" + cameraSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
                             }
+                            ExposureBlock xb = xbManager.getCurrentExposureBlock();
+                            devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
                             devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                                     + "Upload server = " + upload_url + "\n"
                                     + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"

@@ -57,10 +57,16 @@
     <!-- Expert use only -->
     <CheckBoxPreference
         android:defaultValue="false"
-        android:key="prefFixThreshold"
+        android:key="prefTriggerLock"
         android:summary="@string/settings_thresh_summary"
         android:title="@string/settings_thresh_title">
     </CheckBoxPreference> <!-- expert only -->
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="prefDisableScreenSaver"
+        android:summary="@string/settings_disable_screensaver_summary"
+        android:title="@string/settings_disable_screensaver">
+    </CheckBoxPreference>
 
     <ListPreference
         android:key="prefResolution"

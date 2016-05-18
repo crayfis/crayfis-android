@@ -6,7 +6,7 @@ import edu.uci.crayfis.util.CFLog;
 public class L1Calibrator {
     private static FrameHistory<Integer> max_pixels;
 
-    private final int n_frames = 1000;
+    private int n_frames = 1000;
 
     private L1Calibrator() {
         max_pixels = new FrameHistory<Integer>(n_frames);
@@ -29,15 +29,24 @@ public class L1Calibrator {
     public static FrameHistory<Integer> getMaxPixels() { return max_pixels; }
 
     public static void clear() {
-        max_pixels.clear();
+        synchronized (max_pixels) {
+            max_pixels.clear();
+        }
     }
 
     public static void AddFrame(RawCameraFrame frame) {
-        max_pixels.add_value(frame.getPixMax());
+        int frame_max = frame.getPixMax();
+        synchronized (max_pixels) {
+            max_pixels.add_value(frame_max);
+        }
     }
 
     public static Histogram getHistogram() {
-        return max_pixels.getHistogram(256);
+        Histogram h;
+        synchronized (max_pixels) {
+            h = max_pixels.getHistogram(256);
+        }
+        return h;
     }
 
     /**
@@ -63,6 +72,11 @@ public class L1Calibrator {
             //CFLog.d(" L1Calibrator. Thresh="+thresh);
             return thresh;
         }
+    }
+
+    public void resize(int n) {
+        n_frames = n;
+        max_pixels.resize(n);
     }
 
 }
