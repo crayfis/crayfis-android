@@ -192,7 +192,7 @@ public final class ExposureBlockManager {
 
     private void commitExposureBlock(ExposureBlock xb) {
         if (xb.daq_state == CFApplication.State.STABILIZATION
-                || xb.daq_state == CFApplication.State.IDLE) {
+                || xb.daq_state == CFApplication.State.IDLE || xb.daq_state == CFApplication.State.RECONFIGURE) {
             // don't commit stabilization/idle blocks! they're just deadtime.
             return;
         }

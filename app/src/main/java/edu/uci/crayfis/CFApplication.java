@@ -84,6 +84,10 @@ public class CFApplication extends Application {
             // recieved a command from the server to enter calibration loop!
             setApplicationState(State.STABILIZATION);
         }
+        if (sc.getResolution() != null) {
+            // go to the recalibrate state, so that the camera can be setup with the new resolution.
+            setApplicationState(State.RECONFIGURE);
+        }
     }
 
     /**
@@ -142,9 +146,11 @@ public class CFApplication extends Application {
         mLastKnownLocation = lastKnownLocation;
     }
 
+
     public static Camera.Size getCameraSize() {
         return mCameraSize;
     }
+
     public static void setCameraSize(Camera.Size size) {
         mCameraSize = size;
     }
@@ -263,6 +269,7 @@ public class CFApplication extends Application {
         CALIBRATION,
         DATA,
         STABILIZATION,
-        IDLE
+        IDLE,
+        RECONFIGURE,
     }
 }
