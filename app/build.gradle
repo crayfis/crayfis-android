@@ -55,7 +55,7 @@ def getVersionName = { ->
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "20.0.0"
+    buildToolsVersion "23.0.3"
 
     defaultConfig {
         applicationId "edu.uci.crayfis"
