@@ -52,10 +52,12 @@ public class Histogram implements Iterable<Integer> {
     {
         String res="";
         int n_total = getEntries();
-        for (int i=0;i<10;i++) {
-                double rate = getIntegral(i, 256) / (1.0*n_total);
-
-            res += "[ bin " + i + " = " + values[i] + " eff = "+rate+"] \n";
+        int nprint = 0;
+        for (int i=0;i<values.length && nprint<10;i++) {
+            double rate = getIntegral(i, 256) / (1.0*n_total);
+            if (rate == 1.0) { continue; }
+            nprint++;
+            res += "[ bin " + i + " = " + values[i] + " eff = " + String.format("%.3f", rate) + "] \n";
         }
         return res;
     }
