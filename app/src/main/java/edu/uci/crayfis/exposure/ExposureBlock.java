@@ -15,9 +15,7 @@ import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.trigger.L1Config;
-import edu.uci.crayfis.trigger.L1Processor;
 import edu.uci.crayfis.trigger.L2Config;
-import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.trigger.L2Task.RecoEvent;
 import edu.uci.crayfis.util.CFLog;
 
@@ -119,6 +117,7 @@ public class ExposureBlock implements Parcelable {
         L2_pass = parcel.readLong();
         L2_skip = parcel.readLong();
         total_pixels = parcel.readInt();
+        total_background = parcel.readDouble();
         xbn = parcel.readInt();
         daq_state = (CFApplication.State) parcel.readSerializable();
         frozen = parcel.readInt() == 1;
@@ -151,6 +150,7 @@ public class ExposureBlock implements Parcelable {
         dest.writeLong(L2_pass);
         dest.writeLong(L2_skip);
         dest.writeInt(total_pixels);
+        dest.writeDouble(total_background);
         dest.writeInt(xbn);
         dest.writeSerializable(daq_state);
         dest.writeInt(frozen ? 1 : 0);
@@ -316,7 +316,11 @@ public class ExposureBlock implements Parcelable {
         buf.setEndTimeNtp(end_time.NTP);
 		
 		buf.setRunId(run_id.getLeastSignificantBits());
-		
+
+        if (L1_processed > 0) {
+            buf.setBgAvg(total_background / L1_processed);
+        }
+
 		buf.setXbn(xbn);
 		
 		buf.setAborted(aborted);

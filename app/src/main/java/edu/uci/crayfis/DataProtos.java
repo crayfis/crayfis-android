@@ -2893,6 +2893,15 @@ public final class DataProtos {
     int getL2Skip();
 
     /**
+     * <code>optional double bg_avg = 31;</code>
+     */
+    boolean hasBgAvg();
+    /**
+     * <code>optional double bg_avg = 31;</code>
+     */
+    double getBgAvg();
+
+    /**
      * <code>optional uint32 xbn = 17;</code>
      */
     boolean hasXbn();
@@ -3052,12 +3061,12 @@ public final class DataProtos {
               break;
             }
             case 136: {
-              bitField0_ |= 0x08000000;
+              bitField0_ |= 0x10000000;
               xbn_ = input.readUInt32();
               break;
             }
             case 144: {
-              bitField0_ |= 0x10000000;
+              bitField0_ |= 0x20000000;
               aborted_ = input.readBool();
               break;
             }
@@ -3121,6 +3130,11 @@ public final class DataProtos {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00080000;
               l2Conf_ = bs;
+              break;
+            }
+            case 249: {
+              bitField0_ |= 0x08000000;
+              bgAvg_ = input.readDouble();
               break;
             }
           }
@@ -3767,13 +3781,28 @@ public final class DataProtos {
       return l2Skip_;
     }
 
+    public static final int BG_AVG_FIELD_NUMBER = 31;
+    private double bgAvg_;
+    /**
+     * <code>optional double bg_avg = 31;</code>
+     */
+    public boolean hasBgAvg() {
+      return ((bitField0_ & 0x08000000) == 0x08000000);
+    }
+    /**
+     * <code>optional double bg_avg = 31;</code>
+     */
+    public double getBgAvg() {
+      return bgAvg_;
+    }
+
     public static final int XBN_FIELD_NUMBER = 17;
     private int xbn_;
     /**
      * <code>optional uint32 xbn = 17;</code>
      */
     public boolean hasXbn() {
-      return ((bitField0_ & 0x08000000) == 0x08000000);
+      return ((bitField0_ & 0x10000000) == 0x10000000);
     }
     /**
      * <code>optional uint32 xbn = 17;</code>
@@ -3788,7 +3817,7 @@ public final class DataProtos {
      * <code>optional bool aborted = 18;</code>
      */
     public boolean hasAborted() {
-      return ((bitField0_ & 0x10000000) == 0x10000000);
+      return ((bitField0_ & 0x20000000) == 0x20000000);
     }
     /**
      * <code>optional bool aborted = 18;</code>
@@ -3826,6 +3855,7 @@ public final class DataProtos {
       l1Skip_ = 0;
       l2Pass_ = 0;
       l2Skip_ = 0;
+      bgAvg_ = 0D;
       xbn_ = 0;
       aborted_ = false;
     }
@@ -3890,10 +3920,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x04000000) == 0x04000000)) {
         output.writeUInt32(16, l2Skip_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
         output.writeUInt32(17, xbn_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
         output.writeBool(18, aborted_);
       }
       if (((bitField0_ & 0x00000200) == 0x00000200)) {
@@ -3931,6 +3961,9 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00080000) == 0x00080000)) {
         output.writeBytes(30, getL2ConfBytes());
+      }
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+        output.writeDouble(31, bgAvg_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -4005,11 +4038,11 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(16, l2Skip_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(17, xbn_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(18, aborted_);
       }
@@ -4060,6 +4093,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00080000) == 0x00080000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(30, getL2ConfBytes());
+      }
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(31, bgAvg_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -4239,10 +4276,12 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x04000000);
         l2Skip_ = 0;
         bitField0_ = (bitField0_ & ~0x08000000);
-        xbn_ = 0;
+        bgAvg_ = 0D;
         bitField0_ = (bitField0_ & ~0x10000000);
-        aborted_ = false;
+        xbn_ = 0;
         bitField0_ = (bitField0_ & ~0x20000000);
+        aborted_ = false;
+        bitField0_ = (bitField0_ & ~0x40000000);
         return this;
       }
 
@@ -4391,9 +4430,13 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x10000000) == 0x10000000)) {
           to_bitField0_ |= 0x08000000;
         }
-        result.xbn_ = xbn_;
+        result.bgAvg_ = bgAvg_;
         if (((from_bitField0_ & 0x20000000) == 0x20000000)) {
           to_bitField0_ |= 0x10000000;
+        }
+        result.xbn_ = xbn_;
+        if (((from_bitField0_ & 0x40000000) == 0x40000000)) {
+          to_bitField0_ |= 0x20000000;
         }
         result.aborted_ = aborted_;
         result.bitField0_ = to_bitField0_;
@@ -4522,6 +4565,9 @@ public final class DataProtos {
         }
         if (other.hasL2Skip()) {
           setL2Skip(other.getL2Skip());
+        }
+        if (other.hasBgAvg()) {
+          setBgAvg(other.getBgAvg());
         }
         if (other.hasXbn()) {
           setXbn(other.getXbn());
@@ -5783,12 +5829,44 @@ public final class DataProtos {
         return this;
       }
 
+      private double bgAvg_ ;
+      /**
+       * <code>optional double bg_avg = 31;</code>
+       */
+      public boolean hasBgAvg() {
+        return ((bitField0_ & 0x10000000) == 0x10000000);
+      }
+      /**
+       * <code>optional double bg_avg = 31;</code>
+       */
+      public double getBgAvg() {
+        return bgAvg_;
+      }
+      /**
+       * <code>optional double bg_avg = 31;</code>
+       */
+      public Builder setBgAvg(double value) {
+        bitField0_ |= 0x10000000;
+        bgAvg_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double bg_avg = 31;</code>
+       */
+      public Builder clearBgAvg() {
+        bitField0_ = (bitField0_ & ~0x10000000);
+        bgAvg_ = 0D;
+        onChanged();
+        return this;
+      }
+
       private int xbn_ ;
       /**
        * <code>optional uint32 xbn = 17;</code>
        */
       public boolean hasXbn() {
-        return ((bitField0_ & 0x10000000) == 0x10000000);
+        return ((bitField0_ & 0x20000000) == 0x20000000);
       }
       /**
        * <code>optional uint32 xbn = 17;</code>
@@ -5800,7 +5878,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder setXbn(int value) {
-        bitField0_ |= 0x10000000;
+        bitField0_ |= 0x20000000;
         xbn_ = value;
         onChanged();
         return this;
@@ -5809,7 +5887,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder clearXbn() {
-        bitField0_ = (bitField0_ & ~0x10000000);
+        bitField0_ = (bitField0_ & ~0x20000000);
         xbn_ = 0;
         onChanged();
         return this;
@@ -5820,7 +5898,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public boolean hasAborted() {
-        return ((bitField0_ & 0x20000000) == 0x20000000);
+        return ((bitField0_ & 0x40000000) == 0x40000000);
       }
       /**
        * <code>optional bool aborted = 18;</code>
@@ -5832,7 +5910,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder setAborted(boolean value) {
-        bitField0_ |= 0x20000000;
+        bitField0_ |= 0x40000000;
         aborted_ = value;
         onChanged();
         return this;
@@ -5841,7 +5919,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder clearAborted() {
-        bitField0_ = (bitField0_ & ~0x20000000);
+        bitField0_ = (bitField0_ & ~0x40000000);
         aborted_ = false;
         onChanged();
         return this;
@@ -10903,7 +10981,7 @@ public final class DataProtos {
       "nfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nst" +
       "art_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 \001(\t\022\021\n" +
       "\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(\t\022\025\n\rc" +
-      "amera_params\030\007 \001(\t\"\253\005\n\rExposureBlock\022\016\n\006" +
+      "amera_params\030\007 \001(\t\"\273\005\n\rExposureBlock\022\016\n\006" +
       "run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_",
       "time\030\003 \001(\004\022\027\n\017start_time_nano\030\026 \001(\004\022\025\n\re" +
       "nd_time_nano\030\027 \001(\004\022\026\n\016start_time_ntp\030\030 \001" +
@@ -10918,28 +10996,28 @@ public final class DataProtos {
       "2_conf\030\036 \001(\t\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2" +
       "_processed\030\013 \001(\r\022\026\n\016frames_dropped\030\014 \001(\r" +
       "\022\017\n\007L1_pass\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017\n\007L2" +
-      "_pass\030\017 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\013\n\003xbn\030\021 \001(" +
-      "\r\022\017\n\007aborted\030\022 \001(\010\",\n\005State\022\010\n\004INIT\020\000\022\017\n" +
-      "\013CALIBRATION\020\001\022\010\n\004DATA\020\002\"\303\002\n\005Event\022\021\n\tti" +
-      "mestamp\030\001 \001(\004\022\026\n\016timestamp_nano\030\016 \001(\004\022\025\n" +
-      "\rtimestamp_ntp\030\017 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n" +
-      "\007gps_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014" +
-      "gps_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022",
-      "\030\n\020gps_fixtime_nano\030\020 \001(\004\022\036\n\006pixels\030\004 \003(" +
-      "\0132\016.crayfis.Pixel\022\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 " +
-      "\001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020\n\010or" +
-      "ient_y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\"Z\n\005Pixel\022" +
-      "\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010ne" +
-      "ar_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001" +
-      "(\002\"\241\001\n\021CalibrationResult\022\016\n\006run_id\030\001 \001(\004" +
-      "\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022" +
-      "\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r" +
-      "\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel",
-      "\030\007 \003(\r\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(" +
-      "\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007" +
-      "user_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remot" +
-      "e_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n\017edu" +
-      ".uci.crayfisB\nDataProtos"
+      "_pass\030\017 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\016\n\006bg_avg\030\037" +
+      " \001(\001\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\",\n\005St" +
+      "ate\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DATA\020\002" +
+      "\"\303\002\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\026\n\016timesta" +
+      "mp_nano\030\016 \001(\004\022\025\n\rtimestamp_ntp\030\017 \001(\004\022\017\n\007" +
+      "gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\024\n\014gps_al" +
+      "titude\030\013 \001(\001\022\024\n\014gps_accuracy\030\014 \001(\002\022\023\n\013gp",
+      "s_fixtime\030\r \001(\004\022\030\n\020gps_fixtime_nano\030\020 \001(" +
+      "\004\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003avg" +
+      "\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orie" +
+      "nt_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orient_z" +
+      "\030\n \001(\002\"Z\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n" +
+      "\003val\030\003 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005 " +
+      "\001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021CalibrationResult" +
+      "\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010" +
+      "end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hi" +
+      "st_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022",
+      "\025\n\rhist_numpixel\030\007 \003(\r\"\220\001\n\rCrayonMessage" +
+      "\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdev" +
+      "ice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_cod" +
+      "e\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013submit_t" +
+      "ime\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -10970,7 +11048,7 @@ public final class DataProtos {
     internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_ExposureBlock_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L1Conf", "L2Conf", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", "Xbn", "Aborted", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L1Conf", "L2Conf", "L1Processed", "L2Processed", "FramesDropped", "L1Pass", "L1Skip", "L2Pass", "L2Skip", "BgAvg", "Xbn", "Aborted", });
     internal_static_crayfis_Event_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_crayfis_Event_fieldAccessorTable = new
