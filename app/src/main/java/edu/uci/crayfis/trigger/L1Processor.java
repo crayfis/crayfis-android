@@ -17,6 +17,7 @@ public class L1Processor {
 
     public L1Calibrator mL1Cal = null;
     public int mL1Count = 0;
+    public int mL1CountData;
 
     public int mBufferBalance = 0;
 

@@ -71,6 +71,9 @@ class L1Task implements Runnable {
     }
 
     protected boolean processData() {
+
+        mL1Processor.mL1CountData++;
+
         // check if we pass the L1 threshold
         boolean pass = false;
 

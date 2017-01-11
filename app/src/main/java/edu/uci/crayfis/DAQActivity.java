@@ -83,12 +83,11 @@ import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
-import edu.uci.crayfis.particle.ParticleReco;
-import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.trigger.L1Processor;
 import edu.uci.crayfis.trigger.L2Processor;
+import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
@@ -182,9 +181,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     // Thread for NTP updates
     private SntpUpdateThread ntpThread;
-
-	// class to find particles in frames
-	private ParticleReco mParticleReco;
 
 	Context context;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
@@ -1504,11 +1500,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         }
 
 
-                        if (mParticleReco != null) {
+                        if (mL2Processor != null) {
                             final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
-                                    .setTotalEvents((int) mParticleReco.h_l2pixel.getIntegral())
-                                    .setTotalPixels(L1counter_data * previewSize.height * previewSize.width)
-                                    .setTotalFrames(L1counter_data)
+                                    .setTotalEvents(mL2Processor.mL2Count)
+                                    .setTotalPixels((long)mL1Processor.mL1CountData * previewSize.height * previewSize.width)
+                                    .setTotalFrames(mL1Processor.mL1CountData)
                                     .build();
                             CFApplication.setCollectionStatus(dstatus);
                         }
@@ -1516,7 +1512,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
                             try {
-                                RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
+                                L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
                                 if (ev != null) {
                                     //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
                                     mLayoutBlack.addEvent(ev);

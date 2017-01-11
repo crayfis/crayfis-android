@@ -16,13 +16,12 @@ import android.util.AttributeSet;
 import android.widget.ImageView;
 import android.graphics.RectF;
 import java.util.Iterator;
-import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
-import edu.uci.crayfis.particle.ParticleReco.RecoEvent;
 
 import java.util.ArrayList;
 import android.graphics.Color;
 
 import static edu.uci.crayfis.LayoutBlack.*;
+import edu.uci.crayfis.trigger.L2Task;
 
 public class SplashView extends ImageView
 {
@@ -102,13 +101,13 @@ public class SplashView extends ImageView
                 //CFLog.d("The splashView does not have the camera size "+mLayoutBlack);
             }
 
-            Iterator<RecoEvent> iterator;
+            Iterator<L2Task.RecoEvent> iterator;
             // loop over events
             for (iterator = mLayoutBlack.events.iterator(); iterator.hasNext();) {
                 // get the event and pixels
 
-                RecoEvent event = iterator.next();
-                ArrayList<RecoPixel> pixels = event.pixels;
+                L2Task.RecoEvent event = iterator.next();
+                ArrayList<L2Task.RecoPixel> pixels = event.pixels;
                 long event_time = event.time;
                 //CFLog.d(" SplashView draw event with "+pixels.size()+ " from time "+mLayoutBlack.events.get(ie).time);
 
@@ -122,7 +121,7 @@ public class SplashView extends ImageView
                     iterator.remove();
                 } else {
                     for (int ip = 0; ip < pixels.size(); ip++) {
-                        RecoPixel p = pixels.get(ip);
+                        L2Task.RecoPixel p = pixels.get(ip);
                         int x = (int)(scale_y*p.y);
                         int y = (int)(scale_x*p.x);
 

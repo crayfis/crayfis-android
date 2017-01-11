@@ -3,12 +3,15 @@ package edu.uci.crayfis.trigger;
 import android.os.AsyncTask;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.calibration.Histogram;
 import edu.uci.crayfis.camera.RawCameraFrame;
 
 public class L2Processor {
     public final CFApplication mApplication;
 
-    public int mL2Count = 0;
+    public static int mL2Count = 0;
+
+    public static Histogram histL2Pixels = new Histogram(256);
 
     public L2Processor(CFApplication application) {
         // TODO: it will make more sense to have the triggerType assigned to the XB and then get it from there.

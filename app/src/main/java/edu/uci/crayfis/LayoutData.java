@@ -12,7 +12,6 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import edu.uci.crayfis.calibration.L1Calibrator;
-import edu.uci.crayfis.particle.ParticleReco;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 import edu.uci.crayfis.widget.LightMeter;
 import edu.uci.crayfis.widget.MessageView;
@@ -30,13 +29,11 @@ public class LayoutData extends Fragment{
     private static LayoutData mInstance =null;
 
     private static L1Calibrator mL1Calibrator;
-    private static ParticleReco mParticleReco;
 
 
     public LayoutData()
     {
         mL1Calibrator = L1Calibrator.getInstance();
-        mParticleReco = ParticleReco.getInstance();
     }
 
     public static LayoutData getInstance() {

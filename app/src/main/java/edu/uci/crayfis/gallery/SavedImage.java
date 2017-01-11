@@ -10,8 +10,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.ArrayList;
 
-import edu.uci.crayfis.particle.ParticleReco;
-import edu.uci.crayfis.particle.ParticleReco.RecoPixel;
+import edu.uci.crayfis.trigger.L2Task;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -49,7 +48,7 @@ public class SavedImage {
         }
     }
 
-    public SavedImage(ArrayList<RecoPixel> pixels,int max,int width,int height, long t)
+    public SavedImage(ArrayList<L2Task.RecoPixel> pixels,int max,int width,int height, long t)
     {
 
         max_pix=max;
@@ -68,7 +67,7 @@ public class SavedImage {
         int miny = height - 1;
 
         for (int i = 0; i < pixels.size(); i++) {
-            ParticleReco.RecoPixel pix = pixels.get(i);
+            L2Task.RecoPixel pix = pixels.get(i);
             CFLog.d(" pixel at x,y=" + (pix.x) + "," + (pix.y) + " = " + pix.val);
             if (pix.x < minx) minx = pix.x;
             if (pix.x > maxx) maxx = pix.x;
@@ -93,7 +92,7 @@ public class SavedImage {
                 if (bitmap != null) {
                     // put all pixels in the bitmap
                     for (int i = 0; i < pixels.size(); i++) {
-                        ParticleReco.RecoPixel pix = pixels.get(i);
+                        L2Task.RecoPixel pix = pixels.get(i);
 
                         int val = (int) (255 * (pix.val / (1.0 * max)));
                         int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
