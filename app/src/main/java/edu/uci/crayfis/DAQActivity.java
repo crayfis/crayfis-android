@@ -132,8 +132,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	char[] labels = new char[256];
 	// settings
 
-    public final float battery_stop_threshold = (float)0.20;
-    public final float battery_start_threshold = (float)0.80;
+    public final float battery_stop_threshold = 0.20f;
+    public final float battery_start_threshold = 0.80f;
 
     public static final int N_CYCLE_BUFFERS = 10;
 
@@ -159,16 +159,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	private ExposureBlockManager xbManager;
 
     private L1Calibrator L1cal = null;
-	private long L1counter = 0;
-    private long L1counter_data = 0;
 
     private FrameHistory<Long> frame_times;
-
-	// counter for stabilization mode
-	private int stabilization_counter;
-
-    // counter for calibration mode
-    private int calibration_counter;
 
 	// L1 hit threshold
 	long starttime;
@@ -508,8 +500,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 l2thread.clearQueue();
                 }
                 */
-                stabilization_counter = 0;
-                calibration_counter = 0;
                 xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
                 break;
 
@@ -517,15 +507,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             case CALIBRATION:
             case DATA:
                 //l2thread.clearQueue();
-                stabilization_counter = 0;
-                calibration_counter = 0;
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
-                // just reset the counter.
-                stabilization_counter = 0;
-                calibration_counter = 0;
-
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
@@ -797,11 +781,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
 		preview.addView(mPreview);
 
-
-
-
-        L1counter = 0;
-        L1counter_data = 0;
 
         if (L1cal == null) {
             L1cal = L1Calibrator.getInstance();
@@ -1236,19 +1215,14 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             // try to assign the frame to the current XB
             boolean assigned = xb.assignFrame(frame);
 
-            L1counter++;
-
             // track the acquisition times for FPS calculation
             synchronized(frame_times) {
                 frame_times.add_value(acq_time.Nano);
             }
             // update the FPS and Calibration calculation periodically
-            if (L1counter % fps_update_interval == 0) {
-                double fps = updateFPS();
-
-                if (!CONFIG.getTriggerLock() && xb.daq_state == CFApplication.State.DATA) {
-                    updateCalibration();
-                }
+            if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
+                    && xb.daq_state == CFApplication.State.DATA) {
+                updateCalibration();
             }
 
             // if we failed to assign the block to the XB, just drop it.
@@ -1476,7 +1450,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                             LayoutData.mProgressWheel.setBarColor(Color.RED);
 
                             int needev = CONFIG.getCalibrationSampleFrames();
-                            float frac = calibration_counter / ((float) 1.0 * needev);
+                            float frac = L1cal.getMaxPixels().size() / ((float) 1.0 * needev);
                             int progress = (int) (360 * frac);
                             LayoutData.mProgressWheel.setProgress(progress);
                             LayoutData.mProgressWheel.stopGrowing();
