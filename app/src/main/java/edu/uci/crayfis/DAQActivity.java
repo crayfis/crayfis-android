@@ -134,6 +134,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     public final float battery_stop_threshold = 0.20f;
     public final float battery_start_threshold = 0.80f;
+    public final int batteryOverheatTemp = 450;
+    public final int batteryStartTemp = 370;
 
     public static final int N_CYCLE_BUFFERS = 10;
 
@@ -1190,6 +1192,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     private final long battery_check_wait = 10000; // ms
     private long last_battery_check_time;
     private float batteryPct;
+    private int batteryTemp;
+    private boolean batteryOverheated = false;
 
 	/**
 	 * Called each time a new image arrives in the data stream.
@@ -1370,21 +1374,33 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                     int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                     int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                    // if overheated, see if battery temp is still falling
+                    int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                    CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
+                    if (batteryOverheated) {
+                        batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp);
+                    }
+                    batteryTemp = newTemp;
 
                     batteryPct = level / (float)scale;
                     last_battery_check_time = System.currentTimeMillis();
                 }
 
-                if (batteryPct < battery_stop_threshold
-                        && application.getApplicationState()!=edu.uci.crayfis.CFApplication.State.IDLE)
+                if (application.getApplicationState()!=edu.uci.crayfis.CFApplication.State.IDLE)
                 {
-                    CFLog.d(" Battery too low, going to IDLE mode.");
-                    application.setApplicationState(CFApplication.State.IDLE);
+                    if(batteryPct < battery_stop_threshold) {
+                        CFLog.d(" Battery too low, going to IDLE mode.");
+                        application.setApplicationState(CFApplication.State.IDLE);
+                    } else if (batteryTemp > batteryOverheatTemp) {
+                        CFLog.d(" Battery too hot, going to IDLE mode.");
+                        application.setApplicationState(CFApplication.State.IDLE);
+                        batteryOverheated = true;
+                    }
 
                 }
 
                 if (application.getApplicationState()==edu.uci.crayfis.CFApplication.State.IDLE
-                        && batteryPct > battery_start_threshold)
+                        && batteryPct > battery_start_threshold && !batteryOverheated)
                 {
                     CFLog.d(" Battery ok now, returning to run mode.");
                     setUpAndConfigureCamera();
@@ -1412,7 +1428,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     if (application.getApplicationState() == CFApplication.State.IDLE)
                     {
                         if (LayoutData.mProgressWheel != null) {
-                            LayoutData.mProgressWheel.setText("Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%");
+                            if (batteryPct < battery_start_threshold) {
+                                LayoutData.mProgressWheel.setText("Low battery " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
+                            } else {
+                                LayoutData.mProgressWheel.setText("Battery overheated " + String.format("%1.1f", batteryTemp/10.) + "C");
+                            }
 
                             LayoutData.mProgressWheel.setTextColor(Color.WHITE);
                             LayoutData.mProgressWheel.setBarColor(Color.LTGRAY);
@@ -1535,7 +1555,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                                     + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                                    + "Battery power pct = "+(int)(100*batteryPct)+"% from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
+                                    + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
+                                    +String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
                             if (cameraSize != null) {
                                 ResolutionSpec targetRes = CONFIG.getTargetResolution();
                                 devtxt += "Image dimensions = " + cameraSize.width + "x" + cameraSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
