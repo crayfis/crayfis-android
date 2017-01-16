@@ -135,7 +135,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     public final float battery_stop_threshold = 0.20f;
     public final float battery_start_threshold = 0.80f;
     public final int batteryOverheatTemp = 450;
-    public final int batteryStartTemp = 370;
+    public final int batteryStartTemp = 380;
 
     public static final int N_CYCLE_BUFFERS = 10;
 
@@ -1374,15 +1374,17 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                     int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
                     int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+                    batteryPct = level / (float)scale;
                     // if overheated, see if battery temp is still falling
                     int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
                     CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
                     if (batteryOverheated) {
-                        batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp);
+                        batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
+                        DataCollectionFragment.getInstance().updateIdleStatus("Battery overheated: " + String.format("%1.1f", newTemp/10.) + "C");
+                    } else {
+                        DataCollectionFragment.getInstance().updateIdleStatus("Low battery: "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+ "%");
                     }
                     batteryTemp = newTemp;
-
-                    batteryPct = level / (float)scale;
                     last_battery_check_time = System.currentTimeMillis();
                 }
 
@@ -1390,9 +1392,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 {
                     if(batteryPct < battery_stop_threshold) {
                         CFLog.d(" Battery too low, going to IDLE mode.");
+                        DataCollectionFragment.getInstance().updateIdleStatus("Low battery: "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+ "%");
                         application.setApplicationState(CFApplication.State.IDLE);
                     } else if (batteryTemp > batteryOverheatTemp) {
                         CFLog.d(" Battery too hot, going to IDLE mode.");
+                        DataCollectionFragment.getInstance().updateIdleStatus("Cooling battery: " + String.format("%1.1f", batteryTemp/10.) + "C");
                         application.setApplicationState(CFApplication.State.IDLE);
                         batteryOverheated = true;
                     }

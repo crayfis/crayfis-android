@@ -30,6 +30,7 @@ public class DataCollectionFragment extends CFFragment {
 
     private TextView mStatus;
     private TextView mStatusMessage;
+    private static String mIdleStatus;
     private DataCollectionStatsView mDataCollectionStats;
     private TextView mErrorMessage;
     private ProgressBar mProgressBar;
@@ -94,12 +95,10 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
-                // FIXME "Low battery "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+"%"
                 mStatus.setText("Idle");
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
-                //TODO: Explain why the app is idle.
-                setStatusMessage("TODO: Explain why the app is idle.");
+                setStatusMessage(mIdleStatus);
                 break;
             case INIT:
                 mStatus.setText("Initializing...");
@@ -138,6 +137,10 @@ public class DataCollectionFragment extends CFFragment {
             }
             mErrorMessage.setText(resId);
         }
+    }
+
+    public static void updateIdleStatus(String status) {
+        mIdleStatus = status;
     }
 
     /**
