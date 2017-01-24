@@ -22,7 +22,7 @@ import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
 import com.jjoe64.graphview.GraphViewStyle;
 import com.jjoe64.graphview.ValueDependentColor;
 
-import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.trigger.L2Processor;
 
 public class LayoutHist extends Fragment{
 
@@ -77,7 +77,6 @@ public class LayoutHist extends Fragment{
     }
 
     // class to find particles in frames
-    private static ParticleReco mParticleReco;
 
     private static GraphView mGraph;
 
@@ -86,22 +85,17 @@ public class LayoutHist extends Fragment{
 
     public static void updateData() {
 
-        if (mParticleReco !=null) {
-            if (mGraphSeries !=null && mParticleReco.h_l2pixel != null)
-                mGraphSeries.resetData(make_graph_data(mParticleReco.h_l2pixel.getValues()));
-            if (mGraph != null && mParticleReco.h_l2pixel != null)
-                mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*mParticleReco.h_l2pixel.getIntegral()), 0.);
-        }
+        if (mGraphSeries !=null && L2Processor.histL2Pixels != null)
+            mGraphSeries.resetData(make_graph_data(L2Processor.histL2Pixels.getValues()));
+        if (mGraph != null && L2Processor.histL2Pixels != null)
+            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*L2Processor.histL2Pixels.getIntegral()), 0.);
 
     }
 
     private static LayoutHist mInstance =null;
 
 
-    public LayoutHist()
-    {
-        mParticleReco = ParticleReco.getInstance();
-    }
+    public LayoutHist() {    }
 
     public static LayoutHist getInstance() {
         if (mInstance==null)
@@ -118,9 +112,9 @@ public class LayoutHist extends Fragment{
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             Context act = getActivity();
-            if (mParticleReco != null && act !=null)
+            if (L2Processor.histL2Pixels != null && act !=null)
             {
-                if (mParticleReco.h_l2pixel.getIntegral()==0)
+                if (L2Processor.histL2Pixels.getIntegral()==0)
                 {
                     Toast.makeText(act, R.string.hist_toast_zero,Toast.LENGTH_LONG).show();
                 } else {

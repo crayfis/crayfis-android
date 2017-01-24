@@ -15,7 +15,7 @@ import android.hardware.Camera;
 import android.content.Context;
 import java.util.ArrayList;
 
-import edu.uci.crayfis.particle.ParticleReco;
+import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.SplashView;
 
@@ -56,9 +56,9 @@ public class LayoutBlack extends Fragment{
     }
 
     private static final int max_events = 100;
-    public ArrayList<ParticleReco.RecoEvent> events = new ArrayList<ParticleReco.RecoEvent>(max_events);
+    public ArrayList<L2Task.RecoEvent> events = new ArrayList<L2Task.RecoEvent>(max_events);
 
-    public void addEvent(ParticleReco.RecoEvent p)
+    public void addEvent(L2Task.RecoEvent p)
     {
         synchronized(event_lock)
         {

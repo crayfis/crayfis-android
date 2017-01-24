@@ -320,6 +320,8 @@ public class L2Task implements Runnable {
                     }
                     // okay, found a pixel above threshold!
                     RecoPixel p;
+
+                    L2Processor.histL2Pixels.fill(val);
                     try {
                         p = new RecoPixel();
                     } catch (OutOfMemoryError e) {
@@ -395,7 +397,6 @@ public class L2Task implements Runnable {
         xb.L2_processed++;
 
         // First, build the event from the raw frame.
-        //ParticleReco.RecoEvent event = PARTICLE_RECO.buildEvent(mFrame);
         mEvent = buildEvent();
 
 
