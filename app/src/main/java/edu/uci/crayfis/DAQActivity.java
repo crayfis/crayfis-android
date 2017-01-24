@@ -1379,9 +1379,11 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
                     CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
                     if (batteryOverheated) {
+                        // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
                         batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
-                        DataCollectionFragment.getInstance().updateIdleStatus("Battery overheated: " + String.format("%1.1f", newTemp/10.) + "C");
+                        DataCollectionFragment.getInstance().updateIdleStatus("Cooling battery: " + String.format("%1.1f", newTemp/10.) + "C");
                     } else {
+                        // if not in IDLE mode for overheat, must be for low battery
                         DataCollectionFragment.getInstance().updateIdleStatus("Low battery: "+(int)(batteryPct*100)+"%/"+(int)(battery_start_threshold*100)+ "%");
                     }
                     batteryTemp = newTemp;
