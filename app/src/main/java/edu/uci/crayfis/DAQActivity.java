@@ -1014,6 +1014,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         CFLog.i("DAQActivity Suspending!");
 
         unSetupCamera();
+
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
 
@@ -1085,7 +1088,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         try {
 
             Camera.Parameters param= mCamera.getParameters();
-            CFLog.d("params: Camera params are" + param.flatten());
 
             previewSize = CONFIG.getTargetResolution().getClosestSize(mCamera);
             CFLog.i("selected preview size="+previewSize);
@@ -1127,6 +1129,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
                 mCamera.setParameters(param);
             }
+            CFLog.d("params: Camera params are " + param.flatten());
 
             // update the current application settings to reflect new camera size.
             CFApplication.setCameraSize(mCamera.getParameters().getPreviewSize());
@@ -1562,7 +1565,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                                     + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
-                                    +String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n";
+                                    + String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
+                                    + "\n";
+
                             if (cameraSize != null) {
                                 ResolutionSpec targetRes = CONFIG.getTargetResolution();
                                 devtxt += "Image dimensions = " + cameraSize.width + "x" + cameraSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
