@@ -25,6 +25,8 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
+import org.opencv.android.OpenCVLoader;
+
 import edu.uci.crayfis.usernotif.UserNotificationActivity;
 import edu.uci.crayfis.util.CFLog;
 
@@ -41,6 +43,13 @@ public class MainActivity extends Activity  {
 	private static final int REQUEST_CODE_HOW_TO = 2;
 
 	public String build_version = null;
+
+	static {
+		if(OpenCVLoader.initDebug()) {
+		} else {
+			CFLog.d("OpenCV not installed");
+		}
+	}
 
 	public void onRestart()
 	{
