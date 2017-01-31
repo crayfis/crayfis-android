@@ -46,6 +46,7 @@ public class MainActivity extends Activity  {
 
 	static {
 		if(OpenCVLoader.initDebug()) {
+			CFLog.d("OpenCV installed");
 		} else {
 			CFLog.d("OpenCV not installed");
 		}
