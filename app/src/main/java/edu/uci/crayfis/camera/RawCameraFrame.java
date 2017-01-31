@@ -5,6 +5,9 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.support.annotation.NonNull;
 
+import org.opencv.core.Core;
+import org.opencv.core.MatOfByte;
+
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -17,6 +20,7 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
+    private MatOfByte mMat;
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
@@ -39,6 +43,7 @@ public class RawCameraFrame {
      */
     public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, int temp, Camera camera) {
         mBytes = bytes;
+        mMat = new MatOfByte(bytes);
         mAcquiredTime = timestamp;
         mBatteryTemp = temp;
         mCamera = camera;
@@ -76,6 +81,7 @@ public class RawCameraFrame {
             mCamera.addCallbackBuffer(mBytes);
             mBufferOutstanding = false;
             mBytes = null;
+            mMat = null;
         }
     }
 
@@ -97,6 +103,7 @@ public class RawCameraFrame {
             mExposureBlock.clearFrame(this);
             // make sure we null the image buffer so that its memory can be freed.
             mBytes = null;
+            mMat = null;
         }
     }
 
@@ -178,25 +185,13 @@ public class RawCameraFrame {
     public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
     private void calculateStatistics() {
-        synchronized (mBytes) {
+        synchronized (mMat) {
             if (mPixMax >= 0) {
                 // somebody beat us to it! nothing to do.
                 return;
             }
-
-            // TODO: consider implementing one-pass variance calculation here as well
-            // (although it may suffer from numerical instabilities)
-            int max = mPixMax;
-            long sum = 0;
-            for (int i = 0; i < mLength; i++) {
-                int val = mBytes[i]&0xFF;
-                max = Math.max(max, val);
-                sum += val;
-                //int val = mBytes[i] & 0xFF;
-                //if (val > mPixMax) mPixMax = val;
-            }
-            mPixMax = max;
-            mPixAvg = (double)sum / mLength;
+            mPixMax = (int)Core.minMaxLoc(mMat).maxVal;
+            mPixAvg = Core.mean(mMat).val[0];
         }
     }
 
