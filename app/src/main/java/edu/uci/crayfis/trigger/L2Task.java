@@ -5,6 +5,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
+
 import java.util.ArrayList;
 
 import edu.uci.crayfis.CFApplication;
@@ -264,7 +270,7 @@ public class L2Task implements Runnable {
         double variance = 0;
         double avg = mFrame.getPixAvg();
         int npixels = 0;
-        for (int ix=0;ix < width;ix+= stepW)
+        for (int ix=mFrame.BORDER;ix < width-mFrame.BORDER;ix+= stepW)
             for (int iy=0;iy<height;iy+=stepH)
             {
                 int val = bytes[ix+width*iy]&0xFF;
@@ -294,96 +300,58 @@ public class L2Task implements Runnable {
     ArrayList<RecoPixel> buildPixels() {
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
-        int width = mFrame.getSize().width;
-        int height = mFrame.getSize().height;
+        Mat greyMat = mFrame.getGreyMat();
+        Mat threshMat = new Mat();
+        Mat l2PixelCoords = new Mat();
 
-        byte[] bytes = mFrame.getBytes();
+        int width = greyMat.width();
+        int height = greyMat.height();
+
 
         ExposureBlock xb = mFrame.getExposureBlock();
 
-        // recalculate the variance w/ full stats
-        double variance = 0.;
-        double avg = mFrame.getPixAvg();
-        boolean fail = false;
-        boolean quitReco = false;
-        for (int ix = 0; ix < width && !quitReco; ix++) {
-            for (int iy = 0; iy < height; iy++) {
-                // NB: cast (signed) byte to integer for meaningful comparisons!
-                int val = bytes[ix + width * iy] & 0xFF;
+        // set everything below threshold to zero
+        Imgproc.threshold(greyMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Core.findNonZero(threshMat, l2PixelCoords);
 
-                variance += (val-avg)*(val - avg);
+        for(int i=0; i<l2PixelCoords.total(); i++) {
+            double[] xy = l2PixelCoords.get(i,0);
+            int ix = (int) xy[0];
+            int iy = (int) xy[1];
+            int val = (int) greyMat.get(iy, ix)[0];
+            CFLog.d("x:" + ix);
+            CFLog.d("y:" + iy);
+            CFLog.d("val:" + val);
+            CFLog.d("thresh:" + xb.L2_threshold);
 
-                if (val > xb.L2_threshold) {
-                    if (fail) {
-                        mEvent.npix_dropped++;
-                        continue;
-                    }
-                    // okay, found a pixel above threshold!
-                    RecoPixel p;
+            RecoPixel p;
 
-                    L2Processor.histL2Pixels.fill(val);
-                    try {
-                        p = new RecoPixel();
-                    } catch (OutOfMemoryError e) {
-                        CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-                        mEvent.npix_dropped++;
-                        continue;
-                    }
-
-                    p.x = ix;
-                    p.y = iy;
-                    p.val = val;
-
-                    // look at the 8 adjacent pixels to measure max and avg values
-                    int sum3 = 0, sum5 = 0;
-                    int norm3 = 0, norm5 = 0;
-                    int nearMax = 0, nearMax5 = 0;
-                    for (int dx = -2; dx <= 2; ++dx) {
-                        for (int dy = -2; dy <= 2; ++dy) {
-                            if (dx == 0 && dy == 0) {
-                                // exclude center from average
-                                continue;
-                            }
-
-                            int idx = ix + dx;
-                            int idy = iy + dy;
-                            if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
-                                // we're off the sensor plane.
-                                continue;
-                            }
-
-                            int dval = bytes[idx + width * idy] & 0xFF;
-                            sum5 += dval;
-                            norm5++;
-                            nearMax5 = Math.max(nearMax5, dval);
-                            if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                                // we're in the 3x3 part
-                                sum3 += dval;
-                                norm3++;
-                                nearMax = Math.max(nearMax, dval);
-                            }
-                        }
-                    }
-
-                    p.avg_3 = ((float) sum3) / norm3;
-                    p.avg_5 = ((float) sum5) / norm5;
-                    p.near_max = nearMax;
-
-                    pixels.add(p);
-
-                    if (pixels.size() >= ((Config)mConfig).npix) {
-                        quitReco = true;
-                        break;
-                    }
-                }
+            L2Processor.histL2Pixels.fill(val);
+            try {
+                p = new RecoPixel();
+            } catch (OutOfMemoryError e) {
+                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
+                mEvent.npix_dropped++;
+                continue;
             }
-        }
 
-        if (!quitReco) {
-            // update event with the "variance" computed from full pixel statistics.
-            variance /= (double) (width * height);
-            variance = Math.sqrt(variance);
-            mEvent.variance = variance;
+            // record the coordinates of the frame, not of the sliced Mat we used
+            p.x = ix+mFrame.BORDER;
+            p.y = iy+mFrame.BORDER;
+            p.val = val;
+
+            Mat greyAvg3 = greyMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                    Math.max(ix-1,0), Math.min(ix+2,width));
+            Mat greyAvg5 = greyMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                    Math.max(ix-2,0), Math.min(ix+3,width));
+
+            p.avg_3 = (float)Core.mean(greyAvg3).val[0];
+            p.avg_5 = (float)Core.mean(greyAvg5).val[0];
+            p.near_max = (int)Core.minMaxLoc(greyAvg3).maxVal;
+
+
+            pixels.add(p);
+
         }
 
         return pixels;

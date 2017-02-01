@@ -6,7 +6,11 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfInt;
+import org.opencv.core.Range;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -20,18 +24,20 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
-    private MatOfByte mMat;
+    private Mat mGreyMat;
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
     private Camera mCamera;
     private Camera.Parameters mParams;
     private Camera.Size mSize;
+    private int mLength;
     private int mPixMax;
     private double mPixAvg = -1;
-    private int mLength;
     private Boolean mBufferOutstanding = true;
     private ExposureBlock mExposureBlock;
+
+    public static final int BORDER = 5;
 
     /**
      * Create a new instance.
@@ -42,23 +48,25 @@ public class RawCameraFrame {
      */
     public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera) {
         mBytes = bytes;
-        mMat = new MatOfByte(bytes);
+        Mat byteMat = new MatOfByte(bytes);
         mAcquiredTime = timestamp;
         mCamera = camera;
         mParams = mCamera.getParameters();
         mSize = mParams.getPreviewSize();
         mPixMax = -1;
 
-        mLength = mSize.height * mSize.width;
+        mLength = mSize.width * mSize.height;
+        mGreyMat = byteMat
+                .rowRange(0,mLength) // only use greyscale bytes
+                .reshape(1, mSize.height) //
+                .submat(BORDER, mSize.height-BORDER, BORDER, mSize.width-BORDER); // trim off border
     }
 
-    /**
-     * Get the raw bytes for this frame.
-     *
-     * @return byte[]
-     */
+    public Mat getGreyMat() {
+        return mGreyMat;
+    }
+
     public byte[] getBytes() {
-        // FIXME: Need to worry about thread-safety on these bytes for frames that get retired.
         return mBytes;
     }
 
@@ -79,7 +87,7 @@ public class RawCameraFrame {
             mCamera.addCallbackBuffer(mBytes);
             mBufferOutstanding = false;
             mBytes = null;
-            mMat = null;
+            mGreyMat = null;
         }
     }
 
@@ -101,7 +109,7 @@ public class RawCameraFrame {
             mExposureBlock.clearFrame(this);
             // make sure we null the image buffer so that its memory can be freed.
             mBytes = null;
-            mMat = null;
+            mGreyMat = null;
         }
     }
 
@@ -174,20 +182,20 @@ public class RawCameraFrame {
     }
 
     public Camera getCamera() { return mCamera; }
-    public Camera.Parameters getParams() { return mParams; }
     public Camera.Size getSize() { return mSize; }
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
     public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
     private void calculateStatistics() {
-        synchronized (mMat) {
+        synchronized (mGreyMat) {
             if (mPixMax >= 0) {
                 // somebody beat us to it! nothing to do.
                 return;
             }
-            mPixMax = (int)Core.minMaxLoc(mMat).maxVal;
-            mPixAvg = Core.mean(mMat).val[0];
+            Core.MinMaxLocResult result = Core.minMaxLoc(mGreyMat);
+            mPixMax = (int) result.maxVal;
+            mPixAvg = Core.mean(mGreyMat).val[0];
         }
     }
 
