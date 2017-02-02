@@ -3,6 +3,7 @@ package edu.uci.crayfis.server;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -65,6 +66,8 @@ public class UploadExposureService extends IntentService {
     private static boolean sPermitUpload = true;
     private static boolean sValidId = true;
     private static boolean sStartUploading;
+
+    private static final boolean IS_PUBLIC = false;
 
     /**
      * Helper for submitting an {@link edu.uci.crayfis.exposure.ExposureBlock}.
@@ -214,7 +217,14 @@ public class UploadExposureService extends IntentService {
         FileOutputStream outputStream;
 
         try {
-            outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
+            if(IS_PUBLIC) {
+                File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"CRAYFIS");
+                path.mkdirs();
+                File protofile = new File(path, filename);
+                outputStream = new FileOutputStream(protofile);
+            } else {
+                outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
+            }
             abstractMessage.writeTo(outputStream);
             outputStream.close();
             CFLog.i("Data saved to " + filename);
