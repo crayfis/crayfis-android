@@ -250,6 +250,7 @@ public class L2Task implements Runnable {
         event.time_ntp = mFrame.getAcquiredTimeNTP();
         event.location = mFrame.getLocation();
         event.orientation = mFrame.getOrientation();
+        event.batteryTemp = mFrame.getBatteryTemp();
 
         // first we measure the background and variance, but to save time only do it for every
         // stepW or stepH-th pixel

@@ -168,6 +168,8 @@ public class RawCameraFrame {
         mOrientation = orient.clone();
     }
 
+    public int getBatteryTemp() { return mBatteryTemp; }
+
     public Camera getCamera() { return mCamera; }
     public Camera.Parameters getParams() { return mParams; }
     public Camera.Size getSize() { return mSize; }
