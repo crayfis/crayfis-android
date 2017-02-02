@@ -1215,7 +1215,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera);
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, batteryTemp, camera);
             frame.setLocation(CFApplication.getLastKnownLocation());
             frame.setOrientation(orientation);
 
@@ -1380,6 +1380,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                     batteryPct = level / (float)scale;
                     // if overheated, see if battery temp is still falling
                     int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+                    xbManager.updateBatteryTemp(newTemp);
                     CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
                     if (batteryOverheated) {
                         // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp

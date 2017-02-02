@@ -28,6 +28,7 @@ public class RawCameraFrame {
     private int mLength;
     private Boolean mBufferOutstanding = true;
     private ExposureBlock mExposureBlock;
+    private int mBatteryTemp;
 
     /**
      * Create a new instance.
@@ -36,9 +37,10 @@ public class RawCameraFrame {
      * @param timestamp The time at which the image was recieved by our app.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera) {
+    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, int temp, Camera camera) {
         mBytes = bytes;
         mAcquiredTime = timestamp;
+        mBatteryTemp = temp;
         mCamera = camera;
         mParams = mCamera.getParameters();
         mSize = mParams.getPreviewSize();

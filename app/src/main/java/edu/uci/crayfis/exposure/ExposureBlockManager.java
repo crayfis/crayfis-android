@@ -46,6 +46,8 @@ public final class ExposureBlockManager {
 
     private long safe_time = 0;
 
+    private int mBatteryTemp = 0;
+
     private static ExposureBlockManager sInstance;
 
     /**
@@ -103,6 +105,7 @@ public final class ExposureBlockManager {
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
                 new Location(CFApplication.getLastKnownLocation()),
+                mBatteryTemp,
                 state, APPLICATION.getCameraSize());
 
         mTotalXBs++;
@@ -213,5 +216,9 @@ public final class ExposureBlockManager {
 
     public int getCommittedXBs() {
         return mCommittedXBs;
+    }
+
+    public void updateBatteryTemp(int temp) {
+        mBatteryTemp = temp;
     }
 }

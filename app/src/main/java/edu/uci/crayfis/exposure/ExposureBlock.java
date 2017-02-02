@@ -29,6 +29,8 @@ public class ExposureBlock implements Parcelable {
 
 	public final Location start_loc;
 
+    public final int batteryTemp;
+
 	public final int res_x;
 	public final int res_y;
 	
@@ -78,6 +80,7 @@ public class ExposureBlock implements Parcelable {
                          String L2_config,
                          int L1_threshold, int L2_threshold,
                          Location start_loc,
+                         int batteryTemp,
                          CFApplication.State daq_state, Camera.Size sz) {
         start_time = new AcquisitionTime();
 
@@ -88,6 +91,7 @@ public class ExposureBlock implements Parcelable {
         this.L1_threshold = L1_threshold;
         this.L2_threshold = L2_threshold;
         this.start_loc = start_loc;
+        this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
         this.res_x = sz.width;
         this.res_y = sz.height;
@@ -103,6 +107,7 @@ public class ExposureBlock implements Parcelable {
         start_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         end_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
+        batteryTemp = parcel.readInt();
         res_x = parcel.readInt();
         res_y = parcel.readInt();
         frames_dropped = parcel.readLong();
@@ -136,6 +141,7 @@ public class ExposureBlock implements Parcelable {
         dest.writeParcelable(start_time, flags);
         dest.writeParcelable(end_time, flags);
         dest.writeParcelable(start_loc, flags);
+        dest.writeInt(batteryTemp);
         dest.writeInt(res_x);
         dest.writeInt(res_y);
         dest.writeLong(frames_dropped);
@@ -300,6 +306,7 @@ public class ExposureBlock implements Parcelable {
         if (start_loc.hasAltitude()) {
             buf.setGpsAltitude(start_loc.getAltitude());
         }
+        buf.setBatteryTemp(batteryTemp);
 
 		if (res_x > 0 || res_y > 0) {
 			buf.setResX(res_x);
