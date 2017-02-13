@@ -79,16 +79,16 @@ public class L2TaskMaxN extends L2Task {
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
 
-        Mat greyMat = mFrame.getGreyMat();
+        Mat grayMat = mFrame.getGrayMat();
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 
-        int width = greyMat.width();
-        int height = greyMat.height();
+        int width = grayMat.width();
+        int height = grayMat.height();
 
         ExposureBlock xb = mFrame.getExposureBlock();
 
-        Imgproc.threshold(greyMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
 
         for(int i=0; i<l2PixelCoords.total(); i++) {
@@ -96,7 +96,7 @@ public class L2TaskMaxN extends L2Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = (int) greyMat.get(iy, ix)[0];
+            int val = (int) grayMat.get(iy, ix)[0];
 
             RecoPixel p;
 
@@ -115,14 +115,14 @@ public class L2TaskMaxN extends L2Task {
             p.val = val;
 
             //
-            Mat greyAvg3 = greyMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
                     Math.max(ix-1,0), Math.min(ix+2,width));
-            Mat greyAvg5 = greyMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
                     Math.max(ix-2,0), Math.min(ix+3,width));
 
-            p.avg_3 = (float)Core.mean(greyAvg3).val[0];
-            p.avg_5 = (float)Core.mean(greyAvg5).val[0];
-            p.near_max = (int)Core.minMaxLoc(greyAvg3).maxVal;
+            p.avg_3 = (float)Core.mean(grayAvg3).val[0];
+            p.avg_5 = (float)Core.mean(grayAvg5).val[0];
+            p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
 
 
             pixels.add(p);

@@ -38,6 +38,10 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicHistogram;
+import android.renderscript.Type;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
@@ -110,6 +114,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
     // camera and display objects
 	private Camera mCamera;
+    private Camera.Parameters mParams;
 	private CameraPreviewView mPreview;
 
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
@@ -126,11 +131,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 	// WakeLock to prevent the phone from sleeping during DAQ
 	private PowerManager.WakeLock wl;
-
-	private char[][] histo_chars = new char[256][256];
-	// draw some X axis labels
-	char[] labels = new char[256];
-	// settings
 
     public final float battery_stop_threshold = 0.20f;
     public final float battery_start_threshold = 0.80f;
@@ -178,6 +178,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 	Context context;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
+    private RenderScript mRS;
+    private Type mType;
+    private ScriptIntrinsicHistogram mScript;
 
     public void clickedSettings() {
 
@@ -558,7 +561,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 		b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
-        b.setCameraParams(mCamera.getParameters().flatten());
+        b.setCameraParams(mParams.flatten());
 
 
 
@@ -884,6 +887,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             }
             mCamera.stopPreview();
             mCamera.release();
+            mParams = null;
             mCamera = null;
 
             // clear out any (old) buffers
@@ -972,6 +976,9 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
 
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        CFLog.d(" Build RenderScript");
+        mRS = RenderScript.create(context);
 
         CFLog.d(" Setup camera");
         // this will also trigger setting up the camera
@@ -1119,20 +1126,28 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 // Try to set minimum=maximum FPS range.
                 // This seems to work for some phones...
                 param.setPreviewFpsRange(maxfps, maxfps);
-
-                mCamera.setParameters(param);
             }
             catch (RuntimeException ex) {
                 // but some phones will throw a fit. So just give it a "supported" range.
                 CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
                 param.setPreviewFpsRange(minfps, maxfps);
-
-                mCamera.setParameters(param);
             }
+            mParams = param;
+            mCamera.setParameters(mParams);
             CFLog.d("params: Camera params are " + param.flatten());
 
             // update the current application settings to reflect new camera size.
-            CFApplication.setCameraSize(mCamera.getParameters().getPreviewSize());
+            CFApplication.setCameraSize(mParams.getPreviewSize());
+
+            // configure RenderScript if available
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                mScript = ScriptIntrinsicHistogram.create(mRS, Element.U8(mRS));
+                Type.Builder tb = new Type.Builder(mRS, Element.createPixel(mRS, Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV));
+                tb.setX(previewSize.width)
+                        .setY(previewSize.height)
+                        .setYuvFormat(param.getPreviewFormat());
+                mType = tb.create();
+            }
 
             // Create an instance of Camera
             CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
@@ -1140,7 +1155,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             } catch (Exception e) {
                 userErrorMessage(getResources().getString(R.string.camera_error),true);
 
-            }
+        }
 
         try {
             // install the camera on the preview so we can start sampling images
@@ -1215,9 +1230,15 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, batteryTemp, camera);
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera);
             frame.setLocation(CFApplication.getLastKnownLocation());
             frame.setOrientation(orientation);
+            frame.setBatteryTemp(batteryTemp);
+
+            // use RenderScript for every other frame
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && false) {
+                frame.makeHistogram(mRS, mScript, mType);
+            }
 
             // try to assign the frame to the current XB
             boolean assigned = xb.assignFrame(frame);

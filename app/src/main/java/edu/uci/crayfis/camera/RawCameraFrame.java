@@ -1,8 +1,15 @@
 package edu.uci.crayfis.camera;
 
+import android.annotation.TargetApi;
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.location.Location;
+import android.os.Build;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.ScriptIntrinsicHistogram;
+import android.renderscript.Type;
 import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
@@ -24,7 +31,7 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
-    private Mat mGreyMat;
+    private Mat mGrayMat;
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
@@ -32,13 +39,20 @@ public class RawCameraFrame {
     private Camera.Parameters mParams;
     private Camera.Size mSize;
     private int mLength;
-    private int mPixMax;
+    private int mPixMax = -1;
     private double mPixAvg = -1;
+    private double mPixStd = -1;
     private Boolean mBufferOutstanding = true;
     private ExposureBlock mExposureBlock;
     private int mBatteryTemp;
 
-    public static final int BORDER = 5;
+    public static final int BORDER = 0;
+
+    // RenderScript objects
+
+    private ScriptIntrinsicHistogram mScript;
+    private Allocation ain;
+    private Allocation aout;
 
     /**
      * Create a new instance.
@@ -47,37 +61,41 @@ public class RawCameraFrame {
      * @param timestamp The time at which the image was recieved by our app.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, int temp, Camera camera) {
+    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera) {
         mBytes = bytes;
-        Mat byteMat = new MatOfByte(bytes);
+
         mAcquiredTime = timestamp;
-        mBatteryTemp = temp;
         mCamera = camera;
-        mParams = mCamera.getParameters();
+        mParams = camera.getParameters();
         mSize = mParams.getPreviewSize();
-        mPixMax = -1;
 
         mLength = mSize.width * mSize.height;
-        mGreyMat = byteMat
-                .rowRange(0,mLength) // only use greyscale bytes
-                .reshape(1, mSize.height) //
-                .submat(BORDER, mSize.height-BORDER, BORDER, mSize.width-BORDER); // trim off border
     }
 
-    public Mat getGreyMat() {
-        return mGreyMat;
+    @TargetApi(19)
+    public void makeHistogram(RenderScript rs, ScriptIntrinsicHistogram script, Type type) {
+        // create RenderScript allocation objects
+        mScript = script;
+        ain = Allocation.createTyped(rs, type);
+        aout = Allocation.createSized(rs, Element.U32(rs), 256);
     }
 
-    public byte[] getBytes() {
-        return mBytes;
+
+    public Mat getGrayMat() {
+        if (mGrayMat == null) {
+            Mat byteMat = new MatOfByte(mBytes);
+            mGrayMat = byteMat
+                    .rowRange(0, mLength) // only use greyscale bytes
+                    .reshape(1, mSize.height) //
+                    .submat(BORDER, mSize.height - BORDER, BORDER, mSize.width - BORDER); // trim off border
+        }
+        return mGrayMat;
     }
 
     private byte[] createPreviewBuffer() {
-        Camera.Size sz = mParams.getPreviewSize();
-        int imgsize = sz.height*sz.width;
         int formatsize = ImageFormat.getBitsPerPixel(mParams.getPreviewFormat());
-        int bsize = imgsize * formatsize / 8;
-        CFLog.d("Creating new preview buffer; imgsize = " + imgsize + " formatsize = " + formatsize + " bsize = " + bsize);
+        int bsize = mLength * formatsize / 8;
+        CFLog.d("Creating new preview buffer; imgsize = " + mLength + " formatsize = " + formatsize + " bsize = " + bsize);
         return new byte[bsize+1];
     }
 
@@ -89,7 +107,7 @@ public class RawCameraFrame {
             mCamera.addCallbackBuffer(mBytes);
             mBufferOutstanding = false;
             mBytes = null;
-            mGreyMat = null;
+            mGrayMat = null;
         }
     }
 
@@ -111,7 +129,7 @@ public class RawCameraFrame {
             mExposureBlock.clearFrame(this);
             // make sure we null the image buffer so that its memory can be freed.
             mBytes = null;
-            mGreyMat = null;
+            mGrayMat = null;
         }
     }
 
@@ -185,6 +203,10 @@ public class RawCameraFrame {
 
     public int getBatteryTemp() { return mBatteryTemp; }
 
+    public void setBatteryTemp(int batteryTemp) {
+        mBatteryTemp = batteryTemp;
+    }
+
     public Camera getCamera() { return mCamera; }
     public Camera.Size getSize() { return mSize; }
 
@@ -192,32 +214,58 @@ public class RawCameraFrame {
     public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
     private void calculateStatistics() {
-        synchronized (mGreyMat) {
-            if (mPixMax >= 0) {
-                // somebody beat us to it! nothing to do.
-                return;
+        if (mPixMax >= 0) {
+            // somebody beat us to it! nothing to do.
+            return;
+        }
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
+            ain.copy1DRangeFrom(0, mLength, mBytes);
+
+            // use built-in script to create histogram
+            mScript.setOutput(aout);
+            mScript.forEach(ain);
+            int[] hist = new int[256];
+            aout.copyTo(hist);
+
+            int max = 0;
+            int sum = 0;
+            for(int i=0; i<256; i++) {
+                sum += i*hist[i];
+                if(hist[i] != 0) {
+                    max = i;
+                }
             }
-            Core.MinMaxLocResult result = Core.minMaxLoc(mGreyMat);
-            mPixMax = (int) result.maxVal;
-            mPixAvg = Core.mean(mGreyMat).val[0];
+            mPixMax = max;
+            mPixAvg = (double)sum/mLength;
+
+        } else {
+            getGrayMat();
+            synchronized (mGrayMat) {
+                mPixMax = (int) Core.minMaxLoc(mGrayMat).maxVal;
+                mPixAvg = Core.mean(mGrayMat).val[0];
+            }
+            mPixStd = 0; // don't think we actually care about this enough to justify the CPU use
         }
     }
 
     public int getPixMax() {
-        if (mPixMax >= 0) {
-            return mPixMax;
-        } else {
+        if (mPixMax < 0) {
             calculateStatistics();
-            return mPixMax;
         }
+        return mPixMax;
     }
 
     public double getPixAvg() {
-        if (mPixAvg >= 0) {
-            return mPixAvg;
-        } else {
+        if (mPixAvg < 0) {
             calculateStatistics();
-            return mPixAvg;
         }
+        return mPixAvg;
+    }
+
+    public double getPixStd() {
+        if (mPixStd < 0) {
+            calculateStatistics();
+        }
+        return mPixStd;
     }
 }

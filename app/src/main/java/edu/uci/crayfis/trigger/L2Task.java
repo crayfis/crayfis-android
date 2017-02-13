@@ -88,7 +88,7 @@ public class L2Task implements Runnable {
 
         public boolean quality;
         public double background;
-        public double variance;
+        public double std;
 
         public int npix_dropped;
 
@@ -109,7 +109,7 @@ public class L2Task implements Runnable {
             orientation = parcel.createFloatArray();
             quality = parcel.readInt() == 1;
             background = parcel.readDouble();
-            variance = parcel.readDouble();
+            std = parcel.readDouble();
             npix_dropped = parcel.readInt();
             xbn = parcel.readInt();
             pixels = parcel.createTypedArrayList(RecoPixel.CREATOR);
@@ -137,7 +137,7 @@ public class L2Task implements Runnable {
             buf.setOrientZ(orientation[2]);
 
             buf.setAvg(background);
-            buf.setStd(variance);
+            buf.setStd(std);
 
             buf.setXbn(xbn);
 
@@ -167,7 +167,7 @@ public class L2Task implements Runnable {
             dest.writeFloatArray(orientation);
             dest.writeInt(quality ? 1 : 0);
             dest.writeDouble(background);
-            dest.writeDouble(variance);
+            dest.writeDouble(std);
             dest.writeInt(npix_dropped);
             dest.writeInt(xbn);
             dest.writeTypedList(pixels);
@@ -258,45 +258,20 @@ public class L2Task implements Runnable {
         event.orientation = mFrame.getOrientation();
         event.batteryTemp = mFrame.getBatteryTemp();
 
-        // first we measure the background and variance, but to save time only do it for every
-        // stepW or stepH-th pixel
-        final int width = mFrame.getSize().width;
-        final int height = mFrame.getSize().height;
-
-        // When measuring bg and variance, we only look at some pixels
-        // to save time. stepW and stepH are the number of pixels skipped
-        // between samples.
-        final int stepW = 10;
-        final int stepH = 10;
-
-        final byte[] bytes = mFrame.getBytes();
-
-        // calculate variance of the background
-        double variance = 0;
         double avg = mFrame.getPixAvg();
-        int npixels = 0;
-        for (int ix=mFrame.BORDER;ix < width-mFrame.BORDER;ix+= stepW)
-            for (int iy=0;iy<height;iy+=stepH)
-            {
-                int val = bytes[ix+width*iy]&0xFF;
-                variance += (val-avg)*(val - avg);
-                npixels++;
-            }
-        if (npixels>0) {
-            variance = Math.sqrt(variance / ((double) npixels));
-        }
+        double std = mFrame.getPixStd();
 
         // is the data good?
         // TODO: investigate what makes sense here!
-        boolean good_quality = (avg < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
+        boolean good_quality = (avg < CONFIG.getQualityBgAverage() && std < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
         event.background = avg;
-        event.variance = variance;
+        event.std = std;
         event.quality = good_quality;
 
         if (!event.quality) {
             CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + avg);
-            CFLog.w("var req: " + CONFIG.getQualityBgVariance() + ", obs: " + variance);
+            CFLog.w("std req: " + CONFIG.getQualityBgVariance() + ", obs: " + std);
         }
 
         return event;
@@ -305,29 +280,25 @@ public class L2Task implements Runnable {
     ArrayList<RecoPixel> buildPixels() {
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
-        Mat greyMat = mFrame.getGreyMat();
+        Mat grayMat = mFrame.getGrayMat();
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 
-        int width = greyMat.width();
-        int height = greyMat.height();
+        int width = grayMat.width();
+        int height = grayMat.height();
 
 
         ExposureBlock xb = mFrame.getExposureBlock();
 
         // set everything below threshold to zero
-        Imgproc.threshold(greyMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
 
         for(int i=0; i<l2PixelCoords.total(); i++) {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = (int) greyMat.get(iy, ix)[0];
-            CFLog.d("x:" + ix);
-            CFLog.d("y:" + iy);
-            CFLog.d("val:" + val);
-            CFLog.d("thresh:" + xb.L2_threshold);
+            int val = (int) grayMat.get(iy, ix)[0];
 
             RecoPixel p;
 
@@ -345,14 +316,14 @@ public class L2Task implements Runnable {
             p.y = iy+mFrame.BORDER;
             p.val = val;
 
-            Mat greyAvg3 = greyMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
                     Math.max(ix-1,0), Math.min(ix+2,width));
-            Mat greyAvg5 = greyMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
                     Math.max(ix-2,0), Math.min(ix+3,width));
 
-            p.avg_3 = (float)Core.mean(greyAvg3).val[0];
-            p.avg_5 = (float)Core.mean(greyAvg5).val[0];
-            p.near_max = (int)Core.minMaxLoc(greyAvg3).maxVal;
+            p.avg_3 = (float)Core.mean(grayAvg3).val[0];
+            p.avg_5 = (float)Core.mean(grayAvg5).val[0];
+            p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
 
 
             pixels.add(p);

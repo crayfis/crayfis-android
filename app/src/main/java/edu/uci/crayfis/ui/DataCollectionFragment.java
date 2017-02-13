@@ -139,7 +139,7 @@ public class DataCollectionFragment extends CFFragment {
         }
     }
 
-    public static void updateIdleStatus(String status) {
+    public void updateIdleStatus(String status) {
         mIdleStatus = status;
     }
 
