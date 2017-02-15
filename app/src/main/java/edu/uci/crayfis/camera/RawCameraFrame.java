@@ -13,11 +13,13 @@ import android.renderscript.Type;
 import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfInt;
-import org.opencv.core.Range;
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -25,8 +27,6 @@ import edu.uci.crayfis.util.CFLog;
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
  * location of the device and the time the frame was captured.
- *
- * TODO Jodi - Not really sure what ExposureBlock is yet.
  */
 public class RawCameraFrame {
 
@@ -35,16 +35,17 @@ public class RawCameraFrame {
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
+    private int mBatteryTemp;
     private Camera mCamera;
-    private Camera.Parameters mParams;
-    private Camera.Size mSize;
+    private int mFrameWidth;
+    private int mFrameHeight;
     private int mLength;
     private int mPixMax = -1;
     private double mPixAvg = -1;
     private double mPixStd = -1;
-    private Boolean mBufferOutstanding = true;
+    private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
-    private int mBatteryTemp;
+
 
     public static final int BORDER = 0;
 
@@ -61,19 +62,20 @@ public class RawCameraFrame {
      * @param timestamp The time at which the image was recieved by our app.
      * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera) {
+    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera, Camera.Size sz) {
         mBytes = bytes;
 
         mAcquiredTime = timestamp;
         mCamera = camera;
-        mParams = camera.getParameters();
-        mSize = mParams.getPreviewSize();
+        mFrameWidth = sz.width;
+        mFrameHeight = sz.height;
 
-        mLength = mSize.width * mSize.height;
+        mLength = mFrameWidth*mFrameHeight;
+
     }
 
     @TargetApi(19)
-    public void makeHistogram(RenderScript rs, ScriptIntrinsicHistogram script, Type type) {
+    public void useRenderScript(RenderScript rs, ScriptIntrinsicHistogram script, Type type) {
         // create RenderScript allocation objects
         mScript = script;
         ain = Allocation.createTyped(rs, type);
@@ -81,66 +83,84 @@ public class RawCameraFrame {
     }
 
 
+    /**
+     * Return Mat from image buffer, create if necessary
+     *
+     * @return 2D OpenCV::Mat
+     */
     public Mat getGrayMat() {
         if (mGrayMat == null) {
-            Mat byteMat = new MatOfByte(mBytes);
-            mGrayMat = byteMat
-                    .rowRange(0, mLength) // only use greyscale bytes
-                    .reshape(1, mSize.height) //
-                    .submat(BORDER, mSize.height - BORDER, BORDER, mSize.width - BORDER); // trim off border
+
+            synchronized (mBytes) {
+
+                // probably a better way to do this, but this
+                // works for preventing native memory leaks
+
+                Mat mat1 = new MatOfByte(mBytes);
+                Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+                mat1.release();
+                Mat mat3 = mat2.reshape(1, mFrameHeight); // create 2D array
+                mat2.release();
+                mGrayMat = mat3.submat(BORDER, mFrameHeight - BORDER, BORDER, mFrameWidth - BORDER); // trim off border
+                mat3.release();
+
+                // don't need bytes anymore
+                replenishBuffer();
+            }
         }
         return mGrayMat;
     }
 
-    private byte[] createPreviewBuffer() {
-        int formatsize = ImageFormat.getBitsPerPixel(mParams.getPreviewFormat());
-        int bsize = mLength * formatsize / 8;
-        CFLog.d("Creating new preview buffer; imgsize = " + mLength + " formatsize = " + formatsize + " bsize = " + bsize);
-        return new byte[bsize+1];
-    }
-
-    public void retire() {
-        synchronized (mBufferOutstanding) {
-            if (!mBufferOutstanding) {
-                return;
-            }
+    /**
+     * Free memory from mBytes and add as PreviewCallback buffer
+     */
+    private void replenishBuffer() {
+        if(mBytes != null) {
             mCamera.addCallbackBuffer(mBytes);
-            mBufferOutstanding = false;
             mBytes = null;
-            mGrayMat = null;
         }
     }
 
-    public void claim() {
-        // FIXME/TODO: add a check to ensure we have enough memory to allocate a new buffer
-        synchronized (mBufferOutstanding) {
-            if (!mBufferOutstanding) {
-                return;
+    /**
+     * Free memory from Mat
+     */
+    private void releaseMat() {
+
+        if (mGrayMat != null) {
+            synchronized (mGrayMat) {
+                mGrayMat.release();
+                mGrayMat = null;
             }
-            mCamera.addCallbackBuffer(createPreviewBuffer());
-            mBufferOutstanding = false;
         }
+        mBufferClaimed = false;
+    }
+
+    /**
+     * Clear memory from RawCameraFrame
+     */
+    public void retire() {
+        replenishBuffer();
+        releaseMat();
+    }
+
+    /**
+     * Replenish image buffer after sending frame for L2 processing
+     */
+    public void claim() {
+        // FIXME/TODO: add a check to ensure we have enough memory to allocate a new buffer;
+        mBufferClaimed = true;
     }
 
     // notify the XB that we are totally done processing this frame.
     public void clear() {
-        synchronized (mBufferOutstanding) {
-            assert mBufferOutstanding == false;
-            mExposureBlock.clearFrame(this);
-            // make sure we null the image buffer so that its memory can be freed.
-            mBytes = null;
-            mGrayMat = null;
-        }
+        mExposureBlock.clearFrame(this);
+        // make sure we null the image buffer so that its memory can be freed.
+        releaseMat();
     }
 
     public boolean isOutstanding() {
-        try {
-            synchronized (mBytes) {
-                return mBufferOutstanding;
-            }
-        } catch (NullPointerException e) {
-            // mBytes is null, so we certainly don't have a buffer!
-            return false;
+        synchronized (mBufferClaimed) {
+            return !(mBytes == null && (mGrayMat == null || mBufferClaimed));
         }
     }
 
@@ -207,9 +227,6 @@ public class RawCameraFrame {
         mBatteryTemp = batteryTemp;
     }
 
-    public Camera getCamera() { return mCamera; }
-    public Camera.Size getSize() { return mSize; }
-
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
     public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
@@ -220,6 +237,7 @@ public class RawCameraFrame {
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
             ain.copy1DRangeFrom(0, mLength, mBytes);
+            mBytes = null;
 
             // use built-in script to create histogram
             mScript.setOutput(aout);
@@ -243,8 +261,8 @@ public class RawCameraFrame {
             synchronized (mGrayMat) {
                 mPixMax = (int) Core.minMaxLoc(mGrayMat).maxVal;
                 mPixAvg = Core.mean(mGrayMat).val[0];
+                mPixStd = 0; // don't think we actually care about this enough to justify the CPU use
             }
-            mPixStd = 0; // don't think we actually care about this enough to justify the CPU use
         }
     }
 
