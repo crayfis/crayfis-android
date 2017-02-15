@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -115,6 +116,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     // camera and display objects
 	private Camera mCamera;
     private Camera.Parameters mParams;
+    private int mBitsPerPix;
 	private CameraPreviewView mPreview;
 
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
@@ -1133,6 +1135,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 param.setPreviewFpsRange(minfps, maxfps);
             }
             mParams = param;
+            mBitsPerPix = ImageFormat.getBitsPerPixel(mParams.getPreviewFormat());
             mCamera.setParameters(mParams);
             CFLog.d("params: Camera params are " + param.flatten());
 
@@ -1218,26 +1221,24 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 	 */
 	@Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
+
         // record the (approximate) acquisition time
         // FIXME: can we do better than this, perhaps at Camera API level?
         AcquisitionTime acq_time = new AcquisitionTime();
-
-        // sanity check
-        if (bytes == null) return;
 
         try {
             // get a reference to the current xb, so it doesn't change from underneath us
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera);
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera, previewSize.width, previewSize.height, mBitsPerPix);
             frame.setLocation(CFApplication.getLastKnownLocation());
             frame.setOrientation(orientation);
             frame.setBatteryTemp(batteryTemp);
 
             // use RenderScript for every other frame
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && false) {
-                frame.makeHistogram(mRS, mScript, mType);
+                frame.useRenderScript(mRS, mScript, mType);
             }
 
             // try to assign the frame to the current XB
