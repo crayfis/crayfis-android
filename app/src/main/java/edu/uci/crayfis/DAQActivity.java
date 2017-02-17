@@ -26,6 +26,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -80,7 +81,6 @@ import java.util.UUID;
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.AcquisitionTime;
-import edu.uci.crayfis.camera.CameraPreviewView;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
@@ -116,7 +116,8 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     // camera and display objects
 	private Camera mCamera;
     private Camera.Parameters mParams;
-	private CameraPreviewView mPreview;
+    private Camera.Size previewSize;
+    private SurfaceTexture mTexture;
 
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
@@ -141,9 +142,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
     public static final int N_CYCLE_BUFFERS = 10;
 
     DataProtos.RunConfig run_config = null;
-
-	// to keep track of height/width
-	private Camera.Size previewSize;
 
 	// sensors
 	SensorManager mSensorManager;
@@ -777,16 +775,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
         setContentView(R.layout.activity_daq);
         configureNaviation();
 
-		// Create our Preview view and set it as the content of our activity.
-		mPreview = new CameraPreviewView(this, this, true, N_CYCLE_BUFFERS);
-
-        CFLog.d("DAQActivity: Camera preview view is "+mPreview);
-
 		context = getApplicationContext();
-
-		FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
-		preview.addView(mPreview);
-
 
         if (L1cal == null) {
             L1cal = L1Calibrator.getInstance();
@@ -880,7 +869,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
 
         // stop the camera preview and all processing
         if (mCamera != null) {
-            mPreview.setCamera(null);
+
             if (N_CYCLE_BUFFERS>0) {
                 mCamera.setPreviewCallbackWithBuffer(null);
             } else {
@@ -888,6 +877,7 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             }
             mCamera.stopPreview();
             mCamera.release();
+            mTexture = null;
             mParams = null;
             mCamera = null;
 
@@ -1150,21 +1140,27 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
                 mType = tb.create();
             }
 
-            // Create an instance of Camera
-            CFLog.d("before SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
-
             } catch (Exception e) {
                 userErrorMessage(getResources().getString(R.string.camera_error),true);
 
         }
 
         try {
-            // install the camera on the preview so we can start sampling images
-            mPreview.setCamera(mCamera);
+            int bufSize = previewSize.width*previewSize.height* ImageFormat.getBitsPerPixel(mParams.getPreviewFormat())/8;
+            if(N_CYCLE_BUFFERS > 0) {
+                mCamera.setPreviewCallbackWithBuffer(this);
+                for(int i=0; i<N_CYCLE_BUFFERS; i++) {
+                    mCamera.addCallbackBuffer(new byte[bufSize]);
+                }
+            } else {
+                mCamera.setPreviewCallback(this);
+            }
+            mTexture = new SurfaceTexture(10);
+            mCamera.setPreviewTexture(mTexture);
+            mCamera.startPreview();
         }  catch (Exception e) {
             userErrorMessage(getResources().getString(R.string.camera_error),true);
         }
-        CFLog.d("after SetupCamera mpreview = "+mPreview+" mCamera="+mCamera);
 	}
 
     private long last_user_interaction=0;
@@ -1190,8 +1186,6 @@ public class DAQActivity extends AppCompatActivity implements Camera.PreviewCall
             WindowManager.LayoutParams settings = getWindow().getAttributes();
             settings.screenBrightness = screen_brightness > 0 ? 0 : screen_brightness;
             getWindow().setAttributes(settings);
-
-            findViewById(R.id.camera_preview).setVisibility(View.VISIBLE);
             sleep_mode=false;
 
             long current_time = System.currentTimeMillis();
