@@ -62,6 +62,10 @@
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/CrayfisApp"/>
 
+        <service
+            android:name=".DAQService"
+            android:exported="false"></service>
+
         <activity android:name=".usernotif.UserNotificationActivity"
                   android:screenOrientation="portrait"/>
 
