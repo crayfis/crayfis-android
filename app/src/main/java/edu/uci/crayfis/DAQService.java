@@ -730,16 +730,15 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
         // stop the camera preview and all processing
         if (mCamera != null) {
-
+            mCamera.stopPreview();
             if (N_CYCLE_BUFFERS>0) {
                 mCamera.setPreviewCallbackWithBuffer(null);
             } else {
                 mCamera.setPreviewCallback(null);
             }
-            mCamera.stopPreview();
-            mCamera.release();
             mTexture = null;
             mParams = null;
+            mCamera.release();
             mCamera = null;
 
             // clear out any (old) buffers
@@ -1049,8 +1048,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     // UI Feedback //
     /////////////////
 
-
-    public String getDevText() {
+    private String getDevText() {
         CFApplication application = (CFApplication) getApplication();
         String server_address = context.getString(R.string.server_address);
         String server_port = context.getString(R.string.server_port);
@@ -1089,9 +1087,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         return devtxt;
 
     }
-
-    public L1Processor getL1Processor() { return mL1Processor; }
-    public L2Processor getL2Processor() { return mL2Processor; }
 
 
 }

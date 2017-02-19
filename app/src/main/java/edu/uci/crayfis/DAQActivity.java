@@ -254,36 +254,6 @@ public class DAQActivity extends AppCompatActivity {
 
     private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-
-        try {
-            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
-        } catch (Exception e){ }
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
-        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
-
-        final File files[] = getFilesDir().listFiles();
-        int foundFiles = 0;
-        for (int i = 0; i < files.length && foundFiles < 5; i++) {
-            if (files[i].getName().endsWith(".bin")) {
-                new UploadExposureTask((CFApplication) getApplication(),
-                        new UploadExposureService.ServerInfo(this), files[i])
-                        .execute();
-                foundFiles++;
-            }
-        }
-
-        setContentView(R.layout.activity_daq);
-        configureNavigation();
-
-		context = getApplicationContext();
-
-		starttime = System.currentTimeMillis();
-        last_user_interaction = starttime;
-	}
-
     /**
      * Configure the toolbar and navigation drawer.
      */
@@ -335,17 +305,35 @@ public class DAQActivity extends AppCompatActivity {
         mActionBarDrawerToggle.syncState();
     }
 
-
     @Override
-    protected void onStop() {
-        super.onStop();
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-        // give back brightness control
-        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
+        try {
+            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
+        } catch (Exception e){ }
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
+        final File files[] = getFilesDir().listFiles();
+        int foundFiles = 0;
+        for (int i = 0; i < files.length && foundFiles < 5; i++) {
+            if (files[i].getName().endsWith(".bin")) {
+                new UploadExposureTask((CFApplication) getApplication(),
+                        new UploadExposureService.ServerInfo(this), files[i])
+                        .execute();
+                foundFiles++;
+            }
+        }
 
+        setContentView(R.layout.activity_daq);
+        configureNavigation();
+
+        context = getApplicationContext();
+
+        starttime = System.currentTimeMillis();
+        last_user_interaction = starttime;
     }
-
 
 	@Override
 	protected void onResume() {
@@ -362,22 +350,38 @@ public class DAQActivity extends AppCompatActivity {
         DAQService.startService(this);
     }
 
-	@Override
+
+    @Override
 	protected void onPause() {
 		super.onPause();
 
-        DAQService.endService();
+        CFLog.i("onPause()");
 
         mUiUpdateTimer.cancel();
+	}
 
-        CFLog.i("DAQActivity Suspending!");
+    @Override
+    protected void onStop() {
+        super.onStop();
 
-        DataCollectionFragment.getInstance().updateIdleStatus("");
+        CFLog.d("onStop()");
+
+        // give back brightness control
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        CFLog.d("onDestroy()");
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
+        DAQService.endService();
 
-	}
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+    }
 
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
