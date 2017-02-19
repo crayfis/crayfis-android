@@ -56,7 +56,7 @@ public class L2TaskMaxN extends L2Task {
     public static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
     private final int mNpix;
 
-    L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
+    private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
         super(l2processor, frame, null);
         mNpix = npix;
     }
@@ -68,7 +68,7 @@ public class L2TaskMaxN extends L2Task {
             return t1.val - recoPixel.val;
         }
     }
-    void prunePixels(ArrayList<RecoPixel> pixels, int N) {
+    private void prunePixels(ArrayList<RecoPixel> pixels, int N) {
         if (pixels.size() <= N) { return; }
         //Collections.sort(pixels, PIXEL_COMPARATOR);
         pixels.subList(N, pixels.size()).clear();
@@ -90,6 +90,7 @@ public class L2TaskMaxN extends L2Task {
 
         Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
+        threshMat.release();
 
         for(int i=0; i<l2PixelCoords.total(); i++) {
 
@@ -110,8 +111,8 @@ public class L2TaskMaxN extends L2Task {
             }
 
             // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+mFrame.BORDER;
-            p.y = iy+mFrame.BORDER;
+            p.x = ix+RawCameraFrame.BORDER;
+            p.y = iy+RawCameraFrame.BORDER;
             p.val = val;
 
             //
@@ -124,6 +125,8 @@ public class L2TaskMaxN extends L2Task {
             p.avg_5 = (float)Core.mean(grayAvg5).val[0];
             p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
 
+            grayAvg3.release();
+            grayAvg5.release();
 
             pixels.add(p);
             Collections.sort(pixels, PIXEL_COMPARATOR);

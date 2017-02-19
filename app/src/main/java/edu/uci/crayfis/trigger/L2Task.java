@@ -293,6 +293,7 @@ public class L2Task implements Runnable {
         // set everything below threshold to zero
         Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
+        threshMat.release();
 
         for(int i=0; i<l2PixelCoords.total(); i++) {
             double[] xy = l2PixelCoords.get(i,0);
@@ -312,8 +313,8 @@ public class L2Task implements Runnable {
             }
 
             // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+mFrame.BORDER;
-            p.y = iy+mFrame.BORDER;
+            p.x = ix+RawCameraFrame.BORDER;
+            p.y = iy+RawCameraFrame.BORDER;
             p.val = val;
 
             Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
@@ -325,17 +326,20 @@ public class L2Task implements Runnable {
             p.avg_5 = (float)Core.mean(grayAvg5).val[0];
             p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
 
+            grayAvg3.release();
+            grayAvg5.release();
 
             pixels.add(p);
 
         }
+        l2PixelCoords.release();
 
         return pixels;
     }
 
     @Override
     public void run() {
-        ++mL2Processor.mL2Count;
+        ++L2Processor.mL2Count;
 
         ExposureBlock xb = mFrame.getExposureBlock();
         xb.L2_processed++;
