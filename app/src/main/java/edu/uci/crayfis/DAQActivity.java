@@ -264,6 +264,7 @@ public class DAQActivity extends AppCompatActivity {
 
     public void clickedSettings() {
 
+        DAQService.endService();
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
