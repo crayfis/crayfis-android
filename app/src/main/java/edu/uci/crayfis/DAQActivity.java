@@ -84,24 +84,280 @@ public class DAQActivity extends AppCompatActivity {
     // FIXME This is wrong to be static.
 	public static int L2busy = 0;
 
-    private L1Processor mL1Processor = null;
-    private L2Processor mL2Processor = null;
     private L1Calibrator L1cal = null;
 
 	// L1 hit threshold
 	long starttime;
 
-    // store value of most recently calculated FPS
-    private double last_fps = 0;
-
 	Context context;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
+
+    ////////////////////////
+    // Activity lifecycle //
+    ////////////////////////
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        try {
+            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
+        } catch (Exception e){ }
+        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
+
+        final File files[] = getFilesDir().listFiles();
+        int foundFiles = 0;
+        for (int i = 0; i < files.length && foundFiles < 5; i++) {
+            if (files[i].getName().endsWith(".bin")) {
+                new UploadExposureTask((CFApplication) getApplication(),
+                        new UploadExposureService.ServerInfo(this), files[i])
+                        .execute();
+                foundFiles++;
+            }
+        }
+
+        setContentView(R.layout.activity_daq);
+        configureNavigation();
+
+        context = getApplicationContext();
+
+        starttime = System.currentTimeMillis();
+        last_user_interaction = starttime;
+    }
+
+    @Override
+    protected void onPostCreate(final Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        mActionBarDrawerToggle.syncState();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
+
+        if (mUiUpdateTimer != null) {
+            mUiUpdateTimer.cancel();
+        }
+        mUiUpdateTimer = new Timer();
+        mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000L, 1000L);
+
+        DAQService.startService(this);
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        CFLog.i("onPause()");
+
+        mUiUpdateTimer.cancel();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        CFLog.d("onStop()");
+
+        // give back brightness control
+        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        CFLog.d("onDestroy()");
+
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+
+        DAQService.endService();
+
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+    }
+
+
+    /////////////////////////
+    // Toolbar and Drawers //
+    /////////////////////////
+
+
+
+    @Override
+    public boolean onCreateOptionsMenu(final Menu menu) {
+        getMenuInflater().inflate(R.menu.daq_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(final MenuItem item) {
+        // Check if the drawer toggle has already handled the click.  The hamburger icon is an option item.
+        if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+
+        switch(item.getItemId()) {
+            case R.id.menu_settings:
+                clickedSettings();
+                return true;
+            case R.id.menu_about:
+                clickedAbout();
+                return true;
+            case R.id.menu_sleep:
+                clickedSleep();
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
+    /**
+     * Configure the toolbar and navigation drawer.
+     */
+    private void configureNavigation() {
+        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
+        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
+        drawerLayout.setDrawerListener(listener);
+        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
+        navItems.setAdapter(new NavDrawerAdapter(this));
+        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
+                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
+            }
+        });
+
+        // When the device is not registered, this should take the user to the log in page.
+        findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                if (CONFIG.getAccountName() == null) {
+                    NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
+                    drawerLayout.closeDrawers();
+                }
+            }
+        });
+
+        final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
+        navItems.setAdapter(navItemsAdapter);
+        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+            @Override
+            public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
+                navItemsAdapter.notifyDataSetChanged();
+            }
+        });
+        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+    }
 
     public void clickedSettings() {
 
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
+
+    public void clickedSleep()
+    {
+        // go to sleep
+        goToSleep();
+    }
+
+    public void clickedAbout() {
+
+        final SpannableString s = new SpannableString(
+                "crayfis.io/about.html");
+
+        final TextView tx1 = new TextView(this);
+
+        // FIXME: Jodi - There has to be a better way, but this works.... Move these into the fragments or something....
+        final List fragments = getSupportFragmentManager().getFragments();
+        if (fragments.size() == 0) {
+            return;
+        }
+
+        final Fragment activeFragment = (Fragment) fragments.get(0);
+        if (activeFragment instanceof LayoutData) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
+                    +getResources().getString(R.string.help_data)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutHist) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s
+            );
+        } else if (activeFragment instanceof LayoutTime) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+
+                    + s);
+        } else if (activeFragment instanceof LayoutLogin) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutLeader) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutDeveloper) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_devel)+"\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else if (activeFragment instanceof LayoutBlack) {
+            tx1.setText(getResources().getString(R.string.crayfis_about)+
+                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
+                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+                    + s);
+        } else {
+            tx1.setText("No more further information available at this time.");
+        }
+
+
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
+//            tx1.setText(getResources().getString(R.string.crayfis_about)+
+//                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
+//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+//                    + s);
+//
+//
+//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
+
+        tx1.setAutoLinkMask(RESULT_OK);
+        tx1.setMovementMethod(LinkMovementMethod.getInstance());
+        tx1.setTextColor(Color.WHITE);
+        tx1.setBackgroundColor(Color.BLACK);
+        Linkify.addLinks(s, Linkify.WEB_URLS);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle( getResources().getString(R.string.about_title)).setCancelable(false)
+                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                    }
+                })
+                .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(),
+                                NavDrawerAdapter.Type.FEEDBACK.getTitle());
+                    }
+                })
+                .setView(tx1).show();
+    }
 
     private String last_update_URL = "";
     public void showUpdateURL(String url)
@@ -154,263 +410,16 @@ public class DAQActivity extends AppCompatActivity {
 
         sleep_mode=true;
         sleeping_since = System.currentTimeMillis();
-        cands_before_sleeping = mL2Processor.mL2Count;
+        cands_before_sleeping = L2Processor.mL2Count;
     }
 
-    public void clickedSleep()
-    {
-        // go to sleep
-        goToSleep();
-    }
 
-	public void clickedAbout() {
-
-		final SpannableString s = new SpannableString(
-				"crayfis.io/about.html");
-
-		final TextView tx1 = new TextView(this);
-
-        // FIXME: Jodi - There has to be a better way, but this works.... Move these into the fragments or something....
-        final List fragments = getSupportFragmentManager().getFragments();
-        if (fragments.size() == 0) {
-            return;
-        }
-
-        final Fragment activeFragment = (Fragment) fragments.get(0);
-        if (activeFragment instanceof LayoutData) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
-                    +getResources().getString(R.string.help_data)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutHist) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                            "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
-                            getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                            + s
-            );
-        } else if (activeFragment instanceof LayoutTime) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-
-                    + s);
-        } else if (activeFragment instanceof LayoutLogin) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutLeader) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutDeveloper) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_devel)+"\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutBlack) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else {
-            tx1.setText("No more further information available at this time.");
-        }
-
-
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s);
-//
-//
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
-
-		tx1.setAutoLinkMask(RESULT_OK);
-		tx1.setMovementMethod(LinkMovementMethod.getInstance());
-        tx1.setTextColor(Color.WHITE);
-        tx1.setBackgroundColor(Color.BLACK);
-		Linkify.addLinks(s, Linkify.WEB_URLS);
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle( getResources().getString(R.string.about_title)).setCancelable(false)
-				.setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-					}
-				})
-                .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(),
-                                NavDrawerAdapter.Type.FEEDBACK.getTitle());
-                    }
-                })
-				.setView(tx1).show();
-	}
 
     // last time we warned about the location
     private long last_location_warning=0;
 
 
     private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
-
-    /**
-     * Configure the toolbar and navigation drawer.
-     */
-    private void configureNavigation() {
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
-        final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
-
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
-        final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
-        drawerLayout.setDrawerListener(listener);
-        final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
-        navItems.setAdapter(new NavDrawerAdapter(this));
-        navItems.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
-                NavHelper.doNavClick(DAQActivity.this, view, listener, drawerLayout);
-            }
-        });
-
-        // When the device is not registered, this should take the user to the log in page.
-        findViewById(R.id.user_status).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                if (CONFIG.getAccountName() == null) {
-                    NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
-                    drawerLayout.closeDrawers();
-                }
-            }
-        });
-
-        final NavDrawerAdapter navItemsAdapter = new NavDrawerAdapter(this);
-        navItems.setAdapter(navItemsAdapter);
-        final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        sharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-                navItemsAdapter.notifyDataSetChanged();
-            }
-        });
-        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
-    }
-
-    @Override
-    protected void onPostCreate(final Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        mActionBarDrawerToggle.syncState();
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        try {
-            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
-        } catch (Exception e){ }
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
-        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
-
-        final File files[] = getFilesDir().listFiles();
-        int foundFiles = 0;
-        for (int i = 0; i < files.length && foundFiles < 5; i++) {
-            if (files[i].getName().endsWith(".bin")) {
-                new UploadExposureTask((CFApplication) getApplication(),
-                        new UploadExposureService.ServerInfo(this), files[i])
-                        .execute();
-                foundFiles++;
-            }
-        }
-
-        setContentView(R.layout.activity_daq);
-        configureNavigation();
-
-        context = getApplicationContext();
-
-        starttime = System.currentTimeMillis();
-        last_user_interaction = starttime;
-    }
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-
-        CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
-
-        if (mUiUpdateTimer != null) {
-            mUiUpdateTimer.cancel();
-        }
-        mUiUpdateTimer = new Timer();
-        mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000L, 1000L);
-
-        DAQService.startService(this);
-    }
-
-
-    @Override
-	protected void onPause() {
-		super.onPause();
-
-        CFLog.i("onPause()");
-
-        mUiUpdateTimer.cancel();
-	}
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        CFLog.d("onStop()");
-
-        // give back brightness control
-        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        CFLog.d("onDestroy()");
-
-        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
-
-        DAQService.endService();
-
-        DataCollectionFragment.getInstance().updateIdleStatus("");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(final Menu menu) {
-        getMenuInflater().inflate(R.menu.daq_activity, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        // Check if the drawer toggle has already handled the click.  The hamburger icon is an option item.
-        if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
-
-        switch(item.getItemId()) {
-            case R.id.menu_settings:
-                clickedSettings();
-                return true;
-            case R.id.menu_about:
-                clickedAbout();
-                return true;
-            case R.id.menu_sleep:
-                clickedSleep();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 
     private void userErrorMessage(String mess, boolean fatal)
     {
@@ -436,6 +445,19 @@ public class DAQActivity extends AppCompatActivity {
     private long last_user_interaction=0;
     private boolean sleep_mode = false;
     private float screen_brightness = 0;
+
+    //FIXME: THIS CLASS IS WAY TOO BIG
+    private final class UiVisibilityListener implements View.OnSystemUiVisibilityChangeListener {
+
+        @Override
+        public void onSystemUiVisibilityChange(final int visibility) {
+            if (visibility == 0) {
+                // This is so the user doesn't have to double tap the screen to get back to normal.
+                onUserInteraction();
+            }
+        }
+    }
+
     @Override
     public void onUserInteraction()
     {
@@ -575,14 +597,14 @@ public class DAQActivity extends AppCompatActivity {
 
                         }
 
-                        if (mL2Processor != null) {
-                            final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
-                                    .setTotalEvents(mL2Processor.mL2Count)
-                                    .setTotalPixels((long)mL1Processor.mL1CountData * cameraSize.height * cameraSize.width)
-                                    .setTotalFrames(mL1Processor.mL1CountData)
-                                    .build();
-                            CFApplication.setCollectionStatus(dstatus);
-                        }
+
+                        final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
+                                .setTotalEvents(L2Processor.mL2Count)
+                                .setTotalPixels((long)L1Processor.mL1CountData * cameraSize.height * cameraSize.width)
+                                .setTotalFrames(L1Processor.mL1CountData)
+                                .build();
+                        CFApplication.setCollectionStatus(dstatus);
+
 
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
@@ -635,15 +657,4 @@ public class DAQActivity extends AppCompatActivity {
         }
     }
 
-    //FIXME: THIS CLASS IS WAY TOO BIG
-    private final class UiVisibilityListener implements View.OnSystemUiVisibilityChangeListener {
-
-        @Override
-        public void onSystemUiVisibilityChange(final int visibility) {
-            if (visibility == 0) {
-                // This is so the user doesn't have to double tap the screen to get back to normal.
-                onUserInteraction();
-            }
-        }
-    }
 }
