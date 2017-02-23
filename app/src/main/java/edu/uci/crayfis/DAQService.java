@@ -61,8 +61,10 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         Runnable {
 
 
-    private final CFConfig CONFIG = CFConfig.getInstance();
+    private static final CFConfig CONFIG = CFConfig.getInstance();
+    private static CFApplication mApplication;
     private CFApplication.AppBuild mAppBuild;
+    private static String upload_url;
 
 
     /////////////////////////////////////////////
@@ -119,21 +121,32 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     ////////////////////////////
 
     private void startDAQ() throws InterruptedException {
-        CFApplication application = (CFApplication) getApplication();
+        mApplication = (CFApplication) getApplication();
+        context = getApplicationContext();
 
-        mL2Processor = new L2Processor(application);
-        mL1Processor = new L1Processor(application);
+        String server_address = context.getString(R.string.server_address);
+        String server_port = context.getString(R.string.server_port);
+        String upload_uri = context.getString(R.string.upload_uri);
+        boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+        String upload_proto;
+        if (force_https) {
+            upload_proto = "https://";
+        } else {
+            upload_proto = "http://";
+        }
+        upload_url = upload_proto + server_address+":"+server_port+upload_uri;
+
+        mL2Processor = new L2Processor(mApplication);
+        mL1Processor = new L1Processor(mApplication);
         mL1Processor.setL2Processor(mL2Processor);
 
-        mAppBuild = application.getBuildInformation();
+        mAppBuild = mApplication.getBuildInformation();
 
         // get the grav/accelerometer, if any
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-        context = getApplicationContext();
 
         if (L1cal == null) {
             L1cal = L1Calibrator.getInstance();
@@ -477,13 +490,13 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     //////////////
 
     // New API
-    GoogleApiClient mGoogleApiClient;
-    Location mLastLocation;
-    LocationRequest mLocationRequest;
+    private GoogleApiClient mGoogleApiClient;
+    private static Location mLastLocation;
+    private LocationRequest mLocationRequest;
 
     // Old API
-    android.location.LocationListener mLocationListener = null;
-    Location mLastLocationDeprecated;
+    private android.location.LocationListener mLocationListener = null;
+    private static Location mLastLocationDeprecated;
 
     @Override
     public void onAccuracyChanged(Sensor arg0, int arg1) {
@@ -633,17 +646,18 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
     // camera and display objects
     private Camera mCamera;
-    private Camera.Parameters mParams;
-    private Camera.Size previewSize;
+    private static Camera.Parameters mParams;
+    private static Camera.Size previewSize;
     private SurfaceTexture mTexture;
     private static final int N_CYCLE_BUFFERS = 10;
 
     /**
      * Sets up the camera if it is not already setup.
      */
-    private void setUpAndConfigureCamera() {
+    private synchronized void setUpAndConfigureCamera() {
         // Open and configure the camera
         CFLog.d("setUpAndConfigureCamera()");
+        if(mCamera != null) return;
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
@@ -725,28 +739,27 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         }
     }
 
-    private void unSetupCamera() {
-        CFLog.d(" DAQActivity: unsetup camera called. mCamera ="+mCamera);
+    private synchronized void unSetupCamera() {
+
+        if(mCamera == null) return;
 
         // stop the camera preview and all processing
-        if (mCamera != null) {
-            mCamera.stopPreview();
-            if (N_CYCLE_BUFFERS>0) {
-                mCamera.setPreviewCallbackWithBuffer(null);
-            } else {
-                mCamera.setPreviewCallback(null);
-            }
-            mTexture = null;
-            mParams = null;
-            mCamera.release();
-            mCamera = null;
-
-            // clear out any (old) buffers
-            //l2thread.clearQueue();
-            // FIXME: should we abort any AsyncTasks in the L1/L2 queue that haven't executed yet?
-
-            CFLog.d(" DAQActivity: unsetup camera");
+        mCamera.stopPreview();
+        if (N_CYCLE_BUFFERS>0) {
+            mCamera.setPreviewCallbackWithBuffer(null);
+        } else {
+            mCamera.setPreviewCallback(null);
         }
+        mTexture = null;
+        mParams = null;
+        mCamera.release();
+        mCamera = null;
+
+        // clear out any (old) buffers
+        //l2thread.clearQueue();
+        // FIXME: should we abort any AsyncTasks in the L1/L2 queue that haven't executed yet?
+
+        CFLog.d(" DAQActivity: unsetup camera");
     }
 
 
@@ -824,7 +837,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     // Frame processing //
     //////////////////////
 
-    private ExposureBlockManager xbManager;
+    private static ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
     // helper that dispatches L2 inputs to be processed by the L2 trigger.
@@ -832,8 +845,8 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
     private L1Calibrator L1cal = null;
 
-    private FrameHistory<Long> frame_times;
-    private double target_L1_eff;
+    private static FrameHistory<Long> frame_times;
+    private static double target_L1_eff;
 
     // L1 hit threshold
     long starttime;
@@ -842,7 +855,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     public static final int fps_update_interval = 20;
 
     // store value of most recently calculated FPS
-    private double last_fps = 0;
+    private static double last_fps = 0;
 
     // Thread for NTP updates
     private SntpUpdateThread ntpThread;
@@ -913,7 +926,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         }
     }
 
-    private double updateFPS() {
+    private static double updateFPS() {
         long now = System.nanoTime() - CFApplication.getStartTimeNano();
         if (frame_times != null) {
             synchronized(frame_times) {
@@ -979,10 +992,10 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     public final int batteryStartTemp = 380;
 
     private final long battery_check_wait = 10000; // ms
-    private float batteryPct;
-    private int batteryTemp;
-    private boolean batteryOverheated = false;
-    private long last_battery_check_time;
+    private static float batteryPct;
+    private static int batteryTemp;
+    private static boolean batteryOverheated = false;
+    private static long last_battery_check_time;
 
 
     private long last_user_interaction=0;
@@ -1048,23 +1061,16 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     // UI Feedback //
     /////////////////
 
-    private String getDevText() {
-        CFApplication application = (CFApplication) getApplication();
-        String server_address = context.getString(R.string.server_address);
-        String server_port = context.getString(R.string.server_port);
-        String upload_uri = context.getString(R.string.upload_uri);
-        boolean force_https = context.getResources().getBoolean(R.bool.force_https);
-        String upload_proto;
-        if (force_https) {
-            upload_proto = "https://";
-        } else {
-            upload_proto = "http://";
+    public static String getDevText() {
+
+        if(mApplication.getApplicationState() != CFApplication.State.DATA) {
+            updateFPS();
         }
-        String upload_url = upload_proto + server_address+":"+server_port+upload_uri;
+
         String devtxt = "@@ Developer View @@\n"
-                + "State: " + application.getApplicationState() + "\n"
+                + "State: " + mApplication.getApplicationState() + "\n"
                 + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                + "total frames - L1: " + mL1Processor.mL1Count + " (L2: " + mL2Processor.mL2Count + ")\n"
+                + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
                 + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
                 + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                 + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
@@ -1078,7 +1084,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         }
         ExposureBlock xb = xbManager.getCurrentExposureBlock();
         devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
-        devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
+        devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
                 + "Upload server = " + upload_url + "\n"
                 + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
                 + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"

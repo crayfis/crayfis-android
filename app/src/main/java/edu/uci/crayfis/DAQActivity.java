@@ -637,8 +637,7 @@ public class DAQActivity extends AppCompatActivity {
 
 
                         if (mLayoutDeveloper.mTextView != null) {
-                            String devtxt = "";
-                            mLayoutDeveloper.mTextView.setText(devtxt);
+                            mLayoutDeveloper.mTextView.setText(DAQService.getDevText());
                         }
                     }
 
