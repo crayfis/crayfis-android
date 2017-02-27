@@ -24,7 +24,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Camera;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -40,7 +39,6 @@ import android.text.util.Linkify;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -96,6 +94,9 @@ public class DAQActivity extends AppCompatActivity {
     // Activity lifecycle //
     ////////////////////////
 
+    private long sleeping_since=0;
+    private int cands_before_sleeping=0;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,7 +124,6 @@ public class DAQActivity extends AppCompatActivity {
         context = getApplicationContext();
 
         starttime = System.currentTimeMillis();
-        last_user_interaction = starttime;
     }
 
     @Override
@@ -136,13 +136,22 @@ public class DAQActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        CFLog.d("DAQActivity onResume: last user interaction="+last_user_interaction);
+        CFLog.d("DAQActivity onResume");
 
         if (mUiUpdateTimer != null) {
             mUiUpdateTimer.cancel();
         }
         mUiUpdateTimer = new Timer();
         mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000L, 1000L);
+
+        if(sleeping_since > 0) {
+            long current_time = System.currentTimeMillis();
+            float time_sleeping = (current_time - sleeping_since) * (float) 1e-3;
+            int cand_sleeping = L2Processor.mL2Count - cands_before_sleeping;
+            if (time_sleeping > 5.0) {
+                Toast.makeText(this, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
+            }
+        }
 
         DAQService.startService(this);
     }
@@ -154,6 +163,8 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.i("onPause()");
 
+        sleeping_since = System.currentTimeMillis();
+        cands_before_sleeping = L2Processor.mL2Count;
         mUiUpdateTimer.cancel();
     }
 
@@ -165,6 +176,7 @@ public class DAQActivity extends AppCompatActivity {
 
         // give back brightness control
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
+
     }
 
     @Override
@@ -206,9 +218,6 @@ public class DAQActivity extends AppCompatActivity {
                 return true;
             case R.id.menu_about:
                 clickedAbout();
-                return true;
-            case R.id.menu_sleep:
-                clickedSleep();
                 return true;
 
             default:
@@ -268,12 +277,6 @@ public class DAQActivity extends AppCompatActivity {
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
-
-    public void clickedSleep()
-    {
-        // go to sleep
-        goToSleep();
-    }
 
     public void clickedAbout() {
 
@@ -383,42 +386,6 @@ public class DAQActivity extends AppCompatActivity {
                 .setView(tx1).show();
     }
 
-    private long sleeping_since=0;
-    private int cands_before_sleeping=0;
-    public void goToSleep()
-    {
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        getSupportActionBar().hide();
-
-        try {
-            screen_brightness = getWindow().getAttributes().screenBrightness;
-           // CFLog.d(" saving screen brightness of "+screen_brightness);
-        } catch (Exception e) {
-            CFLog.d(" Unable to find screen brightness");
-            screen_brightness = -1;
-        }
-
-        ((DrawerLayout) findViewById(R.id.drawer_layout)).closeDrawers();
-        NavHelper.setFragment(this, LayoutBlack.getInstance(), NavDrawerAdapter.Type.LIVE_VIEW.getTitle());
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
-            // Newer devices allow us to completely hide the soft control buttons.
-            // Doesn't matter what view is used here, we just need the methods in the View class.
-            final View view = findViewById(R.id.fragment_container);
-            view.setOnSystemUiVisibilityChangeListener(new UiVisibilityListener());
-            view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
-        }
-
-        sleep_mode=true;
-        sleeping_since = System.currentTimeMillis();
-        cands_before_sleeping = L2Processor.mL2Count;
-    }
-
-
-
-    // last time we warned about the location
-    private long last_location_warning=0;
-
 
     private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
 
@@ -443,54 +410,6 @@ public class DAQActivity extends AppCompatActivity {
 
 
 
-    private long last_user_interaction=0;
-    private boolean sleep_mode = false;
-    private float screen_brightness = 0;
-
-    //FIXME: THIS CLASS IS WAY TOO BIG
-    private final class UiVisibilityListener implements View.OnSystemUiVisibilityChangeListener {
-
-        @Override
-        public void onSystemUiVisibilityChange(final int visibility) {
-            if (visibility == 0) {
-                // This is so the user doesn't have to double tap the screen to get back to normal.
-                onUserInteraction();
-            }
-        }
-    }
-
-    @Override
-    public void onUserInteraction()
-    {
-        last_user_interaction=System.currentTimeMillis();
-       // CFLog.d(" The UserActivity at time= "+last_user_interaction);
-        if (sleep_mode)
-        {
-            //wake up
-            getSupportActionBar().show();
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
-
-          //  CFLog.d(" Switching out of INACTIVE pane to pane "+previous_item+" and setting brightness to "+screen_brightness);
-
-            // Set the screen brightness to what we have saved.  We should have retrieved a value less than
-            // 0, meaning the user themselves set their screen brightness.  Failure on that, let's err on the side
-            // of caution and not blind them at 3am.  0 means super dark, not off.
-            WindowManager.LayoutParams settings = getWindow().getAttributes();
-            settings.screenBrightness = screen_brightness > 0 ? 0 : screen_brightness;
-            getWindow().setAttributes(settings);
-            sleep_mode=false;
-
-            long current_time = System.currentTimeMillis();
-            float time_sleeping = (current_time-sleeping_since)*(float)1e-3;
-            int cand_sleeping = 0; //mL2Processor.mL2Count-cands_before_sleeping;
-            if (time_sleeping > 5.0)
-            {
-                Toast.makeText(this, "Your device saw "+cand_sleeping+" particle candidates in the last "+ String.format("%1.1f",time_sleeping)+"s",Toast.LENGTH_LONG).show();
-            }
-        }
-    }
-
     /**
      * Task that gets called during the UI update tick.
      */
@@ -501,19 +420,6 @@ public class DAQActivity extends AppCompatActivity {
             @Override
             public void run() {
                 final CFApplication application = (CFApplication) getApplication();
-                SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(application);
-                boolean disable_sleep = localPrefs.getBoolean("prefDisableScreenSaver", false);
-
-                //CFLog.d(" The last recorded user interaction was at "+((last_user_interaction - System.currentTimeMillis())/1e3)+" sec ago");
-                if (!disable_sleep && !sleep_mode
-                        && (System.currentTimeMillis() - last_user_interaction) >= CFApplication.SLEEP_TIMEOUT_MS
-                        && (application.getApplicationState() == CFApplication.State.DATA
-                            || application.getApplicationState() == CFApplication.State.IDLE)
-                        ) // wait 1m after going into DATA or IDLE mode
-                {
-                    goToSleep();
-
-                }
 
                 // turn on developer options if it has been selected
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
