@@ -84,8 +84,7 @@ public class DAQActivity extends AppCompatActivity {
 
     private L1Calibrator L1cal = null;
 
-	// L1 hit threshold
-	long starttime;
+
 
 	Context context;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
@@ -123,7 +122,7 @@ public class DAQActivity extends AppCompatActivity {
 
         context = getApplicationContext();
 
-        starttime = System.currentTimeMillis();
+        DAQService.startService(this);
     }
 
     @Override
@@ -137,6 +136,9 @@ public class DAQActivity extends AppCompatActivity {
         super.onResume();
 
         CFLog.d("DAQActivity onResume");
+
+        // in case this isn't already running
+        DAQService.startService(this);
 
         if (mUiUpdateTimer != null) {
             mUiUpdateTimer.cancel();
@@ -152,8 +154,6 @@ public class DAQActivity extends AppCompatActivity {
                 Toast.makeText(this, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
             }
         }
-
-        DAQService.startService(this);
     }
 
 

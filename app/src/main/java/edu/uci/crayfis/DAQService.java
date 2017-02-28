@@ -73,12 +73,19 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     private HandlerThread mBackgroundThread;
     private Handler mBackgroundHandler;
     private static boolean mRunService = true;
+    private static boolean mIsRunning = false;
 
     public DAQService() {
         super("DAQService");
     }
 
     public static void startService(Context context) {
+
+        // do nothing if DAQ is already running
+        if(mIsRunning) { return; }
+
+        CFLog.d("DAQService: starting");
+
         mRunService = true;
         Intent intent = new Intent(context, DAQService.class);
         intent.setAction(ACTION_START);
@@ -86,7 +93,22 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     }
 
     public static void endService() {
+
+        CFLog.d("DAQService: ending");
+
+        // FIXME: this is a bad way to do this
         mRunService = false;
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+
+        // check to make sure the service has actually exited before proceeding
+        while(mIsRunning) {
+            try {
+                Thread.sleep(100L);
+            } catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        CFLog.d("DAQService: stopped");
     }
 
     @Override
@@ -119,6 +141,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     ////////////////////////////
 
     private void startDAQ() throws InterruptedException {
+        mIsRunning = true;
         mApplication = (CFApplication) getApplication();
         context = getApplicationContext();
 
@@ -207,6 +230,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         mBatteryCheckTimer.cancel();
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
+        mIsRunning = false;
     }
 
     @Override
@@ -993,6 +1017,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         @Override
         public void run() {
             final CFApplication application = (CFApplication) getApplication();
+            last_battery_check_time = System.currentTimeMillis();
 
             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = context.registerReceiver(null, ifilter);
