@@ -5,7 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -20,7 +19,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.preference.PreferenceManager;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
@@ -152,14 +150,13 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             L1cal = L1Calibrator.getInstance();
         }
         if (frame_times == null) {
-            frame_times = new FrameHistory<Long>(100);
+            frame_times = new FrameHistory<>(100);
         }
 
         starttime = System.currentTimeMillis();
         last_battery_check_time = starttime;
         batteryPct = -1; // indicate no data yet
         batteryTemp = -1;
-        last_user_interaction = starttime;
 
         newLocation(new Location("BLANK"), false);
 
@@ -180,8 +177,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             throw new RuntimeException(
                     "Bug, camera should not be initialized already");
 
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 
         CFLog.d(" Build RenderScript");
         mRS = RenderScript.create(context);
@@ -391,8 +386,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
      */
     private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
-        // start the user interaction clock
-        last_user_interaction = System.currentTimeMillis();
         switch (previousState) {
             /*
             case INIT:
@@ -525,7 +518,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     private void newLocation(Location location, boolean deprecated)
     {
 
-        if (deprecated==false)
+        if (!deprecated)
         {
             //  Google location API
             // as long as it's valid, update the data
@@ -708,12 +701,14 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
             // configure RenderScript if available
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                mScript = ScriptIntrinsicHistogram.create(mRS, Element.U8(mRS));
+                CFLog.i("Configuring RenderScript");
                 Type.Builder tb = new Type.Builder(mRS, Element.createPixel(mRS, Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV));
                 tb.setX(previewSize.width)
                         .setY(previewSize.height)
                         .setYuvFormat(param.getPreviewFormat());
-                mType = tb.create();
+                Type type = tb.create();
+                ScriptIntrinsicHistogram script = ScriptIntrinsicHistogram.create(mRS, Element.U8(mRS));
+                RawCameraFrame.useRenderScript(mRS, type, script);
             }
 
         } catch (Exception e) {
@@ -860,12 +855,8 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     // Thread for NTP updates
     private SntpUpdateThread ntpThread;
 
-    Context context;
-
-    // RenderScript objects
+    private Context context;
     private RenderScript mRS;
-    private Type mType;
-    private ScriptIntrinsicHistogram mScript;
 
 
 
@@ -888,11 +879,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             frame.setLocation(CFApplication.getLastKnownLocation());
             frame.setOrientation(orientation);
             frame.setBatteryTemp(batteryTemp);
-
-            // use RenderScript for every other frame
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && false) {
-                frame.useRenderScript(mRS, mScript, mType);
-            }
 
             // try to assign the frame to the current XB
             boolean assigned = xb.assignFrame(frame);
@@ -998,7 +984,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     private static long last_battery_check_time;
 
 
-    private long last_user_interaction=0;
 
     /**
      * Task that gets called during the UI update tick.

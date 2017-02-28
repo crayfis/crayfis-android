@@ -1,7 +1,6 @@
 package edu.uci.crayfis.camera;
 
 import android.annotation.TargetApi;
-import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
@@ -46,9 +45,9 @@ public class RawCameraFrame {
 
     // RenderScript objects
 
-    private ScriptIntrinsicHistogram mScript;
-    private Allocation ain;
-    private Allocation aout;
+    private static RenderScript mRS;
+    private static Type mType;
+    private static ScriptIntrinsicHistogram mScript;
 
     /**
      * Create a new instance.
@@ -70,11 +69,10 @@ public class RawCameraFrame {
     }
 
     @TargetApi(19)
-    public void useRenderScript(RenderScript rs, ScriptIntrinsicHistogram script, Type type) {
-        // create RenderScript allocation objects
+    public static void useRenderScript(RenderScript rs, Type type, ScriptIntrinsicHistogram script) {
+        mRS = rs;
+        mType = type;
         mScript = script;
-        ain = Allocation.createTyped(rs, type);
-        aout = Allocation.createSized(rs, Element.U32(rs), 256);
     }
 
 
@@ -232,13 +230,18 @@ public class RawCameraFrame {
             return;
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
-            ain.copy1DRangeFrom(0, mLength, mBytes);
+            // create RenderScript allocation objects
+            Allocation ain = Allocation.createTyped(mRS, mType, Allocation.USAGE_SCRIPT);
+            Allocation aout = Allocation.createSized(mRS, Element.U32(mRS), 256, Allocation.USAGE_SCRIPT);
+            ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
+            int[] hist = new int[256];
 
             // use built-in script to create histogram
-            mScript.setOutput(aout);
-            mScript.forEach(ain);
-            int[] hist = new int[256];
-            aout.copyTo(hist);
+            synchronized(mScript) {
+                mScript.setOutput(aout);
+                mScript.forEach(ain);
+                aout.copyTo(hist);
+            }
 
             int max = 0;
             int sum = 0;
@@ -250,6 +253,9 @@ public class RawCameraFrame {
             }
             mPixMax = max;
             mPixAvg = (double)sum/mLength;
+            if(hist[0] > mLength) {
+                CFLog.d("nPix0 = " + hist[0] + ", size = " + aout.getBytesSize());
+            }
             ain = null;
             aout = null;
 
