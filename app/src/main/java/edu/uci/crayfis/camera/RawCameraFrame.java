@@ -16,11 +16,6 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -132,7 +127,6 @@ public class RawCameraFrame {
                 mGrayMat = null;
             }
         }
-        mBufferClaimed = false;
     }
 
     /**
@@ -147,7 +141,9 @@ public class RawCameraFrame {
      * Replenish image buffer after sending frame for L2 processing
      */
     public void claim() {
-        // FIXME/TODO: add a check to ensure we have enough memory to allocate a new buffer;
+        if(mGrayMat == null) {
+            getGrayMat();
+        }
         mBufferClaimed = true;
     }
 
@@ -237,7 +233,6 @@ public class RawCameraFrame {
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
             ain.copy1DRangeFrom(0, mLength, mBytes);
-            mBytes = null;
 
             // use built-in script to create histogram
             mScript.setOutput(aout);
@@ -255,6 +250,8 @@ public class RawCameraFrame {
             }
             mPixMax = max;
             mPixAvg = (double)sum/mLength;
+            ain = null;
+            aout = null;
 
         } else {
             getGrayMat();
