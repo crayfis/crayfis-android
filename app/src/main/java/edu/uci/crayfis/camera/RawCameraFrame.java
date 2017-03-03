@@ -30,16 +30,16 @@ public class RawCameraFrame {
     private Location mLocation;
     private float[] mOrientation;
     private int mBatteryTemp;
-    private Camera mCamera;
-    private int mFrameWidth;
-    private int mFrameHeight;
-    private int mLength;
     private int mPixMax = -1;
     private double mPixAvg = -1;
     private double mPixStd = -1;
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
+    private static Camera mCamera;
+    private static int mFrameWidth;
+    private static int mFrameHeight;
+    private static int mLength;
 
     public static final int BORDER = 0;
 
@@ -48,24 +48,24 @@ public class RawCameraFrame {
     private static RenderScript mRS;
     private static Type mType;
     private static ScriptIntrinsicHistogram mScript;
+    private static Element mElement;
 
     /**
      * Create a new instance.
      *
      * @param bytes Raw bytes from the camera.
      * @param timestamp The time at which the image was recieved by our app.
-     * @param camera The camera instance this image came from.
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp, Camera camera, Camera.Size sz) {
+    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp) {
         mBytes = bytes;
-
         mAcquiredTime = timestamp;
+    }
+
+    public static void setCamera(Camera camera, Camera.Size sz) {
         mCamera = camera;
         mFrameWidth = sz.width;
         mFrameHeight = sz.height;
-
-        mLength = mFrameWidth*mFrameHeight;
-
+        mLength = mFrameWidth * mFrameHeight;
     }
 
     @TargetApi(19)
@@ -73,6 +73,7 @@ public class RawCameraFrame {
         mRS = rs;
         mType = type;
         mScript = script;
+        mElement = Element.U32(rs);
     }
 
 
@@ -108,9 +109,11 @@ public class RawCameraFrame {
      * Free memory from mBytes and add as PreviewCallback buffer
      */
     private void replenishBuffer() {
-        if(mBytes != null) {
-            mCamera.addCallbackBuffer(mBytes);
-            mBytes = null;
+        synchronized (mCamera) {
+            if (mBytes != null) {
+                mCamera.addCallbackBuffer(mBytes);
+                mBytes = null;
+            }
         }
     }
 
@@ -232,7 +235,7 @@ public class RawCameraFrame {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
             // create RenderScript allocation objects
             Allocation ain = Allocation.createTyped(mRS, mType, Allocation.USAGE_SCRIPT);
-            Allocation aout = Allocation.createSized(mRS, Element.U32(mRS), 256, Allocation.USAGE_SCRIPT);
+            Allocation aout = Allocation.createSized(mRS, mElement, 256, Allocation.USAGE_SCRIPT);
             ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
             int[] hist = new int[256];
 
@@ -253,11 +256,6 @@ public class RawCameraFrame {
             }
             mPixMax = max;
             mPixAvg = (double)sum/mLength;
-            if(hist[0] > mLength) {
-                CFLog.d("nPix0 = " + hist[0] + ", size = " + aout.getBytesSize());
-            }
-            ain = null;
-            aout = null;
 
         } else {
             getGrayMat();

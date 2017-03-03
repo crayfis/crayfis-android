@@ -752,6 +752,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             }
             mTexture = new SurfaceTexture(10);
             mCamera.setPreviewTexture(mTexture);
+            RawCameraFrame.setCamera(mCamera, previewSize);
             mCamera.startPreview();
         }  catch (Exception e) {
             //userErrorMessage(getResources().getString(R.string.camera_error),true);
@@ -899,7 +900,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time, camera, previewSize);
+            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time);
             frame.setLocation(CFApplication.getLastKnownLocation());
             frame.setOrientation(orientation);
             frame.setBatteryTemp(batteryTemp);
