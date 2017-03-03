@@ -55,8 +55,8 @@ import edu.uci.crayfis.util.CFLog;
  */
 
 public class DAQService extends IntentService implements Camera.PreviewCallback, SensorEventListener,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener,
-        Runnable {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        com.google.android.gms.location.LocationListener, Runnable {
 
 
     private static final CFConfig CONFIG = CFConfig.getInstance();
@@ -142,70 +142,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
     private void startDAQ() throws InterruptedException {
         mIsRunning = true;
-        mApplication = (CFApplication) getApplication();
-        context = getApplicationContext();
-
-        String server_address = context.getString(R.string.server_address);
-        String server_port = context.getString(R.string.server_port);
-        String upload_uri = context.getString(R.string.upload_uri);
-        boolean force_https = context.getResources().getBoolean(R.bool.force_https);
-        String upload_proto;
-        if (force_https) {
-            upload_proto = "https://";
-        } else {
-            upload_proto = "http://";
-        }
-        upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-
-        mL2Processor = new L2Processor(mApplication);
-        mL1Processor = new L1Processor(mApplication);
-        mL1Processor.setL2Processor(mL2Processor);
-
-        mAppBuild = mApplication.getBuildInformation();
-
-        // get the grav/accelerometer, if any
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-
-        if (L1cal == null) {
-            L1cal = L1Calibrator.getInstance();
-        }
-        if (frame_times == null) {
-            frame_times = new FrameHistory<>(100);
-        }
-
-        starttime = System.currentTimeMillis();
-        last_battery_check_time = starttime;
-        batteryPct = -1; // indicate no data yet
-        batteryTemp = -1;
-
-        newLocation(new Location("BLANK"), false);
-
-        xbManager = ExposureBlockManager.getInstance(this);
-
-        if (ntpThread == null) {
-            ntpThread = new SntpUpdateThread();
-            ntpThread.start();
-        }
-
-        if(mBatteryCheckTimer != null) {
-            mBatteryCheckTimer.cancel();
-        }
-        mBatteryCheckTimer = new Timer();
-        mBatteryCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
-
-        if (mCamera != null)
-            throw new RuntimeException(
-                    "Bug, camera should not be initialized already");
-
-
-        CFLog.d(" Build RenderScript");
-        mRS = RenderScript.create(context);
-
-        SntpClient.getInstance();
-
 
         // run DAQ in background thread
         startBackgroundThread();
@@ -215,7 +151,9 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             Thread.sleep(1000L);
         }
 
-        CFLog.i("DAQActivity Suspending!");
+        // if we've made it here, tear down hardware
+
+        CFLog.i("DAQService Suspending!");
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
@@ -235,15 +173,38 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
     @Override
     public void run() {
-        buildGoogleApiClient();
-        mGoogleApiClient.connect();
 
-        // backup location if Google play isn't working or installed
-        mLastLocationDeprecated = getLocationDeprecated();
-        newLocation(mLastLocationDeprecated, true);
+        mApplication = (CFApplication) getApplication();
+        context = getApplicationContext();
+        mRS = RenderScript.create(context);
+
+        String server_address = context.getString(R.string.server_address);
+        String server_port = context.getString(R.string.server_port);
+        String upload_uri = context.getString(R.string.upload_uri);
+        boolean force_https = context.getResources().getBoolean(R.bool.force_https);
+        String upload_proto;
+        if (force_https) {
+            upload_proto = "https://";
+        } else {
+            upload_proto = "http://";
+        }
+        upload_url = upload_proto + server_address+":"+server_port+upload_uri;
+
+        mAppBuild = mApplication.getBuildInformation();
+
+
+        // State changes
 
         LocalBroadcastManager.getInstance(context).registerReceiver(STATE_CHANGE_RECEIVER,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+
+
+        // Sensors
+
+        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
 
         Sensor sens = gravSensor;
         if (sens == null) {
@@ -253,8 +214,62 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
-        // this will also trigger setting up the camera
+
+        // Location
+
+        newLocation(new Location("BLANK"), false);
+        buildGoogleApiClient();
+        mGoogleApiClient.connect();
+        // backup location if Google play isn't working or installed
+        mLastLocationDeprecated = getLocationDeprecated();
+        newLocation(mLastLocationDeprecated, true);
+
+
+        // Camera
+
+        if (mCamera != null)
+            throw new RuntimeException(
+                    "Bug, camera should not be initialized already");
+
         setUpAndConfigureCamera();
+
+
+        // Frame Processing
+
+        mL2Processor = new L2Processor(mApplication);
+        mL1Processor = new L1Processor(mApplication);
+        mL1Processor.setL2Processor(mL2Processor);
+
+        if (L1cal == null) {
+            L1cal = L1Calibrator.getInstance();
+        }
+        if (frame_times == null) {
+            frame_times = new FrameHistory<>(100);
+        }
+
+        SntpClient.getInstance();
+        if (ntpThread == null) {
+            ntpThread = new SntpUpdateThread();
+            ntpThread.start();
+        }
+
+        xbManager = ExposureBlockManager.getInstance(this);
+
+
+        // System check
+
+        starttime = System.currentTimeMillis();
+        last_battery_check_time = starttime;
+        batteryPct = -1; // indicate no data yet
+        batteryTemp = -1;
+
+        if(mBatteryCheckTimer != null) {
+            mBatteryCheckTimer.cancel();
+        }
+        mBatteryCheckTimer = new Timer();
+        mBatteryCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
+
+
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
 
