@@ -45,10 +45,9 @@ public class RawCameraFrame {
 
     // RenderScript objects
 
-    private static RenderScript mRS;
-    private static Type mType;
     private static ScriptIntrinsicHistogram mScript;
-    private static Element mElement;
+    private static Allocation ain;
+    private static Allocation aout;
 
     /**
      * Create a new instance.
@@ -69,11 +68,10 @@ public class RawCameraFrame {
     }
 
     @TargetApi(19)
-    public static void useRenderScript(RenderScript rs, Type type, ScriptIntrinsicHistogram script) {
-        mRS = rs;
-        mType = type;
-        mScript = script;
-        mElement = Element.U32(rs);
+    public static void useRenderScript(RenderScript rs, Type type) {
+        mScript = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+        ain = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+        aout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
     }
 
 
@@ -233,14 +231,11 @@ public class RawCameraFrame {
             return;
         }
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
-            // create RenderScript allocation objects
-            Allocation ain = Allocation.createTyped(mRS, mType, Allocation.USAGE_SCRIPT);
-            Allocation aout = Allocation.createSized(mRS, mElement, 256, Allocation.USAGE_SCRIPT);
-            ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
+
             int[] hist = new int[256];
 
-            // use built-in script to create histogram
-            synchronized(mScript) {
+            synchronized (mScript) {
+                ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
                 mScript.setOutput(aout);
                 mScript.forEach(ain);
                 aout.copyTo(hist);
