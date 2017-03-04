@@ -683,7 +683,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     private static Camera.Parameters mParams;
     private static Camera.Size previewSize;
     private SurfaceTexture mTexture;
-    private static final int N_CYCLE_BUFFERS = 10;
+    private static final int N_CYCLE_BUFFERS = 7;
 
     /**
      * Sets up the camera if it is not already setup.
@@ -748,8 +748,8 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
                         .setY(previewSize.height)
                         .setYuvFormat(param.getPreviewFormat());
                 Type type = tb.create();
-                ScriptIntrinsicHistogram script = ScriptIntrinsicHistogram.create(mRS, Element.U8(mRS));
-                RawCameraFrame.useRenderScript(mRS, type, script);
+
+                RawCameraFrame.useRenderScript(mRS, type);
             }
 
         } catch (Exception e) {
