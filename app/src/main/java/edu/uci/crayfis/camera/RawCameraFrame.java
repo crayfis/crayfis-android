@@ -7,6 +7,7 @@ import android.os.Build;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
+import android.renderscript.Script;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
@@ -15,6 +16,9 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
+import java.util.Arrays;
+
+import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -45,8 +49,12 @@ public class RawCameraFrame {
 
     // RenderScript objects
 
-    private static ScriptIntrinsicHistogram mScript;
+    private static ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
+    private static ScriptC_weight mScriptCWeight;
+    private static Script.LaunchOptions mLaunchOptions;
     private static Allocation ain;
+    private static Allocation aweights;
+    private static Allocation aweighted;
     private static Allocation aout;
 
     /**
@@ -60,19 +68,45 @@ public class RawCameraFrame {
         mAcquiredTime = timestamp;
     }
 
-    public static void setCamera(Camera camera, Camera.Size sz) {
+    public static void setCamera(Camera camera) {
         mCamera = camera;
+        Camera.Parameters params = camera.getParameters();
+        Camera.Size sz = params.getPreviewSize();
         mFrameWidth = sz.width;
         mFrameHeight = sz.height;
         mLength = mFrameWidth * mFrameHeight;
     }
 
     @TargetApi(19)
-    public static void useRenderScript(RenderScript rs, Type type) {
-        mScript = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+    public static void setCameraWithRenderScript(Camera camera, RenderScript rs) {
+
+        setCamera(camera);
+
+        Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
+        Type type = tb.setX(mFrameWidth)
+                .setY(mFrameHeight)
+                .create();
+        mScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
         ain = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+        aweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+        aweighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
         aout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
-        mScript.setOutput(aout);
+        mScriptIntrinsicHistogram.setOutput(aout);
+
+        // define aweights
+        byte[] maskArray = new byte[mLength];
+
+        // for now, just use equal weights
+        byte b1 = (byte)1;
+        Arrays.fill(maskArray, b1);
+
+        aweights.copy1DRangeFromUnchecked(0, mLength, maskArray);
+        mScriptCWeight = new ScriptC_weight(rs);
+        mScriptCWeight.set_weights(aweights);
+        mLaunchOptions = new Script.LaunchOptions()
+                .setX(BORDER, mFrameWidth-BORDER)
+                .setY(BORDER, mFrameHeight-BORDER);
+
     }
 
 
@@ -231,13 +265,14 @@ public class RawCameraFrame {
             // somebody beat us to it! nothing to do.
             return;
         }
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScript != null) {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScriptIntrinsicHistogram != null) {
 
             int[] hist = new int[256];
 
-            synchronized (mScript) {
+            synchronized (mScriptIntrinsicHistogram) {
                 ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
-                mScript.forEach(ain);
+                mScriptCWeight.forEach_weight(ain, aweighted, mLaunchOptions);
+                mScriptIntrinsicHistogram.forEach(aweighted);
                 aout.copyTo(hist);
             }
 
