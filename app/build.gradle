@@ -61,6 +61,7 @@ android {
         applicationId "edu.uci.crayfis"
         minSdkVersion 13
         targetSdkVersion 21
+        renderscriptTargetApi 18
         versionCode getVersionCode()
         versionName getVersionName()
     }

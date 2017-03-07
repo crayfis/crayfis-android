@@ -740,18 +740,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             // update the current application settings to reflect new camera size.
             CFApplication.setCameraSize(mParams.getPreviewSize());
 
-            // configure RenderScript if available
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                CFLog.i("Configuring RenderScript");
-                Type.Builder tb = new Type.Builder(mRS, Element.createPixel(mRS, Element.DataType.UNSIGNED_8, Element.DataKind.PIXEL_YUV));
-                tb.setX(previewSize.width)
-                        .setY(previewSize.height)
-                        .setYuvFormat(param.getPreviewFormat());
-                Type type = tb.create();
-
-                RawCameraFrame.useRenderScript(mRS, type);
-            }
-
         } catch (Exception e) {
             //userErrorMessage(getResources().getString(R.string.camera_error),true);
 
@@ -769,7 +757,16 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             }
             mTexture = new SurfaceTexture(10);
             mCamera.setPreviewTexture(mTexture);
-            RawCameraFrame.setCamera(mCamera, previewSize);
+
+            // configure RenderScript if available
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                CFLog.i("Configuring RenderScript");
+
+                RawCameraFrame.setCameraWithRenderScript(mCamera, mRS);
+            }
+
+            RawCameraFrame.setCamera(mCamera);
+
             mCamera.startPreview();
         }  catch (Exception e) {
             //userErrorMessage(getResources().getString(R.string.camera_error),true);
