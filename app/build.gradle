@@ -54,13 +54,13 @@ def getVersionName = { ->
 }
 
 android {
-    compileSdkVersion 21
-    buildToolsVersion "23.0.3"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.2'
 
     defaultConfig {
         applicationId "edu.uci.crayfis"
         minSdkVersion 13
-        targetSdkVersion 21
+        targetSdkVersion 25
         renderscriptTargetApi 18
         versionCode getVersionCode()
         versionName getVersionName()
