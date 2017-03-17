@@ -223,7 +223,14 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         buildGoogleApiClient();
         mGoogleApiClient.connect();
         // backup location if Google play isn't working or installed
-        mLastLocationDeprecated = getLocationDeprecated();
+        try {
+            mLastLocationDeprecated = getLocationDeprecated();
+        } catch (SecurityException e) {
+            // permission revoked?
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+            endService();
+        }
         newLocation(mLastLocationDeprecated, true);
 
 
@@ -584,7 +591,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
 
     }
 
-    public Location getLocationDeprecated()
+    public Location getLocationDeprecated() throws SecurityException
     {
         if (mLocationListener==null) {
             mLocationListener = new android.location.LocationListener() {

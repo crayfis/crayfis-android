@@ -18,12 +18,18 @@
 
 package edu.uci.crayfis;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -42,6 +48,11 @@ public class MainActivity extends Activity  {
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
 
+    public static final String[] permissions = {
+        Manifest.permission.CAMERA,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    };
+
 	public String build_version = null;
 
 	static {
@@ -52,52 +63,56 @@ public class MainActivity extends Activity  {
 		}
 	}
 
-	public void onRestart()
-	{
-		super.onRestart();
+	@Override
+	public void onRestart() {
+        super.onRestart();
+        CFLog.d("onRestart()");
 	}
-	
+
+	@Override
+    public void onStart() {
+        super.onStart();
+        CFLog.d("onStart()");
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        CFLog.d("onStop()");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        CFLog.d("onPause()");
+    }
+
+	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		try {
-			build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
-		}
-		catch (NameNotFoundException ex) {
-			CFLog.w("MainActivity: Could not find build version!");
-		}
-
-		//Pull the existing shared preferences and set editor
-		SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-		boolean firstRun = sharedprefs.getBoolean("firstRun", true);
-		if (firstRun) {
-			final Intent intent = new Intent(this, UserNotificationActivity.class);
-			intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
-			intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
-			startActivityForResult(intent, REQUEST_CODE_WELCOME);
-		}
-		else {
-		//See if we already have user ID saved
-		//Because then no need to login again
-		//if((ID != "") && !badID) {
-			Intent intent = new Intent(MainActivity.this, DAQActivity.class);
-			startActivity(intent);
-			//and quit
-			MainActivity.this.finish();
-		}
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(permissions, 0);
+        } else {
+            // no need to ask for permissions here
+            startDAQ();
+        }
 	}
 
 	@Override
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
+        CFLog.d("onActivityResult()");
 		if (resultCode != RESULT_OK) {
 			finish();
 		} else {
-			if (requestCode == REQUEST_CODE_WELCOME) {
-				final Intent intent = new Intent(this, UserNotificationActivity.class);
-				intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
-				intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
-				startActivityForResult(intent, REQUEST_CODE_HOW_TO);
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && requestCode == PermissionDialogFragment.WRITE_SETTINGS_ACTIVITY) {
+                requestPermissions(permissions, 0);
+            } else if (requestCode == REQUEST_CODE_WELCOME) {
+                final Intent intent = new Intent(this, UserNotificationActivity.class);
+                intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
+                intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+                startActivityForResult(intent, REQUEST_CODE_HOW_TO);
 			} else {
 				//This is so that if they have entered in an invalid user ID before, but
 				//then just decide to run it locally, it will reset the userID to empty
@@ -113,4 +128,49 @@ public class MainActivity extends Activity  {
 			}
 		}
 	}
+
+	@Override
+    @TargetApi(23)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        CFLog.d("onRequestPermissionsResult()");
+        // check if all permissions are granted
+        if(checkSelfPermission(Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED
+                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                && Settings.System.canWrite(this)) {
+
+            startDAQ();
+        } else {
+            PermissionDialogFragment f = new PermissionDialogFragment();
+            f.show(getFragmentManager(), "PERMISSION_ERROR");
+        }
+    }
+
+    private void startDAQ() {
+        try {
+            build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
+        }
+        catch (NameNotFoundException ex) {
+            CFLog.w("MainActivity: Could not find build version!");
+        }
+
+        //Pull the existing shared preferences and set editor
+        SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean firstRun = sharedprefs.getBoolean("firstRun", true);
+        if (firstRun) {
+            final Intent intent = new Intent(this, UserNotificationActivity.class);
+            intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
+            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
+            startActivityForResult(intent, REQUEST_CODE_WELCOME);
+        }
+        else {
+            //See if we already have user ID saved
+            //Because then no need to login again
+            //if((ID != "") && !badID) {
+            Intent intent = new Intent(MainActivity.this, DAQActivity.class);
+            startActivity(intent);
+            //and quit
+            MainActivity.this.finish();
+        }
+    }
 }
