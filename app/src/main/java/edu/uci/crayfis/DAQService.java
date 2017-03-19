@@ -304,7 +304,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         public void onReceive(final Context context, final Intent intent) {
             final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
-            CFLog.d(DAQActivity.class.getSimpleName() + " state transition: " + previous + " -> " + current);
+            CFLog.d(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
             if (current != previous) {
                 if (current == CFApplication.State.DATA) {
@@ -698,7 +698,7 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
     private synchronized void setUpAndConfigureCamera() {
         // Open and configure the camera
         CFLog.d("setUpAndConfigureCamera()");
-        if(mCamera != null) return;
+        if(mCamera != null && CFApplication.getCameraSize() != null) return;
         try {
             mCamera = Camera.open();
         } catch (Exception e) {
