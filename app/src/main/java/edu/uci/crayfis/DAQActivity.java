@@ -179,19 +179,6 @@ public class DAQActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        CFLog.d("onDestroy()");
-
-        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
-
-        stopService(DAQIntent);
-
-        DataCollectionFragment.getInstance().updateIdleStatus("");
-    }
-
 
     /////////////////////////
     // Toolbar and Drawers //

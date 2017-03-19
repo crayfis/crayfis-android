@@ -1,8 +1,5 @@
 package edu.uci.crayfis;
 
-import android.app.IntentService;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -21,16 +18,10 @@ import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
-import android.renderscript.Element;
 import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicHistogram;
-import android.renderscript.Type;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 
@@ -76,7 +67,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     private static CFApplication mApplication;
     private CFApplication.AppBuild mAppBuild;
     private static String upload_url;
-    private static final int FOREGROUND_ID = 0;
+    private static final int FOREGROUND_ID = 1;
 
     @Override
     public void onCreate() {
@@ -199,9 +190,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         // notify user that CRAYFIS is running in background
-        Intent restartIntent = new Intent(this, DAQActivity.class);
+        Intent restartIntent = new Intent(this, MainActivity.class);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(DAQActivity.class);
+        stackBuilder.addParentStack(MainActivity.class);
         stackBuilder.addNextIntent(restartIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -211,12 +202,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 .setContentText(getString(R.string.notification_message))
                 .setContentIntent(resultPendingIntent);
 
-        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        Notification notification = builder.build();
-        nManager.notify(FOREGROUND_ID, notification);
-
-        // make it more difficult for process to be killed
-        startForeground(FOREGROUND_ID, notification);
+        startForeground(FOREGROUND_ID, builder.build());
 
         // tell service to restart if it gets killed
         return START_STICKY;
@@ -224,7 +210,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
     @Override
     public IBinder onBind(Intent intent) {
-        // TODO: should we implement a way to bind to this service?
+        // TODO: implement a way to bind to this service
         return null;
     }
 
