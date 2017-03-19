@@ -1,6 +1,10 @@
 package edu.uci.crayfis;
 
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -19,11 +23,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.IBinder;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -54,127 +62,25 @@ import edu.uci.crayfis.util.CFLog;
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends IntentService implements Camera.PreviewCallback, SensorEventListener,
+public class DAQService extends Service implements Camera.PreviewCallback, SensorEventListener,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        com.google.android.gms.location.LocationListener, Runnable {
+        com.google.android.gms.location.LocationListener {
 
+
+
+    ///////////////
+    // Lifecycle //
+    ///////////////
 
     private static final CFConfig CONFIG = CFConfig.getInstance();
     private static CFApplication mApplication;
     private CFApplication.AppBuild mAppBuild;
     private static String upload_url;
-
-
-    /////////////////////////////////////////////
-    // Basic elements of calling IntentService //
-    /////////////////////////////////////////////
-
-    private static final String ACTION_START = "edu.uci.crayfis.action.START";
-    private HandlerThread mBackgroundThread;
-    private Handler mBackgroundHandler;
-    private static boolean mRunService = true;
-    private static boolean mIsRunning = false;
-
-    public DAQService() {
-        super("DAQService");
-    }
-
-    public static void startService(Context context) {
-
-        // do nothing if DAQ is already running
-        if(mIsRunning) { return; }
-
-        CFLog.d("DAQService: starting");
-
-        mRunService = true;
-        Intent intent = new Intent(context, DAQService.class);
-        intent.setAction(ACTION_START);
-        context.startService(intent);
-    }
-
-    public static void endService() {
-
-        CFLog.d("DAQService: ending");
-
-        // FIXME: this is a bad way to do this
-        mRunService = false;
-        DataCollectionFragment.getInstance().updateIdleStatus("");
-
-        // check to make sure the service has actually exited before proceeding
-        while(mIsRunning) {
-            try {
-                Thread.sleep(100L);
-            } catch(InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        CFLog.d("DAQService: stopped");
-    }
+    private static final int FOREGROUND_ID = 0;
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            if (ACTION_START.equals(action)) {
-                try {
-                    startDAQ();
-                } catch(InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    /* Spin up a BG thread where the camera data will delivered to */
-    private void startBackgroundThread() {
-        if (mBackgroundThread != null) return;
-        mBackgroundThread = new HandlerThread("DAQ");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-    }
-
-
-
-
-    ////////////////////////////
-    // Initialize and run DAQ //
-    ////////////////////////////
-
-    private void startDAQ() throws InterruptedException {
-        mIsRunning = true;
-
-        // run DAQ in background thread
-        startBackgroundThread();
-        mBackgroundHandler.post(this);
-
-        while(mRunService) {
-            Thread.sleep(1000L);
-        }
-
-        // if we've made it here, tear down hardware
-
-        CFLog.i("DAQService Suspending!");
-
-        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
-
-        mSensorManager.unregisterListener(this);
-        mGoogleApiClient.disconnect();
-        unSetupCamera();
-        xbManager.flushCommittedBlocks(true);
-
-        if(ntpThread != null) {
-            ntpThread.stopThread();
-            ntpThread = null;
-        }
-
-        mBatteryCheckTimer.cancel();
-
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
-        mIsRunning = false;
-    }
-
-    @Override
-    public void run() {
+    public void onCreate() {
+        super.onCreate();
 
         mApplication = (CFApplication) getApplication();
         context = getApplicationContext();
@@ -193,7 +99,6 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         upload_url = upload_proto + server_address+":"+server_port+upload_uri;
 
         mAppBuild = mApplication.getBuildInformation();
-
 
         // State changes
 
@@ -227,9 +132,9 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
             mLastLocationDeprecated = getLocationDeprecated();
         } catch (SecurityException e) {
             // permission revoked?
-            Intent intent = new Intent(this, MainActivity.class);
-            startActivity(intent);
-            endService();
+            Intent permissionIntent = new Intent(this, MainActivity.class);
+            startActivity(permissionIntent);
+            stopSelf();
         }
         newLocation(mLastLocationDeprecated, true);
 
@@ -290,6 +195,63 @@ public class DAQService extends IntentService implements Camera.PreviewCallback,
         }
     }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        // notify user that CRAYFIS is running in background
+        Intent restartIntent = new Intent(this, DAQActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(DAQActivity.class);
+        stackBuilder.addNextIntent(restartIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_just_a)
+                .setContentTitle(getString(R.string.notification_title))
+                .setContentText(getString(R.string.notification_message))
+                .setContentIntent(resultPendingIntent);
+
+        NotificationManager nManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        Notification notification = builder.build();
+        nManager.notify(FOREGROUND_ID, notification);
+
+        // make it more difficult for process to be killed
+        startForeground(FOREGROUND_ID, notification);
+
+        // tell service to restart if it gets killed
+        return START_STICKY;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: should we implement a way to bind to this service?
+        return null;
+    }
+
+
+    @Override
+    public void onDestroy() {
+        CFLog.i("DAQService Suspending!");
+
+        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+
+        mSensorManager.unregisterListener(this);
+        mGoogleApiClient.disconnect();
+        unSetupCamera();
+        xbManager.flushCommittedBlocks(true);
+
+        if(ntpThread != null) {
+            ntpThread.stopThread();
+            ntpThread = null;
+        }
+
+        mBatteryCheckTimer.cancel();
+
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
+
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+        CFLog.d("DAQService: stopped");
+    }
 
 
 

@@ -55,6 +55,7 @@ public class PermissionDialogFragment extends DialogFragment {
                             Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
                             intent.setData(Uri.parse("package:" +activity.getPackageName()))
                                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            // FIXME: this doesn't work, and the user has to restart the app instead
                             activity.startActivityForResult(intent, WRITE_SETTINGS_ACTIVITY);
                         }
                     })

@@ -87,6 +87,7 @@ public class DAQActivity extends AppCompatActivity {
 
 
 	Context context;
+    private Intent DAQIntent;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
 
     ////////////////////////
@@ -121,8 +122,6 @@ public class DAQActivity extends AppCompatActivity {
         configureNavigation();
 
         context = getApplicationContext();
-
-        DAQService.startService(this);
     }
 
     @Override
@@ -138,7 +137,8 @@ public class DAQActivity extends AppCompatActivity {
         CFLog.d("DAQActivity onResume");
 
         // in case this isn't already running
-        DAQService.startService(this);
+        DAQIntent = new Intent(this, DAQService.class);
+        startService(DAQIntent);
 
         if (mUiUpdateTimer != null) {
             mUiUpdateTimer.cancel();
@@ -150,7 +150,7 @@ public class DAQActivity extends AppCompatActivity {
             long current_time = System.currentTimeMillis();
             float time_sleeping = (current_time - sleeping_since) * (float) 1e-3;
             int cand_sleeping = L2Processor.mL2Count - cands_before_sleeping;
-            if (time_sleeping > 5.0) {
+            if (time_sleeping > 5.0 && cand_sleeping > 0) {
                 Toast.makeText(this, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
             }
         }
@@ -187,7 +187,7 @@ public class DAQActivity extends AppCompatActivity {
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
 
-        DAQService.endService();
+        stopService(DAQIntent);
 
         DataCollectionFragment.getInstance().updateIdleStatus("");
     }
@@ -273,7 +273,7 @@ public class DAQActivity extends AppCompatActivity {
 
     public void clickedSettings() {
 
-        DAQService.endService();
+        stopService(DAQIntent);
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}

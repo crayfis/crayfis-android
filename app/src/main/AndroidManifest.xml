@@ -58,11 +58,12 @@
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
+            android:exported="true"
             android:theme="@style/CrayfisApp"/>
 
         <service
             android:name=".DAQService"
-            android:exported="false"></service>
+            android:exported="false"/>
 
         <activity android:name=".usernotif.UserNotificationActivity"
                   android:screenOrientation="portrait"/>

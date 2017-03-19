@@ -84,6 +84,8 @@
     <string name="permission_no">No thanks</string>
     <string name="pager_dev">Developer</string>
     <string name="feedback">Feedback</string>
+    <string name="notification_title">CRAYFIS</string>
+    <string name="notification_message">Taking data</string>
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>
