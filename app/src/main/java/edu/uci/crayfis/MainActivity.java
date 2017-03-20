@@ -52,7 +52,6 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
-    public static final int WRITE_SETTINGS_ACTIVITY = 3;
 
     public static final String[] permissions = {
         Manifest.permission.CAMERA,
@@ -70,32 +69,8 @@ public class MainActivity extends Activity  {
 	}
 
 	@Override
-	public void onRestart() {
-        super.onRestart();
-        CFLog.d("onRestart()");
-	}
-
-	@Override
-    public void onStart() {
-        super.onStart();
-        CFLog.d("onStart()");
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-        CFLog.d("onStop()");
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        CFLog.d("onPause()");
-    }
-
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
+	public void onStart() {
+		super.onStart();
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(permissions, 0);
@@ -108,14 +83,11 @@ public class MainActivity extends Activity  {
 	@Override
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
-        CFLog.d("onActivityResult()");
+
 		if (resultCode != RESULT_OK) {
-			//finish();
+			finish();
 		} else {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && requestCode == WRITE_SETTINGS_ACTIVITY) {
-                CFLog.d("Write setttings activity");
-                requestPermissions(permissions, 0);
-            } else if (requestCode == REQUEST_CODE_WELCOME) {
+            if (requestCode == REQUEST_CODE_WELCOME) {
                 final Intent intent = new Intent(this, UserNotificationActivity.class);
                 intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
                 intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
@@ -176,8 +148,7 @@ public class MainActivity extends Activity  {
                                 Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
                                 intent.setData(Uri.parse("package:" +getPackageName()))
                                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                // FIXME: this doesn't work, and the user has to restart the app instead
-                                startActivityForResult(intent, WRITE_SETTINGS_ACTIVITY);
+                                startActivity(intent);
                             }
                         })
                         .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
