@@ -5,6 +5,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.imgproc.Imgproc;
+
 import java.util.ArrayList;
 
 import edu.uci.crayfis.CFApplication;
@@ -82,7 +88,7 @@ public class L2Task implements Runnable {
 
         public boolean quality;
         public double background;
-        public double variance;
+        public double std;
 
         public int npix_dropped;
 
@@ -103,7 +109,7 @@ public class L2Task implements Runnable {
             orientation = parcel.createFloatArray();
             quality = parcel.readInt() == 1;
             background = parcel.readDouble();
-            variance = parcel.readDouble();
+            std = parcel.readDouble();
             npix_dropped = parcel.readInt();
             xbn = parcel.readInt();
             pixels = parcel.createTypedArrayList(RecoPixel.CREATOR);
@@ -131,7 +137,7 @@ public class L2Task implements Runnable {
             buf.setOrientZ(orientation[2]);
 
             buf.setAvg(background);
-            buf.setStd(variance);
+            buf.setStd(std);
 
             buf.setXbn(xbn);
 
@@ -161,7 +167,7 @@ public class L2Task implements Runnable {
             dest.writeFloatArray(orientation);
             dest.writeInt(quality ? 1 : 0);
             dest.writeDouble(background);
-            dest.writeDouble(variance);
+            dest.writeDouble(std);
             dest.writeInt(npix_dropped);
             dest.writeInt(xbn);
             dest.writeTypedList(pixels);
@@ -252,45 +258,20 @@ public class L2Task implements Runnable {
         event.orientation = mFrame.getOrientation();
         event.batteryTemp = mFrame.getBatteryTemp();
 
-        // first we measure the background and variance, but to save time only do it for every
-        // stepW or stepH-th pixel
-        final int width = mFrame.getSize().width;
-        final int height = mFrame.getSize().height;
-
-        // When measuring bg and variance, we only look at some pixels
-        // to save time. stepW and stepH are the number of pixels skipped
-        // between samples.
-        final int stepW = 10;
-        final int stepH = 10;
-
-        final byte[] bytes = mFrame.getBytes();
-
-        // calculate variance of the background
-        double variance = 0;
         double avg = mFrame.getPixAvg();
-        int npixels = 0;
-        for (int ix=0;ix < width;ix+= stepW)
-            for (int iy=0;iy<height;iy+=stepH)
-            {
-                int val = bytes[ix+width*iy]&0xFF;
-                variance += (val-avg)*(val - avg);
-                npixels++;
-            }
-        if (npixels>0) {
-            variance = Math.sqrt(variance / ((double) npixels));
-        }
+        double std = mFrame.getPixStd();
 
         // is the data good?
         // TODO: investigate what makes sense here!
-        boolean good_quality = (avg < CONFIG.getQualityBgAverage() && variance < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
+        boolean good_quality = (avg < CONFIG.getQualityBgAverage() && std < CONFIG.getQualityBgVariance()); // && percent_hit < max_pix_frac);
 
         event.background = avg;
-        event.variance = variance;
+        event.std = std;
         event.quality = good_quality;
 
         if (!event.quality) {
             CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + avg);
-            CFLog.w("var req: " + CONFIG.getQualityBgVariance() + ", obs: " + variance);
+            CFLog.w("std req: " + CONFIG.getQualityBgVariance() + ", obs: " + std);
         }
 
         return event;
@@ -299,104 +280,66 @@ public class L2Task implements Runnable {
     ArrayList<RecoPixel> buildPixels() {
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
-        int width = mFrame.getSize().width;
-        int height = mFrame.getSize().height;
+        Mat grayMat = mFrame.getGrayMat();
+        Mat threshMat = new Mat();
+        Mat l2PixelCoords = new Mat();
 
-        byte[] bytes = mFrame.getBytes();
+        int width = grayMat.width();
+        int height = grayMat.height();
+
 
         ExposureBlock xb = mFrame.getExposureBlock();
 
-        // recalculate the variance w/ full stats
-        double variance = 0.;
-        double avg = mFrame.getPixAvg();
-        boolean fail = false;
-        boolean quitReco = false;
-        for (int ix = 0; ix < width && !quitReco; ix++) {
-            for (int iy = 0; iy < height; iy++) {
-                // NB: cast (signed) byte to integer for meaningful comparisons!
-                int val = bytes[ix + width * iy] & 0xFF;
+        // set everything below threshold to zero
+        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Core.findNonZero(threshMat, l2PixelCoords);
+        threshMat.release();
 
-                variance += (val-avg)*(val - avg);
+        for(int i=0; i<l2PixelCoords.total(); i++) {
+            double[] xy = l2PixelCoords.get(i,0);
+            int ix = (int) xy[0];
+            int iy = (int) xy[1];
+            int val = (int) grayMat.get(iy, ix)[0];
 
-                if (val > xb.L2_threshold) {
-                    if (fail) {
-                        mEvent.npix_dropped++;
-                        continue;
-                    }
-                    // okay, found a pixel above threshold!
-                    RecoPixel p;
+            RecoPixel p;
 
-                    L2Processor.histL2Pixels.fill(val);
-                    try {
-                        p = new RecoPixel();
-                    } catch (OutOfMemoryError e) {
-                        CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-                        mEvent.npix_dropped++;
-                        continue;
-                    }
-
-                    p.x = ix;
-                    p.y = iy;
-                    p.val = val;
-
-                    // look at the 8 adjacent pixels to measure max and avg values
-                    int sum3 = 0, sum5 = 0;
-                    int norm3 = 0, norm5 = 0;
-                    int nearMax = 0, nearMax5 = 0;
-                    for (int dx = -2; dx <= 2; ++dx) {
-                        for (int dy = -2; dy <= 2; ++dy) {
-                            if (dx == 0 && dy == 0) {
-                                // exclude center from average
-                                continue;
-                            }
-
-                            int idx = ix + dx;
-                            int idy = iy + dy;
-                            if (idx < 0 || idy < 0 || idx >= width || idy >= height) {
-                                // we're off the sensor plane.
-                                continue;
-                            }
-
-                            int dval = bytes[idx + width * idy] & 0xFF;
-                            sum5 += dval;
-                            norm5++;
-                            nearMax5 = Math.max(nearMax5, dval);
-                            if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
-                                // we're in the 3x3 part
-                                sum3 += dval;
-                                norm3++;
-                                nearMax = Math.max(nearMax, dval);
-                            }
-                        }
-                    }
-
-                    p.avg_3 = ((float) sum3) / norm3;
-                    p.avg_5 = ((float) sum5) / norm5;
-                    p.near_max = nearMax;
-
-                    pixels.add(p);
-
-                    if (pixels.size() >= ((Config)mConfig).npix) {
-                        quitReco = true;
-                        break;
-                    }
-                }
+            L2Processor.histL2Pixels.fill(val);
+            try {
+                p = new RecoPixel();
+            } catch (OutOfMemoryError e) {
+                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
+                mEvent.npix_dropped++;
+                continue;
             }
-        }
 
-        if (!quitReco) {
-            // update event with the "variance" computed from full pixel statistics.
-            variance /= (double) (width * height);
-            variance = Math.sqrt(variance);
-            mEvent.variance = variance;
+            // record the coordinates of the frame, not of the sliced Mat we used
+            p.x = ix+RawCameraFrame.BORDER;
+            p.y = iy+RawCameraFrame.BORDER;
+            p.val = val;
+
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                    Math.max(ix-1,0), Math.min(ix+2,width));
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                    Math.max(ix-2,0), Math.min(ix+3,width));
+
+            p.avg_3 = (float)Core.mean(grayAvg3).val[0];
+            p.avg_5 = (float)Core.mean(grayAvg5).val[0];
+            p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
+
+            grayAvg3.release();
+            grayAvg5.release();
+
+            pixels.add(p);
+
         }
+        l2PixelCoords.release();
 
         return pixels;
     }
 
     @Override
     public void run() {
-        ++mL2Processor.mL2Count;
+        ++L2Processor.mL2Count;
 
         ExposureBlock xb = mFrame.getExposureBlock();
         xb.L2_processed++;

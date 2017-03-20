@@ -16,8 +16,8 @@ public class L1Processor {
     public final CFApplication mApplication;
 
     public L1Calibrator mL1Cal = null;
-    public int mL1Count = 0;
-    public int mL1CountData;
+    public static int mL1Count = 0;
+    public static int mL1CountData;
 
     public int mBufferBalance = 0;
 

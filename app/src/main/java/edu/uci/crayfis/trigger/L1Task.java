@@ -38,7 +38,9 @@ class L1Task implements Runnable {
 
     protected boolean processInitial() {
         // show the frame to the L1 calibrator
-        mL1Processor.mL1Cal.AddFrame(mFrame);
+        if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
+            mL1Processor.mL1Cal.AddFrame(mFrame);
+        }
 
         return false;
     }

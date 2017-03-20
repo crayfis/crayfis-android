@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
-    
-    <string name="pref_save_data">Save Data?</string>			
+
+
+    <string name="pref_save_data">Save Data?</string>
 	<string name="app_name">CRAYFIS beta</string>
 	<string name="pref_show_image">Show Image</string>
 	<string name="pref_do_reco">"Do Reco"</string>
@@ -77,8 +77,15 @@
     <string name="fatal_error_title">CRAYFIS Error</string>
     <string name="camera_error">CRAYFIS could not open the camera.</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
+    <string name="permission_error_title">Permission required</string>
+    <string name="permission_error">CRAYFIS requires Camera and Location settings to be enabled.</string>
+    <string name="write_settings_error">CRAYFIS has not been given permission to write to system settings.</string>
+    <string name="permission_yes">Enable</string>
+    <string name="permission_no">No thanks</string>
     <string name="pager_dev">Developer</string>
     <string name="feedback">Feedback</string>
+    <string name="notification_title">CRAYFIS</string>
+    <string name="notification_message">Taking data</string>
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>

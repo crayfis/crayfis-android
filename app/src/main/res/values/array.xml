@@ -12,7 +12,7 @@
     </string-array>
     <string-array name="hist_bins">
         <item>Cand. Pix</item>
-        <item>Good. Cand.</item>
+        <item>Good Cand.</item>
         <item>Clean Cand.</item>
     </string-array>
     <string-array name="time_bins">

@@ -32,12 +32,6 @@
         android:clickable="true"
         android:orientation="vertical">
 
-        <FrameLayout
-            android:id="@+id/camera_preview"
-            android:layout_width="fill_parent"
-            android:layout_height="0dp"
-            android:background="@android:color/transparent"/>
-
         <ImageView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
