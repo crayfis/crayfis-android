@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="prefEnableGallery">prefEnableGallery</string>
+    <string name="prefEnableGallery" translatable="false">prefEnableGallery</string>
 </resources>
