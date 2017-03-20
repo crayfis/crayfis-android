@@ -18,13 +18,15 @@
 package edu.uci.crayfis;
 
 import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
@@ -54,12 +56,9 @@ import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
-import edu.uci.crayfis.trigger.L1Processor;
-import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * This is the main Activity of the app; this activity is started when the user
@@ -68,6 +67,7 @@ import edu.uci.crayfis.widget.DataCollectionStatsView;
  */
 public class DAQActivity extends AppCompatActivity {
 
+    private DAQService.DAQBinder mBinder;
     private LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
     private LayoutHist mLayoutHist = LayoutHist.getInstance();
     private LayoutTime mLayoutTime = LayoutTime.getInstance();
@@ -76,6 +76,7 @@ public class DAQActivity extends AppCompatActivity {
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private Timer mUiUpdateTimer;
+    private ServiceConnection mServiceConnection;
 
 	// keep track of how often we had to drop a frame at L1
 	// because the L2 queue was full.
@@ -94,8 +95,6 @@ public class DAQActivity extends AppCompatActivity {
     // Activity lifecycle //
     ////////////////////////
 
-    private long sleeping_since=0;
-    private int cands_before_sleeping=0;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -122,6 +121,23 @@ public class DAQActivity extends AppCompatActivity {
         configureNavigation();
 
         context = getApplicationContext();
+
+        mServiceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+                mBinder = (DAQService.DAQBinder) iBinder;
+                float time_sleeping = mBinder.getTimeWhileSleeping() * (float) 1e-3;
+                int cand_sleeping = mBinder.getCountsWhileSleeping();
+                if (time_sleeping > 5.0 && cand_sleeping > 0) {
+                    Toast.makeText(context, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+                mBinder = null;
+            }
+        };
     }
 
     @Override
@@ -139,21 +155,13 @@ public class DAQActivity extends AppCompatActivity {
         // in case this isn't already running
         DAQIntent = new Intent(this, DAQService.class);
         startService(DAQIntent);
+        bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
 
         if (mUiUpdateTimer != null) {
             mUiUpdateTimer.cancel();
         }
         mUiUpdateTimer = new Timer();
         mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000L, 1000L);
-
-        if(sleeping_since > 0) {
-            long current_time = System.currentTimeMillis();
-            float time_sleeping = (current_time - sleeping_since) * (float) 1e-3;
-            int cand_sleeping = L2Processor.mL2Count - cands_before_sleeping;
-            if (time_sleeping > 5.0 && cand_sleeping > 0) {
-                Toast.makeText(this, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
-            }
-        }
     }
 
 
@@ -163,8 +171,10 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.i("onPause()");
 
-        sleeping_since = System.currentTimeMillis();
-        cands_before_sleeping = L2Processor.mL2Count;
+        if(mBinder != null) {
+            mBinder.saveStatsBeforeSleeping();
+        }
+        unbindService(mServiceConnection);
         mUiUpdateTimer.cancel();
     }
 
@@ -421,8 +431,6 @@ public class DAQActivity extends AppCompatActivity {
 
                 try {
 
-                    final Camera.Size cameraSize = CFApplication.getCameraSize();
-
                     if (LayoutData.mLightMeter != null) {
                         LayoutData.updateData();
                     }
@@ -491,14 +499,7 @@ public class DAQActivity extends AppCompatActivity {
 
                         }
 
-
-                        final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
-                                .setTotalEvents(L2Processor.mL2Count)
-                                .setTotalPixels((long)L1Processor.mL1CountData * cameraSize.height * cameraSize.width)
-                                .setTotalFrames(L1Processor.mL1CountData)
-                                .build();
-                        CFApplication.setCollectionStatus(dstatus);
-
+                        mBinder.updateDataCollectionStatus();
 
                         boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
                         if (show_splashes && mLayoutBlack != null) {
@@ -530,7 +531,7 @@ public class DAQActivity extends AppCompatActivity {
 
 
                         if (mLayoutDeveloper.mTextView != null) {
-                            mLayoutDeveloper.mTextView.setText(DAQService.getDevText());
+                            mLayoutDeveloper.mTextView.setText(mBinder.getDevText());
                         }
                     }
 

@@ -21,15 +21,20 @@ package edu.uci.crayfis;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -47,6 +52,7 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
+    public static final int WRITE_SETTINGS_ACTIVITY = 3;
 
     public static final String[] permissions = {
         Manifest.permission.CAMERA,
@@ -104,9 +110,10 @@ public class MainActivity extends Activity  {
 		super.onActivityResult(requestCode, resultCode, data);
         CFLog.d("onActivityResult()");
 		if (resultCode != RESULT_OK) {
-			finish();
+			//finish();
 		} else {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && requestCode == PermissionDialogFragment.WRITE_SETTINGS_ACTIVITY) {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && requestCode == WRITE_SETTINGS_ACTIVITY) {
+                CFLog.d("Write setttings activity");
                 requestPermissions(permissions, 0);
             } else if (requestCode == REQUEST_CODE_WELCOME) {
                 final Intent intent = new Intent(this, UserNotificationActivity.class);
@@ -134,15 +141,56 @@ public class MainActivity extends Activity  {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
         CFLog.d("onRequestPermissionsResult()");
-        // check if all permissions are granted
-        if(checkSelfPermission(Manifest.permission.CAMERA)==PackageManager.PERMISSION_GRANTED
-                && checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                && Settings.System.canWrite(this)) {
 
+        boolean permissionError = checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+
+        boolean writeError = !Settings.System.canWrite(this);
+
+        if(!(permissionError || writeError)) {
             startDAQ();
         } else {
-            PermissionDialogFragment f = new PermissionDialogFragment();
-            f.show(getFragmentManager(), "PERMISSION_ERROR");
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+            if (permissionError) {
+                builder.setMessage(R.string.permission_error)
+                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                requestPermissions(MainActivity.permissions, 0);
+                            }
+                        })
+                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        });
+
+            } else {
+                builder.setMessage(R.string.write_settings_error)
+                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                                intent.setData(Uri.parse("package:" +getPackageName()))
+                                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                // FIXME: this doesn't work, and the user has to restart the app instead
+                                startActivityForResult(intent, WRITE_SETTINGS_ACTIVITY);
+                            }
+                        })
+                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        });
+            }
+
+            builder.setTitle(R.string.permission_error_title)
+                    .setCancelable(false)
+                    .show();
         }
     }
 

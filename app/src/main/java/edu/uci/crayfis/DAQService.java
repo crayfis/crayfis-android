@@ -16,6 +16,7 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.BatteryManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -30,6 +31,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.io.FileDescriptor;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -48,6 +50,7 @@ import edu.uci.crayfis.trigger.L1Processor;
 import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * Created by Jeff on 2/17/2017.
@@ -63,11 +66,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     // Lifecycle //
     ///////////////
 
-    private static final CFConfig CONFIG = CFConfig.getInstance();
-    private static CFApplication mApplication;
+    private final CFConfig CONFIG = CFConfig.getInstance();
+    private CFApplication mApplication;
     private CFApplication.AppBuild mAppBuild;
-    private static String upload_url;
-    private static final int FOREGROUND_ID = 1;
+    private String upload_url;
+    private final int FOREGROUND_ID = 1;
 
     @Override
     public void onCreate() {
@@ -206,12 +209,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
         // tell service to restart if it gets killed
         return START_STICKY;
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: implement a way to bind to this service
-        return null;
     }
 
 
@@ -480,12 +477,12 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
     // New API
     private GoogleApiClient mGoogleApiClient;
-    private static Location mLastLocation;
+    private Location mLastLocation;
     private LocationRequest mLocationRequest;
 
     // Old API
     private android.location.LocationListener mLocationListener = null;
-    private static Location mLastLocationDeprecated;
+    private Location mLastLocationDeprecated;
 
     @Override
     public void onAccuracyChanged(Sensor arg0, int arg1) {
@@ -635,10 +632,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
     // camera and display objects
     private Camera mCamera;
-    private static Camera.Parameters mParams;
-    private static Camera.Size previewSize;
+    private Camera.Parameters mParams;
+    private Camera.Size previewSize;
     private SurfaceTexture mTexture;
-    private static final int N_CYCLE_BUFFERS = 7;
+    private final int N_CYCLE_BUFFERS = 7;
 
     /**
      * Sets up the camera if it is not already setup.
@@ -826,7 +823,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     // Frame processing //
     //////////////////////
 
-    private static ExposureBlockManager xbManager;
+    private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
     // helper that dispatches L2 inputs to be processed by the L2 trigger.
@@ -834,17 +831,17 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
     private L1Calibrator L1cal = null;
 
-    private static FrameHistory<Long> frame_times;
-    private static double target_L1_eff;
+    private FrameHistory<Long> frame_times;
+    private double target_L1_eff;
 
     // L1 hit threshold
     long starttime;
 
     // number of frames to wait between fps updates
-    public static final int fps_update_interval = 20;
+    public final int fps_update_interval = 20;
 
     // store value of most recently calculated FPS
-    private static double last_fps = 0;
+    private double last_fps = 0;
 
     // Thread for NTP updates
     private SntpUpdateThread ntpThread;
@@ -906,7 +903,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         }
     }
 
-    private static double updateFPS() {
+    private double updateFPS() {
         long now = System.nanoTime() - CFApplication.getStartTimeNano();
         if (frame_times != null) {
             synchronized(frame_times) {
@@ -972,10 +969,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     public final int batteryStartTemp = 380;
 
     private final long battery_check_wait = 10000; // ms
-    private static float batteryPct;
-    private static int batteryTemp;
-    private static boolean batteryOverheated = false;
-    private static long last_battery_check_time;
+    private float batteryPct;
+    private int batteryTemp;
+    private boolean batteryOverheated = false;
+    private long last_battery_check_time;
 
 
 
@@ -1041,38 +1038,75 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     // UI Feedback //
     /////////////////
 
-    public static String getDevText() {
+    private final IBinder mBinder = new DAQBinder();
+    private long mTimeBeforeSleeping = 0;
+    private int mCountsBeforeSleeping = 0;
 
-        if(mApplication.getApplicationState() != CFApplication.State.DATA) {
-            updateFPS();
+    class DAQBinder extends Binder {
+
+        void saveStatsBeforeSleeping() {
+            mTimeBeforeSleeping = System.currentTimeMillis();
+            mCountsBeforeSleeping = L2Processor.mL2Count;
         }
 
-        String devtxt = "@@ Developer View @@\n"
-                + "State: " + mApplication.getApplicationState() + "\n"
-                + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
-                + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
-                + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
-                + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
-                + String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
-                + "\n";
-
-        if (previewSize != null) {
-            ResolutionSpec targetRes = CONFIG.getTargetResolution();
-            devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
+        long getTimeWhileSleeping() {
+            if(mTimeBeforeSleeping == 0) { return 0; } // on start of DAQService
+            return System.currentTimeMillis() - mTimeBeforeSleeping;
         }
-        ExposureBlock xb = xbManager.getCurrentExposureBlock();
-        devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
-        devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
-                + "Upload server = " + upload_url + "\n"
-                + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
-                + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
 
-        return devtxt;
+        int getCountsWhileSleeping() {
+            return L2Processor.mL2Count - mCountsBeforeSleeping;
+        }
+
+        void updateDataCollectionStatus() {
+            final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
+                    .setTotalEvents(L2Processor.mL2Count)
+                    .setTotalPixels((long)L1Processor.mL1CountData * previewSize.height * previewSize.width)
+                    .setTotalFrames(L1Processor.mL1CountData)
+                    .build();
+            CFApplication.setCollectionStatus(dstatus);
+        }
+
+        String getDevText() {
+
+            if(mApplication.getApplicationState() != CFApplication.State.DATA) {
+                updateFPS();
+            }
+
+            String devtxt = "@@ Developer View @@\n"
+                    + "State: " + mApplication.getApplicationState() + "\n"
+                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
+                    + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
+                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
+                    + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
+                    + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                    + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
+                    + String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
+                    + "\n";
+
+            if (previewSize != null) {
+                ResolutionSpec targetRes = CONFIG.getTargetResolution();
+                devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
+            }
+            ExposureBlock xb = xbManager.getCurrentExposureBlock();
+            devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
+            devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
+                    + "Upload server = " + upload_url + "\n"
+                    + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
+                    + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+                    + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
+
+            return devtxt;
+
+        }
 
     }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
 
 
 }
