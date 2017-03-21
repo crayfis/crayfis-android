@@ -26,7 +26,6 @@
     <string name="settings_autostart_title">Klicka för att förebygga autostart</string>
     <string name="menu_about">Om</string>
     <string name="menu_settings">Inställningar</string>
-    <string name="menu_sleep">Sömnläge</string>
     <string name="menu_view_mode">Visningsläge</string>
     <string name="toast_black">Här visas när kandidater till kosmiska partiklar träffar din telefon i realtid.\n\nFöredrar du släckt skärm? Stäng av live-visningen under Inställningar.</string>
     <string name="toast_data">Den här skärmen visar appens status.\n\nSvep för andra visningslägen.</string>

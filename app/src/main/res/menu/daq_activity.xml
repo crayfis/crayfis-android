@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:crayfis="http://schemas.android.com/apk/res-auto" >
+    <item android:id="@+id/menu_stop"
+        crayfis:showAsAction="ifRoom"
+            android:icon="@drawable/ic_action_stop"
+        android:title="@string/menu_stop"/>
     <item android:id="@+id/menu_about"
           crayfis:showAsAction="never"
           android:title="@string/menu_about"/>

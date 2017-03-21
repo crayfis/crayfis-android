@@ -26,7 +26,6 @@
     <string name="settings_autostart_title">点击以阻止自动启动</string>
     <string name="menu_about">关于</string>
     <string name="menu_settings">设置</string>
-    <string name="menu_sleep">休眠</string>
     <string name="menu_view_mode">显示模式</string>
     <string name="toast_black">此表明您手机正采集到宇宙线候选事例正在通过您的手机.\n\n希望黑屏运行么? 您可以在设置中关闭即时光斑显示.</string>
     <string name="toast_data">此屏显示状态.\n\n滑动到其他视图.</string>

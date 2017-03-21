@@ -26,7 +26,6 @@
     <string name="settings_autostart_title">Klicken, um Autostart zu verhindern</string>
     <string name="menu_about">About</string>
     <string name="menu_settings">Einstellungen</string>
-    <string name="menu_sleep">Ruhezustand</string>
     <string name="menu_view_mode">Ansicht</string>
     <string name="toast_black">This shows cosmic ray candidates hitting your phone in real time.\n\nPrefer a black screen? You can disable live splashes in Settings.</string>
     <string name="toast_data">Dieses Fenster zeigt den aktuellen Zustand.\n\nWischen Sie fuer andere Ansichten.</string>
