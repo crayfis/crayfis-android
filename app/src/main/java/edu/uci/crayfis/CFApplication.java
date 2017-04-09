@@ -20,8 +20,10 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
@@ -32,6 +34,9 @@ public class CFApplication extends Application {
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
+
+    public static final String ACTION_CAMERA_CHANGE = "camera_change";
+    public static final String EXTRA_NEW_CAMERA = "new_camera";
     // TODO: This should be a configurable value in the preferences.
     public static final int SLEEP_TIMEOUT_MS = 60000;
 
@@ -45,6 +50,7 @@ public class CFApplication extends Application {
     private static DataCollectionStatsView.Status sStatus;
 
     private State mApplicationState;
+    private int mCameraId = -1;
 
     private AppBuild mAppBuild;
 
@@ -119,6 +125,23 @@ public class CFApplication extends Application {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
+    public int getCameraId() { return mCameraId; }
+
+    public synchronized void setCameraId(int id) {
+        if(id != mCameraId) {
+            CFLog.d("cameraId:" + mCameraId + " -> "+ id);
+            mCameraId = id;
+            if(mCameraId < Camera.getNumberOfCameras()) {
+                final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
+                intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
+                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+            } else {
+                setApplicationState(State.IDLE);
+            }
+        }
+
+    }
+
     /**
      * Get the {@link edu.uci.crayfis.CFApplication.AppBuild} for this instance.
      *
@@ -145,7 +168,6 @@ public class CFApplication extends Application {
     public static void setLastKnownLocation(Location lastKnownLocation) {
         mLastKnownLocation = lastKnownLocation;
     }
-
 
     public static Camera.Size getCameraSize() {
         return mCameraSize;

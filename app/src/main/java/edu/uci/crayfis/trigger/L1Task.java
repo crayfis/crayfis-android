@@ -1,9 +1,12 @@
 package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * Created by cshimmin on 5/12/16.
@@ -25,6 +28,7 @@ class L1Task implements Runnable {
     private RawCameraFrame mFrame = null;
     private ExposureBlock mExposureBlock = null;
     private CFApplication mApplication = null;
+    private CFConfig CONFIG = CFConfig.getInstance();
     private boolean mKeepFrame = false;
 
     public L1Task(L1Processor l1processor, RawCameraFrame frame) {
@@ -40,6 +44,21 @@ class L1Task implements Runnable {
         // show the frame to the L1 calibrator
         if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
             mL1Processor.mL1Cal.AddFrame(mFrame);
+        }
+
+        // check whether camera has been uncovered
+        if(mFrame.getPixAvg() > CONFIG.getQualityBgAverage() || mFrame.getPixStd() > CONFIG.getQualityBgVariance()) {
+            CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + mFrame.getPixAvg());
+            CFLog.w("std req: " + CONFIG.getQualityBgVariance() + ", obs: " + mFrame.getPixStd());
+
+            if(mApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
+
+                // switch cameras and try again
+                mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
+
+            } else {
+                mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+            }
         }
 
         return false;

@@ -40,6 +40,7 @@ public class RawCameraFrame {
     private ExposureBlock mExposureBlock;
 
     private static Camera mCamera;
+    private static int mCameraId;
     private static int mFrameWidth;
     private static int mFrameHeight;
     private static int mLength;
@@ -65,8 +66,9 @@ public class RawCameraFrame {
         mAcquiredTime = timestamp;
     }
 
-    public static void setCamera(Camera camera) {
+    public static void setCamera(Camera camera, int cameraId) {
         mCamera = camera;
+        mCameraId = cameraId;
         Camera.Parameters params = camera.getParameters();
         Camera.Size sz = params.getPreviewSize();
         mFrameWidth = sz.width;
@@ -75,9 +77,9 @@ public class RawCameraFrame {
     }
 
     @TargetApi(19)
-    public static void setCameraWithRenderScript(Camera camera, RenderScript rs) {
+    public static void setCameraWithRenderScript(Camera camera, int cameraId, RenderScript rs) {
 
-        setCamera(camera);
+        setCamera(camera, cameraId);
 
         Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
         Type type = tb.setX(mFrameWidth)
@@ -252,6 +254,8 @@ public class RawCameraFrame {
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
     public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
+
+    public static int getCameraId() { return mCameraId; }
 
     private void calculateStatistics() {
         if (mPixMax >= 0) {

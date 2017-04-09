@@ -20,6 +20,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.ContactsContract;
 import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
@@ -96,9 +97,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
         // State changes
 
-        LocalBroadcastManager.getInstance(context).registerReceiver(STATE_CHANGE_RECEIVER,
-                new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
+        mBroadcastManager = LocalBroadcastManager.getInstance(context);
+        mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+        mBroadcastManager.registerReceiver(CAMERA_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_CAMERA_CHANGE));
 
         // Sensors
 
@@ -139,8 +140,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             throw new RuntimeException(
                     "Bug, camera should not be initialized already");
 
-        setUpAndConfigureCamera();
-
 
         // Frame Processing
 
@@ -171,22 +170,14 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         batteryPct = -1; // indicate no data yet
         batteryTemp = -1;
 
-        if(mBatteryCheckTimer != null) {
-            mBatteryCheckTimer.cancel();
+        if(mHardwareCheckTimer != null) {
+            mHardwareCheckTimer.cancel();
         }
-        mBatteryCheckTimer = new Timer();
-        mBatteryCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
-
+        mHardwareCheckTimer = new Timer();
+        mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
 
 
         ((CFApplication) getApplication()).setApplicationState(CFApplication.State.STABILIZATION);
-
-        // once all the hardware is set up and the output manager is running,
-        // we can generate and commit the runconfig
-        if (run_config == null) {
-            generateRunConfig();
-            UploadExposureService.submitRunConfig(context, run_config);
-        }
     }
 
     @Override
@@ -216,7 +207,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
-        ((CFApplication) getApplication()).setApplicationState(CFApplication.State.IDLE);
+        if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
+            mApplication.setApplicationState(CFApplication.State.IDLE);
+        }
 
         mSensorManager.unregisterListener(this);
         mGoogleApiClient.disconnect();
@@ -231,9 +224,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             ntpThread = null;
         }
 
-        mBatteryCheckTimer.cancel();
+        mHardwareCheckTimer.cancel();
 
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(STATE_CHANGE_RECEIVER);
+        mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
+        mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
+
 
         DataCollectionFragment.getInstance().updateIdleStatus("");
         CFLog.d("DAQService: stopped");
@@ -246,6 +241,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     //  Handle state changes //
     ///////////////////////////
 
+    LocalBroadcastManager mBroadcastManager;
+
 
     private final BroadcastReceiver STATE_CHANGE_RECEIVER = new BroadcastReceiver() {
         @Override
@@ -254,18 +251,16 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.d(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
-            if (current != previous) {
-                if (current == CFApplication.State.DATA) {
-                    doStateTransitionData(previous);
-                } else if (current == CFApplication.State.STABILIZATION) {
-                    doStateTransitionStabilization(previous);
-                } else if (current == CFApplication.State.IDLE) {
-                    doStateTransitionIdle(previous);
-                } else if (current == CFApplication.State.CALIBRATION) {
-                    doStateTransitionCalibration(previous);
-                } else if (current == CFApplication.State.RECONFIGURE) {
-                    doStateTransitionReconfigure(previous);
-                }
+            if (current == CFApplication.State.DATA) {
+                doStateTransitionData(previous);
+            } else if (current == CFApplication.State.STABILIZATION) {
+                doStateTransitionStabilization(previous);
+            } else if (current == CFApplication.State.IDLE) {
+                doStateTransitionIdle(previous);
+            } else if (current == CFApplication.State.CALIBRATION) {
+                doStateTransitionCalibration(previous);
+            } else if (current == CFApplication.State.RECONFIGURE) {
+                doStateTransitionReconfigure(previous);
             }
         }
     };
@@ -277,6 +272,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+        mApplication.setCameraId(0);
         switch(previousState) {
             case INIT:
             case IDLE:
@@ -290,13 +286,12 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 l2thread.clearQueue();
                 }
                 */
-                xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
+                //xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
                 break;
 
             // coming out of calibration and data should be the same.
             case CALIBRATION:
             case DATA:
-                //l2thread.clearQueue();
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
@@ -324,6 +319,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 break;
             case STABILIZATION:
                 // for data, stop taking data to let battery charge
+                stabilizationCountdown = stabilizationDelay; // wait before retrying camera
+                DataCollectionFragment.getInstance().updateIdleStatus("No cameras uncovered");
+                CFLog.d("No cameras uncovered");
                 xbManager.newExposureBlock(CFApplication.State.IDLE);
                 break;
             default:
@@ -339,6 +337,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 L1cal.clear();
                 frame_times.clear();
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
+                // generate runconfig for a specific camera
+                if (run_config == null) {
+                    generateRunConfig();
+                    UploadExposureService.submitRunConfig(context, run_config);
+                }
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + ((CFApplication) getApplication()).getApplicationState());
@@ -362,7 +365,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
         // tear down and then reconfigure the camera
         unSetupCamera();
-        setUpAndConfigureCamera();
+        setUpAndConfigureCamera(mApplication.getCameraId());
 
         final CFApplication app = (CFApplication)getApplicationContext();
         // if we were idling, go back to that state.
@@ -427,6 +430,22 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         }
 
     }
+
+
+    private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            CFLog.d("Changing cameras");
+            unSetupCamera();
+            setUpAndConfigureCamera(mApplication.getCameraId());
+            if(mApplication.getCameraId() != 0) {
+                // first choice failed
+                xbManager.abortExposureBlock();
+            } else {
+                xbManager.newExposureBlock(mApplication.getApplicationState());
+            }
+        }
+    };
 
 
 
@@ -527,7 +546,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             if (location_valid(location))
             {
                 // do we not have a valid current location?
-                if (location_valid(CFApplication.getLastKnownLocation()) == false)
+                if (!location_valid(CFApplication.getLastKnownLocation()))
                 {
                     // use the deprecated info if it's the best we have
                     CFApplication.setLastKnownLocation(location);
@@ -643,12 +662,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     /**
      * Sets up the camera if it is not already setup.
      */
-    private synchronized void setUpAndConfigureCamera() {
+    private synchronized void setUpAndConfigureCamera(int cameraId) {
         // Open and configure the camera
         CFLog.d("setUpAndConfigureCamera()");
-        if(mCamera != null && CFApplication.getCameraSize() != null) return;
+        if(mCamera != null && CFApplication.getCameraSize() != null
+                || cameraId > Camera.getNumberOfCameras()) { return; }
         try {
-            mCamera = Camera.open();
+            mCamera = Camera.open(cameraId);
         } catch (Exception e) {
             //userErrorMessage(getResources().getString(R.string.camera_error),true);
 
@@ -717,10 +737,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 CFLog.i("Configuring RenderScript");
 
-                RawCameraFrame.setCameraWithRenderScript(mCamera, mRS);
+                RawCameraFrame.setCameraWithRenderScript(mCamera, cameraId, mRS);
+            } else {
+                RawCameraFrame.setCamera(mCamera, cameraId);
             }
-
-            RawCameraFrame.setCamera(mCamera);
 
             mCamera.startPreview();
         }  catch (Exception e) {
@@ -963,19 +983,20 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     // Routine system checks //
     ///////////////////////////
 
-    private Timer mBatteryCheckTimer;
-
+    private Timer mHardwareCheckTimer;
 
     public final float battery_stop_threshold = 0.20f;
     public final float battery_start_threshold = 0.80f;
-    public final int batteryOverheatTemp = 450;
-    public final int batteryStartTemp = 380;
+    public final int batteryOverheatTemp = 420;
+    public final int batteryStartTemp = 350;
+    private final int stabilizationDelay = 300000; // ms
 
     private final long battery_check_wait = 10000; // ms
     private float batteryPct;
     private int batteryTemp;
     private boolean batteryOverheated = false;
     private long last_battery_check_time;
+    private int stabilizationCountdown = stabilizationDelay;
 
 
 
@@ -987,10 +1008,16 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         @Override
         public void run() {
             final CFApplication application = (CFApplication) getApplication();
+            final DataCollectionFragment fragment = DataCollectionFragment.getInstance();
             last_battery_check_time = System.currentTimeMillis();
 
             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = context.registerReceiver(null, ifilter);
+
+            //
+            // see if anything is wrong with the battery
+            //
+
             int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             batteryPct = level / (float) scale;
@@ -1001,34 +1028,31 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             if (batteryOverheated) {
                 // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
                 batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
-                DataCollectionFragment.getInstance().updateIdleStatus("Cooling battery: " + String.format("%1.1f", newTemp / 10.) + "C");
-            } else {
-                // if not in IDLE mode for overheat, must be for low battery
-                DataCollectionFragment.getInstance().updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
+                fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", newTemp / 10.) + "C");
+            } else if (batteryPct < battery_start_threshold) {
+                fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
             }
             batteryTemp = newTemp;
 
+            // go into idle mode if necessary
             if (application.getApplicationState() != edu.uci.crayfis.CFApplication.State.IDLE) {
                 if (batteryPct < battery_stop_threshold) {
                     CFLog.d(" Battery too low, going to IDLE mode.");
-                    DataCollectionFragment.getInstance().updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
+                    fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
                     application.setApplicationState(CFApplication.State.IDLE);
                 } else if (batteryTemp > batteryOverheatTemp) {
                     CFLog.d(" Battery too hot, going to IDLE mode.");
-                    DataCollectionFragment.getInstance().updateIdleStatus("Cooling battery: " + String.format("%1.1f", batteryTemp / 10.) + "C");
+                    fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", batteryTemp / 10.) + "C");
                     application.setApplicationState(CFApplication.State.IDLE);
                     batteryOverheated = true;
                 }
 
             }
-
-            if (application.getApplicationState() == edu.uci.crayfis.CFApplication.State.IDLE
-                    && batteryPct > battery_start_threshold && !batteryOverheated) {
-                CFLog.d(" Battery ok now, returning to run mode.");
-                setUpAndConfigureCamera();
-
-                application.setApplicationState(CFApplication.State.STABILIZATION);
+            // if we are in idle mode, restart if everything is okay
+            else if (batteryPct >= battery_start_threshold && !batteryOverheated && stabilizationCountdown == 0) {
+                //application.setApplicationState(CFApplication.State.STABILIZATION);
             }
+
         }
     }
 
@@ -1089,7 +1113,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
             if (previewSize != null) {
                 ResolutionSpec targetRes = CONFIG.getTargetResolution();
-                devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
+                devtxt += "Camera ID: " + mApplication.getCameraId() + ", Image dimensions = " + previewSize.width + "x" + previewSize.height
+                        + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
             }
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
