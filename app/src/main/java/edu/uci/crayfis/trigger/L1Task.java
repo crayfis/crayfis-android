@@ -51,13 +51,14 @@ class L1Task implements Runnable {
             CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + mFrame.getPixAvg());
             CFLog.w("std req: " + CONFIG.getQualityBgVariance() + ", obs: " + mFrame.getPixStd());
 
-            if(mApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
-
-                // switch cameras and try again
-                mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
-
-            } else {
-                mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+            switch(mApplication.getApplicationState()) {
+                case STABILIZATION:
+                    // switch cameras and try again
+                    mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
+                    break;
+                case CALIBRATION:
+                case DATA:
+                    mApplication.setApplicationState(CFApplication.State.STABILIZATION);
             }
         }
 
