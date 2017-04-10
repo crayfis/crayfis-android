@@ -1,11 +1,14 @@
 package edu.uci.crayfis;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -73,6 +76,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     private CFApplication.AppBuild mAppBuild;
     private String upload_url;
     private final int FOREGROUND_ID = 1;
+    private int errorId = 2;
 
     @Override
     public void onCreate() {
@@ -226,6 +230,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         }
 
         mHardwareCheckTimer.cancel();
+        mStabilizationTimer.cancel();
 
         mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
         mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
@@ -659,7 +664,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         try {
             mCamera = Camera.open(cameraId);
         } catch (Exception e) {
-            //userErrorMessage(getResources().getString(R.string.camera_error),true);
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
 
         }
         CFLog.d("Camera opened camera="+mCamera);
@@ -705,7 +710,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             CFApplication.setCameraSize(mParams.getPreviewSize());
 
         } catch (Exception e) {
-            //userErrorMessage(getResources().getString(R.string.camera_error),true);
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
 
         }
 
@@ -733,7 +738,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
             mCamera.startPreview();
         }  catch (Exception e) {
-            //userErrorMessage(getResources().getString(R.string.camera_error),true);
+            userErrorMessage(getResources().getString(R.string.camera_error),true);
         }
     }
 
@@ -1072,6 +1077,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     private final IBinder mBinder = new DAQBinder();
     private long mTimeBeforeSleeping = 0;
     private int mCountsBeforeSleeping = 0;
+    public static final String ACTION_FATAL_ERROR = "fatal_error";
 
     class DAQBinder extends Binder {
 
@@ -1139,6 +1145,27 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         return mBinder;
     }
 
+    private void userErrorMessage(String mess, boolean fatal) {
+
+        Notification notification = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_just_a)
+                .setContentTitle(getString(R.string.notification_title))
+                .setContentText(mess)
+                .setContentIntent(null)
+                .build();
+
+        NotificationManager notificationManager
+                = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(errorId, notification);
+        errorId++;
+
+        if(fatal) {
+            stopForeground(true);
+            // make sure to kill activity if open
+            mBroadcastManager.sendBroadcast(new Intent(ACTION_FATAL_ERROR));
+            stopSelf();
+        }
+    }
 
 
 }

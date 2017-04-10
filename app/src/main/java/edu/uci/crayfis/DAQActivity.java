@@ -18,10 +18,12 @@
 package edu.uci.crayfis;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -30,6 +32,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -90,6 +93,12 @@ public class DAQActivity extends AppCompatActivity {
 	Context context;
     private Intent DAQIntent;
     private ActionBarDrawerToggle mActionBarDrawerToggle;
+    private final BroadcastReceiver FATAL_ERROR_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            finish();
+        }
+    };
 
     ////////////////////////
     // Activity lifecycle //
@@ -121,6 +130,9 @@ public class DAQActivity extends AppCompatActivity {
         configureNavigation();
 
         context = getApplicationContext();
+
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(DAQService.ACTION_FATAL_ERROR));
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -392,26 +404,6 @@ public class DAQActivity extends AppCompatActivity {
 
 
     private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
-
-    private void userErrorMessage(String mess, boolean fatal)
-    {
-        final TextView tx1 = new TextView(this);
-        tx1.setText(mess);
-        tx1.setTextColor(Color.WHITE);
-        tx1.setBackgroundColor(Color.BLACK);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
-                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                    }
-                })
-
-                .setView(tx1).show();
-        finish();
-        if (fatal)
-            System.exit(0);
-    }
-
 
 
     /**
