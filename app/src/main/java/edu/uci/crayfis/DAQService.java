@@ -57,12 +57,15 @@ import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
+import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
+
 /**
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements Camera.PreviewCallback, SensorEventListener,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+public class DAQService extends Service implements Camera.PreviewCallback, Camera.ErrorCallback,
+        SensorEventListener, GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener {
 
 
@@ -212,6 +215,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
+        DataCollectionFragment.getInstance().updateIdleStatus("");
+
         if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
             mApplication.setApplicationState(CFApplication.State.IDLE);
         }
@@ -229,14 +234,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             ntpThread = null;
         }
 
-        mHardwareCheckTimer.cancel();
-        mStabilizationTimer.cancel();
-
         mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
         mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
 
+        mHardwareCheckTimer.cancel();
 
-        DataCollectionFragment.getInstance().updateIdleStatus("");
         CFLog.d("DAQService: stopped");
     }
 
@@ -280,16 +282,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         mApplication.setCameraId(0);
         switch(previousState) {
-            case INIT:
-            case IDLE:
-            case RECONFIGURE:
-                break;
-
             // coming out of calibration and data should be the same.
             case CALIBRATION:
             case DATA:
                 xbManager.abortExposureBlock();
-                break;
+            case INIT:
+            case IDLE:
+            case RECONFIGURE:
             case STABILIZATION:
                 break;
             default:
@@ -315,9 +314,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 break;
             case STABILIZATION:
                 // for data, stop taking data to let battery charge
-                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
                 xbManager.newExposureBlock(CFApplication.State.IDLE);
-                mStabilizationTimer.start();
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -431,13 +428,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         public void onReceive(Context context, Intent intent) {
             CFLog.d("Changing cameras");
             unSetupCamera();
-            setUpAndConfigureCamera(mApplication.getCameraId());
-            if(mApplication.getCameraId() != 0) {
-                // first choice failed
-                xbManager.abortExposureBlock();
-            } else {
-                xbManager.newExposureBlock(mApplication.getApplicationState());
-            }
+            setUpAndConfigureCamera(intent.getIntExtra(EXTRA_NEW_CAMERA, 0));
+            xbManager.newExposureBlock(mApplication.getApplicationState());
         }
     };
 
@@ -736,6 +728,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
                 RawCameraFrame.setCamera(mCamera, cameraId);
             }
 
+            // allow other apps to access camera
+            mCamera.setErrorCallback(this);
+
             mCamera.startPreview();
         }  catch (Exception e) {
             userErrorMessage(getResources().getString(R.string.camera_error),true);
@@ -764,6 +759,24 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
         CFLog.d(" DAQActivity: unsetup camera");
     }
+
+    @Override
+    public void onError(int errorId, Camera camera) {
+        // TODO: combine this with L1Task.processInitial()
+        CFLog.e("Camera error " + errorId);
+        unSetupCamera();
+        switch(mApplication.getApplicationState()) {
+            case STABILIZATION:
+                // switch cameras and try again
+                mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
+                break;
+            case CALIBRATION:
+            case DATA:
+                // take a break for a while
+                mApplication.setCameraId(Camera.getNumberOfCameras());
+        }
+    }
+
 
 
 
@@ -989,21 +1002,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     private int batteryTemp;
     private boolean batteryOverheated = false;
     private long last_battery_check_time;
-
-    private long stabilizationCountdownUpdateTick = 1000; // ms
-    private long stabilizationDelay = 300000; // ms
-    private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
-        @Override
-        public void onTick(long millisUntilFinished) {
-            CFLog.d("Time left: " + millisUntilFinished / 1000L);
-        }
-
-        @Override
-        public void onFinish() {
-            mApplication.setApplicationState(CFApplication.State.STABILIZATION);
-        }
-
-    };
 
 
 

@@ -10,6 +10,7 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -23,6 +24,7 @@ import java.util.UUID;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
@@ -37,8 +39,21 @@ public class CFApplication extends Application {
 
     public static final String ACTION_CAMERA_CHANGE = "camera_change";
     public static final String EXTRA_NEW_CAMERA = "new_camera";
-    // TODO: This should be a configurable value in the preferences.
-    public static final int SLEEP_TIMEOUT_MS = 60000;
+
+    private long stabilizationCountdownUpdateTick = 1000; // ms
+    private long stabilizationDelay = 30000; // ms
+    private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+            CFLog.d("Time left: " + millisUntilFinished / 1000L);
+        }
+
+        @Override
+        public void onFinish() {
+            setApplicationState(CFApplication.State.STABILIZATION);
+        }
+
+    };
 
     //private static final String SHARED_PREFS_NAME = "global";
     private static Location mLastKnownLocation;
@@ -136,6 +151,8 @@ public class CFApplication extends Application {
                 intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             } else {
+                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+                mStabilizationTimer.start();
                 setApplicationState(State.IDLE);
             }
         }
