@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -135,6 +136,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             mLastLocationDeprecated = getLocationDeprecated();
         } catch (SecurityException se) {
             // permission revoked?
+            se.printStackTrace();
             Intent permissionIntent = new Intent(this, MainActivity.class);
             startActivity(permissionIntent);
             stopSelf();
@@ -280,13 +282,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        mApplication.setCameraId(0);
         switch(previousState) {
-            // coming out of calibration and data should be the same.
+            case INIT:
             case CALIBRATION:
             case DATA:
-                xbManager.abortExposureBlock();
-            case INIT:
             case IDLE:
             case RECONFIGURE:
             case STABILIZATION:
@@ -294,6 +293,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
         }
+        // exposure blocks are created in camera setup
+        mApplication.setCameraId(0);
     }
 
     /**
@@ -426,10 +427,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            CFLog.d("Changing cameras");
             unSetupCamera();
             setUpAndConfigureCamera(intent.getIntExtra(EXTRA_NEW_CAMERA, 0));
-            xbManager.newExposureBlock(mApplication.getApplicationState());
+            if(xbManager.getCurrentExposureBlock() == null) {
+                xbManager.newExposureBlock(mApplication.getApplicationState());
+            } else {
+                xbManager.abortExposureBlock();
+            }
         }
     };
 
@@ -656,8 +660,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         try {
             mCamera = Camera.open(cameraId);
         } catch (Exception e) {
-            userErrorMessage(getResources().getString(R.string.camera_error),true);
-
+            if (e.getMessage().equals("Fail to connect to camera service")) {
+                // camera is in use by another app, so just wait it out
+                onError(1, mCamera);
+                return;
+            } else {
+                userErrorMessage(getResources().getString(R.string.camera_error), true);
+            }
         }
         CFLog.d("Camera opened camera="+mCamera);
         try {
@@ -763,12 +772,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     @Override
     public void onError(int errorId, Camera camera) {
         // TODO: combine this with L1Task.processInitial()
+        if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
         unSetupCamera();
         switch(mApplication.getApplicationState()) {
             case STABILIZATION:
                 // switch cameras and try again
-                mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
+                mApplication.setCameraId(mApplication.getCameraId()+1);
                 break;
             case CALIBRATION:
             case DATA:
@@ -976,7 +986,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
         target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
-        return L1cal.findL1Threshold(target_L1_eff);
+        return Math.max(L1cal.findL1Threshold(target_L1_eff),2);
     }
 
 
@@ -1112,7 +1122,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
                     + "State: " + mApplication.getApplicationState() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                     + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
-                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "") + "\n"
+                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "")
+                    + ", L2 Threshold:" + (CONFIG != null ? CONFIG.getL2Threshold() : -1) + "\n"
                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
@@ -1145,23 +1156,25 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
     private void userErrorMessage(String mess, boolean fatal) {
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_just_a)
-                .setContentTitle(getString(R.string.notification_title))
-                .setContentText(mess)
-                .setContentIntent(null)
-                .build();
-
-        NotificationManager notificationManager
-                = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.notify(errorId, notification);
-        errorId++;
-
         if(fatal) {
-            stopForeground(true);
+            CFLog.e("Error: " + mess);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_just_a)
+                    .setContentTitle(getString(R.string.notification_title))
+                    .setContentText(mess)
+                    .setContentIntent(null)
+                    .build();
+
+            NotificationManager notificationManager
+                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(errorId, notification);
+            errorId++;
+
             // make sure to kill activity if open
             mBroadcastManager.sendBroadcast(new Intent(ACTION_FATAL_ERROR));
             stopSelf();
+        } else {
+            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
         }
     }
 

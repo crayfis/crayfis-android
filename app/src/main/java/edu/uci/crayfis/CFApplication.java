@@ -41,7 +41,7 @@ public class CFApplication extends Application {
     public static final String EXTRA_NEW_CAMERA = "new_camera";
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
-    private long stabilizationDelay = 30000; // ms
+    private long stabilizationDelay = 300000; // ms
     private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
         @Override
         public void onTick(long millisUntilFinished) {
