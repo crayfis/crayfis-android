@@ -113,9 +113,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         // Sensors
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        Sensor gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        Sensor accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        Sensor pressureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
 
         Sensor sens = gravSensor;
         if (sens == null) {
@@ -124,6 +125,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 
         // Location
@@ -448,25 +450,29 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
 
     SensorManager mSensorManager;
-    private Sensor gravSensor = null;
-    private Sensor accelSensor = null;
-    private Sensor magSensor = null;
     private float[] gravity = new float[3];
     private float[] geomagnetic = new float[3];
     private float[] orientation = new float[3];
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        if (gravSensor !=null && event.sensor.getType() == gravSensor.getType()) {
-            // get the gravity vector:
-            gravity[0] = event.values[0];
-            gravity[1] = event.values[1];
-            gravity[2] = event.values[2];
-        }
-        if (magSensor != null && event.sensor.getType() == magSensor.getType()) {
-            geomagnetic[0] = event.values[0];
-            geomagnetic[1] = event.values[1];
-            geomagnetic[2] = event.values[2];
+        switch(event.sensor.getType()) {
+            // both gravity and accel should give the same gravity vector
+            case Sensor.TYPE_ACCELEROMETER:
+            case Sensor.TYPE_GRAVITY:
+                // get the gravity vector:
+                gravity[0] = event.values[0];
+                gravity[1] = event.values[1];
+                gravity[2] = event.values[2];
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                geomagnetic[0] = event.values[0];
+                geomagnetic[1] = event.values[1];
+                geomagnetic[2] = event.values[2];
+                break;
+            case Sensor.TYPE_PRESSURE:
+                mFrameBuilder.setPressure(event.values[0]);
+                return;
         }
 
         // now update the orientation vector
@@ -474,10 +480,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         boolean succ = SensorManager.getRotationMatrix(R, null, gravity, geomagnetic);
         if (succ) {
             SensorManager.getOrientation(R, orientation);
-        } else {
-            orientation[0] = 0;
-            orientation[1] = 0;
-            orientation[2] = 0;
+            mFrameBuilder.setOrientation(orientation);
         }
     }
 
@@ -914,8 +917,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             RawCameraFrame frame = mFrameBuilder.setBytes(bytes)
                     .setAcquisitionTime(acq_time)
                     .setLocation(CFApplication.getLastKnownLocation())
-                    .setOrientation(orientation)
-                    .setBatteryTemp(batteryTemp)
                     .setExposureBlock(xb)
                     .build();
 
@@ -1045,6 +1046,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             batteryPct = level / (float) scale;
             // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            mFrameBuilder.setBatteryTemp(newTemp);
             xbManager.updateBatteryTemp(newTemp);
             CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
             if (batteryOverheated) {

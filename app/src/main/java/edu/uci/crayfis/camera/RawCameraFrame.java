@@ -28,22 +28,23 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
-    private Mat mGrayMat;
-    private final AcquisitionTime mAcquiredTime;
-    private Location mLocation;
-    private float[] mOrientation;
-    private int mBatteryTemp;
-    private int mPixMax = -1;
-    private double mPixAvg = -1;
-    private double mPixStd = -1;
-    private Boolean mBufferClaimed = false;
-    private ExposureBlock mExposureBlock;
 
     private Camera mCamera;
     private int mCameraId;
     private int mFrameWidth;
     private int mFrameHeight;
     private int mLength;
+
+    private final AcquisitionTime mAcquiredTime;
+    private Location mLocation;
+    private float[] mOrientation;
+    private float mPressure;
+    private int mBatteryTemp;
+    private int mPixMax = -1;
+    private double mPixAvg = -1;
+    private double mPixStd = -1;
+    private Boolean mBufferClaimed = false;
+    private ExposureBlock mExposureBlock;
 
     public static final int BORDER = 10;
 
@@ -54,6 +55,8 @@ public class RawCameraFrame {
     private Allocation ain;
     private Allocation aweights;
     private Allocation aout;
+
+    private Mat mGrayMat;
 
     /**
      * Class for creating immutable RawCameraFrames
@@ -68,6 +71,7 @@ public class RawCameraFrame {
         private AcquisitionTime bAcquisitionTime;
         private Location bLocation;
         private float[] bOrientation;
+        private float bPressure;
         private int bBatteryTemp;
         private ExposureBlock bExposureBlock;
         private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
@@ -144,6 +148,11 @@ public class RawCameraFrame {
             return this;
         }
 
+        public Builder setPressure(float pressure) {
+            bPressure = pressure;
+            return this;
+        }
+
         public Builder setBatteryTemp(int batteryTemp) {
             bBatteryTemp = batteryTemp;
             return this;
@@ -156,8 +165,8 @@ public class RawCameraFrame {
 
         public RawCameraFrame build() {
             return new RawCameraFrame(bBytes, bCamera, bCameraId, bFrameWidth, bFrameHeight,
-                    bLength, bAcquisitionTime, bLocation, bOrientation, bBatteryTemp, bExposureBlock,
-                    bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
+                    bLength, bAcquisitionTime, bLocation, bOrientation, bPressure, bBatteryTemp,
+                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
         }
     }
 
@@ -173,6 +182,7 @@ public class RawCameraFrame {
      * @param acquisitionTime
      * @param location
      * @param orientation
+     * @param pressure
      * @param batteryTemp
      * @param exposureBlock
      * @param scriptIntrinsicHistogram
@@ -190,6 +200,7 @@ public class RawCameraFrame {
                            final AcquisitionTime acquisitionTime,
                            final Location location,
                            final float[] orientation,
+                           final float pressure,
                            final int batteryTemp,
                            final ExposureBlock exposureBlock,
                            final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
@@ -206,6 +217,7 @@ public class RawCameraFrame {
         mAcquiredTime = acquisitionTime;
         mLocation = location;
         mOrientation = orientation;
+        mPressure = pressure;
         mBatteryTemp = batteryTemp;
         mExposureBlock = exposureBlock;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
@@ -351,6 +363,8 @@ public class RawCameraFrame {
     public float[] getOrientation() {
         return mOrientation;
     }
+
+    public float getPressure() { return mPressure; }
 
     public int getBatteryTemp() { return mBatteryTemp; }
 
