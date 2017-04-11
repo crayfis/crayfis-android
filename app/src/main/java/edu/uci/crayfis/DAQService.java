@@ -153,6 +153,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         // Frame Processing
 
+        mFrameBuilder = new RawCameraFrame.Builder();
         mL2Processor = new L2Processor(mApplication);
         mL1Processor = new L1Processor(mApplication);
         mL1Processor.setL2Processor(mL2Processor);
@@ -732,9 +733,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 CFLog.i("Configuring RenderScript");
 
-                RawCameraFrame.setCameraWithRenderScript(mCamera, cameraId, mRS);
+                mFrameBuilder.setCamera(mCamera, mRS)
+                        .setCameraId(cameraId);
             } else {
-                RawCameraFrame.setCamera(mCamera, cameraId);
+                mFrameBuilder.setCamera(mCamera)
+                        .setCameraId(cameraId);
             }
 
             // allow other apps to access camera
@@ -863,6 +866,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     // Frame processing //
     //////////////////////
 
+    private RawCameraFrame.Builder mFrameBuilder;
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
@@ -906,10 +910,14 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
 
             // pack the image bytes along with other event info into a RawCameraFrame object
-            RawCameraFrame frame = new RawCameraFrame(bytes, acq_time);
-            frame.setLocation(CFApplication.getLastKnownLocation());
-            frame.setOrientation(orientation);
-            frame.setBatteryTemp(batteryTemp);
+
+            RawCameraFrame frame = mFrameBuilder.setBytes(bytes)
+                    .setAcquisitionTime(acq_time)
+                    .setLocation(CFApplication.getLastKnownLocation())
+                    .setOrientation(orientation)
+                    .setBatteryTemp(batteryTemp)
+                    .setExposureBlock(xb)
+                    .build();
 
             // try to assign the frame to the current XB
             boolean assigned = xb.assignFrame(frame);
@@ -935,7 +943,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             // If we made it here, we can submit the XB to the L1Processor.
             // It will pop the assigned frame from the XB's internal list, and will also handle
             // recycling the buffers.
-            frame.setExposureBlock(xb);
             mL1Processor.submitFrame(frame);
 
         } catch (Exception e) {

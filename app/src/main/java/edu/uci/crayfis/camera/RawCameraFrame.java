@@ -39,69 +39,180 @@ public class RawCameraFrame {
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
-    private static Camera mCamera;
-    private static int mCameraId;
-    private static int mFrameWidth;
-    private static int mFrameHeight;
-    private static int mLength;
+    private Camera mCamera;
+    private int mCameraId;
+    private int mFrameWidth;
+    private int mFrameHeight;
+    private int mLength;
 
     public static final int BORDER = 10;
 
     // RenderScript objects
 
-    private static ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
-    private static ScriptC_weight mScriptCWeight;
-    private static Allocation ain;
-    private static Allocation aweights;
-    private static Allocation aout;
+    private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
+    private ScriptC_weight mScriptCWeight;
+    private Allocation ain;
+    private Allocation aweights;
+    private Allocation aout;
 
     /**
-     * Create a new instance.
-     *
-     * @param bytes Raw bytes from the camera.
-     * @param timestamp The time at which the image was recieved by our app.
+     * Class for creating immutable RawCameraFrames
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp) {
-        mBytes = bytes;
-        mAcquiredTime = timestamp;
+    public static class Builder {
+        private byte[] bBytes;
+        private Camera bCamera;
+        private int bCameraId;
+        private int bFrameWidth;
+        private int bFrameHeight;
+        private int bLength;
+        private AcquisitionTime bAcquisitionTime;
+        private Location bLocation;
+        private float[] bOrientation;
+        private int bBatteryTemp;
+        private ExposureBlock bExposureBlock;
+        private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        private ScriptC_weight bScriptCWeight;
+        private Allocation bin;
+        private Allocation bweights;
+        private Allocation bout;
+
+        public Builder() {
+
+        }
+
+        public Builder setBytes(byte[] bytes) {
+            bBytes = bytes;
+            return this;
+        }
+
+        public Builder setCamera(Camera camera) {
+            bCamera = camera;
+            Camera.Parameters params = camera.getParameters();
+            Camera.Size sz = params.getPreviewSize();
+            bFrameWidth = sz.width;
+            bFrameHeight = sz.height;
+            bLength = bFrameWidth * bFrameHeight;
+            return this;
+        }
+
+        @TargetApi(19)
+        public Builder setCamera(Camera camera, RenderScript rs) {
+
+            setCamera(camera);
+
+            Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
+            Type type = tb.setX(bFrameWidth)
+                    .setY(bFrameHeight)
+                    .create();
+            bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+            bweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+            bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
+            bScriptIntrinsicHistogram.setOutput(bout);
+
+            // define aweights
+            byte[] maskArray = new byte[(bFrameWidth-2*BORDER)*(bFrameHeight-2*BORDER)];
+
+            // for now, just use equal weights
+            byte b1 = (byte)1;
+            Arrays.fill(maskArray, b1);
+
+            bweights.copy2DRangeFrom(BORDER, BORDER, bFrameWidth-2*BORDER, bFrameHeight-2*BORDER, maskArray);
+            bScriptCWeight = new ScriptC_weight(rs);
+            bScriptCWeight.set_weights(bweights);
+
+            return this;
+        }
+
+        public Builder setCameraId(int cameraId) {
+            bCameraId = cameraId;
+            return this;
+        }
+
+        public Builder setAcquisitionTime(AcquisitionTime acquisitionTime) {
+            bAcquisitionTime = acquisitionTime;
+            return this;
+        }
+
+        public Builder setLocation(Location location) {
+            bLocation = location;
+            return this;
+        }
+
+        public Builder setOrientation(float[] orientation) {
+            bOrientation = orientation;
+            return this;
+        }
+
+        public Builder setBatteryTemp(int batteryTemp) {
+            bBatteryTemp = batteryTemp;
+            return this;
+        }
+
+        public Builder setExposureBlock(ExposureBlock exposureBlock) {
+            bExposureBlock = exposureBlock;
+            return this;
+        }
+
+        public RawCameraFrame build() {
+            return new RawCameraFrame(bBytes, bCamera, bCameraId, bFrameWidth, bFrameHeight,
+                    bLength, bAcquisitionTime, bLocation, bOrientation, bBatteryTemp, bExposureBlock,
+                    bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
+        }
     }
 
-    public static void setCamera(Camera camera, int cameraId) {
+    /**
+     * Create a new instance via Builder class
+     *
+     * @param bytes
+     * @param camera
+     * @param cameraId
+     * @param frameWidth
+     * @param frameHeight
+     * @param length
+     * @param acquisitionTime
+     * @param location
+     * @param orientation
+     * @param batteryTemp
+     * @param exposureBlock
+     * @param scriptIntrinsicHistogram
+     * @param scriptCWeight
+     * @param in
+     * @param weights
+     * @param out
+     */
+    private RawCameraFrame(@NonNull final byte[] bytes,
+                           final Camera camera,
+                           final int cameraId,
+                           final int frameWidth,
+                           final int frameHeight,
+                           final int length,
+                           final AcquisitionTime acquisitionTime,
+                           final Location location,
+                           final float[] orientation,
+                           final int batteryTemp,
+                           final ExposureBlock exposureBlock,
+                           final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
+                           final ScriptC_weight scriptCWeight,
+                           final Allocation in,
+                           final Allocation weights,
+                           final Allocation out) {
+        mBytes = bytes;
         mCamera = camera;
         mCameraId = cameraId;
-        Camera.Parameters params = camera.getParameters();
-        Camera.Size sz = params.getPreviewSize();
-        mFrameWidth = sz.width;
-        mFrameHeight = sz.height;
-        mLength = mFrameWidth * mFrameHeight;
-    }
-
-    @TargetApi(19)
-    public static void setCameraWithRenderScript(Camera camera, int cameraId, RenderScript rs) {
-
-        setCamera(camera, cameraId);
-
-        Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
-        Type type = tb.setX(mFrameWidth)
-                .setY(mFrameHeight)
-                .create();
-        mScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
-        ain = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-        aweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-        aout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
-        mScriptIntrinsicHistogram.setOutput(aout);
-
-        // define aweights
-        byte[] maskArray = new byte[(mFrameWidth-2*BORDER)*(mFrameHeight-2*BORDER)];
-
-        // for now, just use equal weights
-        byte b1 = (byte)1;
-        Arrays.fill(maskArray, b1);
-
-        aweights.copy2DRangeFrom(BORDER, BORDER, mFrameWidth-2*BORDER, mFrameHeight-2*BORDER, maskArray);
-        mScriptCWeight = new ScriptC_weight(rs);
-        mScriptCWeight.set_weights(aweights);
-
+        mFrameWidth = frameWidth;
+        mFrameHeight = frameHeight;
+        mLength = length;
+        mAcquiredTime = acquisitionTime;
+        mLocation = location;
+        mOrientation = orientation;
+        mBatteryTemp = batteryTemp;
+        mExposureBlock = exposureBlock;
+        mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
+        mScriptCWeight = scriptCWeight;
+        ain = in;
+        aweights = weights;
+        aout = out;
     }
 
 
@@ -227,7 +338,6 @@ public class RawCameraFrame {
      * Set the {@link android.location.Location}.
      *
      * @param location {@link android.location.Location}
-     * @deprecated Current location could be part of the constructor, this method breaks immutability.
      */
     public void setLocation(final Location location) {
         mLocation = location;
@@ -242,20 +352,11 @@ public class RawCameraFrame {
         return mOrientation;
     }
 
-    public void setOrientation(float[] orient) {
-        mOrientation = orient.clone();
-    }
-
     public int getBatteryTemp() { return mBatteryTemp; }
 
-    public void setBatteryTemp(int batteryTemp) {
-        mBatteryTemp = batteryTemp;
-    }
-
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
-    public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
 
-    public static int getCameraId() { return mCameraId; }
+    public int getCameraId() { return mCameraId; }
 
     private void calculateStatistics() {
         if (mPixMax >= 0) {

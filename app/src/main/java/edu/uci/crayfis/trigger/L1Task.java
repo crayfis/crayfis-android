@@ -54,7 +54,7 @@ class L1Task implements Runnable {
             switch(mApplication.getApplicationState()) {
                 case STABILIZATION:
                     // switch cameras and try again
-                    mApplication.setCameraId(RawCameraFrame.getCameraId()+1);
+                    mApplication.setCameraId(mFrame.getCameraId()+1);
                     break;
                 case CALIBRATION:
                 case DATA:
