@@ -821,6 +821,12 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
+        int id = mApplication.getCameraId();
+        if(id >= Camera.getNumberOfCameras()) {
+            // camera not active
+            id = -1;
+        }
+        b.setCameraId(id);
         b.setCameraParams(mParams.flatten());
 
 
