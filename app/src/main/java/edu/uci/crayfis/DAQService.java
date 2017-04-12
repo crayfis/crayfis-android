@@ -432,11 +432,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         public void onReceive(Context context, Intent intent) {
             unSetupCamera();
             setUpAndConfigureCamera(intent.getIntExtra(EXTRA_NEW_CAMERA, 0));
-            if(xbManager.getCurrentExposureBlock() == null) {
-                xbManager.newExposureBlock(mApplication.getApplicationState());
-            } else {
-                xbManager.abortExposureBlock();
-            }
+            xbManager.abortExposureBlock();
         }
     };
 
@@ -670,6 +666,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
                 return;
             } else {
                 userErrorMessage(getResources().getString(R.string.camera_error), true);
+                return;
             }
         }
         CFLog.d("Camera opened camera="+mCamera);
@@ -716,7 +713,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         } catch (Exception e) {
             userErrorMessage(getResources().getString(R.string.camera_error),true);
-
+            return;
         }
 
         try {

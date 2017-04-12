@@ -91,6 +91,11 @@ public final class ExposureBlockManager {
     }
 
     public synchronized void newExposureBlock(CFApplication.State state) {
+        if(CFApplication.getCameraSize() == null) {
+            // camera error -- don't crash
+            return;
+        }
+
         if (current_xb != null) {
             current_xb.freeze();
             retireExposureBlock(current_xb);
@@ -127,7 +132,9 @@ public final class ExposureBlockManager {
     }
 
     public synchronized void abortExposureBlock() {
-        current_xb.aborted = true;
+        if(current_xb != null) {
+            current_xb.aborted = true;
+        }
         newExposureBlock(APPLICATION.getApplicationState());
     }
 
