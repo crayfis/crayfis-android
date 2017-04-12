@@ -59,6 +59,7 @@ public class CFApplication extends Application {
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
     private static Camera.Size mCameraSize;
+    private static int mBatteryTemp;
 
     // FIXME This is a hack.
     // The way things are coupled in DAQActivity, exposing fields that can create the Status is worse than this.
@@ -192,6 +193,14 @@ public class CFApplication extends Application {
 
     public static void setCameraSize(Camera.Size size) {
         mCameraSize = size;
+    }
+
+    public static int getBatteryTemp() {
+        return mBatteryTemp;
+    }
+
+    public static void setBatteryTemp(int newTemp) {
+        mBatteryTemp = newTemp;
     }
 
     public static long getStartTimeNano() { return mStartTimeNano; }

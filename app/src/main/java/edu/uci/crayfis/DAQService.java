@@ -1052,8 +1052,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             batteryPct = level / (float) scale;
             // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+            // update new frames
             mFrameBuilder.setBatteryTemp(newTemp);
-            xbManager.updateBatteryTemp(newTemp);
+            // update new exposure blocks
+            CFApplication.setBatteryTemp(newTemp);
             CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
             if (batteryOverheated) {
                 // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
