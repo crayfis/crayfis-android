@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<bool name="force_https">true</bool>
-	<string name="server_address">daq.crayfis.io</string>
-	<string name="server_port">443</string>
+	<string name="server_address" translatable="false">daq.crayfis.io</string>
+	<string name="server_port" translatable="false">443</string>
 
     <!--
     <bool name="force_https">false</bool>
     <string name="server_address">52.11.132.164</string>
     <string name="server_port">80</string> -->
 
-    <string name="upload_uri">/submit</string>
+    <string name="upload_uri" translatable="false">/submit</string>
 	<bool name="debug_stream">false</bool>
 </resources>

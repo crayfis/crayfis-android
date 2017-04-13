@@ -27,7 +27,6 @@
     <string name="settings_autostart_title">Otobaslatmayi onlemek icin tikla</string>
     <string name="menu_about">Hakkinda</string>
     <string name="menu_settings">Ayarlar</string>
-    <string name="menu_sleep">Uyumada</string>
     <string name="menu_view_mode">Goruntu modu</string>
     <string name="toast_black">Kozmik isin adaylarinin telefonunuzu isabet aldigini gosterir.\n\nSiyah ekran mi tercih edersiniz? Ayarlara gidip canli sicramalari gecersizlestirebilirsiniz.</string>
     <string name="toast_data">Bu pano durumu gosterir .\n\Diger secenekler icin ekrani kaydirin.</string>

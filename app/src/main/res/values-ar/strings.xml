@@ -26,7 +26,6 @@
     <string name="settings_autostart_title">اضغط لتمنع التشغيل التلقائي</string>
     <string name="menu_about">عن</string>
     <string name="menu_settings">الإعدادات</string>
-    <string name="menu_sleep">نوم</string>
     <string name="menu_view_mode">نظام المشاهدة</string>
     <string name="toast_black">هنا يمكن رؤية صور مباشرة لإصابات أشعة كونية مرشحة.\n\nهل تفضل(ين) الشاشة سوداء؟ يمكنك اختيار ذلك من قائمة الإعدادات.</string>
     <string name="toast_data">هذه النافذة تبين الوضع. \n\n مرر لنظم مشاهدة أخرى.</string>

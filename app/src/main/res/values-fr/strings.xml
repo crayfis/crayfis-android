@@ -26,7 +26,6 @@
     <string name="settings_autostart_title">Sélectionner pour éviter le démarrage automatique</string>
     <string name="menu_about">A propos</string>
     <string name="menu_settings">Configuration</string>
-    <string name="menu_sleep">Veille</string>
     <string name="menu_view_mode">Affichage</string>
     <string name="toast_black">Montre les rayons cosmiques potentiels touchant le téléphone en temps réel.\n\nVous préférez un écran éteint? Vous pouvez désactiver les splashs dans Configuration.</string>
     <string name="toast_data">Cette fenêtre indique le status.\n\nFaites glisser pour afficher d\'autres infos.</string>

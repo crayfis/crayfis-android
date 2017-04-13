@@ -31,7 +31,6 @@
     <string name="settings_autostart_title">הקלק למנוע הפעלה מחדש באופן אוטומטי</string>
     <string name="menu_about">אודות</string>
     <string name="menu_settings">הגדרות</string>
-    <string name="menu_sleep">מצב שינה</string>
     <string name="menu_view_mode">מצב תצוגה</string>
     <string name="toast_black">מציג קרניים קוסמיות הפוגעות בטלפון שלך בזמן אמת.\n\nמעדיף/פה מסך שחור? תוכל/י לבטל אופציה זו בהגדרות.</string>
     <string name="toast_data">לוח זה מראה את המצב.\n\nהחלק עבור תצוגות נוספות</string>

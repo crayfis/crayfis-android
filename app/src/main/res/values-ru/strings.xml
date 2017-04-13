@@ -27,7 +27,6 @@
     <string name="settings_autostart_title">Нажмите чтобы предотвратить автостарт</string>
     <string name="menu_about">О программе</string>
     <string name="menu_settings">Настройки</string>
-    <string name="menu_sleep">Сон</string>
     <string name="menu_view_mode">Режим Просмотра</string>
     <string name="toast_black">Этот экран показывает в реальном времени возможные космические лучи падающие на ваш телефон.\n\nПредпочитаете черный экран? Вы можете выключить всплески в Настройках.</string>
     <string name="toast_data">Эта панель показывает статус.\n\nЧтобы перейти на следующую страницу, проведите пальцем по экрану.</string>

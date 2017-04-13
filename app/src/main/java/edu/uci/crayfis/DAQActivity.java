@@ -216,7 +216,9 @@ public class DAQActivity extends AppCompatActivity {
             case R.id.menu_about:
                 clickedAbout();
                 return true;
-
+            case R.id.menu_stop:
+                clickedStop();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -358,6 +360,11 @@ public class DAQActivity extends AppCompatActivity {
                     }
                 })
                 .setView(tx1).show();
+    }
+
+    private void clickedStop() {
+        stopService(DAQIntent);
+        finish();
     }
 
     private String last_update_URL = "";

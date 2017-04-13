@@ -59,7 +59,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
-    private static final String DEFAULT_TARGET_RESOLUTION_STR = "low";
+    private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
 
     private String mL1Trigger;
     private String mL2Trigger;

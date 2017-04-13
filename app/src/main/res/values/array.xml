@@ -10,17 +10,17 @@
         <item>35</item>
         <item>40</item>   
     </string-array>
-    <string-array name="hist_bins">
+    <string-array name="hist_bins" translatable="false">
         <item>Cand. Pix</item>
         <item>Good Cand.</item>
         <item>Clean Cand.</item>
     </string-array>
-    <string-array name="time_bins">
+    <string-array name="time_bins" translatable="false">
         <item></item>
         <item>Frame Samples</item>
         <item></item>
     </string-array>
-    <string-array name="pager_titles">
+    <string-array name="pager_titles" translatable="false">
         <item>Developer</item>
         <item>Live View</item>
         <item>Status</item>
@@ -32,7 +32,7 @@
         <item>Feedback</item>
         <item>Gallery</item>
     </string-array>
-    <string-array name="pref_resolution">
+    <string-array name="pref_resolution" translatable="false">
         <item>Low</item>
         <item>Medium</item>
         <item>720p</item>
@@ -45,7 +45,7 @@
         <item>60 </item>
         <item>120 </item>
     </string-array>  
-    <string-array name="pref_starttimes">
+    <string-array name="pref_starttimes" translatable="false">
         <item>0</item>
         <item>1</item>
         <item>2</item>

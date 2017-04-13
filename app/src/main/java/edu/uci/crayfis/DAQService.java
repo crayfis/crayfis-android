@@ -124,7 +124,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         // backup location if Google play isn't working or installed
         try {
             mLastLocationDeprecated = getLocationDeprecated();
-        } catch (SecurityException e) {
+        } catch (SecurityException se) {
             // permission revoked?
             Intent permissionIntent = new Intent(this, MainActivity.class);
             startActivity(permissionIntent);
@@ -220,6 +220,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
 
         mSensorManager.unregisterListener(this);
         mGoogleApiClient.disconnect();
+        if(mLocationManager != null) {
+            mLocationManager.removeUpdates(mLocationListener);
+        }
         unSetupCamera();
         xbManager.flushCommittedBlocks(true);
 
@@ -478,10 +481,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
     // New API
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    private LocationRequest mLocationRequest;
 
     // Old API
-    private android.location.LocationListener mLocationListener = null;
+    private LocationManager mLocationManager;
+    private android.location.LocationListener mLocationListener;
     private Location mLastLocationDeprecated;
 
     @Override
@@ -565,18 +568,18 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
             };
         }
         // get the manager
-        LocationManager locationManager = (LocationManager) this
+        mLocationManager = (LocationManager) this
                 .getSystemService(Context.LOCATION_SERVICE);
 
         // ask for updates from network and GPS
         try {
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
         } catch (RuntimeException e)
         { // some phones do not support
         }
         // get the last known coordinates for an initial value
-        Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (null == location) {
             location = new Location("BLANK");
         }
@@ -595,11 +598,11 @@ public class DAQService extends Service implements Camera.PreviewCallback, Senso
         newLocation(mLastLocation,false);
 
         // request updates as well
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
 
 
     }
