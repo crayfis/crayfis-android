@@ -17,6 +17,7 @@
 
 package edu.uci.crayfis;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -95,8 +96,20 @@ public class DAQActivity extends AppCompatActivity {
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private final BroadcastReceiver FATAL_ERROR_RECEIVER = new BroadcastReceiver() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            finish();
+        public void onReceive(Context c, Intent intent) {
+            final TextView tx1 = new TextView(context);
+            tx1.setText(intent.getStringExtra(DAQService.EXTRA_ERROR_MESSAGE));
+            tx1.setTextColor(Color.WHITE);
+            tx1.setBackgroundColor(Color.BLACK);
+            AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
+            builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
+                    .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            System.exit(0);
+                        }
+                    })
+
+                    .setView(tx1).show();
         }
     };
 

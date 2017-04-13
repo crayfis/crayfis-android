@@ -712,6 +712,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             CFApplication.setCameraSize(mParams.getPreviewSize());
 
         } catch (Exception e) {
+            e.printStackTrace();
             userErrorMessage(getResources().getString(R.string.camera_error),true);
             return;
         }
@@ -1100,6 +1101,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private long mTimeBeforeSleeping = 0;
     private int mCountsBeforeSleeping = 0;
     public static final String ACTION_FATAL_ERROR = "fatal_error";
+    public static final String EXTRA_ERROR_MESSAGE = "error_message";
 
     class DAQBinder extends Binder {
 
@@ -1185,7 +1187,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             errorId++;
 
             // make sure to kill activity if open
-            mBroadcastManager.sendBroadcast(new Intent(ACTION_FATAL_ERROR));
+            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
+            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
+            mBroadcastManager.sendBroadcast(errorIntent);
             stopSelf();
         } else {
             Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
