@@ -2,6 +2,7 @@ package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.CameraSelector;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.ui.DataCollectionFragment;
@@ -28,6 +29,7 @@ class L1Task implements Runnable {
     private RawCameraFrame mFrame = null;
     private ExposureBlock mExposureBlock = null;
     private CFApplication mApplication = null;
+    private CameraSelector mCameraSelector;
     private CFConfig CONFIG = CFConfig.getInstance();
     private boolean mKeepFrame = false;
 
@@ -38,28 +40,16 @@ class L1Task implements Runnable {
 
         mApplication = mL1Processor.mApplication;
         mL2Processor = mL1Processor.mL2Processor;
+        mCameraSelector = CameraSelector.getInstance(mApplication);
     }
 
     protected boolean processInitial() {
-        // show the frame to the L1 calibrator
-        if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
+        // check for quality data
+        if(!mCameraSelector.isQuality(mFrame)) {
+            mCameraSelector.changeCamera();
+            return true;
+        } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
             mL1Processor.mL1Cal.AddFrame(mFrame);
-        }
-
-        // check whether camera has been uncovered
-        if(mFrame.getPixAvg() > CONFIG.getQualityBgAverage() || mFrame.getPixStd() > CONFIG.getQualityBgVariance()) {
-            CFLog.w("Got bad quality event. avg req: " + CONFIG.getQualityBgAverage() + ", obs: " + mFrame.getPixAvg());
-            CFLog.w("std req: " + CONFIG.getQualityBgVariance() + ", obs: " + mFrame.getPixStd());
-
-            switch(mApplication.getApplicationState()) {
-                case STABILIZATION:
-                    // switch cameras and try again
-                    mApplication.setCameraId(mFrame.getCameraId()+1);
-                    break;
-                case CALIBRATION:
-                case DATA:
-                    mApplication.setApplicationState(CFApplication.State.STABILIZATION);
-            }
         }
 
         return false;

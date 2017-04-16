@@ -64,11 +64,11 @@
 
     <ListPreference
         android:key="prefCameraSelectMode"
-        android:defaultValue="@string/camera_select_face_down"
+        android:defaultValue="0"
         android:summary="@string/settings_camera_select_mode_summary"
         android:title="@string/settings_camera_select_mode_title"
         android:entries="@array/camera_select_mode_entries"
-        android:entryValues="@array/camera_select_mode_entries" />
+        android:entryValues="@array/camera_select_mode_values" />
 
     <!-- expert only -->
 

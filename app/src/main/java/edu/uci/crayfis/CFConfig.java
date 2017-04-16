@@ -53,7 +53,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final float DEFAULT_BG_AVG_CUT = 5f;
     private static final float DEFAULT_BG_VAR_CUT = 5;
-    private static final float DEFAULT_ORIENT_CUT = 3f;
+    private static final float DEFAULT_ORIENT_CUT = (float)(10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
@@ -65,8 +65,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
-    private static final String DEFAULT_CAMERA_SELECT_MODE
-            = Resources.getSystem().getString(R.string.camera_select_face_down);
+    private static final int DEFAULT_CAMERA_SELECT_MODE = CameraSelector.MODE_FACE_DOWN;
+    //Resources.getSystem().getString(R.string.camera_select_face_down);
 
     private String mL1Trigger;
     private String mL2Trigger;
@@ -116,7 +116,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mUpdateURL = DEFAULT_UPDATE_URL;
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
-        mCameraSelectMode = CameraSelector.getCameraSelectMode(DEFAULT_CAMERA_SELECT_MODE);
+        mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
     }
 
     public String getL1Trigger() {
@@ -331,7 +331,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
         mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
-        mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_ORIENT, DEFAULT_ORIENT_CUT);
+        mQualityOrient = sharedPreferences.getFloat(KEY_QUAL_ORIENT, DEFAULT_ORIENT_CUT);
         mQualityPixFraction = sharedPreferences.getFloat(KEY_QUAL_PIX_FRAC, DEFAULT_PIX_FRAC_CUT);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
         mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
@@ -343,8 +343,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL, DEFAULT_UPDATE_URL);
         mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
-        String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE, DEFAULT_CAMERA_SELECT_MODE);
-        mCameraSelectMode = CameraSelector.getCameraSelectMode(cameraSelectStr);
+        String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE,
+                Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
+        mCameraSelectMode = Integer.parseInt(cameraSelectStr);
 
     }
 
@@ -444,7 +445,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_UPDATE_URL,mUpdateURL)
                 .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
-                .putInt(KEY_CAMERA_SELECT_MODE,mCameraSelectMode)
+                .putString(KEY_CAMERA_SELECT_MODE,Integer.toString(mCameraSelectMode))
                 .apply();
     }
 }

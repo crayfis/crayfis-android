@@ -28,6 +28,8 @@ import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
+import static edu.uci.crayfis.CFApplication.State.IDLE;
+
 /**
  * Extension of {@link android.app.Application}.
  */
@@ -41,7 +43,7 @@ public class CFApplication extends Application {
     public static final String EXTRA_NEW_CAMERA = "new_camera";
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
-    private long stabilizationDelay = 300000; // ms
+    private long stabilizationDelay = 10000; // ms
     private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
         @Override
         public void onTick(long millisUntilFinished) {
@@ -147,14 +149,14 @@ public class CFApplication extends Application {
         if(id != mCameraId) {
             CFLog.d("cameraId:" + mCameraId + " -> "+ id);
             mCameraId = id;
-            if(mCameraId < Camera.getNumberOfCameras()) {
+            if(id == -1 && mApplicationState != IDLE) {
+                setApplicationState(IDLE);
+                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+                mStabilizationTimer.start();
+            } else {
                 final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
                 intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
                 LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-            } else {
-                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
-                mStabilizationTimer.start();
-                setApplicationState(State.IDLE);
             }
         }
 
@@ -307,6 +309,10 @@ public class CFApplication extends Application {
         public UUID getRunId() {
             return mRunId;
         }
+    }
+
+    public void killTimer() {
+        mStabilizationTimer.cancel();
     }
 
     /**

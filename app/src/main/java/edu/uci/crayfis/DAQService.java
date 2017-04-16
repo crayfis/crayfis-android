@@ -151,14 +151,13 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         if (mCamera != null)
             throw new RuntimeException(
                     "Bug, camera should not be initialized already");
+        mCameraSelector = CameraSelector.getInstance(mApplication);
 
 
         // Frame Processing
 
         mFrameBuilder = new RawCameraFrame.Builder();
-        mL2Processor = new L2Processor(mApplication);
         mL1Processor = new L1Processor(mApplication);
-        mL1Processor.setL2Processor(mL2Processor);
 
         if (L1cal == null) {
             L1cal = L1Calibrator.getInstance();
@@ -243,6 +242,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
 
         mHardwareCheckTimer.cancel();
+        mApplication.killTimer();
 
         CFLog.d("DAQService: stopped");
     }
@@ -291,13 +291,12 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             case DATA:
             case IDLE:
             case RECONFIGURE:
-            case STABILIZATION:
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
         }
         // exposure blocks are created in camera setup
-        mApplication.setCameraId(0);
+        mCameraSelector.changeCamera();
     }
 
     /**
@@ -309,6 +308,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
      */
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         unSetupCamera();
+        mCameraSelector.changeCamera();
 
         switch(previousState) {
             case CALIBRATION:
@@ -360,8 +360,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         }
 
         // tear down and then reconfigure the camera
-        unSetupCamera();
-        setUpAndConfigureCamera(mApplication.getCameraId());
+        mCameraSelector.changeCamera();
 
         // if we were idling, go back to that state.
         if (previousState == CFApplication.State.IDLE) {
@@ -647,6 +646,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private Camera.Parameters mParams;
     private Camera.Size previewSize;
     private SurfaceTexture mTexture;
+    private CameraSelector mCameraSelector;
     private final int N_CYCLE_BUFFERS = 7;
 
     /**
@@ -656,7 +656,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         // Open and configure the camera
         CFLog.d("setUpAndConfigureCamera()");
         if(mCamera != null && CFApplication.getCameraSize() != null
-                || cameraId > Camera.getNumberOfCameras()) { return; }
+                || cameraId == -1) { return; }
         try {
             mCamera = Camera.open(cameraId);
         } catch (Exception e) {
@@ -778,17 +778,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         // TODO: combine this with L1Task.processInitial()
         if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
-        unSetupCamera();
-        switch(mApplication.getApplicationState()) {
-            case STABILIZATION:
-                // switch cameras and try again
-                mApplication.setCameraId(mApplication.getCameraId()+1);
-                break;
-            case CALIBRATION:
-            case DATA:
-                // take a break for a while
-                mApplication.setCameraId(Camera.getNumberOfCameras());
-        }
+        mCameraSelector.changeCamera();
     }
 
 
@@ -877,8 +867,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
-    // helper that dispatches L2 inputs to be processed by the L2 trigger.
-    private L2Processor mL2Processor = null;
 
     private L1Calibrator L1cal = null;
 
@@ -1080,7 +1068,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             }
             // if we are in idle mode, restart if everything is okay
             else if (batteryPct >= battery_start_threshold && !batteryOverheated
-                    && mApplication.getCameraId() < Camera.getNumberOfCameras()) {
+                    && mApplication.getCameraId() != -1) {
 
                 CFLog.d("Returning to stabilization");
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);
@@ -1148,7 +1136,23 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
             if (previewSize != null) {
                 ResolutionSpec targetRes = CONFIG.getTargetResolution();
-                devtxt += "Camera ID: " + mApplication.getCameraId() + ", Image dimensions = " + previewSize.width + "x" + previewSize.height
+                devtxt += "Camera ID: " + mApplication.getCameraId() + ", Mode = ";
+                switch(CONFIG.getCameraSelectMode()) {
+                    case CameraSelector.MODE_FACE_DOWN:
+                        devtxt += "FACE_DOWN\n";
+                        break;
+                    case CameraSelector.MODE_AUTO_DETECT:
+                        devtxt += "AUTO_DETECT\n";
+                        break;
+                    case CameraSelector.MODE_BACK_LOCK:
+                        devtxt += "BACK_LOCK\n";
+                        break;
+                    case CameraSelector.MODE_FRONT_LOCK:
+                        devtxt += "FRONT_LOCK\n";
+                        break;
+
+                }
+                devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height
                         + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
             }
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
