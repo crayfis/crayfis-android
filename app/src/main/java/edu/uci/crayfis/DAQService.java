@@ -8,21 +8,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.provider.ContactsContract;
 import android.renderscript.RenderScript;
@@ -31,11 +23,6 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 
 import java.io.FileDescriptor;
 import java.util.List;
@@ -64,10 +51,7 @@ import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements Camera.PreviewCallback, Camera.ErrorCallback,
-        SensorEventListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        com.google.android.gms.location.LocationListener {
+public class DAQService extends Service implements Camera.PreviewCallback, Camera.ErrorCallback {
 
 
 
@@ -81,6 +65,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private String upload_url;
     private final int FOREGROUND_ID = 1;
     private int errorId = 2;
+
+    private CFSensor mCFSensor;
+    private CFLocation mCFLocation;
 
     @Override
     public void onCreate() {
@@ -112,38 +99,12 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         // Sensors
 
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        Sensor gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        Sensor accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        Sensor pressureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-
-        Sensor sens = gravSensor;
-        if (sens == null) {
-            sens = accelSensor;
-        }
-
-        mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mCFSensor = CFSensor.getInstance(context, BUILDER);
 
 
         // Location
 
-        newLocation(new Location("BLANK"), false);
-        buildGoogleApiClient();
-        mGoogleApiClient.connect();
-        // backup location if Google play isn't working or installed
-        try {
-            mLastLocationDeprecated = getLocationDeprecated();
-        } catch (SecurityException se) {
-            // permission revoked?
-            se.printStackTrace();
-            Intent permissionIntent = new Intent(this, MainActivity.class);
-            startActivity(permissionIntent);
-            stopSelf();
-        }
-        newLocation(mLastLocationDeprecated, true);
+        mCFLocation = CFLocation.getInstance(context, BUILDER);
 
 
         // Camera
@@ -156,7 +117,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         // Frame Processing
 
-        mFrameBuilder = new RawCameraFrame.Builder();
         mL1Processor = new L1Processor(mApplication);
 
         if (L1cal == null) {
@@ -225,11 +185,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             mApplication.setApplicationState(CFApplication.State.IDLE);
         }
 
-        mSensorManager.unregisterListener(this);
-        mGoogleApiClient.disconnect();
-        if(mLocationManager != null) {
-            mLocationManager.removeUpdates(mLocationListener);
-        }
+        mCFSensor.unregister();
+        mCFLocation.unregister();
+
         unSetupCamera();
         xbManager.flushCommittedBlocks(true);
 
@@ -439,204 +397,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
 
 
-    /////////////
-    // Sensors //
-    /////////////
-
-
-    SensorManager mSensorManager;
-    private float[] gravity = new float[3];
-    private float[] geomagnetic = new float[3];
-    private float[] orientation = new float[3];
-
-    @Override
-    public void onSensorChanged(SensorEvent event) {
-        switch(event.sensor.getType()) {
-            // both gravity and accel should give the same gravity vector
-            case Sensor.TYPE_ACCELEROMETER:
-            case Sensor.TYPE_GRAVITY:
-                // get the gravity vector:
-                gravity[0] = event.values[0];
-                gravity[1] = event.values[1];
-                gravity[2] = event.values[2];
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                geomagnetic[0] = event.values[0];
-                geomagnetic[1] = event.values[1];
-                geomagnetic[2] = event.values[2];
-                break;
-            case Sensor.TYPE_PRESSURE:
-                mFrameBuilder.setPressure(event.values[0]);
-                return;
-        }
-
-        // now update the orientation vector
-        float[] R = new float[9];
-        boolean succ = SensorManager.getRotationMatrix(R, null, gravity, geomagnetic);
-        if (succ) {
-            SensorManager.getOrientation(R, orientation);
-            mFrameBuilder.setOrientation(orientation);
-        }
-    }
-
-
-
-
-    //////////////
-    // Location //
-    //////////////
-
-    // New API
-    private GoogleApiClient mGoogleApiClient;
-    private Location mLastLocation;
-
-    // Old API
-    private LocationManager mLocationManager;
-    private android.location.LocationListener mLocationListener;
-    private Location mLastLocationDeprecated;
-
-    @Override
-    public void onAccuracyChanged(Sensor arg0, int arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        CFLog.d("Build API client:"+mGoogleApiClient);
-    }
-
-    private boolean location_valid(Location location)
-    {
-
-        return (location != null
-                && java.lang.Math.abs(location.getLongitude())>0.1
-                && java.lang.Math.abs(location.getLatitude())>0.1);
-
-    }
-
-    private void newLocation(Location location, boolean deprecated)
-    {
-
-        if (!deprecated)
-        {
-            //  Google location API
-            // as long as it's valid, update the data
-            if (location != null)
-                CFApplication.setLastKnownLocation(location);
-        } else {
-            // deprecated interface as backup
-
-            // is it valid?
-            if (location_valid(location))
-            {
-                // do we not have a valid current location?
-                if (!location_valid(CFApplication.getLastKnownLocation()))
-                {
-                    // use the deprecated info if it's the best we have
-                    CFApplication.setLastKnownLocation(location);
-                }
-            }
-
-        }
-        //CFLog.d("## newLocation data "+location+" deprecated? "+deprecated+" -> current location is "+CFApplication.getLastKnownLocation());
-
-    }
-
-    public Location getLocationDeprecated() throws SecurityException
-    {
-        if (mLocationListener==null) {
-            mLocationListener = new android.location.LocationListener() {
-                // deprecated location update interface
-                public void onLocationChanged(Location location) {
-                    // Called when a new location is found by the network location
-                    // provider.
-                    //CFLog.d("onLocationChangedDeprecated: new  location = "+location);
-
-                    mLastLocationDeprecated = location;
-
-                    // update the location in case the Google method failed
-                    newLocation(location,true);
-
-                }
-
-                public void onStatusChanged(String provider, int status,
-                                            Bundle extras) {
-                }
-
-                public void onProviderEnabled(String provider) {
-                }
-
-                public void onProviderDisabled(String provider) {
-                }
-            };
-        }
-        // get the manager
-        mLocationManager = (LocationManager) this
-                .getSystemService(Context.LOCATION_SERVICE);
-
-        // ask for updates from network and GPS
-        try {
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-        } catch (RuntimeException e)
-        { // some phones do not support
-        }
-        // get the last known coordinates for an initial value
-        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if (null == location) {
-            location = new Location("BLANK");
-        }
-        return location;
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-
-        // first get last known location
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        CFLog.d("onConnected: asking for location = "+mLastLocation);
-
-        // set the location; if this is false newLocation() will disregard it
-        newLocation(mLastLocation,false);
-
-        // request updates as well
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
-
-
-    }
-
-    // Google location update interface
-    public void onLocationChanged(Location location)
-    {
-        //CFLog.d("onLocationChanged: new  location = "+mLastLocation);
-
-        // set the location; if this is false newLocation() will disregard it
-        newLocation(location,false);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result)
-    {
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause)
-    {
-    }
-
-
-
-
     //////////////////////////
     // Camera configuration //
     //////////////////////////
@@ -734,10 +494,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 CFLog.i("Configuring RenderScript");
 
-                mFrameBuilder.setCamera(mCamera, mRS)
+                BUILDER.setCamera(mCamera, mRS)
                         .setCameraId(cameraId);
             } else {
-                mFrameBuilder.setCamera(mCamera)
+                BUILDER.setCamera(mCamera)
                         .setCameraId(cameraId);
             }
 
@@ -863,7 +623,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     // Frame processing //
     //////////////////////
 
-    private RawCameraFrame.Builder mFrameBuilder;
+    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder();
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
@@ -906,7 +666,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
             // pack the image bytes along with other event info into a RawCameraFrame object
 
-            RawCameraFrame frame = mFrameBuilder.setBytes(bytes)
+            RawCameraFrame frame = BUILDER.setBytes(bytes)
                     .setAcquisitionTime(acq_time)
                     .setLocation(CFApplication.getLastKnownLocation())
                     .setExposureBlock(xb)
@@ -1039,7 +799,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
             // update new frames
-            mFrameBuilder.setBatteryTemp(newTemp);
+            BUILDER.setBatteryTemp(newTemp);
             // update new exposure blocks
             CFApplication.setBatteryTemp(newTemp);
             CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
@@ -1158,11 +918,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
             devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
-                    + "Upload server = " + upload_url + "\n"
-                    + (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude() + ", lat=" + mLastLocation.getLatitude() + ") accuracy = " + mLastLocation.getAccuracy() + " provider = " + mLastLocation.getProvider() + " time=" + mLastLocation.getTime() : "") + "\n"
-                    + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude() + ", lat=" + mLastLocationDeprecated.getLatitude() + ") accuracy = " + mLastLocationDeprecated.getAccuracy() + " provider = " + mLastLocationDeprecated.getProvider() + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                    + (CFApplication.getLastKnownLocation() != null ? " Official location = (long="+CFApplication.getLastKnownLocation().getLongitude()+" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
-
+                    + "Upload server = " + upload_url + "\n";
+            devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
             return devtxt;
 
         }
