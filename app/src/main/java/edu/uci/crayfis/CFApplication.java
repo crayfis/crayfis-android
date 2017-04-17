@@ -64,6 +64,7 @@ public class CFApplication extends Application {
     //private static final String SHARED_PREFS_NAME = "global";
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
+    private static Camera.Parameters mParams;
     private static Camera.Size mCameraSize;
     private static int mBatteryTemp;
 
@@ -223,12 +224,15 @@ public class CFApplication extends Application {
         mLastKnownLocation = lastKnownLocation;
     }
 
+    public static Camera.Parameters getCameraParams() { return mParams; }
+
     public static Camera.Size getCameraSize() {
         return mCameraSize;
     }
 
-    public static void setCameraSize(Camera.Size size) {
-        mCameraSize = size;
+    public static void setCameraParams(Camera.Parameters params) {
+        mParams = params;
+        mCameraSize = params.getPreviewSize();
     }
 
     public static int getBatteryTemp() {

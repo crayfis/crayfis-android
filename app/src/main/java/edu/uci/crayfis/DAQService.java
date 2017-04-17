@@ -8,8 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.ImageFormat;
-import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.os.BatteryManager;
 import android.os.Binder;
@@ -34,7 +32,6 @@ import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.RawCameraFrame;
-import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
@@ -45,17 +42,11 @@ import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
-import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
-import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
-import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
-import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
-import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
-
 /**
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements Camera.PreviewCallback, Camera.ErrorCallback {
+public class DAQService extends Service implements Camera.PreviewCallback {
 
 
 
@@ -70,6 +61,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private final int FOREGROUND_ID = 1;
     private int errorId = 2;
 
+    private CFCamera mCFCamera;
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
 
@@ -79,7 +71,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
 
         mApplication = (CFApplication)getApplication();
         context = getApplicationContext();
-        mRS = RenderScript.create(context);
 
         String server_address = context.getString(R.string.server_address);
         String server_port = context.getString(R.string.server_port);
@@ -101,21 +92,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
         mBroadcastManager.registerReceiver(CAMERA_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_CAMERA_CHANGE));
 
-        // Sensors
 
+        mCFCamera = CFCamera.getInstance(context, BUILDER, this);
         mCFSensor = CFSensor.getInstance(context, BUILDER);
-
-
-        // Location
-
         mCFLocation = CFLocation.getInstance(context, BUILDER);
-
-
-        // Camera
-
-        if (mCamera != null)
-            throw new RuntimeException(
-                    "Bug, camera should not be initialized already");
 
 
         // Frame Processing
@@ -188,10 +168,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
             mApplication.setApplicationState(CFApplication.State.IDLE);
         }
 
+        mCFCamera.unregister();
         mCFSensor.unregister();
         mCFLocation.unregister();
 
-        unSetupCamera();
         xbManager.flushCommittedBlocks(true);
 
         if(ntpThread != null) {
@@ -246,7 +226,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-
+        // all the work here done in camera initialization
     }
 
     /**
@@ -377,160 +357,9 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            unSetupCamera();
-            setUpAndConfigureCamera(intent.getIntExtra(EXTRA_NEW_CAMERA, 0));
             xbManager.abortExposureBlock();
         }
     };
-
-
-
-
-
-    //////////////////////////
-    // Camera configuration //
-    //////////////////////////
-
-    // camera and display objects
-    private Camera mCamera;
-    private Camera.Parameters mParams;
-    private Camera.Size previewSize;
-    private SurfaceTexture mTexture;
-    private final int N_CYCLE_BUFFERS = 7;
-
-    /**
-     * Sets up the camera if it is not already setup.
-     */
-    private synchronized void setUpAndConfigureCamera(int cameraId) {
-        // Open and configure the camera
-        CFLog.d("setUpAndConfigureCamera()");
-        if(mCamera != null && CFApplication.getCameraSize() != null
-                || cameraId == -1) { return; }
-        try {
-            mCamera = Camera.open(cameraId);
-        } catch (Exception e) {
-            if (e.getMessage().equals("Fail to connect to camera service")) {
-                // camera is in use by another app, so just wait it out
-                onError(1, mCamera);
-                return;
-            } else {
-                userErrorMessage(getResources().getString(R.string.camera_error), true);
-                return;
-            }
-        }
-        CFLog.d("Camera opened camera="+mCamera);
-        try {
-
-            Camera.Parameters param= mCamera.getParameters();
-
-            previewSize = CONFIG.getTargetResolution().getClosestSize(mCamera);
-            CFLog.i("selected preview size="+previewSize);
-
-            CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
-            param.setPreviewSize(previewSize.width, previewSize.height);
-            // param.setFocusMode("FIXED");
-            param.setExposureCompensation(0);
-
-            // Try to pick the highest FPS range possible
-            int minfps = 0, maxfps = 0;
-            List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-            if (validRanges != null)
-                for (int[] rng : validRanges) {
-                    CFLog.i("DAQActivity Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-                    if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-                        maxfps = rng[1];
-                        minfps = rng[0];
-                    }
-                }
-            CFLog.i("DAQActivity Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
-            try{
-                // Try to set minimum=maximum FPS range.
-                // This seems to work for some phones...
-                param.setPreviewFpsRange(maxfps, maxfps);
-            }
-            catch (RuntimeException ex) {
-                // but some phones will throw a fit. So just give it a "supported" range.
-                CFLog.w("DAQActivity Unable to set maximum frame rate. Falling back to default range.");
-                param.setPreviewFpsRange(minfps, maxfps);
-            }
-            mParams = param;
-            mCamera.setParameters(mParams);
-            CFLog.d("params: Camera params are " + param.flatten());
-
-            // update the current application settings to reflect new camera size.
-            CFApplication.setCameraSize(mParams.getPreviewSize());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            userErrorMessage(getResources().getString(R.string.camera_error),true);
-            return;
-        }
-
-        try {
-            int bufSize = previewSize.width*previewSize.height* ImageFormat.getBitsPerPixel(mParams.getPreviewFormat())/8;
-            if(N_CYCLE_BUFFERS > 0) {
-                mCamera.setPreviewCallbackWithBuffer(this);
-                for(int i=0; i<N_CYCLE_BUFFERS; i++) {
-                    mCamera.addCallbackBuffer(new byte[bufSize]);
-                }
-            } else {
-                mCamera.setPreviewCallback(this);
-            }
-            mTexture = new SurfaceTexture(10);
-            mCamera.setPreviewTexture(mTexture);
-
-            // configure RenderScript if available
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                CFLog.i("Configuring RenderScript");
-
-                BUILDER.setCamera(mCamera, mRS)
-                        .setCameraId(cameraId);
-            } else {
-                BUILDER.setCamera(mCamera)
-                        .setCameraId(cameraId);
-            }
-
-            // allow other apps to access camera
-            mCamera.setErrorCallback(this);
-
-            mCamera.startPreview();
-        }  catch (Exception e) {
-            userErrorMessage(getResources().getString(R.string.camera_error),true);
-        }
-    }
-
-    private synchronized void unSetupCamera() {
-
-        if(mCamera == null) return;
-
-        // stop the camera preview and all processing
-        mCamera.stopPreview();
-        if (N_CYCLE_BUFFERS>0) {
-            mCamera.setPreviewCallbackWithBuffer(null);
-        } else {
-            mCamera.setPreviewCallback(null);
-        }
-        mTexture = null;
-        mParams = null;
-        mCamera.release();
-        mCamera = null;
-
-        // clear out any (old) buffers
-        //l2thread.clearQueue();
-        // FIXME: should we abort any AsyncTasks in the L1/L2 queue that haven't executed yet?
-
-        CFLog.d(" DAQActivity: unsetup camera");
-    }
-
-    @Override
-    public void onError(int errorId, Camera camera) {
-        // TODO: combine this with L1Task.processInitial()
-        if(camera != mCamera) { return; }
-        CFLog.e("Camera error " + errorId);
-        mApplication.changeCamera();
-    }
-
-
 
 
 
@@ -558,13 +387,8 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
-        int id = mApplication.getCameraId();
-        if(id >= Camera.getNumberOfCameras()) {
-            // camera not active
-            id = -1;
-        }
-        b.setCameraId(id);
-        b.setCameraParams(mParams.flatten());
+        b.setCameraId(mApplication.getCameraId());
+        b.setCameraParams(CFApplication.getCameraParams().flatten());
 
 
 
@@ -635,7 +459,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private SntpUpdateThread ntpThread;
 
     private Context context;
-    private RenderScript mRS;
 
 
 
@@ -857,9 +680,10 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         }
 
         void updateDataCollectionStatus() {
+            final Camera.Size sz = CFApplication.getCameraSize();
             final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
                     .setTotalEvents(L2Processor.mL2Count)
-                    .setTotalPixels((long)L1Processor.mL1CountData * previewSize.height * previewSize.width)
+                    .setTotalPixels((long)L1Processor.mL1CountData * sz.height * sz.width)
                     .setTotalFrames(L1Processor.mL1CountData)
                     .build();
             CFApplication.setCollectionStatus(dstatus);
@@ -883,27 +707,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
                     + String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
                     + "\n";
 
-            if (previewSize != null) {
-                ResolutionSpec targetRes = CONFIG.getTargetResolution();
-                devtxt += "Camera ID: " + mApplication.getCameraId() + ", Mode = ";
-                switch(CONFIG.getCameraSelectMode()) {
-                    case MODE_FACE_DOWN:
-                        devtxt += "FACE-DOWN\n";
-                        break;
-                    case MODE_AUTO_DETECT:
-                        devtxt += "AUTO-DETECT\n";
-                        break;
-                    case MODE_BACK_LOCK:
-                        devtxt += "BACK LOCK\n";
-                        break;
-                    case MODE_FRONT_LOCK:
-                        devtxt += "FRONT LOCK\n";
-                        break;
-
-                }
-                devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height
-                        + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) +")\n";
-            }
+            devtxt += mCFCamera.getStatus();
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
             devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
