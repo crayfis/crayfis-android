@@ -28,7 +28,11 @@ import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
+import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
+import static edu.uci.crayfis.CFApplication.State.DATA;
 import static edu.uci.crayfis.CFApplication.State.IDLE;
+import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
+import static edu.uci.crayfis.CFApplication.State.STABILIZATION;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -140,26 +144,56 @@ public class CFApplication extends Application {
         final Intent intent = new Intent(ACTION_STATE_CHANGE);
         intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
         intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        if(applicationState == IDLE || applicationState == STABILIZATION) {
+            changeCamera();
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     public int getCameraId() { return mCameraId; }
 
-    public synchronized void setCameraId(int id) {
-        if(id != mCameraId) {
-            CFLog.d("cameraId:" + mCameraId + " -> "+ id);
-            mCameraId = id;
-            if(id == -1 && mApplicationState != IDLE) {
+    public void changeCamera() {
+        int nextId = -1;
+        switch(mApplicationState) {
+            case RECONFIGURE:
+                nextId = mCameraId;
+            case STABILIZATION:
+                // switch cameras and try again
+                switch(CFConfig.getInstance().getCameraSelectMode()) {
+                    case MODE_FACE_DOWN:
+                    case MODE_AUTO_DETECT:
+                        nextId = mCameraId + 1;
+                        if(nextId >= Camera.getNumberOfCameras()) {
+                            nextId = -1;
+                        }
+                        break;
+                    case MODE_BACK_LOCK:
+                        nextId = 0;
+                        break;
+                    case MODE_FRONT_LOCK:
+                        nextId = 1;
+                }
+                break;
+            case CALIBRATION:
+            case DATA:
+            case IDLE:
+                // take a break for a while
+                nextId = -1;
+        }
+
+        if(nextId != mCameraId || mApplicationState == RECONFIGURE) {
+            CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
+            mCameraId = nextId;
+            if(nextId == -1 && mApplicationState != IDLE) {
                 setApplicationState(IDLE);
                 DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
                 mStabilizationTimer.start();
-            } else {
-                final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
-                intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
-                LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
             }
-        }
+            final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
+            intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
+        }
     }
 
     /**
@@ -326,4 +360,9 @@ public class CFApplication extends Application {
         IDLE,
         RECONFIGURE,
     }
+
+    public static final int MODE_FACE_DOWN = 0;
+    public static final int MODE_AUTO_DETECT = 1;
+    public static final int MODE_BACK_LOCK = 2;
+    public static final int MODE_FRONT_LOCK = 3;
 }

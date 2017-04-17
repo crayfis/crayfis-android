@@ -46,6 +46,10 @@ import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
+import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
+import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
+import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
+import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Created by Jeff on 2/17/2017.
@@ -112,7 +116,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         if (mCamera != null)
             throw new RuntimeException(
                     "Bug, camera should not be initialized already");
-        mCameraSelector = CameraSelector.getInstance(mApplication);
 
 
         // Frame Processing
@@ -243,18 +246,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        switch(previousState) {
-            case INIT:
-            case CALIBRATION:
-            case DATA:
-            case IDLE:
-            case RECONFIGURE:
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
-        // exposure blocks are created in camera setup
-        mCameraSelector.changeCamera();
+
     }
 
     /**
@@ -265,8 +257,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        unSetupCamera();
-        mCameraSelector.changeCamera();
 
         switch(previousState) {
             case CALIBRATION:
@@ -318,7 +308,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         }
 
         // tear down and then reconfigure the camera
-        mCameraSelector.changeCamera();
+        mApplication.changeCamera();
 
         // if we were idling, go back to that state.
         if (previousState == CFApplication.State.IDLE) {
@@ -406,7 +396,6 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
     private Camera.Parameters mParams;
     private Camera.Size previewSize;
     private SurfaceTexture mTexture;
-    private CameraSelector mCameraSelector;
     private final int N_CYCLE_BUFFERS = 7;
 
     /**
@@ -538,7 +527,7 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
         // TODO: combine this with L1Task.processInitial()
         if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
-        mCameraSelector.changeCamera();
+        mApplication.changeCamera();
     }
 
 
@@ -898,17 +887,17 @@ public class DAQService extends Service implements Camera.PreviewCallback, Camer
                 ResolutionSpec targetRes = CONFIG.getTargetResolution();
                 devtxt += "Camera ID: " + mApplication.getCameraId() + ", Mode = ";
                 switch(CONFIG.getCameraSelectMode()) {
-                    case CameraSelector.MODE_FACE_DOWN:
-                        devtxt += "FACE_DOWN\n";
+                    case MODE_FACE_DOWN:
+                        devtxt += "FACE-DOWN\n";
                         break;
-                    case CameraSelector.MODE_AUTO_DETECT:
-                        devtxt += "AUTO_DETECT\n";
+                    case MODE_AUTO_DETECT:
+                        devtxt += "AUTO-DETECT\n";
                         break;
-                    case CameraSelector.MODE_BACK_LOCK:
-                        devtxt += "BACK_LOCK\n";
+                    case MODE_BACK_LOCK:
+                        devtxt += "BACK LOCK\n";
                         break;
-                    case CameraSelector.MODE_FRONT_LOCK:
-                        devtxt += "FRONT_LOCK\n";
+                    case MODE_FRONT_LOCK:
+                        devtxt += "FRONT LOCK\n";
                         break;
 
                 }

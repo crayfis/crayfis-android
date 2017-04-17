@@ -17,9 +17,15 @@ import org.opencv.core.MatOfByte;
 
 import java.util.Arrays;
 
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
+
+import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
+import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
+import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
+import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -428,5 +434,33 @@ public class RawCameraFrame {
             calculateStatistics();
         }
         return mPixStd;
+    }
+
+    public boolean isQuality() {
+        final CFConfig CONFIG = CFConfig.getInstance();
+        switch(CONFIG.getCameraSelectMode()) {
+            case MODE_FACE_DOWN:
+                if (mOrientation == null) {
+                    CFLog.e("Orientation not found");
+                } else if(Math.abs(mOrientation[1]) > CONFIG.getQualityOrientation()) {
+                    CFLog.w("Bad event: Orientation = " + mOrientation[1] / Math.PI * 180 + ","
+                            + mOrientation[2] / Math.PI * 180 + " > " + CONFIG.getQualityOrientation()/Math.PI*180);
+                    return false;
+                }
+            case MODE_AUTO_DETECT:
+                if (getPixAvg() > CONFIG.getQualityBgAverage()
+                        || getPixStd() > CONFIG.getQualityBgVariance()) {
+                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
+                    return false;
+                } else {
+                    return true;
+                }
+            case MODE_BACK_LOCK:
+                return mCameraId == 0;
+            case MODE_FRONT_LOCK:
+                return mCameraId == 1;
+            default:
+                throw new RuntimeException("Invalid camera select mode");
+        }
     }
 }

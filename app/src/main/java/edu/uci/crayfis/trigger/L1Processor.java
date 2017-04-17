@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.CameraSelector;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.RawCameraFrame;
 

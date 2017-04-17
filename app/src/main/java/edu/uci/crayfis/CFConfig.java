@@ -10,6 +10,8 @@ import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
 
+import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
+
 /**
  * Global configuration class.
  */
@@ -65,7 +67,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
-    private static final int DEFAULT_CAMERA_SELECT_MODE = CameraSelector.MODE_FACE_DOWN;
+    private static final int DEFAULT_CAMERA_SELECT_MODE = MODE_FACE_DOWN;
     //Resources.getSystem().getString(R.string.camera_select_face_down);
 
     private String mL1Trigger;

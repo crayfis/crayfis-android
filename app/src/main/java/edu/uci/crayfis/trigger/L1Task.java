@@ -2,12 +2,9 @@ package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.CameraSelector;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
-import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
  * Created by cshimmin on 5/12/16.
@@ -29,8 +26,6 @@ class L1Task implements Runnable {
     private RawCameraFrame mFrame = null;
     private ExposureBlock mExposureBlock = null;
     private CFApplication mApplication = null;
-    private CameraSelector mCameraSelector;
-    private CFConfig CONFIG = CFConfig.getInstance();
     private boolean mKeepFrame = false;
 
     public L1Task(L1Processor l1processor, RawCameraFrame frame) {
@@ -40,13 +35,12 @@ class L1Task implements Runnable {
 
         mApplication = mL1Processor.mApplication;
         mL2Processor = mL1Processor.mL2Processor;
-        mCameraSelector = CameraSelector.getInstance(mApplication);
     }
 
     protected boolean processInitial() {
         // check for quality data
-        if(!mCameraSelector.isQuality(mFrame)) {
-            mCameraSelector.changeCamera();
+        if(!mFrame.isQuality()) {
+            mApplication.changeCamera();
             return true;
         } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
             mL1Processor.mL1Cal.AddFrame(mFrame);

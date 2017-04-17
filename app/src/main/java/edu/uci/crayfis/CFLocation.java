@@ -45,6 +45,10 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
     private CFLocation(Context context, final RawCameraFrame.Builder frameBuilder) {
         BUILDER = frameBuilder;
 
+        register(context);
+    }
+
+    private void register(Context context) {
         newLocation(new Location("BLANK"), false);
 
         mGoogleApiClient = new GoogleApiClient.Builder(context)
@@ -71,7 +75,9 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
         mGoogleApiClient.disconnect();
         if(mLocationManager != null) {
             mLocationManager.removeUpdates(mLocationListener);
+            mLocationManager = null;
         }
+        sInstance = null;
     }
 
     private boolean location_valid(Location location)

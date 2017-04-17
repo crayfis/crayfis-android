@@ -52,6 +52,7 @@ public class CFSensor implements SensorEventListener {
 
     public void unregister() {
         mSensorManager.unregisterListener(this);
+        sInstance = null;
     }
 
     @Override
