@@ -26,7 +26,7 @@ import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Processor;
 
-public class LayoutHist extends Fragment{
+public class LayoutHist extends CFFragment{
 
 
 
@@ -78,14 +78,12 @@ public class LayoutHist extends Fragment{
         return gd;
     }
 
-    // class to find particles in frames
-
-    private static GraphView mGraph;
+    private GraphView mGraph;
 
 
-    private static GraphViewSeries mGraphSeries;
+    private GraphViewSeries mGraphSeries;
 
-    public static void updateData() {
+    public void updateData() {
 
         if (mGraphSeries !=null && L2Processor.histL2Pixels != null)
             mGraphSeries.resetData(make_graph_data(L2Processor.histL2Pixels.getValues()));
@@ -161,7 +159,20 @@ public class LayoutHist extends Fragment{
         mGraph.setScalable(false);
         mGraph.addSeries(mGraphSeries);
 
+        startUiUpdate(new UiUpdateRunnable());
+
         return mGraph;
+    }
+
+    /*
+     * Runnable to update the UI
+     */
+    private final class UiUpdateRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            updateData();
+        }
     }
 
 }

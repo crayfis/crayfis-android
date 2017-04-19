@@ -4,7 +4,10 @@ package edu.uci.crayfis.ui;
  * Created by danielwhiteson on 1/29/15.
  */
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,24 +18,25 @@ import android.hardware.Camera;
 import android.content.Context;
 import java.util.ArrayList;
 
+import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.widget.SplashView;
 
-public class LayoutBlack extends Fragment{
+public class LayoutBlack extends CFFragment{
     private static LayoutBlack mInstance =null;
 
-    public static SplashView mSplashView;
+    public SplashView mSplashView;
 
-    public final static Object event_lock = new Object();
+    public final Object event_lock = new Object();
 
-    public static Camera.Size previewSize;
+    public Camera.Size previewSize;
 
     public LayoutBlack()
     {
     }
 
-    private static boolean shown_message=false;
+    private boolean shown_message=false;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -85,9 +89,40 @@ public class LayoutBlack extends Fragment{
 
         //CFLog.d(" LayoutBlack splashview = "+mSplashView+" with #events="+events.size());
 
-
+        startUiUpdate(new UiUpdateRunnable());
 
         return root;
     }
 
+    /*
+     * Runnable to update the UI
+     */
+    private final class UiUpdateRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            final Activity activity = getActivity();
+            if (!CFUtil.isActivityValid(activity)) {
+                return;
+            }
+
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
+            boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
+            if (show_splashes) {
+                try {
+                    L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
+                    if (ev != null) {
+                        //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
+                        addEvent(ev);
+                    } else {
+                        // CFLog.d(" L2thread poll returns null ");
+                    }
+
+                } catch (Exception e) {
+                    // just don't do it
+                }
+            }
+        }
     }
+
+}

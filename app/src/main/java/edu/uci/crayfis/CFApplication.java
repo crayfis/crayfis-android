@@ -68,10 +68,6 @@ public class CFApplication extends Application {
     private static Camera.Size mCameraSize;
     private static int mBatteryTemp;
 
-    // FIXME This is a hack.
-    // The way things are coupled in DAQActivity, exposing fields that can create the Status is worse than this.
-    private static DataCollectionStatsView.Status sStatus;
-
     private State mApplicationState;
     private int mCameraId = -1;
 
@@ -245,15 +241,6 @@ public class CFApplication extends Application {
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
-
-    public static void setCollectionStatus(@NonNull final DataCollectionStatsView.Status status) {
-        sStatus = status;
-    }
-
-    @Nullable
-    public static DataCollectionStatsView.Status getCollectionStatus() {
-        return sStatus;
-    }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);

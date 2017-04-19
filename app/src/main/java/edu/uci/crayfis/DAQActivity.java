@@ -78,24 +78,11 @@ import edu.uci.crayfis.util.CFLog;
  */
 public class DAQActivity extends AppCompatActivity {
 
-    private DAQService.DAQBinder mBinder;
-    private LayoutBlack mLayoutBlack = LayoutBlack.getInstance();
-    private LayoutHist mLayoutHist = LayoutHist.getInstance();
-    private LayoutTime mLayoutTime = LayoutTime.getInstance();
-    private LayoutDeveloper mLayoutDeveloper = LayoutDeveloper.getInstance();
+    private static DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private Timer mUiUpdateTimer;
     private ServiceConnection mServiceConnection;
-
-	// keep track of how often we had to drop a frame at L1
-	// because the L2 queue was full.
-    // FIXME This is wrong to be static.
-	public static int L2busy = 0;
-
-    private L1Calibrator L1cal = null;
-
 
 
 	Context context;
@@ -189,11 +176,17 @@ public class DAQActivity extends AppCompatActivity {
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
 
-        if (mUiUpdateTimer != null) {
-            mUiUpdateTimer.cancel();
+        // check for any updates
+
+        if (!CONFIG.getUpdateURL().equals("") && !CONFIG.getUpdateURL().equals(last_update_URL)) {
+            showUpdateURL(CONFIG.getUpdateURL());
+
         }
-        mUiUpdateTimer = new Timer();
-        mUiUpdateTimer.schedule(new UiUpdateTimerTask(), 1000L, 1000L);
+
+        final View userStatus = findViewById(R.id.user_status);
+        if (userStatus != null) {
+            userStatus.postInvalidate();
+        }
     }
 
 
@@ -207,7 +200,6 @@ public class DAQActivity extends AppCompatActivity {
             mBinder.saveStatsBeforeSleeping();
         }
         unbindService(mServiceConnection);
-        mUiUpdateTimer.cancel();
     }
 
     @Override
@@ -426,148 +418,12 @@ public class DAQActivity extends AppCompatActivity {
     private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
 
 
-    /**
-     * Task that gets called during the UI update tick.
-     */
-    private final class UiUpdateTimerTask extends TimerTask {
+    ////////////////
+    // UI Updates //
+    ////////////////
 
-
-        private final Runnable RUNNABLE = new Runnable() {
-            @Override
-            public void run() {
-                final CFApplication application = (CFApplication) getApplication();
-
-                // turn on developer options if it has been selected
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-                //l2thread.setmSaveImages(sharedPrefs.getBoolean("prefEnableGallery", false));
-
-                // Originally, the updating of the LevelView was done here.  This seems like a good place to also
-                // make sure that UserStatusView gets updated with any new counts.
-                final View userStatus = findViewById(R.id.user_status);
-                if (userStatus != null) {
-                    userStatus.postInvalidate();
-                }
-
-                try {
-
-                    if (LayoutData.mLightMeter != null) {
-                        LayoutData.updateData();
-                    }
-
-                    if (application.getApplicationState() == CFApplication.State.IDLE)
-                    {
-                        if (LayoutData.mProgressWheel != null) {
-                            LayoutData.mProgressWheel.setText("");
-
-                            LayoutData.mProgressWheel.setTextColor(Color.WHITE);
-                            LayoutData.mProgressWheel.setBarColor(Color.LTGRAY);
-
-                            int progress = 0; //(int) (360 * batteryPct);
-                            LayoutData.mProgressWheel.setProgress(progress);
-                            LayoutData.mProgressWheel.stopGrowing();
-                            LayoutData.mProgressWheel.doNotShowBackground();
-                        }
-                    }
-
-
-                    if (application.getApplicationState() == CFApplication.State.STABILIZATION)
-                    {
-                        if (LayoutData.mProgressWheel != null) {
-                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.stabilization));
-
-                            LayoutData.mProgressWheel.setTextColor(Color.RED);
-                            LayoutData.mProgressWheel.setBarColor(Color.RED);
-
-                            LayoutData.mProgressWheel.stopGrowing();
-                            LayoutData.mProgressWheel.spin();
-                            LayoutData.mProgressWheel.doNotShowBackground();
-                        }
-                    }
-
-
-                    if (application.getApplicationState() == CFApplication.State.CALIBRATION)
-                    {
-                        if (LayoutData.mProgressWheel != null) {
-
-                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.calibration));
-
-                            LayoutData.mProgressWheel.setTextColor(Color.RED);
-                            LayoutData.mProgressWheel.setBarColor(Color.RED);
-
-                            int needev = CONFIG.getCalibrationSampleFrames();
-                            float frac = L1cal.getMaxPixels().size() / ((float) 1.0 * needev);
-                            int progress = (int) (360 * frac);
-                            LayoutData.mProgressWheel.setProgress(progress);
-                            LayoutData.mProgressWheel.stopGrowing();
-                            LayoutData.mProgressWheel.showBackground();
-
-
-                        }
-                    }
-                    if (application.getApplicationState() == CFApplication.State.DATA)
-                    {
-                        if (LayoutData.mProgressWheel != null) {
-                            LayoutData.mProgressWheel.setText(getResources().getString(R.string.taking_data));
-                            LayoutData.mProgressWheel.setTextColor(0xFF00AA00);
-                            LayoutData.mProgressWheel.setBarColor(0xFF00AA00);
-
-                            // solid circle
-                            LayoutData.mProgressWheel.setProgress(360);
-                            LayoutData.mProgressWheel.showBackground();
-                            LayoutData.mProgressWheel.grow();
-
-                        }
-
-                        mBinder.updateDataCollectionStatus();
-
-                        boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
-                        if (show_splashes && mLayoutBlack != null) {
-                            try {
-                                L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
-                                if (ev != null) {
-                                    //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
-                                    mLayoutBlack.addEvent(ev);
-                                } else {
-                                    // CFLog.d(" L2thread poll returns null ");
-                                }
-
-                            } catch (Exception e) {
-                                // just don't do it
-                            }
-                        }
-
-                        if (mLayoutTime != null) mLayoutTime.updateData();
-                        if (mLayoutHist != null) mLayoutHist.updateData();
-
-                        if (mLayoutDeveloper == null)
-                            mLayoutDeveloper = (LayoutDeveloper) LayoutDeveloper.getInstance();
-
-                    }
-
-                    if (mLayoutDeveloper != null) {
-                        if (mLayoutDeveloper.mAppBuildView != null)
-                            mLayoutDeveloper.mAppBuildView.setAppBuild(application.getBuildInformation());
-
-
-                        if (mLayoutDeveloper.mTextView != null) {
-                            mLayoutDeveloper.mTextView.setText(mBinder.getDevText());
-                        }
-                    }
-
-                    if (CONFIG.getUpdateURL() != "" && CONFIG.getUpdateURL() != last_update_URL) {
-                        showUpdateURL(CONFIG.getUpdateURL());
-
-                    }
-                } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
-
-                }
-            }
-        };
-
-        @Override
-        public void run() {
-            runOnUiThread(RUNNABLE);
-        }
+    public static DAQService.DAQBinder getBinder() {
+        return mBinder;
     }
 
 }

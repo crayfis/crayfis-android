@@ -19,6 +19,7 @@ import android.widget.TextView;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.DAQActivity;
+import edu.uci.crayfis.DAQService;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.util.CFLog;
@@ -197,10 +198,7 @@ public class DataCollectionFragment extends CFFragment {
             }
 
             final CFApplication application = (CFApplication) activity.getApplication();
-            if (DAQActivity.L2busy > 0) {
-                final String ignoredFrames = getResources().getQuantityString(R.plurals.total_frames, DAQActivity.L2busy, DAQActivity.L2busy);
-                setErrorMessage(getResources().getString(R.string.ignored) + " " + ignoredFrames);
-            } else if (!isLocationValid(CFApplication.getLastKnownLocation())) {
+            if (!isLocationValid(CFApplication.getLastKnownLocation())) {
                 setErrorMessage(R.string.location_warning);
             } else if (!application.isNetworkAvailable()) {
                 setErrorMessage(R.string.network_unavailable);
@@ -213,10 +211,14 @@ public class DataCollectionFragment extends CFFragment {
             }
 
             if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-                final DataCollectionStatsView.Status status = CFApplication.getCollectionStatus();
-                if (status != null) {
-                    mDataCollectionStats.setStatus(status);
+                DAQService.DAQBinder binder = DAQActivity.getBinder();
+                if(binder != null) {
+                    final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
+                    if (status != null) {
+                        mDataCollectionStats.setStatus(status);
+                    }
                 }
+
             }
         }
     }

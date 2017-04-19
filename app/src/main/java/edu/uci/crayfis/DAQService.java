@@ -647,33 +647,33 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     public static final String ACTION_FATAL_ERROR = "fatal_error";
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
 
-    class DAQBinder extends Binder {
+    public class DAQBinder extends Binder {
 
-        void saveStatsBeforeSleeping() {
+        public void saveStatsBeforeSleeping() {
             mTimeBeforeSleeping = System.currentTimeMillis();
             mCountsBeforeSleeping = L2Processor.mL2Count;
         }
 
-        long getTimeWhileSleeping() {
+        public long getTimeWhileSleeping() {
             if(mTimeBeforeSleeping == 0) { return 0; } // on start of DAQService
             return System.currentTimeMillis() - mTimeBeforeSleeping;
         }
 
-        int getCountsWhileSleeping() {
+        public int getCountsWhileSleeping() {
             return L2Processor.mL2Count - mCountsBeforeSleeping;
         }
 
-        void updateDataCollectionStatus() {
+        public DataCollectionStatsView.Status getDataCollectionStatus() {
             final Camera.Size sz = CFApplication.getCameraSize();
             final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
                     .setTotalEvents(L2Processor.mL2Count)
                     .setTotalPixels((long)L1Processor.mL1CountData * sz.height * sz.width)
                     .setTotalFrames(L1Processor.mL1CountData)
                     .build();
-            CFApplication.setCollectionStatus(dstatus);
+            return dstatus;
         }
 
-        String getDevText() {
+        public String getDevText() {
 
             if(mApplication.getApplicationState() != CFApplication.State.DATA) {
                 updateFPS();
@@ -687,8 +687,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                     + ", L2 Threshold:" + (CONFIG != null ? CONFIG.getL2Threshold() : -1) + "\n"
                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
-                    + "Battery power pct = "+(int)(100*batteryPct)+"%, temp = "
-                    + String.format("%1.1f", batteryTemp/10.) + "C from "+((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
+                    + "Battery temp = " + String.format("%1.1f", batteryTemp/10.) + "C from "
+                    +((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
                     + "\n";
 
             devtxt += mCFCamera.getStatus();

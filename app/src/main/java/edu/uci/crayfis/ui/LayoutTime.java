@@ -32,7 +32,7 @@ import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.ValueDependentColor;
 
 
-public class LayoutTime extends Fragment {
+public class LayoutTime extends CFFragment {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
@@ -69,15 +69,15 @@ public class LayoutTime extends Fragment {
         return gd;
     }
 
-    private static L1Calibrator mL1Calibrator;
+    private L1Calibrator mL1Calibrator;
     private static LayoutTime mInstance =null;
 
-    private static SpeedometerView mSpeedometerView;
+    private SpeedometerView mSpeedometerView;
 
-    private static boolean shown_message=false;
+    private boolean shown_message=false;
 
-    private static GraphView mGraphTime;
-    private static GraphViewSeries mGraphSeriesTime;
+    private GraphView mGraphTime;
+    private GraphViewSeries mGraphSeriesTime;
     private GraphViewSeries.GraphViewSeriesStyle mGraphSeriesStyleTime;
 
     @Override
@@ -98,7 +98,7 @@ public class LayoutTime extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    public static void updateData() {
+    public void updateData() {
 
         if (mL1Calibrator !=null && mGraphSeriesTime !=null) {
             Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
@@ -172,7 +172,20 @@ public class LayoutTime extends Fragment {
 
         root.addView(mGraphTime);
 
+        startUiUpdate(new UiUpdateRunnable());
+
         return root;
+    }
+
+    /*
+     * Runnable to update the UI
+     */
+    private final class UiUpdateRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            updateData();
+        }
     }
 
 }

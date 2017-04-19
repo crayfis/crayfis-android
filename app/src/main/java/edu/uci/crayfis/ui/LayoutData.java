@@ -4,33 +4,44 @@ package edu.uci.crayfis.ui;
  * Created by danielwhiteson on 11/18/14.
  */
 
+import android.app.Activity;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.CFUtil;
+import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.trigger.L2Task;
+import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 import edu.uci.crayfis.widget.LightMeter;
 import edu.uci.crayfis.widget.MessageView;
 import edu.uci.crayfis.widget.ProgressWheel;
 
 
-public class LayoutData extends Fragment{
+public class LayoutData extends CFFragment{
 
     // Widgets for giving feedback to the user.
-    public static MessageView mMessageView;
-    public static LightMeter mLightMeter;
-    public static ProgressWheel mProgressWheel;
-    public static DataCollectionStatsView mDataView;
+    public MessageView mMessageView;
+    public LightMeter mLightMeter;
+    public ProgressWheel mProgressWheel;
+    public DataCollectionStatsView mDataView;
 
 
     private static LayoutData mInstance =null;
 
-    private static L1Calibrator mL1Calibrator;
+    private L1Calibrator mL1Calibrator;
 
 
     public LayoutData()
@@ -47,7 +58,7 @@ public class LayoutData extends Fragment{
     }
 
 
-    public static void updateData() {
+    public void updateData() {
 
         if (mL1Calibrator !=null) {
             Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
@@ -80,10 +91,12 @@ public class LayoutData extends Fragment{
 
         mMessageView = (MessageView) root.findViewById(R.id.message_view);
 
+        startUiUpdate(new UiUpdateRunnable());
+
         return root;
     }
 
-    private static boolean shown_message=false;
+    private boolean shown_message=false;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -96,6 +109,106 @@ public class LayoutData extends Fragment{
             }
         }
         super.setUserVisibleHint(isVisibleToUser);
+    }
+
+    /**
+     * Runnable to update the UI.
+     */
+    private final class UiUpdateRunnable implements Runnable {
+
+        @Override
+        public void run() {
+
+            final Activity activity = getActivity();
+            if (!CFUtil.isActivityValid(activity)) {
+                return;
+            }
+
+            final CFApplication application = (CFApplication) activity.getApplication();
+
+            //l2thread.setmSaveImages(sharedPrefs.getBoolean("prefEnableGallery", false));
+
+            // Originally, the updating of the LevelView was done here.  This seems like a good place to also
+            // make sure that UserStatusView gets updated with any new counts.
+            final View userStatus = activity.findViewById(R.id.user_status);
+            if (userStatus != null) {
+                userStatus.postInvalidate();
+            }
+
+            try {
+
+                if (mLightMeter != null) {
+                    updateData();
+                }
+
+                if (application.getApplicationState() == CFApplication.State.IDLE)
+                {
+                    if (mProgressWheel != null) {
+                        mProgressWheel.setText("");
+
+                        mProgressWheel.setTextColor(Color.WHITE);
+                        mProgressWheel.setBarColor(Color.LTGRAY);
+
+                        int progress = 0; //(int) (360 * batteryPct);
+                        mProgressWheel.setProgress(progress);
+                        mProgressWheel.stopGrowing();
+                        mProgressWheel.doNotShowBackground();
+                    }
+                }
+
+
+                if (application.getApplicationState() == CFApplication.State.STABILIZATION)
+                {
+                    if (mProgressWheel != null) {
+                        mProgressWheel.setText(getResources().getString(R.string.stabilization));
+
+                        mProgressWheel.setTextColor(Color.RED);
+                        mProgressWheel.setBarColor(Color.RED);
+
+                        mProgressWheel.stopGrowing();
+                        mProgressWheel.spin();
+                        mProgressWheel.doNotShowBackground();
+                    }
+                }
+
+
+                if (application.getApplicationState() == CFApplication.State.CALIBRATION)
+                {
+                    if (mProgressWheel != null) {
+
+                        mProgressWheel.setText(getResources().getString(R.string.calibration));
+
+                        mProgressWheel.setTextColor(Color.RED);
+                        mProgressWheel.setBarColor(Color.RED);
+
+                        int needev = CFConfig.getInstance().getCalibrationSampleFrames();
+                        float frac = L1Calibrator.getMaxPixels().size() / ((float) 1.0 * needev);
+                        int progress = (int) (360 * frac);
+                        mProgressWheel.setProgress(progress);
+                        mProgressWheel.stopGrowing();
+                        mProgressWheel.showBackground();
+
+
+                    }
+                }
+                if (application.getApplicationState() == CFApplication.State.DATA)
+                {
+                    if (mProgressWheel != null) {
+                        mProgressWheel.setText(getResources().getString(R.string.taking_data));
+                        mProgressWheel.setTextColor(0xFF00AA00);
+                        mProgressWheel.setBarColor(0xFF00AA00);
+
+                        // solid circle
+                        mProgressWheel.setProgress(360);
+                        mProgressWheel.showBackground();
+                        mProgressWheel.grow();
+
+                    }
+                }
+            } catch (OutOfMemoryError e) { // don't crash of OOM, just don't update UI
+
+            }
+        }
     }
 
 }
