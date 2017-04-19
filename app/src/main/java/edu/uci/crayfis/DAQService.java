@@ -30,8 +30,6 @@ import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.CFLocation;
 import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.camera.RawCameraFrame;
-import edu.uci.crayfis.camera.SntpClient;
-import edu.uci.crayfis.camera.SntpUpdateThread;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
@@ -109,12 +107,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             frame_times = new FrameHistory<>(100);
         }
 
-        SntpClient.getInstance();
-        if (ntpThread == null) {
-            ntpThread = new SntpUpdateThread();
-            ntpThread.start();
-        }
-
         xbManager = ExposureBlockManager.getInstance(this);
 
 
@@ -173,11 +165,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         mCFLocation.unregister();
 
         xbManager.flushCommittedBlocks(true);
-
-        if(ntpThread != null) {
-            ntpThread.stopThread();
-            ntpThread = null;
-        }
 
         mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
         mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
@@ -454,9 +441,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     // store value of most recently calculated FPS
     private double last_fps = 0;
-
-    // Thread for NTP updates
-    private SntpUpdateThread ntpThread;
 
     private Context context;
 
