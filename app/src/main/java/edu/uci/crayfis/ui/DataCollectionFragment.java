@@ -21,6 +21,7 @@ import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.server.UploadExposureTask;
+import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
@@ -189,7 +190,6 @@ public class DataCollectionFragment extends CFFragment {
 
         @Override
         public void run() {
-            // TODO Add no location.
 
             final Activity activity = getActivity();
             if (!CFUtil.isActivityValid(activity)) {
