@@ -5,8 +5,7 @@ package edu.uci.crayfis.widget;
  */
 
 import android.hardware.Camera;
-import edu.uci.crayfis.LayoutBlack;
-import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.ui.LayoutBlack;
 
 import android.graphics.Paint;
 import android.content.Context;
@@ -20,7 +19,7 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import android.graphics.Color;
 
-import static edu.uci.crayfis.LayoutBlack.*;
+import static edu.uci.crayfis.ui.LayoutBlack.*;
 import edu.uci.crayfis.trigger.L2Task;
 
 public class SplashView extends ImageView

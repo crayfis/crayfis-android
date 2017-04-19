@@ -11,14 +11,14 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
-import edu.uci.crayfis.LayoutBlack;
-import edu.uci.crayfis.LayoutDeveloper;
-import edu.uci.crayfis.LayoutFeedback;
-import edu.uci.crayfis.LayoutGallery;
-import edu.uci.crayfis.LayoutHist;
-import edu.uci.crayfis.LayoutLeader;
-import edu.uci.crayfis.LayoutLogin;
-import edu.uci.crayfis.LayoutTime;
+import edu.uci.crayfis.ui.LayoutBlack;
+import edu.uci.crayfis.ui.LayoutDeveloper;
+import edu.uci.crayfis.ui.LayoutFeedback;
+import edu.uci.crayfis.ui.LayoutGallery;
+import edu.uci.crayfis.ui.LayoutHist;
+import edu.uci.crayfis.ui.LayoutLeader;
+import edu.uci.crayfis.ui.LayoutLogin;
+import edu.uci.crayfis.ui.LayoutTime;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;

@@ -17,7 +17,6 @@
 
 package edu.uci.crayfis;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -62,6 +61,14 @@ import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.ui.DataCollectionFragment;
+import edu.uci.crayfis.ui.LayoutBlack;
+import edu.uci.crayfis.ui.LayoutData;
+import edu.uci.crayfis.ui.LayoutDeveloper;
+import edu.uci.crayfis.ui.LayoutFeedback;
+import edu.uci.crayfis.ui.LayoutHist;
+import edu.uci.crayfis.ui.LayoutLeader;
+import edu.uci.crayfis.ui.LayoutLogin;
+import edu.uci.crayfis.ui.LayoutTime;
 import edu.uci.crayfis.util.CFLog;
 
 /**

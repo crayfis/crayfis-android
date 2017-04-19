@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.widget;
 
 /**
  * Created by danielwhiteson on 11/19/14.
@@ -16,6 +16,8 @@ import android.graphics.RectF;
 import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.View;
+
+import edu.uci.crayfis.R;
 
 
 /**

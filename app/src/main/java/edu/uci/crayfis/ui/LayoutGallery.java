@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 11/19/14.
@@ -24,6 +24,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.ArrayList;
 
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.gallery.GridViewImageAdapter;
 import edu.uci.crayfis.gallery.SavedImage;
 import edu.uci.crayfis.gallery.Utils;

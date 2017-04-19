@@ -7,7 +7,7 @@
     android:layout_height="match_parent">
 
     <!-- The height of this widget is calculdated in code. -->
-    <edu.uci.crayfis.ProgressWheel
+    <edu.uci.crayfis.widget.ProgressWheel
         android:id="@+id/pw_spinner"
         android:layout_width="match_parent"
         android:gravity="center_horizontal"
