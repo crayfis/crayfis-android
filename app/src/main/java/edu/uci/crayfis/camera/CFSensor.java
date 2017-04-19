@@ -1,12 +1,10 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
-import edu.uci.crayfis.camera.RawCameraFrame;
 
 /**
  * Created by Jeff on 4/15/2017.

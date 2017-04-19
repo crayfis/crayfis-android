@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 1/5/15.
@@ -16,6 +16,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
 

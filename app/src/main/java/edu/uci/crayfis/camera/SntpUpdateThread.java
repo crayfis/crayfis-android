@@ -1,6 +1,6 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
-import edu.uci.crayfis.SntpClient;
+import edu.uci.crayfis.camera.SntpClient;
 
 /**
  * Created by danielwhiteson on 3/18/15.

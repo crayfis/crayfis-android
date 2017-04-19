@@ -1,9 +1,11 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
-import edu.uci.crayfis.SpeedometerView;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
+import edu.uci.crayfis.widget.SpeedometerView;
 
 import edu.uci.crayfis.calibration.L1Calibrator;
-import edu.uci.crayfis.util.CFLog;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;

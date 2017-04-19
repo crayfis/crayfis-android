@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 1/29/15.
@@ -15,8 +15,8 @@ import android.hardware.Camera;
 import android.content.Context;
 import java.util.ArrayList;
 
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Task;
-import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.SplashView;
 
 public class LayoutBlack extends Fragment{

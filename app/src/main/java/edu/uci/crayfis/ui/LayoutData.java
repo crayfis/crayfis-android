@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 11/18/14.
@@ -11,10 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 import edu.uci.crayfis.widget.LightMeter;
 import edu.uci.crayfis.widget.MessageView;
+import edu.uci.crayfis.widget.ProgressWheel;
 
 
 public class LayoutData extends Fragment{

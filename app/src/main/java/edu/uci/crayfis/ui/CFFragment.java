@@ -14,7 +14,7 @@ import java.util.TimerTask;
  */
 public class CFFragment extends Fragment {
 
-    private static final long UI_UPDATE_TICK_MS = 1000l;
+    private static final long UI_UPDATE_TICK_MS = 1000L;
 
     @Nullable
     private Handler mUiHandler;
@@ -39,7 +39,7 @@ public class CFFragment extends Fragment {
             public void run() {
                 mUiHandler.post(runnable);
             }
-        }, 0l, UI_UPDATE_TICK_MS);
+        }, 0L, UI_UPDATE_TICK_MS);
     }
 
     @Override

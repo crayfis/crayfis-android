@@ -1,8 +1,6 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import android.content.Context;
-import android.content.Intent;
-import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -12,7 +10,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.util.CFLog;
 
 /**

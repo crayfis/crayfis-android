@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 1/5/15.
@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
-import android.view.Window;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.webkit.WebChromeClient;
@@ -18,6 +17,8 @@ import android.content.Context;
 
 
 import android.widget.Toast;
+
+import edu.uci.crayfis.R;
 
 
 public class LayoutLeader extends Fragment {

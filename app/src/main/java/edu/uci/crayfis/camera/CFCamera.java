@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,8 +13,8 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import java.util.List;
 
-import edu.uci.crayfis.camera.RawCameraFrame;
-import edu.uci.crayfis.camera.ResolutionSpec;
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.util.CFLog;
 
 import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
