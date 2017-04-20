@@ -55,7 +55,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final float DEFAULT_BG_AVG_CUT = 5f;
     private static final float DEFAULT_BG_VAR_CUT = 5;
-    private static final float DEFAULT_ORIENT_CUT = (float)(10 * Math.PI/180);
+    private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
@@ -80,7 +80,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mExposureBlockPeriod;
     private float mQualityBgAverage;
     private float mQualityBgVariance;
-    private float mQualityOrient;
+    private double mQualityOrientCosine;
     private float mQualityPixFraction;
     private int mMaxUploadInterval;
     private int mMaxChunkSize;
@@ -106,7 +106,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mQualityBgAverage = DEFAULT_BG_AVG_CUT;
         mQualityBgVariance = DEFAULT_BG_VAR_CUT;
-        mQualityOrient = DEFAULT_ORIENT_CUT;
+        mQualityOrientCosine = Math.cos(DEFAULT_ORIENT_CUT);
         mQualityPixFraction = DEFAULT_PIX_FRAC_CUT;
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
         mMaxChunkSize = DEFAULT_MAX_CHUNK_SIZE;
@@ -231,12 +231,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     /**
-     * In face-down mode, rotations along the x or y axis (in degrees) greater
+     * In face-down mode, rotations along the x or y axis (in radians) greater
      * than this angle are flagged as "bad".
      *
      * @return float
      */
-    public float getQualityOrientation() { return mQualityOrient; }
+    public double getQualityOrientationCosine() { return mQualityOrientCosine; }
 
     /**
      * Get the instance of the configuration.
@@ -333,7 +333,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mQualityBgAverage = sharedPreferences.getFloat(KEY_QUAL_BG_AVG, DEFAULT_BG_AVG_CUT);
         mQualityBgVariance = sharedPreferences.getFloat(KEY_QUAL_BG_VAR, DEFAULT_BG_VAR_CUT);
-        mQualityOrient = sharedPreferences.getFloat(KEY_QUAL_ORIENT, DEFAULT_ORIENT_CUT);
+        mQualityOrientCosine = sharedPreferences.getFloat(KEY_QUAL_ORIENT, (float)Math.cos(DEFAULT_ORIENT_CUT));
         mQualityPixFraction = sharedPreferences.getFloat(KEY_QUAL_PIX_FRAC, DEFAULT_PIX_FRAC_CUT);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
         mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
@@ -381,7 +381,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mQualityBgVariance = serverCommand.getQualityBgVariance();
         }
         if (serverCommand.getQualityOrientation() != null) {
-            mQualityOrient = serverCommand.getQualityOrientation();
+            mQualityOrientCosine = Math.cos(serverCommand.getQualityOrientation());
         }
         if (serverCommand.getQualityPixFrac() != null) {
             mQualityPixFraction = serverCommand.getQualityPixFrac();
@@ -436,7 +436,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
                 .putFloat(KEY_QUAL_BG_AVG, mQualityBgAverage)
                 .putFloat(KEY_QUAL_BG_VAR, mQualityBgVariance)
-                .putFloat(KEY_QUAL_ORIENT, mQualityOrient)
+                .putFloat(KEY_QUAL_ORIENT, (float)mQualityOrientCosine)
                 .putFloat(KEY_QUAL_PIX_FRAC, mQualityPixFraction)
                 .putInt(KEY_MAX_UPLOAD_INTERVAL, mMaxUploadInterval)
                 .putInt(KEY_MAX_CHUNK_SIZE, mMaxChunkSize)

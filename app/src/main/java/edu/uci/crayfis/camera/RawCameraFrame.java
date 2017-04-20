@@ -44,6 +44,7 @@ public class RawCameraFrame {
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
+    private float mRotationZZ;
     private float mPressure;
     private int mBatteryTemp;
     private int mPixMax = -1;
@@ -77,6 +78,7 @@ public class RawCameraFrame {
         private AcquisitionTime bAcquisitionTime;
         private Location bLocation;
         private float[] bOrientation;
+        private float bRotationZZ;
         private float bPressure;
         private int bBatteryTemp;
         private ExposureBlock bExposureBlock;
@@ -154,6 +156,11 @@ public class RawCameraFrame {
             return this;
         }
 
+        public Builder setRotationZZ(float rotationZZ) {
+            bRotationZZ = rotationZZ;
+            return this;
+        }
+
         public Builder setPressure(float pressure) {
             bPressure = pressure;
             return this;
@@ -171,7 +178,7 @@ public class RawCameraFrame {
 
         public RawCameraFrame build() {
             return new RawCameraFrame(bBytes, bCamera, bCameraId, bFrameWidth, bFrameHeight,
-                    bLength, bAcquisitionTime, bLocation, bOrientation, bPressure, bBatteryTemp,
+                    bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
                     bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
         }
     }
@@ -206,6 +213,7 @@ public class RawCameraFrame {
                            final AcquisitionTime acquisitionTime,
                            final Location location,
                            final float[] orientation,
+                           final float rotationZZ,
                            final float pressure,
                            final int batteryTemp,
                            final ExposureBlock exposureBlock,
@@ -223,6 +231,7 @@ public class RawCameraFrame {
         mAcquiredTime = acquisitionTime;
         mLocation = location;
         mOrientation = orientation;
+        mRotationZZ = rotationZZ;
         mPressure = pressure;
         mBatteryTemp = batteryTemp;
         mExposureBlock = exposureBlock;
@@ -442,10 +451,16 @@ public class RawCameraFrame {
             case MODE_FACE_DOWN:
                 if (mOrientation == null) {
                     CFLog.e("Orientation not found");
-                } else if(Math.abs(mOrientation[1]) > CONFIG.getQualityOrientation()) {
-                    CFLog.w("Bad event: Orientation = " + mOrientation[1] / Math.PI * 180 + ","
-                            + mOrientation[2] / Math.PI * 180 + " > " + CONFIG.getQualityOrientation()/Math.PI*180);
-                    return false;
+                } else {
+
+                    // use quaternion algebra to calculate cosine of angle between vertical
+                    // and phone's z axis (up to a sign that tends to have numerical instabilities)
+
+                    if(Math.abs(mRotationZZ) < CONFIG.getQualityOrientationCosine()) {
+                        // using some quaternion algebra,
+                        CFLog.w("Bad event: Orientation = " + mRotationZZ);
+                        return false;
+                    }
                 }
             case MODE_AUTO_DETECT:
                 if (getPixAvg() > CONFIG.getQualityBgAverage()

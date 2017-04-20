@@ -21,6 +21,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
@@ -56,7 +57,12 @@ public class CFApplication extends Application {
 
         @Override
         public void onFinish() {
-            setApplicationState(CFApplication.State.STABILIZATION);
+            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
+                setApplicationState(CFApplication.State.STABILIZATION);
+            } else {
+                // continue waiting
+                this.start();
+            }
         }
 
     };
@@ -178,7 +184,7 @@ public class CFApplication extends Application {
                 nextId = -1;
         }
 
-        if(nextId != mCameraId || mApplicationState == RECONFIGURE) {
+        if(nextId != mCameraId || mApplicationState == RECONFIGURE || mCameraId == -1) {
             CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
             mCameraId = nextId;
             if(nextId == -1 && mApplicationState != IDLE) {

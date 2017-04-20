@@ -6,6 +6,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.ui.DataCollectionFragment;
+import edu.uci.crayfis.util.CFLog;
+
 /**
  * Created by Jeff on 4/15/2017.
  */
@@ -13,11 +18,12 @@ import android.hardware.SensorManager;
 public class CFSensor implements SensorEventListener {
 
     private SensorManager mSensorManager;
-    private float[] gravity = new float[3];
-    private float[] geomagnetic = new float[3];
     private float[] orientation = new float[3];
+    private float[] rotationMatrix = new float[9];
+    private static float rotationZZ = 0;
     private float pressure = 0;
 
+    private final CFApplication APPLICATION;
     private final RawCameraFrame.Builder BUILDER;
 
     private static CFSensor sInstance;
@@ -31,20 +37,16 @@ public class CFSensor implements SensorEventListener {
 
     private CFSensor(Context context, final RawCameraFrame.Builder frameBuilder) {
         BUILDER = frameBuilder;
+        APPLICATION = (CFApplication)context.getApplicationContext();
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        Sensor gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        Sensor accelSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        Sensor magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        Sensor rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        if(rotationSensor == null) {
+            rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        }
         Sensor pressureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
 
-        Sensor sens = gravSensor;
-        if (sens == null) {
-            sens = accelSensor;
-        }
-
-        mSensorManager.registerListener(this, sens, SensorManager.SENSOR_DELAY_NORMAL);
-        mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
         mSensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -56,44 +58,42 @@ public class CFSensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch(event.sensor.getType()) {
-            // both gravity and accel should give the same gravity vector
-            case Sensor.TYPE_ACCELEROMETER:
-            case Sensor.TYPE_GRAVITY:
-                // get the gravity vector:
-                gravity[0] = event.values[0];
-                gravity[1] = event.values[1];
-                gravity[2] = event.values[2];
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                geomagnetic[0] = event.values[0];
-                geomagnetic[1] = event.values[1];
-                geomagnetic[2] = event.values[2];
+            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
+            case Sensor.TYPE_ROTATION_VECTOR:
+                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
+                rotationZZ = rotationMatrix[8];
+                SensorManager.getOrientation(rotationMatrix, orientation);
+                BUILDER.setOrientation(orientation)
+                        .setRotationZZ(rotationZZ);
                 break;
             case Sensor.TYPE_PRESSURE:
                 pressure = event.values[0];
                 BUILDER.setPressure(pressure);
-                return;
-        }
-
-        // now update the orientation vector
-        float[] R = new float[9];
-        boolean succ = SensorManager.getRotationMatrix(R, null, gravity, geomagnetic);
-        if (succ) {
-            SensorManager.getOrientation(R, orientation);
-            BUILDER.setOrientation(orientation);
         }
     }
 
     @Override
-    public void onAccuracyChanged(Sensor arg0, int arg1) {
-        // TODO Auto-generated method stub
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        switch (sensor.getType()) {
+            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
+            case Sensor.TYPE_ROTATION_VECTOR:
+                if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_HIGH
+                        && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
+                    DataCollectionFragment.getInstance().updateIdleStatus("Sensors recalibrating.  Waiting to retry");
+                    APPLICATION.setApplicationState(CFApplication.State.IDLE);
+                }
+        }
+    }
 
+    public static boolean isFlat() {
+        return Math.abs(rotationZZ) >= CFConfig.getInstance().getQualityOrientationCosine();
     }
 
     public String getStatus() {
         return "Orientation = " + String.format("%1.2f", orientation[0]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[1]*180/Math.PI) + ", "
-                + String.format("%1.2f", orientation[2]*180/Math.PI) + "\n"
+                + String.format("%1.2f", orientation[2]*180/Math.PI) + " -> "
+                + String.format("%1.2f", rotationZZ)+ "\n"
                 + "Pressure = " + pressure + "\n";
     }
 
