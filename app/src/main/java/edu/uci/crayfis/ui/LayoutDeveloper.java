@@ -5,6 +5,7 @@ package edu.uci.crayfis.ui;
  */
 
 import android.os.Bundle;
+import android.support.annotation.StringRes;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +17,10 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.DAQService;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.AppBuildView;
 
 
-public class LayoutDeveloper extends CFFragment{
+public class LayoutDeveloper extends CFFragment {
 
     // Widgets for giving feedback to the user.
     public TextView mTextView;
@@ -28,6 +28,8 @@ public class LayoutDeveloper extends CFFragment{
     public AppBuildView mAppBuildView;
 
     private static LayoutDeveloper mInstance =null;
+
+    private final @StringRes int ABOUT_ID = R.string.toast_devel;
 
     public LayoutDeveloper()
     {
@@ -51,7 +53,7 @@ public class LayoutDeveloper extends CFFragment{
 
         mAppBuildView = (AppBuildView) root.findViewById(R.id.app_build_view);
 
-        startUiUpdate(new UiUpdateRunnable());
+        //startUiUpdate(new UiUpdateRunnable());
 
 
         return root;
@@ -72,21 +74,20 @@ public class LayoutDeveloper extends CFFragment{
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    /*
-     * Runnable to update the UI
-     */
-    private final class UiUpdateRunnable implements Runnable {
-        @Override
-        public void run() {
-            final CFApplication application = (CFApplication) (getActivity().getApplication());
-            mAppBuildView.setAppBuild(application.getBuildInformation());
-            final DAQService.DAQBinder binder = DAQActivity.getBinder();
-            if(binder != null) {
-                mTextView.setText(binder.getDevText());
-            }
-        }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
     }
 
-
+    @Override
+    public void update() {
+        final CFApplication application = (CFApplication) (getActivity().getApplication());
+        mAppBuildView.setAppBuild(application.getBuildInformation());
+        final DAQService.DAQBinder binder = DAQActivity.getBinder();
+        if(binder != null) {
+            mTextView.setText(binder.getDevText());
+        }
+    }
 
 }

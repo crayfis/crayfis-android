@@ -8,7 +8,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +26,9 @@ import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Processor;
 
-public class LayoutHist extends CFFragment{
+public class LayoutHist extends CFFragment {
 
-
+    private final @StringRes int ABOUT_ID = R.string.toast_hist;
 
 
     private class ValueDependentColorX implements ValueDependentColor
@@ -83,15 +83,6 @@ public class LayoutHist extends CFFragment{
 
     private GraphViewSeries mGraphSeries;
 
-    public void updateData() {
-
-        if (mGraphSeries !=null && L2Processor.histL2Pixels != null)
-            mGraphSeries.resetData(make_graph_data(L2Processor.histL2Pixels.getValues()));
-        if (mGraph != null && L2Processor.histL2Pixels != null)
-            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*L2Processor.histL2Pixels.getIntegral()), 0.);
-
-    }
-
     private static LayoutHist mInstance =null;
 
 
@@ -116,10 +107,10 @@ public class LayoutHist extends CFFragment{
             {
                 if (L2Processor.histL2Pixels.getIntegral()==0)
                 {
-                    Toast.makeText(act, R.string.hist_toast_zero,Toast.LENGTH_LONG).show();
+                    Toast.makeText(act, R.string.toast_hist_zero,Toast.LENGTH_LONG).show();
                 } else {
                     if (!shown_message)
-                    Toast.makeText(act, R.string.hist_toast,Toast.LENGTH_LONG).show();
+                    Toast.makeText(act, R.string.toast_hist,Toast.LENGTH_LONG).show();
 
                 }
                 shown_message=true;
@@ -159,20 +150,25 @@ public class LayoutHist extends CFFragment{
         mGraph.setScalable(false);
         mGraph.addSeries(mGraphSeries);
 
-        startUiUpdate(new UiUpdateRunnable());
+        //startUiUpdate(new UiUpdateRunnable());
 
         return mGraph;
     }
 
-    /*
-     * Runnable to update the UI
-     */
-    private final class UiUpdateRunnable implements Runnable {
 
-        @Override
-        public void run() {
-            updateData();
-        }
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
+    }
+
+    @Override
+    public void update() {
+
+        if (mGraphSeries !=null && L2Processor.histL2Pixels != null)
+            mGraphSeries.resetData(make_graph_data(L2Processor.histL2Pixels.getValues()));
+        if (mGraph != null && L2Processor.histL2Pixels != null)
+            mGraph.setManualYAxisBounds(java.lang.Math.max(100.,1.2*L2Processor.histL2Pixels.getIntegral()), 0.);
+
     }
 
 }

@@ -4,8 +4,8 @@ package edu.uci.crayfis.ui;
  * Created by danielwhiteson on 1/5/15.
  */
 
+import android.support.annotation.StringRes;
 import android.webkit.WebViewClient;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
@@ -21,7 +21,7 @@ import android.widget.Toast;
 import edu.uci.crayfis.R;
 
 
-public class LayoutLeader extends Fragment {
+public class LayoutLeader extends CFFragment {
 
 
     private static LayoutLeader mInstance =null;
@@ -33,6 +33,8 @@ public class LayoutLeader extends Fragment {
         return mInstance;
     }
     private static boolean shown_message=false;
+
+    private final @StringRes int ABOUT_ID = R.string.toast_leader;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -105,5 +107,10 @@ public class LayoutLeader extends Fragment {
         browserView.loadUrl(leaderURL);
 
         return root;
+    }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
     }
 }

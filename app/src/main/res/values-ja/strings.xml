@@ -31,7 +31,7 @@
     <string name="toast_black">This shows cosmic ray candidates hitting your phone in real time.\n\nPrefer a black screen? You can disable live splashes in Settings.</string>
     <string name="toast_data">This pane shows the status.\n\nSwipe for other views.</string>
     <string name="help_data">This view shows the current state of the app as well as:\n\tTime: seconds of data-taking\n\tRate: scan rate, frames-per-second</string>
-    <string name="help_hist">This view shows:\n\t Frames scanned: number of video frames examined\n\t Pixels scanned: number of pixels examined\n\t Candidates: number of pixels above the noise threshold\nOn the bottom is a histogram showing the quality of the pixels above threshold.</string>
+    <string name="toast_status">This view shows:\n\t Frames scanned: number of video frames examined\n\t Pixels scanned: number of pixels examined\n\t Candidates: number of pixels above the noise threshold\nOn the bottom is a histogram showing the quality of the pixels above threshold.</string>
     <string name="toast_devel">This pane shows developer-level details.</string>
     <string name="toast_gallery_zero">When especially interested candidates are found, this pane will show you a gallery of images.</string>
     <string name="toast_gallery">"This pane shows you a gallery of images of interesting candidates."</string>
@@ -63,8 +63,8 @@
     <string name="server_overload">Server overloaded</string>
     <string name="ignored">Ignored</string>
     <string name="toast_leader">This pane shows the active network map and leaderboard.</string>
-    <string name="hist_toast_zero">When the app has finished calibrating, this pane will show a histogram of the particle candidates.</string>
-    <string name="hist_toast">This pane shows a histogram of the particle candidates.</string>
+    <string name="toast_hist_zero">When the app has finished calibrating, this pane will show a histogram of the particle candidates.</string>
+    <string name="toast_hist">This pane shows a histogram of the particle candidates.</string>
     <string name="fatal_error_title">CRAYFIS Error</string>
     <string name="camera_error">CRAYFIS could not open the camera.</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>

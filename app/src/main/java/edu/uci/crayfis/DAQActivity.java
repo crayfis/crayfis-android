@@ -26,12 +26,12 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.v4.app.Fragment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -51,24 +51,15 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.server.UploadExposureTask;
-import edu.uci.crayfis.trigger.L2Task;
+import edu.uci.crayfis.ui.CFFragment;
 import edu.uci.crayfis.ui.DataCollectionFragment;
-import edu.uci.crayfis.ui.LayoutBlack;
-import edu.uci.crayfis.ui.LayoutData;
-import edu.uci.crayfis.ui.LayoutDeveloper;
 import edu.uci.crayfis.ui.LayoutFeedback;
-import edu.uci.crayfis.ui.LayoutHist;
-import edu.uci.crayfis.ui.LayoutLeader;
 import edu.uci.crayfis.ui.LayoutLogin;
-import edu.uci.crayfis.ui.LayoutTime;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -308,63 +299,18 @@ public class DAQActivity extends AppCompatActivity {
 
         final TextView tx1 = new TextView(this);
 
-        // FIXME: Jodi - There has to be a better way, but this works.... Move these into the fragments or something....
         final List fragments = getSupportFragmentManager().getFragments();
         if (fragments.size() == 0) {
             return;
         }
 
-        final Fragment activeFragment = (Fragment) fragments.get(0);
-        if (activeFragment instanceof LayoutData) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+"\n"
-                    +getResources().getString(R.string.help_data)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutHist) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.help_hist)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s
-            );
-        } else if (activeFragment instanceof LayoutTime) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_dosimeter)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
+        final CFFragment activeFragment = (CFFragment) fragments.get(0);
+        final Resources res = getResources();
+        tx1.setText(res.getString(R.string.crayfis_about) + "\n"
+                + res.getString(activeFragment.about()) + "\n\n"
+                + res.getString(R.string.swipe_help) + "\n"
+                + res.getString(R.string.more_details));
 
-                    + s);
-        } else if (activeFragment instanceof LayoutLogin) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_login)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutLeader) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_leader)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutDeveloper) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_devel)+"\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else if (activeFragment instanceof LayoutBlack) {
-            tx1.setText(getResources().getString(R.string.crayfis_about)+
-                    "\n"+getResources().getString(R.string.toast_black)+"\n\n"+
-                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-                    + s);
-        } else {
-            tx1.setText("No more further information available at this time.");
-        }
-
-
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.GALLERY)
-//            tx1.setText(getResources().getString(R.string.crayfis_about)+
-//                    "\n"+getResources().getString(R.string.toast_gallery)+"\n\n"+
-//                    getResources().getString(R.string.swipe_help)+"\n"+getResources().getString(R.string.more_details)
-//                    + s);
-//
-//
-//        if (_mViewPager.getCurrentItem()==ViewPagerAdapter.INACTIVE)
 
         tx1.setAutoLinkMask(RESULT_OK);
         tx1.setMovementMethod(LinkMovementMethod.getInstance());

@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.Fragment;
 
 import java.util.Timer;
@@ -20,11 +21,8 @@ public class CFFragment extends Fragment {
     private Handler mUiHandler;
     @Nullable
     private Timer mTimer;
-    @Nullable
-    private Runnable mUiRunnable;
 
-    protected void startUiUpdate(@NonNull final Runnable runnable) {
-        mUiRunnable = runnable;
+    protected void startUiUpdate() {
 
         if (mUiHandler == null) {
             mUiHandler = new Handler(Looper.getMainLooper());
@@ -37,7 +35,12 @@ public class CFFragment extends Fragment {
         mTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                mUiHandler.post(runnable);
+                mUiHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        update();
+                    }
+                });
             }
         }, 0L, UI_UPDATE_TICK_MS);
     }
@@ -45,9 +48,7 @@ public class CFFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if (mUiRunnable != null) {
-            startUiUpdate(mUiRunnable);
-        }
+        startUiUpdate();
     }
 
     @Override
@@ -58,4 +59,18 @@ public class CFFragment extends Fragment {
             mTimer = null;
         }
     }
+
+    // specific methods to be overridden by fragment classes
+
+    /**
+     * Returns the appropriate ID to be displayed when the About tab is clicked
+     *
+     * @return ID from R.string
+     */
+    public @StringRes int about() { return 0; }
+
+    /**
+     * Method to be called during UI Update Timer tick
+     */
+    public void update() {}
 }

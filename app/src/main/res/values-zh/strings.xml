@@ -30,7 +30,7 @@
     <string name="toast_black">此表明您手机正采集到宇宙线候选事例正在通过您的手机.\n\n希望黑屏运行么? 您可以在设置中关闭即时光斑显示.</string>
     <string name="toast_data">此屏显示状态.\n\n滑动到其他视图.</string>
     <string name="help_data">此视图显示应用的当前状态以及:\n\t时间: 数据采集秒数\n\t速度: 扫描速度, 每秒帧数</string>
-    <string name="help_hist">此视图显示:\n\t 扫描帧数: 已检验视频帧数\n\t 扫描像素: 已检验像素数\n\t 候选事例: 高于背景的像素数\n下图显示高于背景的像素质量.</string>
+    <string name="toast_status">此视图显示:\n\t 扫描帧数: 已检验视频帧数\n\t 扫描像素: 已检验像素数\n\t 候选事例: 高于背景的像素数\n下图显示高于背景的像素质量.</string>
     <string name="toast_devel">此屏显示开发级别细节.</string>
     <string name="toast_gallery_zero">当采集到特别关注的候选事例时，此屏向您展示相关影像.</string>
     <string name="toast_gallery">"此屏向您展示所关注候选事例的一些影像."</string>
@@ -62,8 +62,8 @@
     <string name="server_overload">服务器过载</string>
     <string name="ignored">忽略</string>
     <string name="toast_leader">此屏显示有效网络和排名.</string>
-    <string name="hist_toast_zero">当应用完成标度，此屏将显示候选粒子直方图.</string>
-    <string name="hist_toast">此屏显示候选粒子直方图.</string>
+    <string name="toast_hist_zero">当应用完成标度，此屏将显示候选粒子直方图.</string>
+    <string name="toast_hist">此屏显示候选粒子直方图.</string>
     <string name="fatal_error_title">CRAYFIS 错误</string>
     <string name="camera_error">CRAYFIS 无法打开摄像头.</string>
     <string name="fatal_error_message">发生内部错误导致当前显示关闭.  请重试.</string>

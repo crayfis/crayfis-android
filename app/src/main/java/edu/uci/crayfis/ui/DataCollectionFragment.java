@@ -9,6 +9,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -38,6 +39,8 @@ public class DataCollectionFragment extends CFFragment {
     private ProgressBar mProgressBar;
     private StateChangeReceiver mStateChangeReceiver;
 
+    private final @StringRes int ABOUT_ID = R.string.toast_status;
+
     public static DataCollectionFragment getInstance() {
         return new DataCollectionFragment();
     }
@@ -65,7 +68,6 @@ public class DataCollectionFragment extends CFFragment {
         LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mStateChangeReceiver,
                 new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
         updateStatus();
-        startUiUpdate(new UiUpdateRunnable());
 
         return rtn;
     }
@@ -175,53 +177,6 @@ public class DataCollectionFragment extends CFFragment {
         }
     }
 
-    /**
-     * Runnable to update the UI.
-     *
-     * For error message display, the order of importance is
-     * <ul>
-     *     <li>Frames are being dropped.</li>
-     *     <li>No location available.</li>
-     *     <li>No network available.</li>
-     *     <li>Bad user code.</li>
-     *     <li>Server is overloaded.</li>
-     * </ul>
-     */
-    private final class UiUpdateRunnable implements Runnable {
-
-        @Override
-        public void run() {
-
-            final Activity activity = getActivity();
-            if (!CFUtil.isActivityValid(activity)) {
-                return;
-            }
-
-            final CFApplication application = (CFApplication) activity.getApplication();
-            if (!isLocationValid(CFApplication.getLastKnownLocation())) {
-                setErrorMessage(R.string.location_warning);
-            } else if (!application.isNetworkAvailable()) {
-                setErrorMessage(R.string.network_unavailable);
-            } else if (!UploadExposureTask.sValidId.get()) {
-                    setErrorMessage(R.string.bad_user_code);
-            } else if (!UploadExposureTask.sPermitUpload.get()) {
-                setErrorMessage(R.string.server_overload);
-            } else {
-                setErrorMessage(0);
-            }
-
-            if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-                DAQService.DAQBinder binder = DAQActivity.getBinder();
-                if(binder != null) {
-                    final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
-                    if (status != null) {
-                        mDataCollectionStats.setStatus(status);
-                    }
-                }
-
-            }
-        }
-    }
 
     /**
      * Receiver for when the application state changes.
@@ -231,6 +186,43 @@ public class DataCollectionFragment extends CFFragment {
         @Override
         public void onReceive(final Context context, final Intent intent) {
             updateStatus();
+        }
+    }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
+    }
+
+    @Override
+    public void update() {
+        final Activity activity = getActivity();
+        if (!CFUtil.isActivityValid(activity)) {
+            return;
+        }
+
+        final CFApplication application = (CFApplication) activity.getApplication();
+        if (!isLocationValid(CFApplication.getLastKnownLocation())) {
+            setErrorMessage(R.string.location_warning);
+        } else if (!application.isNetworkAvailable()) {
+            setErrorMessage(R.string.network_unavailable);
+        } else if (!UploadExposureTask.sValidId.get()) {
+            setErrorMessage(R.string.bad_user_code);
+        } else if (!UploadExposureTask.sPermitUpload.get()) {
+            setErrorMessage(R.string.server_overload);
+        } else {
+            setErrorMessage(0);
+        }
+
+        if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
+            DAQService.DAQBinder binder = DAQActivity.getBinder();
+            if(binder != null) {
+                final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
+                if (status != null) {
+                    mDataCollectionStats.setStatus(status);
+                }
+            }
+
         }
     }
 }

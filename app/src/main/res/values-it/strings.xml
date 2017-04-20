@@ -31,7 +31,7 @@
     <string name="toast_black">Mostra in tempo reale i potenziali raggi cosmici che attraversano il tuo telefono.\n\nPreferisci lo schermo oscurato? Puoi disattivare la visualizzazione da Impostazioni.</string>
     <string name="toast_data">Questa schermata mostra lo stato attuale.\n\nScorri per passare alle altre schermate.</string>
     <string name="help_data">Questa schermata mostra lo stato attuale dell\'app e anche:\n\tTempo: secondi di presa dati\n\tFrequenza: velocitá di acquisizione, fotogramma-per-secondo</string>
-    <string name="help_hist">Questa schermata mostra:\n\t Fotogrammi acquisiti: numero di fotogrammi esaminate\n\t Pixel acquisiti: numero di pixel esaminati\n\t Candidati: numero di pixel sopra la soglia del rumore\nIn basso si trova un istogramma che mostra la qualitá dei pixel sopra soglia.</string>
+    <string name="toast_status">Questa schermata mostra:\n\t Fotogrammi acquisiti: numero di fotogrammi esaminate\n\t Pixel acquisiti: numero di pixel esaminati\n\t Candidati: numero di pixel sopra la soglia del rumore\nIn basso si trova un istogramma che mostra la qualitá dei pixel sopra soglia.</string>
     <string name="toast_devel">Questa schermata mostra i dettagli per lo sviluppo.</string>
     <string name="toast_gallery_zero">Quando si trovano degli eventi particolarmente interessanti, questa schermata mostrerá una carrellata di immagini.</string>
     <string name="toast_gallery">"Questa schermata mostra una carrellata di immagini di candidati interessanti."</string>
@@ -63,8 +63,8 @@
     <string name="server_overload">Server sovraccarico</string>
     <string name="ignored">Ignorato</string>
     <string name="toast_leader">Questa schermata mostra la mappa della rete attiva e la classifica.</string>
-    <string name="hist_toast_zero">Quando l\'app ha completato la calibrazione, questa schermata mostrerá un istogramma delle candidate particelle.</string>
-    <string name="hist_toast">Questa schermata mostra un istogramma delle candidate particelle.</string>
+    <string name="toast_hist_zero">Quando l\'app ha completato la calibrazione, questa schermata mostrerá un istogramma delle candidate particelle.</string>
+    <string name="toast_hist">Questa schermata mostra un istogramma delle candidate particelle.</string>
     <string name="fatal_error_title">Errore CRAYFIS</string>
     <string name="camera_error">CRAYFIS non é in grado di utilizzare la fotocamera.</string>
     <string name="fatal_error_message">Si é verificato un errore interno e questa operazione deve essere interrotta. Riprova piú tardi.</string>

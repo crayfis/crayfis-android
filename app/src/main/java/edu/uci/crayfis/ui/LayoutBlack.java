@@ -8,7 +8,7 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,7 +23,7 @@ import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.widget.SplashView;
 
-public class LayoutBlack extends CFFragment{
+public class LayoutBlack extends CFFragment {
     private static LayoutBlack mInstance =null;
 
     public SplashView mSplashView;
@@ -37,6 +37,8 @@ public class LayoutBlack extends CFFragment{
     }
 
     private boolean shown_message=false;
+
+    private final @StringRes int ABOUT_ID = R.string.toast_black;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -89,38 +91,36 @@ public class LayoutBlack extends CFFragment{
 
         //CFLog.d(" LayoutBlack splashview = "+mSplashView+" with #events="+events.size());
 
-        startUiUpdate(new UiUpdateRunnable());
-
         return root;
     }
 
-    /*
-     * Runnable to update the UI
-     */
-    private final class UiUpdateRunnable implements Runnable {
 
-        @Override
-        public void run() {
-            final Activity activity = getActivity();
-            if (!CFUtil.isActivityValid(activity)) {
-                return;
-            }
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
+    }
 
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
-            boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
-            if (show_splashes) {
-                try {
-                    L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
-                    if (ev != null) {
-                        //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
-                        addEvent(ev);
-                    } else {
-                        // CFLog.d(" L2thread poll returns null ");
-                    }
+    @Override
+    public void update() {
+        final Activity activity = getActivity();
+        if (!CFUtil.isActivityValid(activity)) {
+            return;
+        }
 
-                } catch (Exception e) {
-                    // just don't do it
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
+        boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
+        if (show_splashes) {
+            try {
+                L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
+                if (ev != null) {
+                    //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
+                    addEvent(ev);
+                } else {
+                    // CFLog.d(" L2thread poll returns null ");
                 }
+
+            } catch (Exception e) {
+                // just don't do it
             }
         }
     }

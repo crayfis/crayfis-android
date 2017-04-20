@@ -30,7 +30,7 @@
     <string name="toast_black">Montre les rayons cosmiques potentiels touchant le téléphone en temps réel.\n\nVous préférez un écran éteint? Vous pouvez désactiver les splashs dans Configuration.</string>
     <string name="toast_data">Cette fenêtre indique le status.\n\nFaites glisser pour afficher d\'autres infos.</string>
     <string name="help_data">Montre l\'état actuel de l\'app ainsi que:\n\tTemps: seconds d\'acquisition de données\'\n\tFréquence: fréquence de scan , images-par-seconde</string>
-    <string name="help_hist">Montre:\n\t Images scannées: nombre de images analysées\n\t Pixels scannées: nombre de pixels examinées\n\t Détection: nombre de pixels au dessus du seuil de bruit\nEn bas se trouve un histogramme montrant la qualité des pixels au dessus du seuil de détection.</string>
+    <string name="toast_status">Montre:\n\t Images scannées: nombre de images analysées\n\t Pixels scannées: nombre de pixels examinées\n\t Détection: nombre de pixels au dessus du seuil de bruit\nEn bas se trouve un histogramme montrant la qualité des pixels au dessus du seuil de détection.</string>
     <string name="toast_devel">Cette fenêtre montre des détails pour les dévelopeurs.</string>
     <string name="toast_gallery_zero">Quand des candidats particulièrement intéressants sont trouvés, cette fenêtre vous montrera une galerie d\'images.</string>
     <string name="toast_gallery">"Cette fenêtre montre la galerie d'images de candidats intéressants."</string>
@@ -62,8 +62,8 @@
     <string name="server_overload">Serveur surchargé</string>
     <string name="ignored">Ignoré</string>
     <string name="toast_leader">Cette fenêtre montre la carte du réseau actif et le tableau des scores.</string>
-    <string name="hist_toast_zero">Quand cette app a terminé l\'étalonnage, cette fenêtre affichera un histogramme montrant les particules candidates.</string>
-    <string name="hist_toast">Cette fenêtre contient un histogramme des particules candidates.</string>
+    <string name="toast_hist_zero">Quand cette app a terminé l\'étalonnage, cette fenêtre affichera un histogramme montrant les particules candidates.</string>
+    <string name="toast_hist">Cette fenêtre contient un histogramme des particules candidates.</string>
     <string name="fatal_error_title">CRAYFIS Erreur</string>
     <string name="camera_error">CRAYFIS n\'arrive pas à ouvrir votre appareil photo.</string>
     <string name="fatal_error_message">Une erreur interne a eu lieue et l\'activité que vous observez actuellement doit fermer.  Essayez à nouveau s\'il vous plait.</string>
