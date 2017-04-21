@@ -35,7 +35,7 @@ public class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("update_url") private String mUpdateURL;
     @SerializedName("set_target_resolution") private String mResolution;
-    @SerializedName("set_camera_select_mode") private int mCameraSelectMode;
+    @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
 
 
     /**
@@ -231,5 +231,11 @@ public class ServerCommand {
     }
 
     @Nullable
-    public Integer getCameraSelectMode() { return mCameraSelectMode; }
+    public Integer getCameraSelectMode() {
+        try {
+            return Integer.parseInt(mCameraSelectModeString);
+        } catch(NumberFormatException e) {
+            return null;
+        }
+    }
 }

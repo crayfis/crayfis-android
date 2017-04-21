@@ -68,7 +68,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final int DEFAULT_CAMERA_SELECT_MODE = MODE_FACE_DOWN;
-    //Resources.getSystem().getString(R.string.camera_select_face_down);
 
     private String mL1Trigger;
     private String mL2Trigger;
@@ -316,7 +315,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
     /**
-     * Get the camera selection mode, as defined in the CameraSelector class
+     * Get the camera selection mode
      *
      * @return int
      */
@@ -357,7 +356,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param serverCommand {@link edu.uci.crayfis.server.ServerCommand}
      */
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
-        if (serverCommand == null) return;
+
         CFLog.i("GOT command from server!");
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
