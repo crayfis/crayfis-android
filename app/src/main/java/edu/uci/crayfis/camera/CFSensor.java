@@ -19,8 +19,9 @@ public class CFSensor implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private float[] orientation = new float[3];
-    private float[] rotationMatrix = new float[9];
-    private static float rotationZZ = 0;
+    private static float[] rotationMatrix = new float[9];
+    private float[] magnetic;
+    private float[] gravity;
     private float pressure = 0;
 
     private final CFApplication APPLICATION;
@@ -41,12 +42,22 @@ public class CFSensor implements SensorEventListener {
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         Sensor rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-        if(rotationSensor == null) {
-            rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if(rotationSensor != null) {
+            mSensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            // find orientation the deprecated way
+            Sensor magSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+            Sensor gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+            magnetic = new float[3];
+            gravity = new float[3];
+            if(gravSensor == null) {
+                gravSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            }
+            mSensorManager.registerListener(this, magSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            mSensorManager.registerListener(this, gravSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        Sensor pressureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
 
-        mSensorManager.registerListener(this, rotationSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        Sensor pressureSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         mSensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
@@ -58,18 +69,25 @@ public class CFSensor implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch(event.sensor.getType()) {
-            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
-            case Sensor.TYPE_ROTATION_VECTOR:
-                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-                rotationZZ = rotationMatrix[8];
-                SensorManager.getOrientation(rotationMatrix, orientation);
-                BUILDER.setOrientation(orientation)
-                        .setRotationZZ(rotationZZ);
-                break;
             case Sensor.TYPE_PRESSURE:
                 pressure = event.values[0];
                 BUILDER.setPressure(pressure);
+                return;
+            case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
+                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                magnetic = event.values;
+                break;
+            case Sensor.TYPE_GRAVITY:
+            case Sensor.TYPE_ACCELEROMETER:
+                gravity = event.values;
+                SensorManager.getRotationMatrix(rotationMatrix, null, gravity, magnetic);
         }
+
+        SensorManager.getOrientation(rotationMatrix, orientation);
+        BUILDER.setOrientation(orientation)
+                .setRotationZZ(rotationMatrix[8]);
     }
 
     @Override
@@ -86,14 +104,14 @@ public class CFSensor implements SensorEventListener {
     }
 
     public static boolean isFlat() {
-        return Math.abs(rotationZZ) >= CFConfig.getInstance().getQualityOrientationCosine();
+        return Math.abs(rotationMatrix[8]) >= CFConfig.getInstance().getQualityOrientationCosine();
     }
 
     public String getStatus() {
         return "Orientation = " + String.format("%1.2f", orientation[0]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[1]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[2]*180/Math.PI) + " -> "
-                + String.format("%1.2f", rotationZZ)+ "\n"
+                + String.format("%1.2f", rotationMatrix[8])+ "\n"
                 + "Pressure = " + pressure + "\n";
     }
 

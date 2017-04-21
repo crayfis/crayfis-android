@@ -59,7 +59,7 @@ android {
 
     defaultConfig {
         applicationId "edu.uci.crayfis"
-        minSdkVersion 19
+        minSdkVersion 13
         targetSdkVersion 25
         renderscriptTargetApi 18
         versionCode getVersionCode()
