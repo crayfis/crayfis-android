@@ -1,11 +1,16 @@
 package edu.uci.crayfis;
 
+import android.app.AlertDialog;
 import android.app.Application;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -15,19 +20,20 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
 import edu.uci.crayfis.camera.CFSensor;
-import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
-import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
 import static edu.uci.crayfis.CFApplication.State.DATA;
@@ -46,6 +52,11 @@ public class CFApplication extends Application {
 
     public static final String ACTION_CAMERA_CHANGE = "camera_change";
     public static final String EXTRA_NEW_CAMERA = "new_camera";
+
+    public static final String ACTION_FATAL_ERROR = "fatal_error";
+    public static final String EXTRA_ERROR_MESSAGE = "error_message";
+
+    private int errorId = 2;
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
@@ -196,6 +207,32 @@ public class CFApplication extends Application {
             intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
+        }
+    }
+
+    public void userErrorMessage(String mess, boolean fatal) {
+
+        if(fatal) {
+            CFLog.e("Error: " + mess);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_just_a)
+                    .setContentTitle(getString(R.string.notification_title))
+                    .setContentText(mess)
+                    .setContentIntent(null)
+                    .build();
+
+            NotificationManager notificationManager
+                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(errorId, notification);
+            errorId++;
+
+            // make sure to kill activity if open
+            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
+            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
+            stopService(new Intent(this, DAQService.class));
+        } else {
+            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
         }
     }
 

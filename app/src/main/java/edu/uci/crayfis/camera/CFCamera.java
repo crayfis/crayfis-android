@@ -15,6 +15,7 @@ import java.util.List;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
 import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
@@ -93,8 +94,7 @@ public class CFCamera implements Camera.ErrorCallback {
                 onError(1, mCamera);
                 return;
             } else {
-                // TODO: fix user error message
-                //userErrorMessage(getResources().getString(R.string.camera_error), true);
+                APPLICATION.userErrorMessage(APPLICATION.getResources().getString(R.string.camera_error),true);
                 return;
             }
         }
@@ -142,7 +142,7 @@ public class CFCamera implements Camera.ErrorCallback {
 
         } catch (Exception e) {
             e.printStackTrace();
-            // userErrorMessage(getResources().getString(R.string.camera_error),true);
+            APPLICATION.userErrorMessage(APPLICATION.getResources().getString(R.string.camera_error),true);
             return;
         }
 
@@ -174,8 +174,8 @@ public class CFCamera implements Camera.ErrorCallback {
             mCamera.setErrorCallback(this);
 
             mCamera.startPreview();
-        }  catch (Exception e) {
-            // userErrorMessage(getResources().getString(R.string.camera_error),true);
+        } catch (Exception e) {
+            APPLICATION.userErrorMessage(APPLICATION.getResources().getString(R.string.camera_error),true);
         }
     }
 

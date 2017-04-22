@@ -57,7 +57,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private CFApplication.AppBuild mAppBuild;
     private String upload_url;
     private final int FOREGROUND_ID = 1;
-    private int errorId = 2;
 
     private CFCamera mCFCamera;
     private CFSensor mCFSensor;
@@ -184,7 +183,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     LocalBroadcastManager mBroadcastManager;
 
-
     private final BroadcastReceiver STATE_CHANGE_RECEIVER = new BroadcastReceiver() {
         @Override
         public void onReceive(final Context context, final Intent intent) {
@@ -205,6 +203,14 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             }
         }
     };
+
+    private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            xbManager.abortExposureBlock();
+        }
+    };
+
 
     /**
      * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
@@ -339,15 +345,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
 
     }
-
-
-    private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            xbManager.abortExposureBlock();
-        }
-    };
-
 
 
 
@@ -644,8 +641,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private final IBinder mBinder = new DAQBinder();
     private long mTimeBeforeSleeping = 0;
     private int mCountsBeforeSleeping = 0;
-    public static final String ACTION_FATAL_ERROR = "fatal_error";
-    public static final String EXTRA_ERROR_MESSAGE = "error_message";
 
     public class DAQBinder extends Binder {
 
@@ -708,31 +703,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         return mBinder;
     }
 
-    private void userErrorMessage(String mess, boolean fatal) {
 
-        if(fatal) {
-            CFLog.e("Error: " + mess);
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_just_a)
-                    .setContentTitle(getString(R.string.notification_title))
-                    .setContentText(mess)
-                    .setContentIntent(null)
-                    .build();
-
-            NotificationManager notificationManager
-                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(errorId, notification);
-            errorId++;
-
-            // make sure to kill activity if open
-            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
-            mBroadcastManager.sendBroadcast(errorIntent);
-            stopSelf();
-        } else {
-            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
-        }
-    }
 
 
 }

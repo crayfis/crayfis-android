@@ -18,6 +18,7 @@
 package edu.uci.crayfis;
 
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -83,13 +84,17 @@ public class DAQActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context c, Intent intent) {
             final TextView tx1 = new TextView(context);
-            tx1.setText(intent.getStringExtra(DAQService.EXTRA_ERROR_MESSAGE));
+            tx1.setText(intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE));
             tx1.setTextColor(Color.WHITE);
             tx1.setBackgroundColor(Color.BLACK);
             AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
             builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
                     .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
+                            // notifications would be redundant
+                            NotificationManager notificationManager
+                                    = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                            notificationManager.cancelAll();
                             System.exit(0);
                         }
                     })
@@ -130,7 +135,7 @@ public class DAQActivity extends AppCompatActivity {
         context = getApplicationContext();
 
         LocalBroadcastManager.getInstance(this)
-                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(DAQService.ACTION_FATAL_ERROR));
+                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
 
         mServiceConnection = new ServiceConnection() {
             @Override
