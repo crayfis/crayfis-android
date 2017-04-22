@@ -471,7 +471,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
             // track the acquisition times for FPS calculation
             synchronized(frame_times) {
-                frame_times.add_value(acq_time.Nano);
+                frame_times.addValue(acq_time.Nano);
             }
             // update the FPS and Calibration calculation periodically
             if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
@@ -690,7 +690,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             devtxt += mCFCamera.getStatus();
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
-            devtxt += "L1 hist = "+L1Calibrator.getHistogram().toString()+"\n"
+            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                     + "Upload server = " + upload_url + "\n";
             devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
             return devtxt;

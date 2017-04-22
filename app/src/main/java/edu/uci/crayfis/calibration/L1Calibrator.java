@@ -4,21 +4,16 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 public class L1Calibrator {
-    private static FrameHistory<Integer> max_pixels;
+    private final FrameHistogram maxPixels;
 
     private int n_frames = 1000;
 
     private L1Calibrator() {
-        max_pixels = new FrameHistory<Integer>(n_frames);
+        maxPixels = new FrameHistogram(n_frames);
     }
 
     private static L1Calibrator sInstance;
 
-    /**
-     * Get the instance of {@link edu.uci.crayfis.particle.ParticleReco}.
-     *
-     * @return {@link edu.uci.crayfis.particle.ParticleReco}
-     */
     public static synchronized L1Calibrator getInstance() {
         if (sInstance == null) {
             sInstance = new L1Calibrator();
@@ -26,27 +21,21 @@ public class L1Calibrator {
         return sInstance;
     }
 
-    public static FrameHistory<Integer> getMaxPixels() { return max_pixels; }
+    public FrameHistory<Integer> getMaxPixels() { return maxPixels; }
 
-    public static void clear() {
-        synchronized (max_pixels) {
-            max_pixels.clear();
+    public void clear() {
+        synchronized (maxPixels) {
+            maxPixels.clear();
         }
     }
 
-    public static void AddFrame(RawCameraFrame frame) {
-        int frame_max = frame.getPixMax();
-        synchronized (max_pixels) {
-            max_pixels.add_value(frame_max);
-        }
-    }
+    public Histogram getHistogram() { return maxPixels.getHistogram(); }
 
-    public static Histogram getHistogram() {
-        Histogram h;
-        synchronized (max_pixels) {
-            h = max_pixels.getHistogram(256);
+    public void addFrame(RawCameraFrame frame) {
+        int frameMax = frame.getPixMax();
+        synchronized (maxPixels) {
+            maxPixels.addValue(frameMax);
         }
-        return h;
     }
 
     /**
@@ -54,8 +43,8 @@ public class L1Calibrator {
      *  or equal to the specified value.
      *  @param target_eff The target (maximum) fraction of events passing L1
      */
-    public static int findL1Threshold(double target_eff) {
-        Histogram h = getHistogram();
+    public int findL1Threshold(double target_eff) {
+        Histogram h = maxPixels.getHistogram();
         int n_total = h.getEntries();
 
         int thresh;
@@ -76,7 +65,7 @@ public class L1Calibrator {
 
     public void resize(int n) {
         n_frames = n;
-        max_pixels.resize(n);
+        maxPixels.resize(n);
     }
 
 }

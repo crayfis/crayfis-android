@@ -14,13 +14,12 @@ public class Histogram implements Iterable<Integer> {
     private double variance = 0;
     private double integral = 0;
     private int entries = 0;
-    private int max_bin = 0;
     private boolean doErrors = false;
-    public final int nbins;
+    private final int nbins;
 
 
     // Iterator over the values of each bin. Does not include overflow/underflow bins.
-    public class HistogramIterator implements Iterator<Integer> {
+    private class HistogramIterator implements Iterator<Integer> {
         private int pos = 0;
         public Integer next() { pos += 1; return values[pos-1]; }
         public boolean hasNext() { return (pos < values.length); }
@@ -70,7 +69,6 @@ public class Histogram implements Iterable<Integer> {
         mean_valid = false;
         variance_valid = false;
         entries = 0;
-        max_bin = 0;
     }
 
     // fill a new entry in the histogram, for the given value of the histogram variable.
@@ -78,14 +76,10 @@ public class Histogram implements Iterable<Integer> {
     public void fill(int val) {
         fill(val, 1);
     }
+    public void remove(int val) { fill(val, -1); }
     public void fill(int x, double weight) {
         // keep track of the total number of raw entries filled
-        entries += 1;
-
-        // keep track of the highest non-zero bin
-        if (x > max_bin && x < nbins) {
-            max_bin = x;
-        }
+        entries += Math.signum(weight);
 
         // underflow/overflow entries get added to the end of the normal array
         // they do not contribute to the integral or other stats, and are not
@@ -159,9 +153,6 @@ public class Histogram implements Iterable<Integer> {
         variance_valid = true;
         return variance;
     }
-
-    // return the maximum non-zero bin.
-    public int getMaxBin() { return max_bin; }
 
     // return the integral (sum of weights). does not include overflow/underflow bins.
     public double getIntegral() { return integral; }
