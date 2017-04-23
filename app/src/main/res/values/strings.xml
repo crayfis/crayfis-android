@@ -88,8 +88,9 @@
     <string name="toast_hist_zero">When the app has finished calibrating, this pane will show a histogram of the particle candidates.</string>
     <string name="toast_hist">This pane shows a histogram of the particle candidates.</string>
     <string name="fatal_error_title">CRAYFIS Error</string>
-    <string name="camera_error">CRAYFIS could not open the camera.</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
+    <string name="camera_error">CRAYFIS could not open the camera.</string>
+    <string name="sensor_error" translatable="false">Unusual sensor output:\n Try switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>

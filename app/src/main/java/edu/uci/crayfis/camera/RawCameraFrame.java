@@ -1,6 +1,7 @@
 package edu.uci.crayfis.camera;
 
 import android.annotation.TargetApi;
+import android.content.res.Resources;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
@@ -17,7 +18,9 @@ import org.opencv.core.MatOfByte;
 
 import java.util.Arrays;
 
+import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -26,6 +29,7 @@ import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
 import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
 import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
 import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
+import static edu.uci.crayfis.CFApplication.badFlatEvents;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -37,6 +41,7 @@ public class RawCameraFrame {
 
     private Camera mCamera;
     private int mCameraId;
+    private boolean mFacingBack;
     private int mFrameWidth;
     private int mFrameHeight;
     private int mLength;
@@ -72,6 +77,7 @@ public class RawCameraFrame {
         private byte[] bBytes;
         private Camera bCamera;
         private int bCameraId;
+        private boolean bFacingBack;
         private int bFrameWidth;
         private int bFrameHeight;
         private int bLength;
@@ -138,6 +144,9 @@ public class RawCameraFrame {
 
         public Builder setCameraId(int cameraId) {
             bCameraId = cameraId;
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
             return this;
         }
 
@@ -177,36 +186,16 @@ public class RawCameraFrame {
         }
 
         public RawCameraFrame build() {
-            return new RawCameraFrame(bBytes, bCamera, bCameraId, bFrameWidth, bFrameHeight,
+            return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
                     bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
                     bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
         }
     }
 
-    /**
-     * Create a new instance via Builder class
-     *
-     * @param bytes
-     * @param camera
-     * @param cameraId
-     * @param frameWidth
-     * @param frameHeight
-     * @param length
-     * @param acquisitionTime
-     * @param location
-     * @param orientation
-     * @param pressure
-     * @param batteryTemp
-     * @param exposureBlock
-     * @param scriptIntrinsicHistogram
-     * @param scriptCWeight
-     * @param in
-     * @param weights
-     * @param out
-     */
     private RawCameraFrame(@NonNull final byte[] bytes,
                            final Camera camera,
                            final int cameraId,
+                           final boolean facingBack,
                            final int frameWidth,
                            final int frameHeight,
                            final int length,
@@ -225,6 +214,7 @@ public class RawCameraFrame {
         mBytes = bytes;
         mCamera = camera;
         mCameraId = cameraId;
+        mFacingBack = facingBack;
         mFrameWidth = frameWidth;
         mFrameHeight = frameHeight;
         mLength = length;
@@ -362,15 +352,6 @@ public class RawCameraFrame {
     }
 
     /**
-     * Set the {@link android.location.Location}.
-     *
-     * @param location {@link android.location.Location}
-     */
-    public void setLocation(final Location location) {
-        mLocation = location;
-    }
-
-    /**
      * Get the orientation of the device when the frame was captured.
      *
      * @return float[]
@@ -456,8 +437,8 @@ public class RawCameraFrame {
                     // use quaternion algebra to calculate cosine of angle between vertical
                     // and phone's z axis (up to a sign that tends to have numerical instabilities)
 
-                    if(Math.abs(mRotationZZ) < CONFIG.getQualityOrientationCosine()) {
-                        // using some quaternion algebra,
+                    if(mFacingBack == mRotationZZ < CONFIG.getQualityOrientationCosine()) {
+
                         CFLog.w("Bad event: Orientation = " + mRotationZZ);
                         return false;
                     }
@@ -466,14 +447,17 @@ public class RawCameraFrame {
                 if (getPixAvg() > CONFIG.getQualityBgAverage()
                         || getPixStd() > CONFIG.getQualityBgVariance()) {
                     CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
+                    if(CFConfig.getInstance().getCameraSelectMode() == MODE_FACE_DOWN) {
+                        CFApplication.badFlatEvents++;
+                    }
                     return false;
                 } else {
                     return true;
                 }
             case MODE_BACK_LOCK:
-                return mCameraId == 0;
+                return mFacingBack;
             case MODE_FRONT_LOCK:
-                return mCameraId == 1;
+                return !mFacingBack;
             default:
                 throw new RuntimeException("Invalid camera select mode");
         }

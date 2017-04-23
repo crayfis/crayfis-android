@@ -85,6 +85,8 @@ public class CFApplication extends Application {
     private static Camera.Size mCameraSize;
     private static int mBatteryTemp;
 
+    public static int badFlatEvents = 0;
+
     private State mApplicationState;
     private int mCameraId = -1;
 

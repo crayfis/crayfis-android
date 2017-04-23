@@ -253,6 +253,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             case STABILIZATION:
                 L1cal.clear();
                 frame_times.clear();
+                CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 // generate runconfig for a specific camera
                 if (run_config == null) {

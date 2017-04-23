@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.DAQService;
@@ -206,6 +207,9 @@ public class DataCollectionFragment extends CFFragment {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
+        } else if(CFApplication.badFlatEvents >= 5
+                && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
+            setErrorMessage(R.string.sensor_error);
         } else if (!UploadExposureTask.sValidId.get()) {
             setErrorMessage(R.string.bad_user_code);
         } else if (!UploadExposureTask.sPermitUpload.get()) {
