@@ -45,22 +45,21 @@ public class L1Calibrator {
      */
     public int findL1Threshold(double target_eff) {
         Histogram h = maxPixels.getHistogram();
-        int n_total = h.getEntries();
+        int[] histValues = h.getValues();
+        int nTotal = h.getEntries();
+        int nTarget = (int) (nTotal * target_eff);
 
         int thresh;
-        double rate = 0;
-        for (thresh = 255; thresh >= 1; --thresh) {
-            rate = h.getIntegral(thresh, 256) / n_total;
+
+        for (thresh = 0; thresh < 256; thresh++) {
+            nTotal -= histValues[thresh];
             //if (thresh<20) CFLog.d(" L1Calibrator. Thresh="+thresh+" integral="+h.getIntegral(thresh, 256)+" rate="+rate+" compare to "+target_eff);
-            if (rate > target_eff) break;
+            if (nTotal < nTarget) {
+                break;
+            }
         }
-        if (rate > target_eff) {
-            //CFLog.d(" L1Calibrator. Thresh="+(thresh+1));
-            return thresh + 1;
-        } else {
-            //CFLog.d(" L1Calibrator. Thresh="+thresh);
-            return thresh;
-        }
+
+        return Math.max(thresh,2);
     }
 
     public void resize(int n) {
