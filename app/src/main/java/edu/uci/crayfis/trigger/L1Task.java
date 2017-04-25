@@ -49,6 +49,11 @@ class L1Task implements Runnable {
 
     protected boolean processPreCalibration() {
         mL1Processor.mPreCal.addFrame(mFrame);
+
+        if (mL1Processor.mPreCal.preCalCount > 1000) {
+            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+        }
+
         return false;
     }
 

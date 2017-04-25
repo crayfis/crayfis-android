@@ -22,6 +22,7 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.ScriptC_weight;
+import edu.uci.crayfis.calibration.PreCalibrator;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -65,7 +66,6 @@ public class RawCameraFrame {
     private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
     private ScriptC_weight mScriptCWeight;
     private Allocation ain;
-    private Allocation aweights;
     private Allocation aout;
 
     private Mat mGrayMat;
@@ -91,7 +91,6 @@ public class RawCameraFrame {
         private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
         private ScriptC_weight bScriptCWeight;
         private Allocation bin;
-        private Allocation bweights;
         private Allocation bout;
 
         public Builder() {
@@ -124,20 +123,9 @@ public class RawCameraFrame {
                     .create();
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
             bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-            bweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bout);
-
-            // define aweights
-            byte[] maskArray = new byte[(bFrameWidth-2*BORDER)*(bFrameHeight-2*BORDER)];
-
-            // for now, just use equal weights
-            byte b1 = (byte)1;
-            Arrays.fill(maskArray, b1);
-
-            bweights.copy2DRangeFrom(BORDER, BORDER, bFrameWidth-2*BORDER, bFrameHeight-2*BORDER, maskArray);
-            bScriptCWeight = new ScriptC_weight(rs);
-            bScriptCWeight.set_weights(bweights);
+            bScriptCWeight = PreCalibrator.getInstance().getScriptCWeight(rs, bFrameWidth, bFrameHeight);
 
             return this;
         }
@@ -188,7 +176,7 @@ public class RawCameraFrame {
         public RawCameraFrame build() {
             return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
                     bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
-                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
+                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout);
         }
     }
 
@@ -209,7 +197,6 @@ public class RawCameraFrame {
                            final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                            final ScriptC_weight scriptCWeight,
                            final Allocation in,
-                           final Allocation weights,
                            final Allocation out) {
         mBytes = bytes;
         mCamera = camera;
@@ -228,8 +215,17 @@ public class RawCameraFrame {
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
         mScriptCWeight = scriptCWeight;
         ain = in;
-        aweights = weights;
         aout = out;
+    }
+
+    /**
+     * Copies byte array into an allocation
+     *
+     * @return allocation of bytes
+     */
+    public synchronized Allocation getAllocation() {
+        ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
+        return ain;
     }
 
 
@@ -381,8 +377,10 @@ public class RawCameraFrame {
 
             int[] hist = new int[256];
 
+            //getAllocation();
+
             synchronized (mScriptIntrinsicHistogram) {
-                ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
+                ain.copy1DRangeFrom(0, mLength, mBytes);
                 mScriptCWeight.forEach_weight(ain, ain);
                 mScriptIntrinsicHistogram.forEach(ain);
                 aout.copyTo(hist);

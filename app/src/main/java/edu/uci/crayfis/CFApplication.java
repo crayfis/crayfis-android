@@ -59,7 +59,7 @@ public class CFApplication extends Application {
 
     private int errorId = 2;
 
-    private boolean mDueForPreCalibration = false;
+    private boolean mDueForPreCalibration = true;
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
