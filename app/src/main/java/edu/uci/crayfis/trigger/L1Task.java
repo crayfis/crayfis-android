@@ -42,10 +42,13 @@ class L1Task implements Runnable {
         if(!mFrame.isQuality()) {
             mApplication.changeCamera();
             return true;
-        } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
-            mL1Processor.mL1Cal.addFrame(mFrame);
         }
 
+        return false;
+    }
+
+    protected boolean processPreCalibration() {
+        mL1Processor.mPreCal.addFrame(mFrame);
         return false;
     }
 
@@ -53,6 +56,7 @@ class L1Task implements Runnable {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = ++mExposureBlock.calibration_count;
+        mL1Processor.mL1Cal.addFrame(mFrame);
 
         if (count == mL1Processor.CONFIG.getCalibrationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.DATA);
@@ -78,6 +82,7 @@ class L1Task implements Runnable {
 
     protected boolean processData() {
 
+        mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
 
         // check if we pass the L1 threshold
@@ -124,6 +129,9 @@ class L1Task implements Runnable {
 
         boolean stopProcessing;
         switch (mExposureBlock.daq_state) {
+            case PRECALIBRATION:
+                stopProcessing = processPreCalibration();
+                break;
             case CALIBRATION:
                 stopProcessing = processCalibration();
                 break;
