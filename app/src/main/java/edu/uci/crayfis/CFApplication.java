@@ -38,6 +38,7 @@ import edu.uci.crayfis.util.CFLog;
 import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
 import static edu.uci.crayfis.CFApplication.State.DATA;
 import static edu.uci.crayfis.CFApplication.State.IDLE;
+import static edu.uci.crayfis.CFApplication.State.PRECALIBRATION;
 import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
 import static edu.uci.crayfis.CFApplication.State.STABILIZATION;
 
@@ -57,6 +58,8 @@ public class CFApplication extends Application {
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
 
     private int errorId = 2;
+
+    private boolean mDueForPreCalibration = false;
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
@@ -157,14 +160,14 @@ public class CFApplication extends Application {
      */
     public void setApplicationState(State applicationState) {
         final State currentState = mApplicationState;
+        if(applicationState == CALIBRATION && mDueForPreCalibration) {
+            applicationState = PRECALIBRATION;
+        }
         mApplicationState = applicationState;
 
         final Intent intent = new Intent(ACTION_STATE_CHANGE);
         intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
         intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
-        if(applicationState == IDLE || applicationState == STABILIZATION) {
-            changeCamera();
-        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
@@ -192,6 +195,7 @@ public class CFApplication extends Application {
                         nextId = 1;
                 }
                 break;
+            case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
             case IDLE:
@@ -393,6 +397,7 @@ public class CFApplication extends Application {
      */
     public enum State {
         INIT,
+        PRECALIBRATION,
         CALIBRATION,
         DATA,
         STABILIZATION,

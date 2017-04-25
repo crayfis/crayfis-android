@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.calibration.PreCalibrator;
 import edu.uci.crayfis.camera.RawCameraFrame;
 
 /**
@@ -15,7 +16,8 @@ public class L1Processor {
 
     public final CFApplication mApplication;
 
-    public L1Calibrator mL1Cal = null;
+    L1Calibrator mL1Cal;
+    PreCalibrator mPreCal;
     public static int mL1Count = 0;
     public static int mL1CountData;
 
@@ -29,6 +31,7 @@ public class L1Processor {
         mApplication = application;
         mL2Processor = new L2Processor(mApplication);
         mL1Cal = L1Calibrator.getInstance();
+        mPreCal = PreCalibrator.getInstance();
     }
 
     private Runnable makeTask(RawCameraFrame frame) {

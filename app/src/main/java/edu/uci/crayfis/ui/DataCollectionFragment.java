@@ -91,6 +91,11 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
+            case PRECALIBRATION:
+                mStatus.setText(getString(R.string.precalibration));
+                mProgressBar.setVisibility(View.VISIBLE);
+                mStatusMessage.setVisibility(View.GONE);
+                mDataCollectionStats.setVisibility(View.GONE);
             case CALIBRATION:
                 mStatus.setText(R.string.calibration);
                 mProgressBar.setVisibility(View.VISIBLE);
@@ -104,13 +109,13 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
-                mStatus.setText("Idle");
+                mStatus.setText(getString(R.string.idle));
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 setStatusMessage(mIdleStatus);
                 break;
             case INIT:
-                mStatus.setText("Initializing...");
+                mStatus.setText(getString(R.string.init));
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
