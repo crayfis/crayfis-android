@@ -38,7 +38,8 @@ public class PreCalibrator {
 
     public void addFrame(RawCameraFrame frame) {
         preCalCount++;
-        mScriptCWeight.forEach_update_weights(frame.getAllocation(), null);
+        frame.getAllocation();
+        //mScriptCWeight.invoke_update_weights(frame.getAllocation());
     }
 
     public ScriptC_weight getScriptCWeight(RenderScript rs, int x, int y) {
@@ -62,7 +63,8 @@ public class PreCalibrator {
 
             weights.copy2DRangeFrom(BORDER, BORDER, type.getX()-2*BORDER, type.getY()-2*BORDER, maskArray);
 
-            mScriptCWeight.set_weights(weights);
+            mScriptCWeight.set_gWeights(weights);
+            mScriptCWeight.set_gScript(mScriptCWeight);
         }
         return mScriptCWeight;
     }

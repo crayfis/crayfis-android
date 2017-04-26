@@ -78,8 +78,8 @@
     <string name="network_unavailable">Network unavailable</string>
 
     <string name="init" translatable="false">Initializing</string>
-    <string name="stabilization">Checking light levels</string>
-    <string name="precalibration">Calculating pixel stats</string>
+    <string name="stabilization">Checking camera is covered</string>
+    <string name="precalibration" translatable="false">Calculating pixel stats</string>
     <string name="calibration">Measuring levels</string>
     <string name="taking_data">Taking data!</string>
     <string name="idle" translatable="false">Idle</string>
