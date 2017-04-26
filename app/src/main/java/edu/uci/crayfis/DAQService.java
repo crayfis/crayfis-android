@@ -244,6 +244,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         mApplication.changeCamera();
         switch(previousState) {
+            case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
@@ -263,6 +264,9 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             case STABILIZATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
                 break;
+            case PRECALIBRATION:
+                // still calculating stats
+                break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
         }
@@ -273,6 +277,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         // is after stabilizaton.
         switch (previousState) {
             case STABILIZATION:
+            case PRECALIBRATION:
                 L1cal.clear();
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;

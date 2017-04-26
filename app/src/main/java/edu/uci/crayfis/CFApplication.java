@@ -161,7 +161,8 @@ public class CFApplication extends Application {
     public void setApplicationState(State applicationState) {
         final State currentState = mApplicationState;
         if(applicationState == CALIBRATION && mDueForPreCalibration) {
-            applicationState = PRECALIBRATION;
+            setApplicationState(PRECALIBRATION);
+            return;
         }
         mApplicationState = applicationState;
 
