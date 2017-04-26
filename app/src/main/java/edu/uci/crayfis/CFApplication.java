@@ -60,6 +60,7 @@ public class CFApplication extends Application {
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
+    public boolean waitingForStabilization = false;
     private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
         @Override
         public void onTick(long millisUntilFinished) {
@@ -69,6 +70,7 @@ public class CFApplication extends Application {
         @Override
         public void onFinish() {
             if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
+                waitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
                 // continue waiting
@@ -203,6 +205,7 @@ public class CFApplication extends Application {
             if(nextId == -1 && mApplicationState != IDLE) {
                 setApplicationState(IDLE);
                 DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+                waitingForStabilization = true;
                 mStabilizationTimer.start();
             }
             final Intent intent = new Intent(ACTION_CAMERA_CHANGE);

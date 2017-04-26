@@ -622,7 +622,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             }
             // if we are in idle mode, restart if everything is okay
             else if (batteryPct >= battery_start_threshold && !batteryOverheated
-                    && mApplication.getCameraId() != -1) {
+                    && !mApplication.waitingForStabilization) {
 
                 CFLog.d("Returning to stabilization");
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);
