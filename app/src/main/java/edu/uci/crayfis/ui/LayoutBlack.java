@@ -36,6 +36,18 @@ public class LayoutBlack extends CFFragment {
     {
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        events = new ArrayList<>(max_events);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        events = null;
+    }
+
     private boolean shown_message=false;
 
     private final @StringRes int ABOUT_ID = R.string.toast_black;
@@ -62,7 +74,7 @@ public class LayoutBlack extends CFFragment {
     }
 
     private static final int max_events = 100;
-    public ArrayList<L2Task.RecoEvent> events = new ArrayList<L2Task.RecoEvent>(max_events);
+    public ArrayList<L2Task.RecoEvent> events;
 
     public void addEvent(L2Task.RecoEvent p)
     {
@@ -98,31 +110,6 @@ public class LayoutBlack extends CFFragment {
     @Override
     public @StringRes int about() {
         return ABOUT_ID;
-    }
-
-    @Override
-    public void update() {
-        final Activity activity = getActivity();
-        if (!CFUtil.isActivityValid(activity)) {
-            return;
-        }
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity.getApplicationContext());
-        boolean show_splashes = sharedPrefs.getBoolean("prefSplashView", true);
-        if (show_splashes) {
-            try {
-                L2Task.RecoEvent ev = null; //l2thread.getDisplayPixels().poll(10, TimeUnit.MILLISECONDS);
-                if (ev != null) {
-                    //CFLog.d(" L2thread poll returns an event with " + ev.pixels.size() + " pixels time=" + ev.time + " pv =" + previewSize);
-                    addEvent(ev);
-                } else {
-                    // CFLog.d(" L2thread poll returns null ");
-                }
-
-            } catch (Exception e) {
-                // just don't do it
-            }
-        }
     }
 
 }

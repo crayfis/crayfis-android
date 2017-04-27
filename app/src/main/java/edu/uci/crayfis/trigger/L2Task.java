@@ -18,6 +18,7 @@ import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.ui.LayoutBlack;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -268,6 +269,11 @@ public class L2Task implements Runnable {
 
         event.background = avg;
         event.std = std;
+
+        LayoutBlack lb = LayoutBlack.getInstance();
+        if(lb.events != null) {
+            lb.addEvent(event);
+        }
 
         return event;
     }
