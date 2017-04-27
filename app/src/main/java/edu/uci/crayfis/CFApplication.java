@@ -29,6 +29,7 @@ import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.calibration.PreCalibrator;
 import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
@@ -58,8 +59,6 @@ public class CFApplication extends Application {
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
 
     private int errorId = 2;
-
-    private boolean mDueForPreCalibration = true;
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
@@ -160,7 +159,7 @@ public class CFApplication extends Application {
      */
     public void setApplicationState(State applicationState) {
         final State currentState = mApplicationState;
-        if(applicationState == CALIBRATION && mDueForPreCalibration) {
+        if(applicationState == CALIBRATION && PreCalibrator.getInstance().dueForPreCalibration()) {
             setApplicationState(PRECALIBRATION);
             return;
         }

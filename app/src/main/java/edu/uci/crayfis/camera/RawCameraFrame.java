@@ -125,7 +125,7 @@ public class RawCameraFrame {
             bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bout);
-            bScriptCWeight = PreCalibrator.getInstance().getScriptCWeight(rs, bFrameWidth, bFrameHeight);
+            bScriptCWeight = PreCalibrator.getInstance().getScriptCWeight(rs);
 
             return this;
         }
@@ -311,6 +311,14 @@ public class RawCameraFrame {
         synchronized (mBufferClaimed) {
             return !(mBytes == null && (mGrayMat == null || mBufferClaimed));
         }
+    }
+
+    public int getWidth() {
+        return mFrameWidth;
+    }
+
+    public int getHeight() {
+        return mFrameHeight;
     }
 
     /**

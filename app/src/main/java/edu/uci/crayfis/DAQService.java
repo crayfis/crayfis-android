@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.calibration.PreCalibrator;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.CFLocation;
@@ -263,9 +264,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         switch (previousState) {
             case STABILIZATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                break;
-            case PRECALIBRATION:
-                // still calculating stats
+                PreCalibrator.getInstance().clear();
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -274,7 +273,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         // The *only* valid way to get into calibration mode
-        // is after stabilizaton.
+        // is after stabilization.
         switch (previousState) {
             case STABILIZATION:
             case PRECALIBRATION:
