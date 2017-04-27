@@ -55,8 +55,7 @@ public class MainActivity extends Activity  {
 
     public static final String[] permissions = {
         Manifest.permission.CAMERA,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE
+        Manifest.permission.ACCESS_FINE_LOCATION
     };
 
 	public String build_version = null;

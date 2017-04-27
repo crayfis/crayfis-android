@@ -17,6 +17,8 @@
 
 package edu.uci.crayfis;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -27,12 +29,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -73,6 +78,8 @@ public class DAQActivity extends AppCompatActivity {
     private static DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
+
+    private final int WRITE_SETTINGS_REQUEST = 1;
 
     private ServiceConnection mServiceConnection;
 
@@ -162,6 +169,21 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        CFLog.d("DAQActivity onStart()");
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if(sharedPrefs.getBoolean(getString(R.string.prefEnableGallery), false)
+                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_DENIED) {
+
+            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_SETTINGS_REQUEST);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
 
@@ -209,8 +231,33 @@ public class DAQActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    @TargetApi(23)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-    /////////////////////////
+        if(requestCode != WRITE_SETTINGS_REQUEST) { return; }
+        if(grantResults[0] == PackageManager.PERMISSION_DENIED) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getResources().getString(R.string.permission_error_title)).setCancelable(false)
+                    .setPositiveButton(getResources().getString(R.string.permission_yes), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_SETTINGS_REQUEST);
+                        }
+                    })
+                    .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            PreferenceManager.getDefaultSharedPreferences(DAQActivity.this)
+                                    .edit()
+                                    .putBoolean(getString(R.string.prefEnableGallery), false)
+                                    .apply();
+                        }
+                    })
+                    .setMessage(R.string.gallery_dcim_error).show();
+        }
+
+    }
+
+        /////////////////////////
     // Toolbar and Drawers //
     /////////////////////////
 

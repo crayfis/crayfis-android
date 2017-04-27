@@ -218,12 +218,6 @@ public class DataCollectionFragment extends CFFragment {
             setErrorMessage(R.string.bad_user_code);
         } else if (!UploadExposureTask.sPermitUpload.get()) {
             setErrorMessage(R.string.server_overload);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && !PreferenceManager.getDefaultSharedPreferences(activity)
-                    .getBoolean(getString(R.string.prefEnableGallery),false)
-                && activity.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_DENIED) {
-            setErrorMessage(getString(R.string.gallery_dcim_error));
         } else {
             setErrorMessage(0);
         }

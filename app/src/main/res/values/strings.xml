@@ -94,7 +94,7 @@
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>
-    <string name="gallery_dcim_error" translatable="false">Gallery needs permission to write to external storage to function properly</string>
+    <string name="gallery_dcim_error" translatable="false">Gallery cannot be enabled without permission to save images.</string>
     <string name="permission_yes" translatable="false">Enable</string>
     <string name="permission_no" translatable="false">No thanks</string>
     <string name="pager_dev">Developer</string>
