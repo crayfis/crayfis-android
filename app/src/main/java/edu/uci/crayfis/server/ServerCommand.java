@@ -19,6 +19,7 @@ public class ServerCommand {
     @SerializedName("set_L2_trig") private String mL2Trigger;
     @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
+    @SerializedName("precalibration_sample_frames") private Integer mPreCalibrationSampleFrames;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
@@ -106,6 +107,9 @@ public class ServerCommand {
     public Float getEventsPerMinute() {
         return mEventsPerMinute;
     }
+
+    @Nullable
+    public Integer getPreCalibrationSampleFrames() { return mPreCalibrationSampleFrames; }
 
     /**
      * Get the calibration sample frames.

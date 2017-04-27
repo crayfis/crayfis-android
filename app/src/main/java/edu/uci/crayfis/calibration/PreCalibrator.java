@@ -8,6 +8,7 @@ import android.renderscript.Type;
 import java.util.Arrays;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
@@ -54,9 +55,6 @@ public class PreCalibrator {
             // define aweights
             float[] maskArray = new float[(frame.getWidth()-2*BORDER)*(frame.getHeight()-2*BORDER)];
 
-            // start with equal weights
-            Arrays.fill(maskArray, 1f);
-
             mWeights.copy2DRangeFrom(BORDER, BORDER, type.getX()-2*BORDER, type.getY()-2*BORDER, maskArray);
 
             mScriptCWeight.set_gWeights(mWeights);
@@ -71,6 +69,7 @@ public class PreCalibrator {
         if(mScriptCWeight == null) {
             mRS = rs;
             mScriptCWeight = new ScriptC_weight(rs);
+            mScriptCWeight.set_gTotalFrames(CFConfig.getInstance().getPreCalibrationSampleFrames());
         }
         return mScriptCWeight;
     }
