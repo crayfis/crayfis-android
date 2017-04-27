@@ -1,7 +1,10 @@
 package edu.uci.crayfis.trigger;
 
+import android.Manifest;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -367,9 +370,13 @@ public class L2Task implements Runnable {
 
         mEvent.pixels = pixels;
 
-        if(pixels.size() >= 3) {
+        if(pixels.size() >= 7) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-            if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)) {
+            if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)
+                    && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                    || mApplication.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED)) {
+
                 mUtils.saveImage(new SavedImage(pixels, mFrame.getPixMax(), mFrame.getWidth(),
                         mFrame.getHeight(), mFrame.getAcquiredTimeNano()));
             }
