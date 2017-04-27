@@ -368,6 +368,10 @@ public class RawCameraFrame {
 
     public int getCameraId() { return mCameraId; }
 
+    public int getWidth() { return mFrameWidth; }
+
+    public int getHeight() { return mFrameHeight; }
+
     private void calculateStatistics() {
         if (mPixMax >= 0) {
             // somebody beat us to it! nothing to do.
