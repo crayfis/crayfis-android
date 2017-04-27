@@ -6,7 +6,7 @@ rs_allocation gWeights;
 rs_script gScript;
 uint n_frames = 0;
 uint gTotalFrames = 1000;
-static const float gNormalizedVal = 10;
+float gNormalizedVal = 10;
 static const float gOffset = 0.5;
 
 uchar RS_KERNEL weight(uchar in, uint32_t x, uint32_t y) {

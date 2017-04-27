@@ -232,7 +232,17 @@ public class DAQService extends Service implements Camera.PreviewCallback {
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         // all the work here done in camera initialization
-        mApplication.changeCamera();
+        switch (previousState) {
+            case INIT:
+            case RECONFIGURE:
+            case IDLE:
+                mApplication.changeCamera();
+                BUILDER.setWeighted(false);
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+        }
+
     }
 
     /**
@@ -286,6 +296,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                     generateRunConfig();
                     UploadExposureService.submitRunConfig(context, run_config);
                 }
+                BUILDER.setWeighted(true);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());

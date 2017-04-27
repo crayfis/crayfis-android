@@ -27,7 +27,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECALIBRATION = "precalibration_sample_frames";
     private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
+    private static final String KEY_NORMALIZED_VAL = "normalized_val";
     private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
+    private static final String KEY_QUAL_WEIGHTED_AVG = "qual_weighted_avg";
     private static final String KEY_QUAL_BG_VAR = "qual_bg_var";
     private static final String KEY_QUAL_ORIENT = "qual_orient";
     private static final String KEY_QUAL_PIX_FRAC = "qual_pix_frac";
@@ -55,7 +57,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final float DEFAULT_BG_AVG_CUT = 3f;
+    private static final float DEFAULT_NORMALIZED_VAL = 10;
+    private static final float DEFAULT_BG_AVG_CUT = 2f;
+    private static final float DEFAlT_WEIGHTED_AVG_CUT = 3*DEFAULT_NORMALIZED_VAL;
     private static final float DEFAULT_BG_VAR_CUT = 5;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
@@ -80,7 +84,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private float mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
     private int mExposureBlockPeriod;
+    private float mNormalizedVal;
     private float mQualityBgAverage;
+    private float mQualityWeightedAverage;
     private float mQualityBgVariance;
     private double mQualityOrientCosine;
     private float mQualityPixFraction;
@@ -107,7 +113,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
+        mNormalizedVal = DEFAULT_NORMALIZED_VAL;
         mQualityBgAverage = DEFAULT_BG_AVG_CUT;
+        mQualityWeightedAverage = DEFAlT_WEIGHTED_AVG_CUT;
         mQualityBgVariance = DEFAULT_BG_VAR_CUT;
         mQualityOrientCosine = Math.cos(DEFAULT_ORIENT_CUT);
         mQualityPixFraction = DEFAULT_PIX_FRAC_CUT;
@@ -217,13 +225,18 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public float getQualityPixFraction() { return mQualityPixFraction; }
 
+    public float getNormalizedVal() { return mNormalizedVal; }
+
     /**
      * Get the maximum average pixel value (before any cuts) allowed before the
      * event is flagged as "bad".
      *
      * @return int
      */
-    public float getQualityBgAverage() {
+    public float getQualityBgAverage(boolean weighted) {
+        if(weighted) {
+            return mQualityWeightedAverage;
+        }
         return mQualityBgAverage;
     }
 

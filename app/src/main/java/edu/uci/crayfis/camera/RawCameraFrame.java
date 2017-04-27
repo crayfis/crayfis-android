@@ -56,6 +56,7 @@ public class RawCameraFrame {
     private int mPixMax = -1;
     private double mPixAvg = -1;
     private double mPixStd = -1;
+    private boolean mStatsWeighted = false;
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
@@ -92,6 +93,7 @@ public class RawCameraFrame {
         private ScriptC_weight bScriptCWeight;
         private Allocation bin;
         private Allocation bout;
+        private boolean bWeighted;
 
         public Builder() {
 
@@ -173,10 +175,15 @@ public class RawCameraFrame {
             return this;
         }
 
+        public Builder setWeighted(boolean weighted) {
+            bWeighted = weighted;
+            return this;
+        }
+
         public RawCameraFrame build() {
             return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
                     bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
-                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout);
+                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout, bWeighted);
         }
     }
 
@@ -197,7 +204,8 @@ public class RawCameraFrame {
                            final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                            final ScriptC_weight scriptCWeight,
                            final Allocation in,
-                           final Allocation out) {
+                           final Allocation out,
+                           final boolean weighted) {
         mBytes = bytes;
         mCamera = camera;
         mCameraId = cameraId;
@@ -216,6 +224,7 @@ public class RawCameraFrame {
         mScriptCWeight = scriptCWeight;
         ain = in;
         aout = out;
+        mStatsWeighted = weighted;
     }
 
     /**
@@ -389,7 +398,9 @@ public class RawCameraFrame {
 
             synchronized (mScriptIntrinsicHistogram) {
                 ain.copy1DRangeFrom(0, mLength, mBytes);
-                mScriptCWeight.forEach_weight(ain, ain);
+                if(mStatsWeighted) {
+                    mScriptCWeight.forEach_weight(ain, ain);
+                }
                 mScriptIntrinsicHistogram.forEach(ain);
                 aout.copyTo(hist);
             }
@@ -454,9 +465,9 @@ public class RawCameraFrame {
                     }
                 }
             case MODE_AUTO_DETECT:
-                if (getPixAvg() > CONFIG.getQualityBgAverage()
+                if (getPixAvg() > CONFIG.getQualityBgAverage(mStatsWeighted)
                         || getPixStd() > CONFIG.getQualityBgVariance()) {
-                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
+                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage(mStatsWeighted));
                     if(CFConfig.getInstance().getCameraSelectMode() == MODE_FACE_DOWN) {
                         CFApplication.badFlatEvents++;
                     }
