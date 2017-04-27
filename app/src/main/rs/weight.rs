@@ -5,7 +5,7 @@
 rs_allocation gWeights;
 rs_script gScript;
 uint n_frames = 0;
-static const uint gTotalFrames = 1000;
+uint gTotalFrames = 1000;
 static const float gNormalizedVal = 10;
 static const float gOffset = 0.5;
 
