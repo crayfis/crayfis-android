@@ -1,8 +1,10 @@
 package edu.uci.crayfis.trigger;
 
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
@@ -16,8 +18,11 @@ import java.util.ArrayList;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.gallery.SavedImage;
+import edu.uci.crayfis.gallery.Utils;
 import edu.uci.crayfis.ui.LayoutBlack;
 import edu.uci.crayfis.util.CFLog;
 
@@ -70,6 +75,8 @@ public class L2Task implements Runnable {
 
     final L2Config mConfig;
 
+    final Utils mUtils;
+
     L2Task(L2Processor l2processor, RawCameraFrame frame, L2Config config) {
         mFrame = frame;
         mL2Processor = l2processor;
@@ -77,6 +84,8 @@ public class L2Task implements Runnable {
         mApplication = mL2Processor.mApplication;
 
         mConfig = config;
+
+        mUtils = new Utils(mApplication);
     }
 
     public static class RecoEvent implements Parcelable {
@@ -358,13 +367,17 @@ public class L2Task implements Runnable {
 
         mEvent.pixels = pixels;
 
-        // TODO: some more stuff here for visualization?
+        if(pixels.size() >= 3) {
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+            if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)) {
+                mUtils.saveImage(new SavedImage(pixels, mFrame.getPixMax(), mFrame.getWidth(),
+                        mFrame.getHeight(), mFrame.getAcquiredTimeNano()));
+            }
+        }
 
         // Finally, add the event to the proper exposure block
         xb.addEvent(mEvent);
         // And notify the XB that we are done processing this frame.
         mFrame.clear();
-
-        // TODO: inspect pixels for "image saving" feature
     }
 }
