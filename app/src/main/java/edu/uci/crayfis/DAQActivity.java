@@ -308,8 +308,13 @@ public class DAQActivity extends AppCompatActivity {
         if (fragments.size() == 0) {
             return;
         }
+        CFLog.d("Size = " + fragments.size());
 
-        final CFFragment activeFragment = (CFFragment) fragments.get(0);
+        CFLog.d("Fragment = " + fragments.get(fragments.size()-1));
+
+        final CFFragment activeFragment = (CFFragment) fragments.get(fragments.size()-1);
+
+        CFLog.d("CFFragment = " + activeFragment);
         final Resources res = getResources();
         tx1.setText(res.getString(R.string.crayfis_about) + "\n"
                 + res.getString(activeFragment.about()) + "\n\n"
