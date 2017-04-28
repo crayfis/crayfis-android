@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 1/5/15.
@@ -9,7 +9,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,10 +20,13 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
 
-public class LayoutLogin extends Fragment {
+public class LayoutLogin extends CFFragment {
 
 
 
@@ -37,6 +40,8 @@ public class LayoutLogin extends Fragment {
         return mInstance;
     }
     private static boolean shown_message=false;
+
+    private final @StringRes int ABOUT_ID = R.string.toast_login;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -196,5 +201,10 @@ public class LayoutLogin extends Fragment {
         browserView.loadUrl(leaderURL);
 
         return root;
+    }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
     }
 }

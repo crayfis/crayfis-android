@@ -1,6 +1,7 @@
 package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -37,8 +38,11 @@ class L1Task implements Runnable {
     }
 
     protected boolean processInitial() {
-        // show the frame to the L1 calibrator
-        if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
+        // check for quality data
+        if(!mFrame.isQuality()) {
+            mApplication.changeCamera();
+            return true;
+        } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
             mL1Processor.mL1Cal.AddFrame(mFrame);
         }
 

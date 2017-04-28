@@ -5,7 +5,6 @@ import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.SntpClient;
 
 /**
  * Created by cshimmin on 5/13/16.

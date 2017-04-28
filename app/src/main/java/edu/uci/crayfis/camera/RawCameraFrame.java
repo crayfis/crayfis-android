@@ -1,6 +1,7 @@
 package edu.uci.crayfis.camera;
 
 import android.annotation.TargetApi;
+import android.content.res.Resources;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
@@ -17,9 +18,18 @@ import org.opencv.core.MatOfByte;
 
 import java.util.Arrays;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
+
+import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
+import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
+import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
+import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
+import static edu.uci.crayfis.CFApplication.badFlatEvents;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -28,10 +38,19 @@ import edu.uci.crayfis.util.CFLog;
 public class RawCameraFrame {
 
     private byte[] mBytes;
-    private Mat mGrayMat;
+
+    private Camera mCamera;
+    private int mCameraId;
+    private boolean mFacingBack;
+    private int mFrameWidth;
+    private int mFrameHeight;
+    private int mLength;
+
     private final AcquisitionTime mAcquiredTime;
     private Location mLocation;
     private float[] mOrientation;
+    private float mRotationZZ;
+    private float mPressure;
     private int mBatteryTemp;
     private int mPixMax = -1;
     private double mPixAvg = -1;
@@ -39,67 +58,178 @@ public class RawCameraFrame {
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
-    private static Camera mCamera;
-    private static int mFrameWidth;
-    private static int mFrameHeight;
-    private static int mLength;
-
     public static final int BORDER = 10;
 
     // RenderScript objects
 
-    private static ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
-    private static ScriptC_weight mScriptCWeight;
-    private static Allocation ain;
-    private static Allocation aweights;
-    private static Allocation aout;
+    private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
+    private ScriptC_weight mScriptCWeight;
+    private Allocation ain;
+    private Allocation aweights;
+    private Allocation aout;
+
+    private Mat mGrayMat;
 
     /**
-     * Create a new instance.
-     *
-     * @param bytes Raw bytes from the camera.
-     * @param timestamp The time at which the image was recieved by our app.
+     * Class for creating immutable RawCameraFrames
      */
-    public RawCameraFrame(@NonNull byte[] bytes, AcquisitionTime timestamp) {
+    public static class Builder {
+        private byte[] bBytes;
+        private Camera bCamera;
+        private int bCameraId;
+        private boolean bFacingBack;
+        private int bFrameWidth;
+        private int bFrameHeight;
+        private int bLength;
+        private AcquisitionTime bAcquisitionTime;
+        private Location bLocation;
+        private float[] bOrientation;
+        private float bRotationZZ;
+        private float bPressure;
+        private int bBatteryTemp;
+        private ExposureBlock bExposureBlock;
+        private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        private ScriptC_weight bScriptCWeight;
+        private Allocation bin;
+        private Allocation bweights;
+        private Allocation bout;
+
+        public Builder() {
+
+        }
+
+        public Builder setBytes(byte[] bytes) {
+            bBytes = bytes;
+            return this;
+        }
+
+        public Builder setCamera(Camera camera) {
+            bCamera = camera;
+            Camera.Parameters params = camera.getParameters();
+            Camera.Size sz = params.getPreviewSize();
+            bFrameWidth = sz.width;
+            bFrameHeight = sz.height;
+            bLength = bFrameWidth * bFrameHeight;
+            return this;
+        }
+
+        @TargetApi(19)
+        public Builder setCamera(Camera camera, RenderScript rs) {
+
+            setCamera(camera);
+
+            Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
+            Type type = tb.setX(bFrameWidth)
+                    .setY(bFrameHeight)
+                    .create();
+            bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+            bweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+            bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
+            bScriptIntrinsicHistogram.setOutput(bout);
+
+            // define aweights
+            byte[] maskArray = new byte[(bFrameWidth-2*BORDER)*(bFrameHeight-2*BORDER)];
+
+            // for now, just use equal weights
+            byte b1 = (byte)1;
+            Arrays.fill(maskArray, b1);
+
+            bweights.copy2DRangeFrom(BORDER, BORDER, bFrameWidth-2*BORDER, bFrameHeight-2*BORDER, maskArray);
+            bScriptCWeight = new ScriptC_weight(rs);
+            bScriptCWeight.set_weights(bweights);
+
+            return this;
+        }
+
+        public Builder setCameraId(int cameraId) {
+            bCameraId = cameraId;
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
+            return this;
+        }
+
+        public Builder setAcquisitionTime(AcquisitionTime acquisitionTime) {
+            bAcquisitionTime = acquisitionTime;
+            return this;
+        }
+
+        public Builder setLocation(Location location) {
+            bLocation = location;
+            return this;
+        }
+
+        public Builder setOrientation(float[] orientation) {
+            bOrientation = orientation;
+            return this;
+        }
+
+        public Builder setRotationZZ(float rotationZZ) {
+            bRotationZZ = rotationZZ;
+            return this;
+        }
+
+        public Builder setPressure(float pressure) {
+            bPressure = pressure;
+            return this;
+        }
+
+        public Builder setBatteryTemp(int batteryTemp) {
+            bBatteryTemp = batteryTemp;
+            return this;
+        }
+
+        public Builder setExposureBlock(ExposureBlock exposureBlock) {
+            bExposureBlock = exposureBlock;
+            return this;
+        }
+
+        public RawCameraFrame build() {
+            return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
+                    bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
+                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bweights, bout);
+        }
+    }
+
+    private RawCameraFrame(@NonNull final byte[] bytes,
+                           final Camera camera,
+                           final int cameraId,
+                           final boolean facingBack,
+                           final int frameWidth,
+                           final int frameHeight,
+                           final int length,
+                           final AcquisitionTime acquisitionTime,
+                           final Location location,
+                           final float[] orientation,
+                           final float rotationZZ,
+                           final float pressure,
+                           final int batteryTemp,
+                           final ExposureBlock exposureBlock,
+                           final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
+                           final ScriptC_weight scriptCWeight,
+                           final Allocation in,
+                           final Allocation weights,
+                           final Allocation out) {
         mBytes = bytes;
-        mAcquiredTime = timestamp;
-    }
-
-    public static void setCamera(Camera camera) {
         mCamera = camera;
-        Camera.Parameters params = camera.getParameters();
-        Camera.Size sz = params.getPreviewSize();
-        mFrameWidth = sz.width;
-        mFrameHeight = sz.height;
-        mLength = mFrameWidth * mFrameHeight;
-    }
-
-    @TargetApi(19)
-    public static void setCameraWithRenderScript(Camera camera, RenderScript rs) {
-
-        setCamera(camera);
-
-        Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
-        Type type = tb.setX(mFrameWidth)
-                .setY(mFrameHeight)
-                .create();
-        mScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
-        ain = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-        aweights = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-        aout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
-        mScriptIntrinsicHistogram.setOutput(aout);
-
-        // define aweights
-        byte[] maskArray = new byte[(mFrameWidth-2*BORDER)*(mFrameHeight-2*BORDER)];
-
-        // for now, just use equal weights
-        byte b1 = (byte)1;
-        Arrays.fill(maskArray, b1);
-
-        aweights.copy2DRangeFrom(BORDER, BORDER, mFrameWidth-2*BORDER, mFrameHeight-2*BORDER, maskArray);
-        mScriptCWeight = new ScriptC_weight(rs);
-        mScriptCWeight.set_weights(aweights);
-
+        mCameraId = cameraId;
+        mFacingBack = facingBack;
+        mFrameWidth = frameWidth;
+        mFrameHeight = frameHeight;
+        mLength = length;
+        mAcquiredTime = acquisitionTime;
+        mLocation = location;
+        mOrientation = orientation;
+        mRotationZZ = rotationZZ;
+        mPressure = pressure;
+        mBatteryTemp = batteryTemp;
+        mExposureBlock = exposureBlock;
+        mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
+        mScriptCWeight = scriptCWeight;
+        ain = in;
+        aweights = weights;
+        aout = out;
     }
 
 
@@ -222,16 +352,6 @@ public class RawCameraFrame {
     }
 
     /**
-     * Set the {@link android.location.Location}.
-     *
-     * @param location {@link android.location.Location}
-     * @deprecated Current location could be part of the constructor, this method breaks immutability.
-     */
-    public void setLocation(final Location location) {
-        mLocation = location;
-    }
-
-    /**
      * Get the orientation of the device when the frame was captured.
      *
      * @return float[]
@@ -240,18 +360,13 @@ public class RawCameraFrame {
         return mOrientation;
     }
 
-    public void setOrientation(float[] orient) {
-        mOrientation = orient.clone();
-    }
+    public float getPressure() { return mPressure; }
 
     public int getBatteryTemp() { return mBatteryTemp; }
 
-    public void setBatteryTemp(int batteryTemp) {
-        mBatteryTemp = batteryTemp;
-    }
-
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
-    public void setExposureBlock(ExposureBlock xb) { mExposureBlock = xb; }
+
+    public int getCameraId() { return mCameraId; }
 
     private void calculateStatistics() {
         if (mPixMax >= 0) {
@@ -309,5 +424,42 @@ public class RawCameraFrame {
             calculateStatistics();
         }
         return mPixStd;
+    }
+
+    public boolean isQuality() {
+        final CFConfig CONFIG = CFConfig.getInstance();
+        switch(CONFIG.getCameraSelectMode()) {
+            case MODE_FACE_DOWN:
+                if (mOrientation == null) {
+                    CFLog.e("Orientation not found");
+                } else {
+
+                    // use quaternion algebra to calculate cosine of angle between vertical
+                    // and phone's z axis (up to a sign that tends to have numerical instabilities)
+
+                    if(mFacingBack == mRotationZZ < CONFIG.getQualityOrientationCosine()) {
+
+                        CFLog.w("Bad event: Orientation = " + mRotationZZ);
+                        return false;
+                    }
+                }
+            case MODE_AUTO_DETECT:
+                if (getPixAvg() > CONFIG.getQualityBgAverage()
+                        || getPixStd() > CONFIG.getQualityBgVariance()) {
+                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
+                    if(CFConfig.getInstance().getCameraSelectMode() == MODE_FACE_DOWN) {
+                        CFApplication.badFlatEvents++;
+                    }
+                    return false;
+                } else {
+                    return true;
+                }
+            case MODE_BACK_LOCK:
+                return mFacingBack;
+            case MODE_FRONT_LOCK:
+                return !mFacingBack;
+            default:
+                throw new RuntimeException("Invalid camera select mode");
+        }
     }
 }

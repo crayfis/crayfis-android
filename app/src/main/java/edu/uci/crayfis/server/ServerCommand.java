@@ -27,6 +27,7 @@ public class ServerCommand {
     @SerializedName("set_qual_pix_frac") private Float mQualityPixFrac;
     @SerializedName("set_qual_bg_avg") private Float mQualityBgAverage;
     @SerializedName("set_qual_bg_var") private Float mQualityBgVariance;
+    @SerializedName("set_qual_orientation") private Float mQualityOrient;
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
     @SerializedName("experiment") private String mCurrentExperiment;
     @SerializedName("nickname") private String mDeviceNickname;
@@ -34,6 +35,7 @@ public class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("update_url") private String mUpdateURL;
     @SerializedName("set_target_resolution") private String mResolution;
+    @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
 
 
     /**
@@ -166,7 +168,7 @@ public class ServerCommand {
     }
 
     /**
-     * TODO What is this?
+     * Get cutoff for average pixel value in frame before flagged as "bad"
      *
      * @return Float or {@code null} if not set.
      */
@@ -176,7 +178,7 @@ public class ServerCommand {
     }
 
     /**
-     * TODO What is this?
+     * Get cutoff for pixel variance in frame before flagged as "bad"
      *
      * @return Float or {@code null} if not set.
      */
@@ -184,6 +186,15 @@ public class ServerCommand {
     public Float getQualityBgVariance() {
         return mQualityBgVariance;
     }
+
+    /**
+     * Get cutoff for orientation (in degrees) about x and y axes before frame
+     * is flagged as "bad"
+     *
+     * @return Float or {@code null} if not set
+     */
+    @Nullable
+    public Float getQualityOrientation() { return mQualityOrient; }
 
     /**
      * Check if the app should recalibrate or not.
@@ -217,5 +228,14 @@ public class ServerCommand {
     @Nullable
     public String getResolution() {
         return mResolution;
+    }
+
+    @Nullable
+    public Integer getCameraSelectMode() {
+        try {
+            return Integer.parseInt(mCameraSelectModeString);
+        } catch(NumberFormatException e) {
+            return null;
+        }
     }
 }

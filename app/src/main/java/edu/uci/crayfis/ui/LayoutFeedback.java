@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 1/5/15.
@@ -6,7 +6,7 @@ package edu.uci.crayfis;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,10 +16,11 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
 
-public class LayoutFeedback extends Fragment {
+public class LayoutFeedback extends CFFragment {
 
 
     private static LayoutFeedback mInstance =null;
@@ -32,7 +33,7 @@ public class LayoutFeedback extends Fragment {
     }
     private static boolean shown_message=false;
 
-
+    private final @StringRes int ABOUT_ID = R.string.toast_feedback;
 
 
     private String server_address;
@@ -98,5 +99,10 @@ public class LayoutFeedback extends Fragment {
         browserView.loadUrl(leaderURL);
 
         return root;
+    }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
     }
 }

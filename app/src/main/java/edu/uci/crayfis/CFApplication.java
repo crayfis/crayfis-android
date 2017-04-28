@@ -1,28 +1,45 @@
 package edu.uci.crayfis;
 
+import android.app.AlertDialog;
 import android.app.Application;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
+import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
-import edu.uci.crayfis.widget.DataCollectionStatsView;
+import edu.uci.crayfis.ui.DataCollectionFragment;
+import edu.uci.crayfis.util.CFLog;
+
+import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
+import static edu.uci.crayfis.CFApplication.State.DATA;
+import static edu.uci.crayfis.CFApplication.State.IDLE;
+import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
+import static edu.uci.crayfis.CFApplication.State.STABILIZATION;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -32,19 +49,48 @@ public class CFApplication extends Application {
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
-    // TODO: This should be a configurable value in the preferences.
-    public static final int SLEEP_TIMEOUT_MS = 60000;
+
+    public static final String ACTION_CAMERA_CHANGE = "camera_change";
+    public static final String EXTRA_NEW_CAMERA = "new_camera";
+
+    public static final String ACTION_FATAL_ERROR = "fatal_error";
+    public static final String EXTRA_ERROR_MESSAGE = "error_message";
+
+    private int errorId = 2;
+
+    private long stabilizationCountdownUpdateTick = 1000; // ms
+    private long stabilizationDelay = 10000; // ms
+    public boolean waitingForStabilization = false;
+    private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+            CFLog.d("Time left: " + millisUntilFinished / 1000L);
+        }
+
+        @Override
+        public void onFinish() {
+            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
+                waitingForStabilization = false;
+                setApplicationState(CFApplication.State.STABILIZATION);
+            } else {
+                // continue waiting
+                this.start();
+            }
+        }
+
+    };
 
     //private static final String SHARED_PREFS_NAME = "global";
     private static Location mLastKnownLocation;
     private static long mStartTimeNano;
+    private static Camera.Parameters mParams;
     private static Camera.Size mCameraSize;
+    private static int mBatteryTemp;
 
-    // FIXME This is a hack.
-    // The way things are coupled in DAQActivity, exposing fields that can create the Status is worse than this.
-    private static DataCollectionStatsView.Status sStatus;
+    public static int badFlatEvents = 0;
 
     private State mApplicationState;
+    private int mCameraId = -1;
 
     private AppBuild mAppBuild;
 
@@ -116,7 +162,83 @@ public class CFApplication extends Application {
         final Intent intent = new Intent(ACTION_STATE_CHANGE);
         intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
         intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        if(applicationState == IDLE || applicationState == STABILIZATION) {
+            changeCamera();
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    public int getCameraId() { return mCameraId; }
+
+    public void changeCamera() {
+        int nextId = -1;
+        switch(mApplicationState) {
+            case RECONFIGURE:
+                nextId = mCameraId;
+            case STABILIZATION:
+                // switch cameras and try again
+                switch(CFConfig.getInstance().getCameraSelectMode()) {
+                    case MODE_FACE_DOWN:
+                    case MODE_AUTO_DETECT:
+                        nextId = mCameraId + 1;
+                        if(nextId >= Camera.getNumberOfCameras()) {
+                            nextId = -1;
+                        }
+                        break;
+                    case MODE_BACK_LOCK:
+                        nextId = 0;
+                        break;
+                    case MODE_FRONT_LOCK:
+                        nextId = 1;
+                }
+                break;
+            case CALIBRATION:
+            case DATA:
+            case IDLE:
+                // take a break for a while
+                nextId = -1;
+        }
+
+        if(nextId != mCameraId || mApplicationState == RECONFIGURE || mCameraId == -1) {
+            CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
+            mCameraId = nextId;
+            if(nextId == -1 && mApplicationState != IDLE) {
+                setApplicationState(IDLE);
+                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+                waitingForStabilization = true;
+                mStabilizationTimer.start();
+            }
+            final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
+            intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+        }
+    }
+
+    public void userErrorMessage(String mess, boolean fatal) {
+
+        if(fatal) {
+            CFLog.e("Error: " + mess);
+            Notification notification = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_just_a)
+                    .setContentTitle(getString(R.string.notification_title))
+                    .setContentText(mess)
+                    .setContentIntent(null)
+                    .build();
+
+            NotificationManager notificationManager
+                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(errorId, notification);
+            errorId++;
+
+            // make sure to kill activity if open
+            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
+            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
+            stopService(new Intent(this, DAQService.class));
+        } else {
+            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
+        }
     }
 
     /**
@@ -146,26 +268,27 @@ public class CFApplication extends Application {
         mLastKnownLocation = lastKnownLocation;
     }
 
+    public static Camera.Parameters getCameraParams() { return mParams; }
 
     public static Camera.Size getCameraSize() {
         return mCameraSize;
     }
 
-    public static void setCameraSize(Camera.Size size) {
-        mCameraSize = size;
+    public static void setCameraParams(Camera.Parameters params) {
+        mParams = params;
+        mCameraSize = params.getPreviewSize();
+    }
+
+    public static int getBatteryTemp() {
+        return mBatteryTemp;
+    }
+
+    public static void setBatteryTemp(int newTemp) {
+        mBatteryTemp = newTemp;
     }
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
-
-    public static void setCollectionStatus(@NonNull final DataCollectionStatsView.Status status) {
-        sStatus = status;
-    }
-
-    @Nullable
-    public static DataCollectionStatsView.Status getCollectionStatus() {
-        return sStatus;
-    }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -261,6 +384,10 @@ public class CFApplication extends Application {
         }
     }
 
+    public void killTimer() {
+        mStabilizationTimer.cancel();
+    }
+
     /**
      * Application state values.
      */
@@ -272,4 +399,9 @@ public class CFApplication extends Application {
         IDLE,
         RECONFIGURE,
     }
+
+    public static final int MODE_FACE_DOWN = 0;
+    public static final int MODE_AUTO_DETECT = 1;
+    public static final int MODE_BACK_LOCK = 2;
+    public static final int MODE_FRONT_LOCK = 3;
 }

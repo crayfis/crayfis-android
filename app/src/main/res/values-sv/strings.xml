@@ -30,7 +30,7 @@
     <string name="toast_black">Här visas när kandidater till kosmiska partiklar träffar din telefon i realtid.\n\nFöredrar du släckt skärm? Stäng av live-visningen under Inställningar.</string>
     <string name="toast_data">Den här skärmen visar appens status.\n\nSvep för andra visningslägen.</string>
     <string name="help_data">Det här visningsläget visar appens status och :\n\tTid: sekunder av datatagning\n\tFrekvens: utläsningsfrekvens, bilder per sekund</string>
-    <string name="help_hist">Den här skärmen visar:\n\t Skannade bilder: antal bilder som analyserats\n\t Skannade pixlar: antal undersöka pixlar\n\t Kandidater: antal pixlar över brusnivå\nDet nedre histogrammet visar kvaliteten på pixelträffarna över brusnivå.</string>
+    <string name="toast_status">Den här skärmen visar:\n\t Skannade bilder: antal bilder som analyserats\n\t Skannade pixlar: antal undersöka pixlar\n\t Kandidater: antal pixlar över brusnivå\nDet nedre histogrammet visar kvaliteten på pixelträffarna över brusnivå.</string>
     <string name="toast_devel">Den här skärmen visar detaljer för utvecklare.</string>
     <string name="toast_gallery_zero">När speciellt intressanta kandidater registreras visar den här skärmen ett galleri med dem.</string>
     <string name="toast_gallery">"Den här skärmen visar ett galleri med bilder på intressanta kandidater."</string>
@@ -62,8 +62,8 @@
     <string name="server_overload">Servern är överbelastad</string>
     <string name="ignored">Ignorerad</string>
     <string name="toast_leader">This pane shows the active network map and leaderboard.</string>
-    <string name="hist_toast_zero">När appen har kalibrerats visar den här skärmen ett histogram av partikelkandidaterna.</string>
-    <string name="hist_toast">Den här skärmen visar ett histogram av partikelkandidaterna.</string>
+    <string name="toast_hist_zero">När appen har kalibrerats visar den här skärmen ett histogram av partikelkandidaterna.</string>
+    <string name="toast_hist">Den här skärmen visar ett histogram av partikelkandidaterna.</string>
     <string name="fatal_error_title">CRAYFIS fel</string>
     <string name="camera_error">CRAYFIS kunde inte starta kameran.</string>
     <string name="fatal_error_message">Ett internt fel har uppstått och aktiviteten du nu tittar på måste stängas. Vänligen försök igen.</string>

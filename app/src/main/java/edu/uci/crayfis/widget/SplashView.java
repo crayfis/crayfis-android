@@ -5,13 +5,13 @@ package edu.uci.crayfis.widget;
  */
 
 import android.hardware.Camera;
-import edu.uci.crayfis.LayoutBlack;
-import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.ui.LayoutBlack;
 
 import android.graphics.Paint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Handler;
+import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 import android.graphics.RectF;
@@ -20,10 +20,10 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import android.graphics.Color;
 
-import static edu.uci.crayfis.LayoutBlack.*;
+import static edu.uci.crayfis.ui.LayoutBlack.*;
 import edu.uci.crayfis.trigger.L2Task;
 
-public class SplashView extends ImageView
+public class SplashView extends AppCompatImageView
 {
     private Context mContext;
     private Handler h;
@@ -35,7 +35,7 @@ public class SplashView extends ImageView
     private RectF ringRect;
 
     // this holds the data, since its static
-    private static LayoutBlack mLayoutBlack = getInstance();
+    private LayoutBlack mLayoutBlack = getInstance();
 
     public SplashView(Context context, AttributeSet attrs)  {
         super(context, attrs);
@@ -83,7 +83,7 @@ public class SplashView extends ImageView
 
 
         // make sure the event list is not modified while we loop over it
-        synchronized(event_lock) {
+        synchronized(mLayoutBlack.event_lock) {
 
             if (mLayoutBlack != null && mLayoutBlack.previewSize != null && mLayoutBlack.events.size()>0)
             {

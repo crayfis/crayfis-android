@@ -1,11 +1,11 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
 /**
  * Created by danielwhiteson on 11/18/14.
  */
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,17 +13,23 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.DAQActivity;
+import edu.uci.crayfis.DAQService;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.widget.AppBuildView;
 
 
-public class LayoutDeveloper extends Fragment{
+public class LayoutDeveloper extends CFFragment {
 
     // Widgets for giving feedback to the user.
-    public static TextView mTextView;
+    public TextView mTextView;
 
-    public static AppBuildView mAppBuildView;
+    public AppBuildView mAppBuildView;
 
     private static LayoutDeveloper mInstance =null;
+
+    private final @StringRes int ABOUT_ID = R.string.toast_devel;
 
     public LayoutDeveloper()
     {
@@ -47,6 +53,8 @@ public class LayoutDeveloper extends Fragment{
 
         mAppBuildView = (AppBuildView) root.findViewById(R.id.app_build_view);
 
+        //startUiUpdate(new UiUpdateRunnable());
+
 
         return root;
     }
@@ -64,6 +72,22 @@ public class LayoutDeveloper extends Fragment{
             }
         }
         super.setUserVisibleHint(isVisibleToUser);
+    }
+
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
+    }
+
+    @Override
+    public void update() {
+        final CFApplication application = (CFApplication) (getActivity().getApplication());
+        mAppBuildView.setAppBuild(application.getBuildInformation());
+        final DAQService.DAQBinder binder = DAQActivity.getBinder();
+        if(binder != null) {
+            mTextView.setText(binder.getDevText());
+        }
     }
 
 }

@@ -1,13 +1,15 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.ui;
 
-import edu.uci.crayfis.SpeedometerView;
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.R;
+import edu.uci.crayfis.widget.SpeedometerView;
 
 import edu.uci.crayfis.calibration.L1Calibrator;
-import edu.uci.crayfis.util.CFLog;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,9 +32,11 @@ import com.jjoe64.graphview.GraphViewDataInterface;
 import com.jjoe64.graphview.ValueDependentColor;
 
 
-public class LayoutTime extends Fragment {
+public class LayoutTime extends CFFragment {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
+
+    private final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
 
 
     private class ValueDependentColorY implements ValueDependentColor
@@ -67,15 +71,15 @@ public class LayoutTime extends Fragment {
         return gd;
     }
 
-    private static L1Calibrator mL1Calibrator;
+    private L1Calibrator mL1Calibrator;
     private static LayoutTime mInstance =null;
 
-    private static SpeedometerView mSpeedometerView;
+    private SpeedometerView mSpeedometerView;
 
-    private static boolean shown_message=false;
+    private boolean shown_message=false;
 
-    private static GraphView mGraphTime;
-    private static GraphViewSeries mGraphSeriesTime;
+    private GraphView mGraphTime;
+    private GraphViewSeries mGraphSeriesTime;
     private GraphViewSeries.GraphViewSeriesStyle mGraphSeriesStyleTime;
 
     @Override
@@ -96,20 +100,6 @@ public class LayoutTime extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    public static void updateData() {
-
-        if (mL1Calibrator !=null && mGraphSeriesTime !=null) {
-            Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
-            values=mL1Calibrator.getMaxPixels().toArray(values);
-            mGraphSeriesTime.resetData(make_graph_data(values));
-            // time average
-            float mean = 0;
-            for (int i=0;i<values.length;i++)
-                mean += values[i];
-            mean /= (1.0*values.length);
-            mSpeedometerView.setSpeed(mean);
-        }
-    }
 
     public LayoutTime()
     {
@@ -171,6 +161,27 @@ public class LayoutTime extends Fragment {
         root.addView(mGraphTime);
 
         return root;
+    }
+
+    @Override
+    public @StringRes int about() {
+        return ABOUT_ID;
+    }
+
+    @Override
+    public void update() {
+
+        if (mL1Calibrator !=null && mGraphSeriesTime !=null) {
+            Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
+            values=mL1Calibrator.getMaxPixels().toArray(values);
+            mGraphSeriesTime.resetData(make_graph_data(values));
+            // time average
+            float mean = 0;
+            for (int i=0;i<values.length;i++)
+                mean += values[i];
+            mean /= (1.0*values.length);
+            mSpeedometerView.setSpeed(mean);
+        }
     }
 
 }

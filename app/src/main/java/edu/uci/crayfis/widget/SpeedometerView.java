@@ -1,4 +1,4 @@
-package edu.uci.crayfis;
+package edu.uci.crayfis.widget;
 
 /**
  * Created by danielwhiteson on 11/18/14.
@@ -9,7 +9,6 @@ import android.animation.TypeEvaluator;
 import android.animation.ValueAnimator;
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -22,6 +21,8 @@ import android.view.View;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.uci.crayfis.R;
 
 /**
  * Speedometer with needle.

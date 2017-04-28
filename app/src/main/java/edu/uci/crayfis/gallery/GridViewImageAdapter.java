@@ -4,24 +4,17 @@ package edu.uci.crayfis.gallery;
  * Created by danielwhiteson on 11/19/14.
  */
 
-    import edu.uci.crayfis.R;
     import java.io.File;
     import java.io.FileInputStream;
     import java.io.FileNotFoundException;
     import java.util.ArrayList;
-    import android.widget.TextView;
 
 
-    import android.view.LayoutInflater;
     import android.content.Context;
 
-    import edu.uci.crayfis.util.CFLog;
-    import android.app.Activity;
-    import android.content.Intent;
     import android.graphics.Bitmap;
     import android.graphics.BitmapFactory;
     import android.view.View;
-    import android.view.View.OnClickListener;
     import android.view.ViewGroup;
     import android.widget.BaseAdapter;
     import android.widget.GridView;
@@ -29,11 +22,10 @@ package edu.uci.crayfis.gallery;
 
     import com.crashlytics.android.Crashlytics;
 
-    import edu.uci.crayfis.LayoutGallery;
-    import edu.uci.crayfis.gallery.SavedImage;
+    import edu.uci.crayfis.ui.LayoutGallery;
 
 
-    public class GridViewImageAdapter extends BaseAdapter {
+public class GridViewImageAdapter extends BaseAdapter {
 
         private Context _context;
         private LayoutGallery _activity;

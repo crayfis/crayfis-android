@@ -33,10 +33,10 @@
         <item>Gallery</item>
     </string-array>
     <string-array name="pref_resolution" translatable="false">
-        <item>Low</item>
-        <item>Medium</item>
-        <item>720p</item>
-        <item>1080p</item>
+        <item>@string/resolution_low</item>
+        <item>@string/resolution_medium</item>
+        <item>@string/resolution_720p</item>
+        <item>@string/resolution_1080p</item>
     </string-array>
     <string-array name="pref_startwait">
         <item>0 </item>
@@ -69,5 +69,17 @@
         <item>21</item>
         <item>22</item>
         <item>23</item>                                                                                                               
-    </string-array>  
+    </string-array>
+    <string-array name="camera_select_mode_entries" translatable="false">
+        <item>@string/camera_select_face_down</item>
+        <item>@string/camera_select_auto_detect</item>
+        <item>@string/camera_select_back_lock</item>
+        <item>@string/camera_select_front_lock</item>
+    </string-array>
+    <string-array name="camera_select_mode_values" translatable="false">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
 </resources>

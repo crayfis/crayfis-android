@@ -4,7 +4,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <edu.uci.crayfis.SpeedometerView
+    <edu.uci.crayfis.widget.SpeedometerView
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:id="@+id/needle_view" />

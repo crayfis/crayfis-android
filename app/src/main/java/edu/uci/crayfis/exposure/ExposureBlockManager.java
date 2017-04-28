@@ -46,8 +46,6 @@ public final class ExposureBlockManager {
 
     private long safe_time = 0;
 
-    private int mBatteryTemp = 0;
-
     private static ExposureBlockManager sInstance;
 
     /**
@@ -93,6 +91,11 @@ public final class ExposureBlockManager {
     }
 
     public synchronized void newExposureBlock(CFApplication.State state) {
+        if(CFApplication.getCameraSize() == null) {
+            // camera error -- don't crash
+            return;
+        }
+
         if (current_xb != null) {
             current_xb.freeze();
             retireExposureBlock(current_xb);
@@ -105,7 +108,7 @@ public final class ExposureBlockManager {
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
                 new Location(CFApplication.getLastKnownLocation()),
-                mBatteryTemp,
+                CFApplication.getBatteryTemp(),
                 state, APPLICATION.getCameraSize());
 
         mTotalXBs++;
@@ -129,7 +132,9 @@ public final class ExposureBlockManager {
     }
 
     public synchronized void abortExposureBlock() {
-        current_xb.aborted = true;
+        if(current_xb != null) {
+            current_xb.aborted = true;
+        }
         newExposureBlock(APPLICATION.getApplicationState());
     }
 
@@ -216,9 +221,5 @@ public final class ExposureBlockManager {
 
     public int getCommittedXBs() {
         return mCommittedXBs;
-    }
-
-    public void updateBatteryTemp(int temp) {
-        mBatteryTemp = temp;
     }
 }

@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package edu.uci.crayfis;
+package edu.uci.crayfis.camera;
 
 import edu.uci.crayfis.util.CFLog;
 
 
 import android.os.SystemClock;
-import android.util.Log;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
