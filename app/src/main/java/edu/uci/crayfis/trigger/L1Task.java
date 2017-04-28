@@ -1,8 +1,5 @@
 package edu.uci.crayfis.trigger;
 
-import android.media.AudioManager;
-import android.media.ToneGenerator;
-
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -91,10 +88,6 @@ class L1Task implements Runnable {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
             pass = true;
-
-            ///Quynh's : phone will beep whenever candidate count increments
-            final ToneGenerator toneG = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);//initiate, 100% volume
-            toneG.startTone(ToneGenerator.TONE_CDMA_DIAL_TONE_LITE, 1000);//play tone in mili seconds
         }
 
         if (pass) {
