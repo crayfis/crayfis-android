@@ -169,21 +169,6 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        CFLog.d("DAQActivity onStart()");
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(sharedPrefs.getBoolean(getString(R.string.prefEnableGallery), false)
-                && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                && checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_DENIED) {
-
-            requestPermissions(new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_SETTINGS_REQUEST);
-        }
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
 
@@ -257,7 +242,7 @@ public class DAQActivity extends AppCompatActivity {
 
     }
 
-        /////////////////////////
+    /////////////////////////
     // Toolbar and Drawers //
     /////////////////////////
 

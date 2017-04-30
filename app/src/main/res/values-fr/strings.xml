@@ -20,14 +20,12 @@
     <string name="settings_code_title">CRAYFIS code utilisateur"</string>
     <string name="settings_gallery_title">Activer la galerie</string>
     <string name="settings_gallery_summary">Sauve and affiche des images intéressantes</string>
-    <string name="settings_splash_title">Activer la visualisation directe des splashs</string>
-    <string name="settings_splash_summary">Désactiver for black screen running</string>
     <string name="settings_autostart_summary">Ne pas démarrer automatiquement</string>
     <string name="settings_autostart_title">Sélectionner pour éviter le démarrage automatique</string>
     <string name="menu_about">A propos</string>
     <string name="menu_settings">Configuration</string>
     <string name="menu_view_mode">Affichage</string>
-    <string name="toast_black">Montre les rayons cosmiques potentiels touchant le téléphone en temps réel.\n\nVous préférez un écran éteint? Vous pouvez désactiver les splashs dans Configuration.</string>
+    <string name="toast_black">Montre les rayons cosmiques potentiels touchant le téléphone en temps réel.</string>
     <string name="toast_data">Cette fenêtre indique le status.\n\nFaites glisser pour afficher d\'autres infos.</string>
     <string name="help_data">Montre l\'état actuel de l\'app ainsi que:\n\tTemps: seconds d\'acquisition de données\'\n\tFréquence: fréquence de scan , images-par-seconde</string>
     <string name="toast_status">Montre:\n\t Images scannées: nombre de images analysées\n\t Pixels scannées: nombre de pixels examinées\n\t Détection: nombre de pixels au dessus du seuil de bruit\nEn bas se trouve un histogramme montrant la qualité des pixels au dessus du seuil de détection.</string>
