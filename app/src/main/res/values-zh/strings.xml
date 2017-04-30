@@ -20,14 +20,12 @@
     <string name="settings_code_title">CRAYFIS用户码"</string>
     <string name="settings_gallery_title">启用图库</string>
     <string name="settings_gallery_summary">保存并显示所关注的影像</string>
-    <string name="settings_splash_title">启用即时显示信号光斑</string>
-    <string name="settings_splash_summary">关闭则黑屏运行</string>
     <string name="settings_autostart_summary">禁止自动启动</string>
     <string name="settings_autostart_title">点击以阻止自动启动</string>
     <string name="menu_about">关于</string>
     <string name="menu_settings">设置</string>
     <string name="menu_view_mode">显示模式</string>
-    <string name="toast_black">此表明您手机正采集到宇宙线候选事例正在通过您的手机.\n\n希望黑屏运行么? 您可以在设置中关闭即时光斑显示.</string>
+    <string name="toast_black">此表明您手机正采集到宇宙线候选事例正在通过您的手机.</string>
     <string name="toast_data">此屏显示状态.\n\n滑动到其他视图.</string>
     <string name="help_data">此视图显示应用的当前状态以及:\n\t时间: 数据采集秒数\n\t速度: 扫描速度, 每秒帧数</string>
     <string name="toast_status">此视图显示:\n\t 扫描帧数: 已检验视频帧数\n\t 扫描像素: 已检验像素数\n\t 候选事例: 高于背景的像素数\n下图显示高于背景的像素质量.</string>

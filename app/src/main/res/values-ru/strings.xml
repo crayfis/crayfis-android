@@ -21,14 +21,12 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Включить галерею</string>
     <string name="settings_gallery_summary">Сохраняет и показывает интересные изображения</string>
-    <string name="settings_splash_title">Позволить просмотр всплесков в реальном времени</string>
-    <string name="settings_splash_summary">Запретить для выключения экрана во время работы</string>
     <string name="settings_autostart_summary">Выключить автостарт</string>
     <string name="settings_autostart_title">Нажмите чтобы предотвратить автостарт</string>
     <string name="menu_about">О программе</string>
     <string name="menu_settings">Настройки</string>
     <string name="menu_view_mode">Режим Просмотра</string>
-    <string name="toast_black">Этот экран показывает в реальном времени возможные космические лучи падающие на ваш телефон.\n\nПредпочитаете черный экран? Вы можете выключить всплески в Настройках.</string>
+    <string name="toast_black">Этот экран показывает в реальном времени возможные космические лучи падающие на ваш телефон.</string>
     <string name="toast_data">Эта панель показывает статус.\n\nЧтобы перейти на следующую страницу, проведите пальцем по экрану.</string>
     <string name="help_data">На этой странице показан статус приложения в данный момент а также:\n\tВремя: время сбора данных в секундах\n\tЧастота: частота сканирования, кадры в секунду</string>
     <string name="toast_status">Эта страница показывает:\n\t Просканированные кадры: количество проанализированных видеокадров\n\t Просканированные пиксели: количество проанализированных пикселей\n\t Кандидаты: количествопикселей превышающих уровень шума\nГистограмма внизу показывает качество пикселей превышающих уровень шума.</string>

@@ -20,14 +20,12 @@
     <string name="settings_code_title">رمز مستخدم كرايفس</string>
     <string name="settings_gallery_title">أمكن الألبوم</string>
     <string name="settings_gallery_summary">يقوم بتخزين و عرض الصور المثيرة للاهتمام</string>
-    <string name="settings_splash_title">أمكن المشاهدة المباشرة</string>
-    <string name="settings_splash_summary">إلغي لإبقاء الشاشة سوداء</string>
     <string name="settings_autostart_summary">لا تبدأ تلقائياً</string>
     <string name="settings_autostart_title">اضغط لتمنع التشغيل التلقائي</string>
     <string name="menu_about">عن</string>
     <string name="menu_settings">الإعدادات</string>
     <string name="menu_view_mode">نظام المشاهدة</string>
-    <string name="toast_black">هنا يمكن رؤية صور مباشرة لإصابات أشعة كونية مرشحة.\n\nهل تفضل(ين) الشاشة سوداء؟ يمكنك اختيار ذلك من قائمة الإعدادات.</string>
+    <string name="toast_black">هنا يمكن رؤية صور مباشرة لإصابات أشعة كونية مرشحة.</string>
     <string name="toast_data">هذه النافذة تبين الوضع. \n\n مرر لنظم مشاهدة أخرى.</string>
     <string name="help_data">هذا النظام يبين الوضع الحالي للبرنامج و أيضاً:\n\t المدة: مدة جمع البيانات بالثواني\n\t المعدل: معدل المسح (إطار في الثانية)</string>
     <string name="toast_status">هذا النظام يبين:\n\t الإطارات الممسوحة: عدد الإطارات التي تم معاينتها.\n\t البكسلات الممسوحة: عدد البكسلات التي تم معاينتها.\n\t المرشحون: عدد إصابات البكسل فوق عتبة الضوضاء.\n الرسم البياني في الأسفل يبين جودة الإصابات فوق العتبة.</string>
