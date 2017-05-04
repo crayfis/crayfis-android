@@ -1,5 +1,6 @@
 package edu.uci.crayfis.calibration;
 
+import android.os.Build;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -61,7 +62,17 @@ public class PreCalibrator {
             mScriptCWeight.set_gScript(mScriptCWeight);
         }
 
-        mScriptCWeight.invoke_update_weights(frame.getAllocation());
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            // just do the whole thing in RS
+            mScriptCWeight.invoke_updateWeights(frame.getAllocation());
+        } else {
+            mScriptCWeight.forEach_update(frame.getAllocation());
+            if(preCalCount == mScriptCWeight.get_gTotalFrames()) {
+                mScriptCWeight.forEach_findMin(frame.getAllocation());
+                mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
+                mScriptCWeight.set_gMinSum(0);
+            }
+        }
     }
 
 
@@ -76,6 +87,7 @@ public class PreCalibrator {
 
     public void clear() {
         mWeights = null;
+        preCalCount = 0;
     }
 
     public boolean dueForPreCalibration() {

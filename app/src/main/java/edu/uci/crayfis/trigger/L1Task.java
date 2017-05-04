@@ -52,6 +52,7 @@ class L1Task implements Runnable {
 
         if (mL1Processor.mPreCal.preCalCount == 1000) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+            mL1Processor.mPreCal.preCalCount = 0;
         }
 
         return false;

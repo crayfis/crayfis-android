@@ -30,7 +30,6 @@ import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
 import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
 import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
 import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
-import static edu.uci.crayfis.CFApplication.badFlatEvents;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -248,16 +247,19 @@ public class RawCameraFrame {
 
             synchronized (mBytes) {
 
+                if(ain != null) {
+                    // update with weighted pixels
+                    ain.copyTo(mBytes);
+                }
+
                 // probably a better way to do this, but this
                 // works for preventing native memory leaks
 
                 Mat mat1 = new MatOfByte(mBytes);
                 Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
                 mat1.release();
-                Mat mat3 = mat2.reshape(1, mFrameHeight); // create 2D array
+                mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
                 mat2.release();
-                mGrayMat = mat3.submat(BORDER, mFrameHeight - BORDER, BORDER, mFrameWidth - BORDER); // trim off border
-                mat3.release();
 
                 // don't need bytes anymore
                 replenishBuffer();
@@ -394,10 +396,8 @@ public class RawCameraFrame {
 
             int[] hist = new int[256];
 
-            //getAllocation();
-
             synchronized (mScriptIntrinsicHistogram) {
-                ain.copy1DRangeFrom(0, mLength, mBytes);
+                getAllocation();
                 if(mStatsWeighted) {
                     mScriptCWeight.forEach_weight(ain, ain);
                 }

@@ -196,6 +196,7 @@ public class CFApplication extends Application {
                 }
                 break;
             case PRECALIBRATION:
+                PreCalibrator.getInstance().clear();
             case CALIBRATION:
             case DATA:
             case IDLE:
