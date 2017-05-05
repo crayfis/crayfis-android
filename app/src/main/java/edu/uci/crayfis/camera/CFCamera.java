@@ -159,16 +159,9 @@ public class CFCamera implements Camera.ErrorCallback {
             mTexture = new SurfaceTexture(10);
             mCamera.setPreviewTexture(mTexture);
 
-            // configure RenderScript if available
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                CFLog.i("Configuring RenderScript");
 
-                BUILDER.setCamera(mCamera, mRS)
-                        .setCameraId(cameraId);
-            } else {
-                BUILDER.setCamera(mCamera)
-                        .setCameraId(cameraId);
-            }
+            BUILDER.setCamera(mCamera, mRS)
+                    .setCameraId(cameraId);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);

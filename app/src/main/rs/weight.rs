@@ -5,7 +5,7 @@
 rs_allocation gWeights;
 rs_script gScript;
 uint n_frames = 0;
-uint gTotalFrames = 100;
+uint gTotalFrames = 1000;
 uint gMinSum;
 static const float gOffset = 0.5;
 
@@ -34,16 +34,3 @@ void RS_KERNEL findMin(float in) {
     }
 }
 
-void updateWeights(rs_allocation frame) {
-
-    rsForEach(update, frame);
-    n_frames++;
-
-    if(n_frames == gTotalFrames) {
-        rsForEach(findMin, gWeights);
-        rsDebug("gMinSum = ", gMinSum);
-        rsForEach(normalizeWeights, gWeights, gWeights);
-        n_frames = 0;
-        gMinSum = 256*gTotalFrames;
-    }
-}

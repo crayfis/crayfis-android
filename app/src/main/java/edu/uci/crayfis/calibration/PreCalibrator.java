@@ -1,9 +1,11 @@
 package edu.uci.crayfis.calibration;
 
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
+import android.renderscript.Script;
 import android.renderscript.Type;
 
 import java.util.Arrays;
@@ -14,7 +16,6 @@ import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
-import static edu.uci.crayfis.camera.RawCameraFrame.BORDER;
 
 /**
  * Created by Jeff on 4/24/2017.
@@ -52,26 +53,20 @@ public class PreCalibrator {
                     .create();
 
             mWeights = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
-
-            // define aweights
-            float[] maskArray = new float[(frame.getWidth()-2*BORDER)*(frame.getHeight()-2*BORDER)];
-
-            mWeights.copy2DRangeFrom(BORDER, BORDER, type.getX()-2*BORDER, type.getY()-2*BORDER, maskArray);
-
             mScriptCWeight.set_gWeights(mWeights);
             mScriptCWeight.set_gScript(mScriptCWeight);
         }
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            // just do the whole thing in RS
-            mScriptCWeight.invoke_updateWeights(frame.getAllocation());
-        } else {
-            mScriptCWeight.forEach_update(frame.getAllocation());
-            if(preCalCount == mScriptCWeight.get_gTotalFrames()) {
-                mScriptCWeight.forEach_findMin(frame.getAllocation());
-                mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
-                mScriptCWeight.set_gMinSum(0);
-            }
+        //Script.LaunchOptions lo = new Script.LaunchOptions()
+        //        .setX(BORDER, frame.getWidth()-BORDER)
+        //        .setY(BORDER, frame.getHeight()-BORDER);
+
+        mScriptCWeight.forEach_update(frame.getAllocation());
+        if(preCalCount == mScriptCWeight.get_gTotalFrames()) {
+            mScriptCWeight.forEach_findMin(mWeights);
+            CFLog.d("gMinSum = " + mScriptCWeight.get_gMinSum());
+            mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
+            mScriptCWeight.set_gMinSum(0);
         }
     }
 

@@ -111,8 +111,8 @@ public class L2TaskMaxN extends L2Task {
             }
 
             // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+RawCameraFrame.BORDER;
-            p.y = iy+RawCameraFrame.BORDER;
+            p.x = ix;
+            p.y = iy;
             p.val = val;
 
             //

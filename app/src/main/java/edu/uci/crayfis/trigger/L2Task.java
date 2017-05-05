@@ -326,8 +326,8 @@ public class L2Task implements Runnable {
             }
 
             // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+RawCameraFrame.BORDER;
-            p.y = iy+RawCameraFrame.BORDER;
+            p.x = ix;
+            p.y = iy;
             p.val = val;
 
             Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
