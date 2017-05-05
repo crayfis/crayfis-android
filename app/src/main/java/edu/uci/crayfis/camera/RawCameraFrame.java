@@ -59,8 +59,6 @@ public class RawCameraFrame {
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
-    public static final int BORDER = 10;
-
     // RenderScript objects
 
     private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
@@ -324,14 +322,6 @@ public class RawCameraFrame {
         }
     }
 
-    public int getWidth() {
-        return mFrameWidth;
-    }
-
-    public int getHeight() {
-        return mFrameHeight;
-    }
-
     /**
      * Get the epoch time with NTP corrections.
      *
@@ -392,38 +382,28 @@ public class RawCameraFrame {
             // somebody beat us to it! nothing to do.
             return;
         }
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT && mScriptIntrinsicHistogram != null) {
+        int[] hist = new int[256];
 
-            int[] hist = new int[256];
-
-            synchronized (mScriptIntrinsicHistogram) {
-                getAllocation();
-                if(mStatsWeighted) {
-                    mScriptCWeight.forEach_weight(ain, ain);
-                }
-                mScriptIntrinsicHistogram.forEach(ain);
-                aout.copyTo(hist);
+        synchronized (mScriptIntrinsicHistogram) {
+            getAllocation();
+            if(mStatsWeighted) {
+                mScriptCWeight.forEach_weight(ain, ain);
             }
+            mScriptIntrinsicHistogram.forEach(ain);
+            aout.copyTo(hist);
+        }
 
-            int max = 0;
-            int sum = 0;
-            for(int i=0; i<256; i++) {
-                sum += i*hist[i];
-                if(hist[i] != 0) {
-                    max = i;
-                }
-            }
-            mPixMax = max;
-            mPixAvg = (double)sum/mLength;
-
-        } else {
-            getGrayMat();
-            synchronized (mGrayMat) {
-                mPixMax = (int) Core.minMaxLoc(mGrayMat).maxVal;
-                mPixAvg = Core.mean(mGrayMat).val[0];
-                mPixStd = 0; // don't think we actually care about this enough to justify the CPU use
+        int max = 0;
+        int sum = 0;
+        for(int i=0; i<256; i++) {
+            sum += i*hist[i];
+            if(hist[i] != 0) {
+                max = i;
             }
         }
+        mPixMax = max;
+        mPixAvg = (double)sum/mLength;
+
     }
 
     public int getPixMax() {
