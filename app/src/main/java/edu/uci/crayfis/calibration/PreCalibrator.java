@@ -54,7 +54,6 @@ public class PreCalibrator {
 
             mWeights = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
             mScriptCWeight.set_gWeights(mWeights);
-            mScriptCWeight.set_gScript(mScriptCWeight);
         }
 
         //Script.LaunchOptions lo = new Script.LaunchOptions()
@@ -64,9 +63,8 @@ public class PreCalibrator {
         mScriptCWeight.forEach_update(frame.getAllocation());
         if(preCalCount == mScriptCWeight.get_gTotalFrames()) {
             mScriptCWeight.forEach_findMin(mWeights);
-            CFLog.d("gMinSum = " + mScriptCWeight.get_gMinSum());
             mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
-            mScriptCWeight.set_gMinSum(0);
+            mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
         }
     }
 

@@ -224,6 +224,10 @@ public class RawCameraFrame {
         mStatsWeighted = weighted;
     }
 
+    public byte[] getBytes() {
+        return mBytes;
+    }
+
     /**
      * Copies byte array into an allocation
      *
@@ -245,22 +249,22 @@ public class RawCameraFrame {
 
             synchronized (mBytes) {
 
-                if(ain != null) {
-                    // update with weighted pixels
-                    ain.copyTo(mBytes);
-                }
+                //FIXME: this is way too much copying
+                byte[] adjustedBytes = new byte[mBytes.length];
+
+                // update with weighted pixels
+                ain.copyTo(adjustedBytes);
 
                 // probably a better way to do this, but this
                 // works for preventing native memory leaks
 
-                Mat mat1 = new MatOfByte(mBytes);
+                Mat mat1 = new MatOfByte(adjustedBytes);
                 Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
                 mat1.release();
                 mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
                 mat2.release();
 
-                // don't need bytes anymore
-                replenishBuffer();
+                mCamera.addCallbackBuffer(adjustedBytes);
             }
         }
         return mGrayMat;
@@ -318,7 +322,7 @@ public class RawCameraFrame {
 
     public boolean isOutstanding() {
         synchronized (mBufferClaimed) {
-            return !(mBytes == null && (mGrayMat == null || mBufferClaimed));
+            return !(mGrayMat == null || mBufferClaimed);
         }
     }
 
