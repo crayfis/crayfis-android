@@ -205,7 +205,7 @@ public class L2Task implements Runnable {
 
     public static class RecoPixel implements Parcelable {
         public int x, y;
-        public int val;
+        public int val, adjusted_val;
         public float avg_3, avg_5;
         public int near_max;
 
@@ -214,6 +214,7 @@ public class L2Task implements Runnable {
             buf.setX(x);
             buf.setY(y);
             buf.setVal(val);
+            //buf.setAdjustedVal(adjusted_val);
             buf.setAvg3(avg_3);
             buf.setAvg5(avg_5);
             buf.setNearMax(near_max);
@@ -229,6 +230,7 @@ public class L2Task implements Runnable {
             x = parcel.readInt();
             y = parcel.readInt();
             val  = parcel.readInt();
+            adjusted_val = parcel.readInt();
             avg_3 = parcel.readFloat();
             avg_5 = parcel.readFloat();
             near_max = parcel.readInt();
@@ -244,6 +246,7 @@ public class L2Task implements Runnable {
             dest.writeInt(x);
             dest.writeInt(y);
             dest.writeInt(val);
+            dest.writeInt(adjusted_val);
             dest.writeFloat(avg_3);
             dest.writeFloat(avg_5);
             dest.writeInt(near_max);
@@ -312,11 +315,12 @@ public class L2Task implements Runnable {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = (int) grayMat.get(iy, ix)[0];
+            int val = mFrame.getBytes()[iy*mFrame.getWidth() + ix] & 0xFF;
+            int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
             RecoPixel p;
 
-            L2Processor.histL2Pixels.fill(val);
+            L2Processor.histL2Pixels.fill(adjustedVal);
             try {
                 p = new RecoPixel();
             } catch (OutOfMemoryError e) {
@@ -329,6 +333,7 @@ public class L2Task implements Runnable {
             p.x = ix;
             p.y = iy;
             p.val = val;
+            p.adjusted_val = adjustedVal;
 
             Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
                     Math.max(ix-1,0), Math.min(ix+2,width));
