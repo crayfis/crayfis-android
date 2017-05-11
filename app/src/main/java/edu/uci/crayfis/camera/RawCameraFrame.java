@@ -101,20 +101,14 @@ public class RawCameraFrame {
             return this;
         }
 
-        public Builder setCamera(Camera camera) {
+        public Builder setCamera(Camera camera, RenderScript rs) {
+
             bCamera = camera;
             Camera.Parameters params = camera.getParameters();
             Camera.Size sz = params.getPreviewSize();
             bFrameWidth = sz.width;
             bFrameHeight = sz.height;
             bLength = bFrameWidth * bFrameHeight;
-            return this;
-        }
-
-        @TargetApi(19)
-        public Builder setCamera(Camera camera, RenderScript rs) {
-
-            setCamera(camera);
 
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(bFrameWidth)

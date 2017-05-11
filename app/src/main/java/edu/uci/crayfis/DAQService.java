@@ -285,8 +285,9 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         // The *only* valid way to get into calibration mode
         // is after stabilization.
         switch (previousState) {
-            case STABILIZATION:
             case PRECALIBRATION:
+                PreCalibrator.getInstance().processPreCalResults();
+            case STABILIZATION:
                 L1cal.clear();
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;

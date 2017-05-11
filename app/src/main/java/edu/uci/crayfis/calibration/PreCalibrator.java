@@ -27,7 +27,6 @@ public class PreCalibrator {
     private ScriptC_weight mScriptCWeight;
     private Allocation mWeights;
 
-    public int preCalCount = 0;
     private static PreCalibrator sInstance = null;
 
     public static PreCalibrator getInstance() {
@@ -42,7 +41,6 @@ public class PreCalibrator {
     }
 
     public void addFrame(RawCameraFrame frame) {
-        preCalCount++;
         frame.getAllocation();
 
         if(mWeights == null || mWeights.getType().getX() != frame.getWidth()) {
@@ -61,11 +59,13 @@ public class PreCalibrator {
         //        .setY(BORDER, frame.getHeight()-BORDER);
 
         mScriptCWeight.forEach_update(frame.getAllocation());
-        if(preCalCount == mScriptCWeight.get_gTotalFrames()) {
-            mScriptCWeight.forEach_findMin(mWeights);
-            mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
-            mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
-        }
+
+    }
+
+    public void processPreCalResults() {
+        mScriptCWeight.forEach_findMin(mWeights);
+        mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
+        mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
     }
 
 
@@ -80,7 +80,6 @@ public class PreCalibrator {
 
     public void clear() {
         mWeights = null;
-        preCalCount = 0;
     }
 
     public boolean dueForPreCalibration() {

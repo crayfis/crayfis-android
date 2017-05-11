@@ -56,8 +56,7 @@ public class ExposureBlock implements Parcelable {
 	public final int xbn;
 
 	public final CFApplication.State daq_state;
-    public long calibration_count = 0;
-    public long stabilization_count = 0;
+    public long count;
 
 	private boolean frozen = false;
 	public boolean aborted = false;
