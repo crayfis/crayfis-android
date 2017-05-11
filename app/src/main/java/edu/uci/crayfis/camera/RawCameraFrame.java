@@ -265,36 +265,15 @@ public class RawCameraFrame {
     }
 
     /**
-     * Free memory from mBytes and add as PreviewCallback buffer
+     * Clear memory from RawCameraFrame
      */
-    private void replenishBuffer() {
+    public void retire() {
         synchronized (mCamera) {
             if (mBytes != null) {
                 mCamera.addCallbackBuffer(mBytes);
                 mBytes = null;
             }
         }
-    }
-
-    /**
-     * Free memory from Mat
-     */
-    private void releaseMat() {
-
-        if (mGrayMat != null) {
-            synchronized (mGrayMat) {
-                mGrayMat.release();
-                mGrayMat = null;
-            }
-        }
-    }
-
-    /**
-     * Clear memory from RawCameraFrame
-     */
-    public void retire() {
-        replenishBuffer();
-        releaseMat();
     }
 
     /**
@@ -311,7 +290,13 @@ public class RawCameraFrame {
     public void clear() {
         mExposureBlock.clearFrame(this);
         // make sure we null the image buffer so that its memory can be freed.
-        releaseMat();
+        if (mGrayMat != null) {
+            synchronized (mGrayMat) {
+                mGrayMat.release();
+                mGrayMat = null;
+            }
+        }
+        mBytes = null;
     }
 
     public boolean isOutstanding() {
