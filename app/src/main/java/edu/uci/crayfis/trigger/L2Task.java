@@ -214,7 +214,7 @@ public class L2Task implements Runnable {
             buf.setX(x);
             buf.setY(y);
             buf.setVal(val);
-            //buf.setAdjustedVal(adjusted_val);
+            buf.setAdjustedVal(adjusted_val);
             buf.setAvg3(avg_3);
             buf.setAvg5(avg_5);
             buf.setNearMax(near_max);
@@ -317,6 +317,7 @@ public class L2Task implements Runnable {
             int iy = (int) xy[1];
             int val = mFrame.getBytes()[iy*mFrame.getWidth() + ix] & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
+            CFLog.d("val = " + val + ", adjusted = " + adjustedVal);
 
             RecoPixel p;
 
@@ -329,7 +330,6 @@ public class L2Task implements Runnable {
                 continue;
             }
 
-            // record the coordinates of the frame, not of the sliced Mat we used
             p.x = ix;
             p.y = iy;
             p.val = val;

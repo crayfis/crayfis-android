@@ -8129,6 +8129,15 @@ public final class DataProtos {
     int getVal();
 
     /**
+     * <code>optional uint32 adjusted_val = 7;</code>
+     */
+    boolean hasAdjustedVal();
+    /**
+     * <code>optional uint32 adjusted_val = 7;</code>
+     */
+    int getAdjustedVal();
+
+    /**
      * <code>optional uint32 near_max = 4;</code>
      */
     boolean hasNearMax();
@@ -8223,18 +8232,23 @@ public final class DataProtos {
               break;
             }
             case 32: {
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000010;
               nearMax_ = input.readUInt32();
               break;
             }
             case 45: {
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               avg3_ = input.readFloat();
               break;
             }
             case 53: {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               avg5_ = input.readFloat();
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000008;
+              adjustedVal_ = input.readUInt32();
               break;
             }
           }
@@ -8322,13 +8336,28 @@ public final class DataProtos {
       return val_;
     }
 
+    public static final int ADJUSTED_VAL_FIELD_NUMBER = 7;
+    private int adjustedVal_;
+    /**
+     * <code>optional uint32 adjusted_val = 7;</code>
+     */
+    public boolean hasAdjustedVal() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint32 adjusted_val = 7;</code>
+     */
+    public int getAdjustedVal() {
+      return adjustedVal_;
+    }
+
     public static final int NEAR_MAX_FIELD_NUMBER = 4;
     private int nearMax_;
     /**
      * <code>optional uint32 near_max = 4;</code>
      */
     public boolean hasNearMax() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional uint32 near_max = 4;</code>
@@ -8343,7 +8372,7 @@ public final class DataProtos {
      * <code>optional float avg_3 = 5;</code>
      */
     public boolean hasAvg3() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional float avg_3 = 5;</code>
@@ -8358,7 +8387,7 @@ public final class DataProtos {
      * <code>optional float avg_5 = 6;</code>
      */
     public boolean hasAvg5() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional float avg_5 = 6;</code>
@@ -8371,6 +8400,7 @@ public final class DataProtos {
       x_ = 0;
       y_ = 0;
       val_ = 0;
+      adjustedVal_ = 0;
       nearMax_ = 0;
       avg3_ = 0F;
       avg5_ = 0F;
@@ -8397,14 +8427,17 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeUInt32(3, val_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeUInt32(4, nearMax_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeFloat(5, avg3_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeFloat(6, avg5_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt32(7, adjustedVal_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -8427,17 +8460,21 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(3, val_);
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(4, nearMax_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(5, avg3_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(6, avg5_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, adjustedVal_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -8562,12 +8599,14 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         val_ = 0;
         bitField0_ = (bitField0_ & ~0x00000004);
-        nearMax_ = 0;
+        adjustedVal_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
-        avg3_ = 0F;
+        nearMax_ = 0;
         bitField0_ = (bitField0_ & ~0x00000010);
-        avg5_ = 0F;
+        avg3_ = 0F;
         bitField0_ = (bitField0_ & ~0x00000020);
+        avg5_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00000040);
         return this;
       }
 
@@ -8611,13 +8650,17 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.nearMax_ = nearMax_;
+        result.adjustedVal_ = adjustedVal_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.avg3_ = avg3_;
+        result.nearMax_ = nearMax_;
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000020;
+        }
+        result.avg3_ = avg3_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000040;
         }
         result.avg5_ = avg5_;
         result.bitField0_ = to_bitField0_;
@@ -8644,6 +8687,9 @@ public final class DataProtos {
         }
         if (other.hasVal()) {
           setVal(other.getVal());
+        }
+        if (other.hasAdjustedVal()) {
+          setAdjustedVal(other.getAdjustedVal());
         }
         if (other.hasNearMax()) {
           setNearMax(other.getNearMax());
@@ -8777,12 +8823,44 @@ public final class DataProtos {
         return this;
       }
 
+      private int adjustedVal_ ;
+      /**
+       * <code>optional uint32 adjusted_val = 7;</code>
+       */
+      public boolean hasAdjustedVal() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional uint32 adjusted_val = 7;</code>
+       */
+      public int getAdjustedVal() {
+        return adjustedVal_;
+      }
+      /**
+       * <code>optional uint32 adjusted_val = 7;</code>
+       */
+      public Builder setAdjustedVal(int value) {
+        bitField0_ |= 0x00000008;
+        adjustedVal_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 adjusted_val = 7;</code>
+       */
+      public Builder clearAdjustedVal() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        adjustedVal_ = 0;
+        onChanged();
+        return this;
+      }
+
       private int nearMax_ ;
       /**
        * <code>optional uint32 near_max = 4;</code>
        */
       public boolean hasNearMax() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
        * <code>optional uint32 near_max = 4;</code>
@@ -8794,7 +8872,7 @@ public final class DataProtos {
        * <code>optional uint32 near_max = 4;</code>
        */
       public Builder setNearMax(int value) {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000010;
         nearMax_ = value;
         onChanged();
         return this;
@@ -8803,7 +8881,7 @@ public final class DataProtos {
        * <code>optional uint32 near_max = 4;</code>
        */
       public Builder clearNearMax() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         nearMax_ = 0;
         onChanged();
         return this;
@@ -8814,7 +8892,7 @@ public final class DataProtos {
        * <code>optional float avg_3 = 5;</code>
        */
       public boolean hasAvg3() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional float avg_3 = 5;</code>
@@ -8826,7 +8904,7 @@ public final class DataProtos {
        * <code>optional float avg_3 = 5;</code>
        */
       public Builder setAvg3(float value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         avg3_ = value;
         onChanged();
         return this;
@@ -8835,7 +8913,7 @@ public final class DataProtos {
        * <code>optional float avg_3 = 5;</code>
        */
       public Builder clearAvg3() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         avg3_ = 0F;
         onChanged();
         return this;
@@ -8846,7 +8924,7 @@ public final class DataProtos {
        * <code>optional float avg_5 = 6;</code>
        */
       public boolean hasAvg5() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional float avg_5 = 6;</code>
@@ -8858,7 +8936,7 @@ public final class DataProtos {
        * <code>optional float avg_5 = 6;</code>
        */
       public Builder setAvg5(float value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         avg5_ = value;
         onChanged();
         return this;
@@ -8867,7 +8945,7 @@ public final class DataProtos {
        * <code>optional float avg_5 = 6;</code>
        */
       public Builder clearAvg5() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         avg5_ = 0F;
         onChanged();
         return this;
@@ -11321,18 +11399,19 @@ public final class DataProtos {
       " \001(\r\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003" +
       "avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010o" +
       "rient_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orien" +
-      "t_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002\"Z\n\005Pixel\022\t\n\001" +
-      "x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\020\n\010near_" +
-      "max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"" +
-      "\241\001\n\021CalibrationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n",
-      "\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nh" +
-      "ist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n" +
-      "\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 " +
-      "\003(\r\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014\022\016" +
-      "\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007use" +
-      "r_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote_a" +
-      "ddr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n\017edu.uc" +
-      "i.crayfisB\nDataProtos"
+      "t_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002\"p\n\005Pixel\022\t\n\001" +
+      "x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adjus" +
+      "ted_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3" +
+      "\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021CalibrationRes",
+      "ult\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022" +
+      "\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n" +
+      "\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003" +
+      "(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\220\001\n\rCrayonMess" +
+      "age\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\t" +
+      "device_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_" +
+      "code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013submi" +
+      "t_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPro" +
+      "tos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11375,7 +11454,7 @@ public final class DataProtos {
     internal_static_crayfis_Pixel_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_Pixel_descriptor,
-        new java.lang.String[] { "X", "Y", "Val", "NearMax", "Avg3", "Avg5", });
+        new java.lang.String[] { "X", "Y", "Val", "AdjustedVal", "NearMax", "Avg3", "Avg5", });
     internal_static_crayfis_CalibrationResult_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_crayfis_CalibrationResult_fieldAccessorTable = new
