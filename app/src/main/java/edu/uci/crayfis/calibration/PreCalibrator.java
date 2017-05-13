@@ -1,19 +1,17 @@
 package edu.uci.crayfis.calibration;
 
-import android.annotation.TargetApi;
-import android.os.Build;
+import android.content.Context;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
-import android.renderscript.Script;
 import android.renderscript.Type;
-
-import java.util.Arrays;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
 
@@ -26,6 +24,8 @@ public class PreCalibrator {
     private RenderScript mRS;
     private ScriptC_weight mScriptCWeight;
     private Allocation mWeights;
+
+    private long start_time;
 
     private static PreCalibrator sInstance = null;
 
@@ -52,6 +52,8 @@ public class PreCalibrator {
 
             mWeights = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
             mScriptCWeight.set_gWeights(mWeights);
+
+            start_time = System.currentTimeMillis();
         }
 
         //Script.LaunchOptions lo = new Script.LaunchOptions()
@@ -62,10 +64,17 @@ public class PreCalibrator {
 
     }
 
-    public void processPreCalResults() {
+    public void processPreCalResults(Context context) {
         mScriptCWeight.forEach_findMin(mWeights);
         mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
         mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
+
+        DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder();
+        CFApplication application = (CFApplication)context.getApplicationContext();
+        b.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits());
+        b.setStartTime(start_time);
+        b.setEndTime(System.currentTimeMillis());
+        UploadExposureService.submitPreCalibrationResult(context, b.build());
     }
 
 

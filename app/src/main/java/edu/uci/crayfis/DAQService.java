@@ -286,7 +286,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         // is after stabilization.
         switch (previousState) {
             case PRECALIBRATION:
-                PreCalibrator.getInstance().processPreCalResults();
+                PreCalibrator.getInstance().processPreCalResults(this);
             case STABILIZATION:
                 L1cal.clear();
                 frame_times.clear();

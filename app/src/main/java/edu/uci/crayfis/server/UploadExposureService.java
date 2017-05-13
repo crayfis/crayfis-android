@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -41,6 +42,11 @@ public class UploadExposureService extends IntentService {
      * Key for storing a serializable {@link edu.uci.crayfis.DataProtos.RunConfig}.
      */
     public static final String RUN_CONFIG = "run_config";
+
+    /**
+     * Key for storing a serializable {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     */
+    public static final String PRECALIBRATION_RESULT = "precalibration_result";
 
     /**
      * Key for storing a serializable {@link edu.uci.crayfis.DataProtos.CalibrationResult}.
@@ -115,6 +121,21 @@ public class UploadExposureService extends IntentService {
         context.startService(intent);
     }
 
+    /**
+     * Helper for submitting a {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     *
+     * This will create a new Intent and call startService with that intent.
+     *
+     * @param context The context for the intent.
+     * @param preCalibrationResult The {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     */
+    public static void submitPreCalibrationResult(@NonNull final Context context,
+                                               @NonNull final DataProtos.PreCalibrationResult preCalibrationResult) {
+        final Intent intent = new Intent(context, UploadExposureService.class);
+        intent.putExtra(PRECALIBRATION_RESULT, preCalibrationResult);
+        context.startService(intent);
+    }
+
     public UploadExposureService() {
         super("Exposure Uploader");
     }
@@ -172,6 +193,8 @@ public class UploadExposureService extends IntentService {
         } else if (message instanceof DataProtos.CalibrationResult) {
             rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
             // FIXME: This doesn't trigger the run config upload.
+        } else if (message instanceof DataProtos.PreCalibrationResult) {
+            rtn.addPrecalibrationResults((DataProtos.PreCalibrationResult) message);
         }
 
         return rtn;
@@ -204,6 +227,12 @@ public class UploadExposureService extends IntentService {
                     getSerializableExtra(CALIBRATION_RESULT);
             if (calibrationResult != null) {
                 return calibrationResult;
+            }
+
+            final AbstractMessage preCalibrationResult = (DataProtos.PreCalibrationResult) intent.
+                    getSerializableExtra(PRECALIBRATION_RESULT);
+            if (preCalibrationResult != null) {
+                return preCalibrationResult;
             }
         }
         return null;
@@ -247,6 +276,8 @@ public class UploadExposureService extends IntentService {
                 rtn = "Calibration";
             } else if (chunk.getRunConfigsCount() > 0) {
                 rtn = "RunConfig";
+            } else if (chunk.getPrecalibrationResultsCount() > 0) {
+                rtn = "PreCalibration";
             } else if (chunk.getExposureBlocksCount() > 0) {
                 rtn = "Exposure";
             } else {

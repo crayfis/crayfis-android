@@ -83,6 +83,30 @@ public final class DataProtos {
      */
     edu.uci.crayfis.DataProtos.CalibrationResultOrBuilder getCalibrationResultsOrBuilder(
         int index);
+
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult> 
+        getPrecalibrationResultsList();
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    edu.uci.crayfis.DataProtos.PreCalibrationResult getPrecalibrationResults(int index);
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    int getPrecalibrationResultsCount();
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    java.util.List<? extends edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder> 
+        getPrecalibrationResultsOrBuilderList();
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder getPrecalibrationResultsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code crayfis.DataChunk}
@@ -165,6 +189,14 @@ public final class DataProtos {
               calibrationResults_.add(input.readMessage(edu.uci.crayfis.DataProtos.CalibrationResult.PARSER, extensionRegistry));
               break;
             }
+            case 34: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                precalibrationResults_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.PreCalibrationResult>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              precalibrationResults_.add(input.readMessage(edu.uci.crayfis.DataProtos.PreCalibrationResult.PARSER, extensionRegistry));
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -181,6 +213,9 @@ public final class DataProtos {
         }
         if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
           calibrationResults_ = java.util.Collections.unmodifiableList(calibrationResults_);
+        }
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          precalibrationResults_ = java.util.Collections.unmodifiableList(precalibrationResults_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -318,10 +353,46 @@ public final class DataProtos {
       return calibrationResults_.get(index);
     }
 
+    public static final int PRECALIBRATION_RESULTS_FIELD_NUMBER = 4;
+    private java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult> precalibrationResults_;
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    public java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult> getPrecalibrationResultsList() {
+      return precalibrationResults_;
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    public java.util.List<? extends edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder> 
+        getPrecalibrationResultsOrBuilderList() {
+      return precalibrationResults_;
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    public int getPrecalibrationResultsCount() {
+      return precalibrationResults_.size();
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    public edu.uci.crayfis.DataProtos.PreCalibrationResult getPrecalibrationResults(int index) {
+      return precalibrationResults_.get(index);
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+     */
+    public edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder getPrecalibrationResultsOrBuilder(
+        int index) {
+      return precalibrationResults_.get(index);
+    }
+
     private void initFields() {
       runConfigs_ = java.util.Collections.emptyList();
       exposureBlocks_ = java.util.Collections.emptyList();
       calibrationResults_ = java.util.Collections.emptyList();
+      precalibrationResults_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -345,6 +416,9 @@ public final class DataProtos {
       for (int i = 0; i < calibrationResults_.size(); i++) {
         output.writeMessage(3, calibrationResults_.get(i));
       }
+      for (int i = 0; i < precalibrationResults_.size(); i++) {
+        output.writeMessage(4, precalibrationResults_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -365,6 +439,10 @@ public final class DataProtos {
       for (int i = 0; i < calibrationResults_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, calibrationResults_.get(i));
+      }
+      for (int i = 0; i < precalibrationResults_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, precalibrationResults_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -483,6 +561,7 @@ public final class DataProtos {
           getRunConfigsFieldBuilder();
           getExposureBlocksFieldBuilder();
           getCalibrationResultsFieldBuilder();
+          getPrecalibrationResultsFieldBuilder();
         }
       }
       private static Builder create() {
@@ -508,6 +587,12 @@ public final class DataProtos {
           bitField0_ = (bitField0_ & ~0x00000004);
         } else {
           calibrationResultsBuilder_.clear();
+        }
+        if (precalibrationResultsBuilder_ == null) {
+          precalibrationResults_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+        } else {
+          precalibrationResultsBuilder_.clear();
         }
         return this;
       }
@@ -562,6 +647,15 @@ public final class DataProtos {
           result.calibrationResults_ = calibrationResults_;
         } else {
           result.calibrationResults_ = calibrationResultsBuilder_.build();
+        }
+        if (precalibrationResultsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+            precalibrationResults_ = java.util.Collections.unmodifiableList(precalibrationResults_);
+            bitField0_ = (bitField0_ & ~0x00000008);
+          }
+          result.precalibrationResults_ = precalibrationResults_;
+        } else {
+          result.precalibrationResults_ = precalibrationResultsBuilder_.build();
         }
         onBuilt();
         return result;
@@ -653,6 +747,32 @@ public final class DataProtos {
                    getCalibrationResultsFieldBuilder() : null;
             } else {
               calibrationResultsBuilder_.addAllMessages(other.calibrationResults_);
+            }
+          }
+        }
+        if (precalibrationResultsBuilder_ == null) {
+          if (!other.precalibrationResults_.isEmpty()) {
+            if (precalibrationResults_.isEmpty()) {
+              precalibrationResults_ = other.precalibrationResults_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+            } else {
+              ensurePrecalibrationResultsIsMutable();
+              precalibrationResults_.addAll(other.precalibrationResults_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.precalibrationResults_.isEmpty()) {
+            if (precalibrationResultsBuilder_.isEmpty()) {
+              precalibrationResultsBuilder_.dispose();
+              precalibrationResultsBuilder_ = null;
+              precalibrationResults_ = other.precalibrationResults_;
+              bitField0_ = (bitField0_ & ~0x00000008);
+              precalibrationResultsBuilder_ = 
+                com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                   getPrecalibrationResultsFieldBuilder() : null;
+            } else {
+              precalibrationResultsBuilder_.addAllMessages(other.precalibrationResults_);
             }
           }
         }
@@ -1401,6 +1521,246 @@ public final class DataProtos {
           calibrationResults_ = null;
         }
         return calibrationResultsBuilder_;
+      }
+
+      private java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult> precalibrationResults_ =
+        java.util.Collections.emptyList();
+      private void ensurePrecalibrationResultsIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          precalibrationResults_ = new java.util.ArrayList<edu.uci.crayfis.DataProtos.PreCalibrationResult>(precalibrationResults_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.PreCalibrationResult, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder, edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder> precalibrationResultsBuilder_;
+
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult> getPrecalibrationResultsList() {
+        if (precalibrationResultsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(precalibrationResults_);
+        } else {
+          return precalibrationResultsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public int getPrecalibrationResultsCount() {
+        if (precalibrationResultsBuilder_ == null) {
+          return precalibrationResults_.size();
+        } else {
+          return precalibrationResultsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult getPrecalibrationResults(int index) {
+        if (precalibrationResultsBuilder_ == null) {
+          return precalibrationResults_.get(index);
+        } else {
+          return precalibrationResultsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder setPrecalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.PreCalibrationResult value) {
+        if (precalibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.set(index, value);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder setPrecalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder builderForValue) {
+        if (precalibrationResultsBuilder_ == null) {
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder addPrecalibrationResults(edu.uci.crayfis.DataProtos.PreCalibrationResult value) {
+        if (precalibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.add(value);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder addPrecalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.PreCalibrationResult value) {
+        if (precalibrationResultsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.add(index, value);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder addPrecalibrationResults(
+          edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder builderForValue) {
+        if (precalibrationResultsBuilder_ == null) {
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.add(builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder addPrecalibrationResults(
+          int index, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder builderForValue) {
+        if (precalibrationResultsBuilder_ == null) {
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder addAllPrecalibrationResults(
+          java.lang.Iterable<? extends edu.uci.crayfis.DataProtos.PreCalibrationResult> values) {
+        if (precalibrationResultsBuilder_ == null) {
+          ensurePrecalibrationResultsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, precalibrationResults_);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder clearPrecalibrationResults() {
+        if (precalibrationResultsBuilder_ == null) {
+          precalibrationResults_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000008);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public Builder removePrecalibrationResults(int index) {
+        if (precalibrationResultsBuilder_ == null) {
+          ensurePrecalibrationResultsIsMutable();
+          precalibrationResults_.remove(index);
+          onChanged();
+        } else {
+          precalibrationResultsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder getPrecalibrationResultsBuilder(
+          int index) {
+        return getPrecalibrationResultsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder getPrecalibrationResultsOrBuilder(
+          int index) {
+        if (precalibrationResultsBuilder_ == null) {
+          return precalibrationResults_.get(index);  } else {
+          return precalibrationResultsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public java.util.List<? extends edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder> 
+           getPrecalibrationResultsOrBuilderList() {
+        if (precalibrationResultsBuilder_ != null) {
+          return precalibrationResultsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(precalibrationResults_);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder addPrecalibrationResultsBuilder() {
+        return getPrecalibrationResultsFieldBuilder().addBuilder(
+            edu.uci.crayfis.DataProtos.PreCalibrationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder addPrecalibrationResultsBuilder(
+          int index) {
+        return getPrecalibrationResultsFieldBuilder().addBuilder(
+            index, edu.uci.crayfis.DataProtos.PreCalibrationResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationResult precalibration_results = 4;</code>
+       */
+      public java.util.List<edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder> 
+           getPrecalibrationResultsBuilderList() {
+        return getPrecalibrationResultsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilder<
+          edu.uci.crayfis.DataProtos.PreCalibrationResult, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder, edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder> 
+          getPrecalibrationResultsFieldBuilder() {
+        if (precalibrationResultsBuilder_ == null) {
+          precalibrationResultsBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+              edu.uci.crayfis.DataProtos.PreCalibrationResult, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder, edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder>(
+                  precalibrationResults_,
+                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  getParentForChildren(),
+                  isClean());
+          precalibrationResults_ = null;
+        }
+        return precalibrationResultsBuilder_;
       }
 
       // @@protoc_insertion_point(builder_scope:crayfis.DataChunk)
@@ -3281,19 +3641,27 @@ public final class DataProtos {
        */
       INIT(0, 0),
       /**
+       * <code>PRECALIBRATION = 3;</code>
+       */
+      PRECALIBRATION(1, 3),
+      /**
        * <code>CALIBRATION = 1;</code>
        */
-      CALIBRATION(1, 1),
+      CALIBRATION(2, 1),
       /**
        * <code>DATA = 2;</code>
        */
-      DATA(2, 2),
+      DATA(3, 2),
       ;
 
       /**
        * <code>INIT = 0;</code>
        */
       public static final int INIT_VALUE = 0;
+      /**
+       * <code>PRECALIBRATION = 3;</code>
+       */
+      public static final int PRECALIBRATION_VALUE = 3;
       /**
        * <code>CALIBRATION = 1;</code>
        */
@@ -3309,6 +3677,7 @@ public final class DataProtos {
       public static State valueOf(int value) {
         switch (value) {
           case 0: return INIT;
+          case 3: return PRECALIBRATION;
           case 1: return CALIBRATION;
           case 2: return DATA;
           default: return null;
@@ -10135,6 +10504,559 @@ public final class DataProtos {
     // @@protoc_insertion_point(class_scope:crayfis.CalibrationResult)
   }
 
+  public interface PreCalibrationResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:crayfis.PreCalibrationResult)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    boolean hasRunId();
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    long getRunId();
+
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    boolean hasStartTime();
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    long getStartTime();
+
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    boolean hasEndTime();
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    long getEndTime();
+  }
+  /**
+   * Protobuf type {@code crayfis.PreCalibrationResult}
+   */
+  public static final class PreCalibrationResult extends
+      com.google.protobuf.GeneratedMessage implements
+      // @@protoc_insertion_point(message_implements:crayfis.PreCalibrationResult)
+      PreCalibrationResultOrBuilder {
+    // Use PreCalibrationResult.newBuilder() to construct.
+    private PreCalibrationResult(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+      super(builder);
+      this.unknownFields = builder.getUnknownFields();
+    }
+    private PreCalibrationResult(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
+
+    private static final PreCalibrationResult defaultInstance;
+    public static PreCalibrationResult getDefaultInstance() {
+      return defaultInstance;
+    }
+
+    public PreCalibrationResult getDefaultInstanceForType() {
+      return defaultInstance;
+    }
+
+    private final com.google.protobuf.UnknownFieldSet unknownFields;
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PreCalibrationResult(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      initFields();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(input, unknownFields,
+                                     extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              runId_ = input.readUInt64();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              startTime_ = input.readUInt64();
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              endTime_ = input.readUInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e.getMessage()).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.uci.crayfis.DataProtos.internal_static_crayfis_PreCalibrationResult_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.uci.crayfis.DataProtos.PreCalibrationResult.class, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder.class);
+    }
+
+    public static com.google.protobuf.Parser<PreCalibrationResult> PARSER =
+        new com.google.protobuf.AbstractParser<PreCalibrationResult>() {
+      public PreCalibrationResult parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new PreCalibrationResult(input, extensionRegistry);
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PreCalibrationResult> getParserForType() {
+      return PARSER;
+    }
+
+    private int bitField0_;
+    public static final int RUN_ID_FIELD_NUMBER = 1;
+    private long runId_;
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    public boolean hasRunId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>optional uint64 run_id = 1;</code>
+     */
+    public long getRunId() {
+      return runId_;
+    }
+
+    public static final int START_TIME_FIELD_NUMBER = 2;
+    private long startTime_;
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    public boolean hasStartTime() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>optional uint64 start_time = 2;</code>
+     */
+    public long getStartTime() {
+      return startTime_;
+    }
+
+    public static final int END_TIME_FIELD_NUMBER = 3;
+    private long endTime_;
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    public boolean hasEndTime() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>optional uint64 end_time = 3;</code>
+     */
+    public long getEndTime() {
+      return endTime_;
+    }
+
+    private void initFields() {
+      runId_ = 0L;
+      startTime_ = 0L;
+      endTime_ = 0L;
+    }
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeUInt64(1, runId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeUInt64(2, startTime_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeUInt64(3, endTime_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    private int memoizedSerializedSize = -1;
+    public int getSerializedSize() {
+      int size = memoizedSerializedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(1, runId_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(2, startTime_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(3, endTime_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSerializedSize = size;
+      return size;
+    }
+
+    private static final long serialVersionUID = 0L;
+    @java.lang.Override
+    protected java.lang.Object writeReplace()
+        throws java.io.ObjectStreamException {
+      return super.writeReplace();
+    }
+
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input);
+    }
+    public static edu.uci.crayfis.DataProtos.PreCalibrationResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return PARSER.parseFrom(input, extensionRegistry);
+    }
+
+    public static Builder newBuilder() { return Builder.create(); }
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder(edu.uci.crayfis.DataProtos.PreCalibrationResult prototype) {
+      return newBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() { return newBuilder(this); }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code crayfis.PreCalibrationResult}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessage.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:crayfis.PreCalibrationResult)
+        edu.uci.crayfis.DataProtos.PreCalibrationResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_PreCalibrationResult_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.uci.crayfis.DataProtos.PreCalibrationResult.class, edu.uci.crayfis.DataProtos.PreCalibrationResult.Builder.class);
+      }
+
+      // Construct using edu.uci.crayfis.DataProtos.PreCalibrationResult.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+        }
+      }
+      private static Builder create() {
+        return new Builder();
+      }
+
+      public Builder clear() {
+        super.clear();
+        runId_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        startTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        endTime_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public Builder clone() {
+        return create().mergeFrom(buildPartial());
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.uci.crayfis.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
+      }
+
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult getDefaultInstanceForType() {
+        return edu.uci.crayfis.DataProtos.PreCalibrationResult.getDefaultInstance();
+      }
+
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult build() {
+        edu.uci.crayfis.DataProtos.PreCalibrationResult result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public edu.uci.crayfis.DataProtos.PreCalibrationResult buildPartial() {
+        edu.uci.crayfis.DataProtos.PreCalibrationResult result = new edu.uci.crayfis.DataProtos.PreCalibrationResult(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.runId_ = runId_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.startTime_ = startTime_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.endTime_ = endTime_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.uci.crayfis.DataProtos.PreCalibrationResult) {
+          return mergeFrom((edu.uci.crayfis.DataProtos.PreCalibrationResult)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.uci.crayfis.DataProtos.PreCalibrationResult other) {
+        if (other == edu.uci.crayfis.DataProtos.PreCalibrationResult.getDefaultInstance()) return this;
+        if (other.hasRunId()) {
+          setRunId(other.getRunId());
+        }
+        if (other.hasStartTime()) {
+          setStartTime(other.getStartTime());
+        }
+        if (other.hasEndTime()) {
+          setEndTime(other.getEndTime());
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.uci.crayfis.DataProtos.PreCalibrationResult parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.uci.crayfis.DataProtos.PreCalibrationResult) e.getUnfinishedMessage();
+          throw e;
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long runId_ ;
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public boolean hasRunId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public long getRunId() {
+        return runId_;
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public Builder setRunId(long value) {
+        bitField0_ |= 0x00000001;
+        runId_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 run_id = 1;</code>
+       */
+      public Builder clearRunId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        runId_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long startTime_ ;
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public boolean hasStartTime() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public long getStartTime() {
+        return startTime_;
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public Builder setStartTime(long value) {
+        bitField0_ |= 0x00000002;
+        startTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 start_time = 2;</code>
+       */
+      public Builder clearStartTime() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        startTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long endTime_ ;
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public boolean hasEndTime() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public long getEndTime() {
+        return endTime_;
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public Builder setEndTime(long value) {
+        bitField0_ |= 0x00000004;
+        endTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 end_time = 3;</code>
+       */
+      public Builder clearEndTime() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        endTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      // @@protoc_insertion_point(builder_scope:crayfis.PreCalibrationResult)
+    }
+
+    static {
+      defaultInstance = new PreCalibrationResult(true);
+      defaultInstance.initFields();
+    }
+
+    // @@protoc_insertion_point(class_scope:crayfis.PreCalibrationResult)
+  }
+
   public interface CrayonMessageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:crayfis.CrayonMessage)
       com.google.protobuf.MessageOrBuilder {
@@ -11350,6 +12272,11 @@ public final class DataProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_crayfis_CalibrationResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_crayfis_PreCalibrationResult_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_crayfis_PreCalibrationResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_crayfis_CrayonMessage_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -11364,54 +12291,58 @@ public final class DataProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n&home/jswaney/crayon/crayfis_data.proto" +
-      "\022\007crayfis\"\236\001\n\tDataChunk\022\'\n\013run_configs\030\001" +
+      "\022\007crayfis\"\335\001\n\tDataChunk\022\'\n\013run_configs\030\001" +
       " \003(\0132\022.crayfis.RunConfig\022/\n\017exposure_blo" +
       "cks\030\002 \003(\0132\026.crayfis.ExposureBlock\0227\n\023cal" +
       "ibration_results\030\003 \003(\0132\032.crayfis.Calibra" +
-      "tionResult\"\244\001\n\tRunConfig\022\r\n\005id_hi\030\001 \001(\004\022" +
-      "\r\n\005id_lo\030\002 \001(\004\022\022\n\nstart_time\030\003 \001(\004\022\025\n\rcr" +
-      "ayfis_build\030\004 \001(\t\022\021\n\thw_params\030\005 \001(\t\022\021\n\t" +
-      "os_params\030\006 \001(\t\022\025\n\rcamera_params\030\007 \001(\t\022\021" +
-      "\n\tcamera_id\030\010 \001(\r\"\321\005\n\rExposureBlock\022\016\n\006r",
-      "un_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_t" +
-      "ime\030\003 \001(\004\022\027\n\017start_time_nano\030\026 \001(\004\022\025\n\ren" +
-      "d_time_nano\030\027 \001(\004\022\026\n\016start_time_ntp\030\030 \001(" +
-      "\004\022\024\n\014end_time_ntp\030\031 \001(\004\022\017\n\007gps_lat\030\004 \001(\001" +
-      "\022\017\n\007gps_lon\030\005 \001(\001\022\024\n\014gps_altitude\030\023 \001(\001\022" +
-      "\024\n\014gps_accuracy\030\024 \001(\002\022\023\n\013gps_fixtime\030\025 \001" +
-      "(\004\022\030\n\020gps_fixtime_nano\030\034 \001(\004\022\024\n\014battery_" +
-      "temp\030  \001(\r\022/\n\tdaq_state\030\006 \001(\0162\034.crayfis." +
-      "ExposureBlock.State\022\r\n\005res_x\030\032 \001(\r\022\r\n\005re" +
-      "s_y\030\033 \001(\r\022\036\n\006events\030\007 \003(\0132\016.crayfis.Even",
-      "t\022\021\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022" +
-      "\017\n\007L1_conf\030\035 \001(\t\022\017\n\007L2_conf\030\036 \001(\t\022\024\n\014L1_" +
-      "processed\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(\r\022\026\n" +
-      "\016frames_dropped\030\014 \001(\r\022\017\n\007L1_pass\030\r \001(\r\022\017" +
-      "\n\007L1_skip\030\016 \001(\r\022\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L2_s" +
-      "kip\030\020 \001(\r\022\016\n\006bg_avg\030\037 \001(\001\022\013\n\003xbn\030\021 \001(\r\022\017" +
-      "\n\007aborted\030\022 \001(\010\",\n\005State\022\010\n\004INIT\020\000\022\017\n\013CA" +
-      "LIBRATION\020\001\022\010\n\004DATA\020\002\"\353\002\n\005Event\022\021\n\ttimes" +
-      "tamp\030\001 \001(\004\022\026\n\016timestamp_nano\030\016 \001(\004\022\025\n\rti" +
-      "mestamp_ntp\030\017 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gp",
-      "s_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014gps" +
-      "_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022\030\n\020" +
-      "gps_fixtime_nano\030\020 \001(\004\022\024\n\014battery_temp\030\021" +
-      " \001(\r\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022\013\n\003" +
-      "avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020\n\010o" +
-      "rient_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orien" +
-      "t_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002\"p\n\005Pixel\022\t\n\001" +
-      "x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adjus" +
-      "ted_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3" +
-      "\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021CalibrationRes",
-      "ult\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022" +
-      "\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n" +
-      "\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003" +
-      "(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\220\001\n\rCrayonMess" +
-      "age\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\t" +
-      "device_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_" +
-      "code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013submi" +
-      "t_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPro" +
-      "tos"
+      "tionResult\022=\n\026precalibration_results\030\004 \003" +
+      "(\0132\035.crayfis.PreCalibrationResult\"\244\001\n\tRu" +
+      "nConfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n" +
+      "\nstart_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 \001(\t" +
+      "\022\021\n\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(\t\022\025",
+      "\n\rcamera_params\030\007 \001(\t\022\021\n\tcamera_id\030\010 \001(\r" +
+      "\"\345\005\n\rExposureBlock\022\016\n\006run_id\030\001 \001(\004\022\022\n\nst" +
+      "art_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\027\n\017star" +
+      "t_time_nano\030\026 \001(\004\022\025\n\rend_time_nano\030\027 \001(\004" +
+      "\022\026\n\016start_time_ntp\030\030 \001(\004\022\024\n\014end_time_ntp" +
+      "\030\031 \001(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007gps_lon\030\005 \001(\001" +
+      "\022\024\n\014gps_altitude\030\023 \001(\001\022\024\n\014gps_accuracy\030\024" +
+      " \001(\002\022\023\n\013gps_fixtime\030\025 \001(\004\022\030\n\020gps_fixtime" +
+      "_nano\030\034 \001(\004\022\024\n\014battery_temp\030  \001(\r\022/\n\tdaq" +
+      "_state\030\006 \001(\0162\034.crayfis.ExposureBlock.Sta",
+      "te\022\r\n\005res_x\030\032 \001(\r\022\r\n\005res_y\030\033 \001(\r\022\036\n\006even" +
+      "ts\030\007 \003(\0132\016.crayfis.Event\022\021\n\tL1_thresh\030\010 " +
+      "\001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\017\n\007L1_conf\030\035 \001(\t\022" +
+      "\017\n\007L2_conf\030\036 \001(\t\022\024\n\014L1_processed\030\n \001(\r\022\024" +
+      "\n\014L2_processed\030\013 \001(\r\022\026\n\016frames_dropped\030\014" +
+      " \001(\r\022\017\n\007L1_pass\030\r \001(\r\022\017\n\007L1_skip\030\016 \001(\r\022\017" +
+      "\n\007L2_pass\030\017 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\016\n\006bg_a" +
+      "vg\030\037 \001(\001\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\"@" +
+      "\n\005State\022\010\n\004INIT\020\000\022\022\n\016PRECALIBRATION\020\003\022\017\n" +
+      "\013CALIBRATION\020\001\022\010\n\004DATA\020\002\"\353\002\n\005Event\022\021\n\tti",
+      "mestamp\030\001 \001(\004\022\026\n\016timestamp_nano\030\016 \001(\004\022\025\n" +
+      "\rtimestamp_ntp\030\017 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n" +
+      "\007gps_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014" +
+      "gps_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022" +
+      "\030\n\020gps_fixtime_nano\030\020 \001(\004\022\024\n\014battery_tem" +
+      "p\030\021 \001(\r\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022" +
+      "\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\013\n\003xbn\030\007 \001(\r\022\020" +
+      "\n\010orient_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010or" +
+      "ient_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002\"p\n\005Pixel\022" +
+      "\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014ad",
+      "justed_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005av" +
+      "g_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"\241\001\n\021Calibration" +
+      "Result\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001" +
+      "(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r" +
+      "\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030" +
+      "\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"L\n\024PreCalib" +
+      "rationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_ti" +
+      "me\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\"\220\001\n\rCrayonMes" +
+      "sage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n" +
+      "\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app",
+      "_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013subm" +
+      "it_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPr" +
+      "otos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -11430,7 +12361,7 @@ public final class DataProtos {
     internal_static_crayfis_DataChunk_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_DataChunk_descriptor,
-        new java.lang.String[] { "RunConfigs", "ExposureBlocks", "CalibrationResults", });
+        new java.lang.String[] { "RunConfigs", "ExposureBlocks", "CalibrationResults", "PrecalibrationResults", });
     internal_static_crayfis_RunConfig_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_crayfis_RunConfig_fieldAccessorTable = new
@@ -11461,8 +12392,14 @@ public final class DataProtos {
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_CalibrationResult_descriptor,
         new java.lang.String[] { "RunId", "StartTime", "EndTime", "HistPixel", "HistL2Pixel", "HistMaxpixel", "HistNumpixel", });
-    internal_static_crayfis_CrayonMessage_descriptor =
+    internal_static_crayfis_PreCalibrationResult_descriptor =
       getDescriptor().getMessageTypes().get(6);
+    internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+        internal_static_crayfis_PreCalibrationResult_descriptor,
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", });
+    internal_static_crayfis_CrayonMessage_descriptor =
+      getDescriptor().getMessageTypes().get(7);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_CrayonMessage_descriptor,
