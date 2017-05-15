@@ -25,14 +25,12 @@
     <string name="settings_code_title">CRAYFIS קוד משתמש של"</string>
     <string name="settings_gallery_title">אפשר גלריה</string>
     <string name="settings_gallery_summary">שמור והצג תמונות מעניינות</string>
-    <string name="settings_splash_title">Enable live view splashes</string>
-    <string name="settings_splash_summary">Disable for black screen running</string>
     <string name="settings_autostart_summary">אל תפעיל מחדש באופן אוטומטי</string>
     <string name="settings_autostart_title">הקלק למנוע הפעלה מחדש באופן אוטומטי</string>
     <string name="menu_about">אודות</string>
     <string name="menu_settings">הגדרות</string>
     <string name="menu_view_mode">מצב תצוגה</string>
-    <string name="toast_black">מציג קרניים קוסמיות הפוגעות בטלפון שלך בזמן אמת.\n\nמעדיף/פה מסך שחור? תוכל/י לבטל אופציה זו בהגדרות.</string>
+    <string name="toast_black">מציג קרניים קוסמיות הפוגעות בטלפון שלך בזמן אמת.</string>
     <string name="toast_data">לוח זה מראה את המצב.\n\nהחלק עבור תצוגות נוספות</string>
     <string name="help_data">תצוגה זו מראה את המצב הנוכחי של האפליקציה, וכמו כן:\n\tזמן: בשניות של דגימת נתונים\n\tקצב: קצב הסריקה, תמונות לשניה</string>
     <string name="toast_status">בתצוגה זו רואים:\n\t תמונות שנסרקו: מספר תמונות הוידאו שנבדקו\n\t פיקסלים שנסרקו: מספר הפיקסלים שנבדקו\n\tמועמדים: מספר הפיקסלים מעבר לסף הרעש\nלמטה, היסטוגרמה המראה את איכות הפיקסלים שעברו את הסף.</string>

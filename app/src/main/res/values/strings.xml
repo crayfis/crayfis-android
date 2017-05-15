@@ -29,8 +29,6 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Enable gallery</string>
     <string name="settings_gallery_summary">Saves and displays interesting images</string>
-    <string name="settings_splash_title">Enable live view splashes</string>
-    <string name="settings_splash_summary">Disable for black screen running</string>
     <string name="settings_autostart_summary">Do not autostart</string>
     <string name="settings_autostart_title">Click to prevent autostart</string>
     <string name="settings_pref_resolution_summary" translatable="false">Resolution</string>
@@ -49,7 +47,7 @@
     <string name="menu_settings">Settings</string>
     <string name="menu_stop" translatable="false">Stop</string>
     <string name="menu_view_mode">View Mode</string>
-    <string name="toast_black">This shows cosmic ray candidates hitting your phone in real time.\n\nPrefer a black screen? You can disable live splashes in Settings.</string>
+    <string name="toast_black">This shows cosmic ray candidates hitting your phone in real time.</string>
     <string name="toast_data">This pane shows the status.\n\nSwipe for other views.</string>
     <string name="help_data">This view shows the current state of the app as well as:\n\tTime: seconds of data-taking\n\tRate: scan rate, frames-per-second</string>
     <string name="toast_status">This view shows:\n\t Frames scanned: number of video frames examined\n\t Pixels scanned: number of pixels examined\n\t Candidates: number of pixels above the noise threshold.</string>
@@ -94,6 +92,7 @@
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>
+    <string name="gallery_dcim_error" translatable="false">Gallery cannot be enabled without permission to save images.</string>
     <string name="permission_yes" translatable="false">Enable</string>
     <string name="permission_no" translatable="false">No thanks</string>
     <string name="pager_dev">Developer</string>

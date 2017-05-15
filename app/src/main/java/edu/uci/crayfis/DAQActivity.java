@@ -17,6 +17,8 @@
 
 package edu.uci.crayfis;
 
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -27,12 +29,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -73,6 +78,8 @@ public class DAQActivity extends AppCompatActivity {
     private static DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
+
+    private final int WRITE_SETTINGS_REQUEST = 1;
 
     private ServiceConnection mServiceConnection;
 
@@ -209,6 +216,31 @@ public class DAQActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    @TargetApi(23)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        if(requestCode != WRITE_SETTINGS_REQUEST) { return; }
+        if(grantResults[0] == PackageManager.PERMISSION_DENIED) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle(getResources().getString(R.string.permission_error_title)).setCancelable(false)
+                    .setPositiveButton(getResources().getString(R.string.permission_yes), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_SETTINGS_REQUEST);
+                        }
+                    })
+                    .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            PreferenceManager.getDefaultSharedPreferences(DAQActivity.this)
+                                    .edit()
+                                    .putBoolean(getString(R.string.prefEnableGallery), false)
+                                    .apply();
+                        }
+                    })
+                    .setMessage(R.string.gallery_dcim_error).show();
+        }
+
+    }
 
     /////////////////////////
     // Toolbar and Drawers //
@@ -308,8 +340,13 @@ public class DAQActivity extends AppCompatActivity {
         if (fragments.size() == 0) {
             return;
         }
+        CFLog.d("Size = " + fragments.size());
 
-        final CFFragment activeFragment = (CFFragment) fragments.get(0);
+        CFLog.d("Fragment = " + fragments.get(fragments.size()-1));
+
+        final CFFragment activeFragment = (CFFragment) fragments.get(fragments.size()-1);
+
+        CFLog.d("CFFragment = " + activeFragment);
         final Resources res = getResources();
         tx1.setText(res.getString(R.string.crayfis_about) + "\n"
                 + res.getString(activeFragment.about()) + "\n\n"

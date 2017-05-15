@@ -21,14 +21,12 @@
     <string name="settings_code_title">Codice utente CRAYFIS"</string>
     <string name="settings_gallery_title">Abilita carrellata</string>
     <string name="settings_gallery_summary">Salva e mostra le immagini interessanti</string>
-    <string name="settings_splash_title">Abilita la visualizzazione degli eventi</string>
-    <string name="settings_splash_summary">Disabilita per funzionamento con schermo oscurato</string>
     <string name="settings_autostart_summary">Non avviare automaticamente</string>
     <string name="settings_autostart_title">Clicca per impedire l\'avvio automatico</string>
     <string name="menu_about">Informazioni</string>
     <string name="menu_settings">Impostazioni</string>
     <string name="menu_view_mode">Modalitá di visualizzazione</string>
-    <string name="toast_black">Mostra in tempo reale i potenziali raggi cosmici che attraversano il tuo telefono.\n\nPreferisci lo schermo oscurato? Puoi disattivare la visualizzazione da Impostazioni.</string>
+    <string name="toast_black">Mostra in tempo reale i potenziali raggi cosmici che attraversano il tuo telefono.</string>
     <string name="toast_data">Questa schermata mostra lo stato attuale.\n\nScorri per passare alle altre schermate.</string>
     <string name="help_data">Questa schermata mostra lo stato attuale dell\'app e anche:\n\tTempo: secondi di presa dati\n\tFrequenza: velocitá di acquisizione, fotogramma-per-secondo</string>
     <string name="toast_status">Questa schermata mostra:\n\t Fotogrammi acquisiti: numero di fotogrammi esaminate\n\t Pixel acquisiti: numero di pixel esaminati\n\t Candidati: numero di pixel sopra la soglia del rumore\nIn basso si trova un istogramma che mostra la qualitá dei pixel sopra soglia.</string>

@@ -21,14 +21,12 @@
     <string name="settings_code_title">CRAYFIS Kullanici kodu"</string>
     <string name="settings_gallery_title">Galeriyi etkinlestir</string>
     <string name="settings_gallery_summary">Ilginc goruntuleri gosterir ve kayitlar</string>
-    <string name="settings_splash_title">Canli goruntu sicramalarini etkinlestirir</string>
-    <string name="settings_splash_summary">Kullanim disi for black screen running</string>
     <string name="settings_autostart_summary">Otomatik baslatma</string>
     <string name="settings_autostart_title">Otobaslatmayi onlemek icin tikla</string>
     <string name="menu_about">Hakkinda</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_view_mode">Goruntu modu</string>
-    <string name="toast_black">Kozmik isin adaylarinin telefonunuzu isabet aldigini gosterir.\n\nSiyah ekran mi tercih edersiniz? Ayarlara gidip canli sicramalari gecersizlestirebilirsiniz.</string>
+    <string name="toast_black">Kozmik isin adaylarinin telefonunuzu isabet aldigini gosterir.</string>
     <string name="toast_data">Bu pano durumu gosterir .\n\Diger secenekler icin ekrani kaydirin.</string>
     <string name="help_data">Bu goruntu app\'taki guncel durumu gosterir ve ayrica:\n\tzaman: data saniyelerini\n\toran: tarama oranini, her saniyede ki cerceveyi gosterir</string>
     <string name="toast_status">Bu goruntunun gosterdikleri:\n\t cercevelere tarandi: bircok video cerceveleri incelendi\n\t Pixels tarandi: bircok pixels incelendi\n\t Adaylar: bircok pixels gurultu esiginin ustunde\ nOn alttaki histogram esigin ustundeki pixel kalitesini gosterir.</string>

@@ -20,14 +20,12 @@
     <string name="settings_code_title">CRAYFIS användarkod"</string>
     <string name="settings_gallery_title">Aktivera galleri</string>
     <string name="settings_gallery_summary">Sparar och visar intressanta bilder</string>
-    <string name="settings_splash_title">Aktivera live-visning</string>
-    <string name="settings_splash_summary">Avaktivera för att köra med svart skärm</string>
     <string name="settings_autostart_summary">Starta inte automatiskt</string>
     <string name="settings_autostart_title">Klicka för att förebygga autostart</string>
     <string name="menu_about">Om</string>
     <string name="menu_settings">Inställningar</string>
     <string name="menu_view_mode">Visningsläge</string>
-    <string name="toast_black">Här visas när kandidater till kosmiska partiklar träffar din telefon i realtid.\n\nFöredrar du släckt skärm? Stäng av live-visningen under Inställningar.</string>
+    <string name="toast_black">Här visas när kandidater till kosmiska partiklar träffar din telefon i realtid.</string>
     <string name="toast_data">Den här skärmen visar appens status.\n\nSvep för andra visningslägen.</string>
     <string name="help_data">Det här visningsläget visar appens status och :\n\tTid: sekunder av datatagning\n\tFrekvens: utläsningsfrekvens, bilder per sekund</string>
     <string name="toast_status">Den här skärmen visar:\n\t Skannade bilder: antal bilder som analyserats\n\t Skannade pixlar: antal undersöka pixlar\n\t Kandidater: antal pixlar över brusnivå\nDet nedre histogrammet visar kvaliteten på pixelträffarna över brusnivå.</string>
