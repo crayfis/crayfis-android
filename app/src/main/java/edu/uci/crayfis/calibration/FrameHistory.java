@@ -4,8 +4,8 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class FrameHistory<E extends Number> {
-    final private Queue<E> values;
-    private int n_frames;
+    final Queue<E> values;
+    int n_frames;
     private Integer max_val = -1;
 
     public FrameHistory(int n_frames) {
@@ -30,7 +30,7 @@ public class FrameHistory<E extends Number> {
         }
     }
 
-    public void add_value(E value) {
+    public void addValue(E value) {
         synchronized(values) {
             if (values.size() >= n_frames) {
                 values.poll();
@@ -38,18 +38,6 @@ public class FrameHistory<E extends Number> {
 
             values.add(value);
         }
-    }
-
-    public Histogram getHistogram(int nbins) {
-        Histogram h = new Histogram(nbins);
-
-        synchronized (values) {
-            for (E i : values) {
-                h.fill(i.intValue());
-            }
-        }
-
-        return h;
     }
 
     public E[] toArray(E in[]) {

@@ -43,7 +43,7 @@ class L1Task implements Runnable {
             mApplication.changeCamera();
             return true;
         } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
-            mL1Processor.mL1Cal.AddFrame(mFrame);
+            mL1Processor.mL1Cal.addFrame(mFrame);
         }
 
         return false;

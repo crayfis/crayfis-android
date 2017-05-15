@@ -286,7 +286,7 @@ public class L2Task implements Runnable {
         ExposureBlock xb = mFrame.getExposureBlock();
 
         // set everything below threshold to zero
-        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
