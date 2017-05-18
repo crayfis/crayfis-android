@@ -59,7 +59,7 @@ public class L1Calibrator {
             }
         }
 
-        return Math.max(thresh,2);
+        return thresh;
     }
 
     public void resize(int n) {

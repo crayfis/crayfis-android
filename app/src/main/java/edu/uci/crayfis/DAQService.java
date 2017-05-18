@@ -540,7 +540,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
         target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
-        return Math.max(L1cal.findL1Threshold(target_L1_eff),2);
+        return L1cal.findL1Threshold(target_L1_eff);
     }
 
 
