@@ -38,6 +38,7 @@ import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
 
+import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.usernotif.UserNotificationActivity;
 import edu.uci.crayfis.util.CFLog;
 
@@ -53,7 +54,7 @@ public class MainActivity extends Activity  {
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
 
-    public static final String[] permissions = {
+    public static String[] permissions = {
         Manifest.permission.CAMERA,
         Manifest.permission.ACCESS_FINE_LOCATION
     };
@@ -73,6 +74,13 @@ public class MainActivity extends Activity  {
 		super.onStart();
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if(UploadExposureService.IS_PUBLIC) {
+                permissions = new String[] {
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                };
+            }
             requestPermissions(permissions, 0);
         } else {
             // no need to ask for permissions here
@@ -114,8 +122,13 @@ public class MainActivity extends Activity  {
 
         CFLog.d("onRequestPermissionsResult()");
 
-        boolean permissionError = checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+        boolean permissionError = false;
+
+        for(String permission: permissions) {
+            if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                permissionError = true;
+            }
+        }
 
         boolean writeError = !Settings.System.canWrite(this);
 
