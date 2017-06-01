@@ -37,7 +37,7 @@ public class CFCamera implements Camera.ErrorCallback {
     private RenderScript mRS;
     private Camera.PreviewCallback mPreviewCallback;
     private LocalBroadcastManager mBroadcastManager;
-    private final int N_CYCLE_BUFFERS = 7;
+    private final int N_CYCLE_BUFFERS = 5;
 
     private final RawCameraFrame.Builder BUILDER;
     private final CFApplication APPLICATION;
