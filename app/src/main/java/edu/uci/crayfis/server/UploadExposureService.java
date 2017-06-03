@@ -73,7 +73,7 @@ public class UploadExposureService extends IntentService {
     private static boolean sValidId = true;
     private static boolean sStartUploading;
 
-    private static final boolean IS_PUBLIC = false;
+    public static final boolean IS_PUBLIC = true;
 
     /**
      * Helper for submitting an {@link edu.uci.crayfis.exposure.ExposureBlock}.
@@ -156,7 +156,7 @@ public class UploadExposureService extends IntentService {
                 final File file = saveMessageToCache(uploadMessage);
                 if (file != null) {
                     CFLog.d("Queueing upload task");
-                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
+                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file, !IS_PUBLIC).
                             execute();
                 }
             }
@@ -243,15 +243,17 @@ public class UploadExposureService extends IntentService {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
         final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
+        File protofile;
         FileOutputStream outputStream;
 
         try {
             if(IS_PUBLIC) {
                 File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"CRAYFIS");
-                path.mkdirs();
-                File protofile = new File(path, filename);
-                outputStream = new FileOutputStream(protofile);
+                path.mkdir();
+                    protofile = new File(path, filename);
+                    outputStream = new FileOutputStream(protofile);
             } else {
+                protofile = new File(getApplicationContext().getFilesDir(), filename);
                 outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
             }
             abstractMessage.writeTo(outputStream);
@@ -263,7 +265,7 @@ public class UploadExposureService extends IntentService {
             return null;
         }
 
-        return new File(getApplicationContext().getFilesDir().toString() + "/" + filename);
+        return protofile;
     }
 
     private String getDataChunkType(final AbstractMessage abstractMessage) {

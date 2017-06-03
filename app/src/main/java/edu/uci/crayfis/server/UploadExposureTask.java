@@ -42,6 +42,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
     private final CFApplication mApplication;
     private final UploadExposureService.ServerInfo mServerInfo;
     private final File mFile;
+    private final boolean mDeleteFile;
     private String mRunId;
 
     /**
@@ -53,10 +54,12 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
      */
     public UploadExposureTask(@NonNull final CFApplication application,
                               @NonNull final UploadExposureService.ServerInfo serverInfo,
-                              @NonNull final File file) {
+                              @NonNull final File file,
+                              @NonNull final boolean deleteFile) {
         mApplication = application;
         mServerInfo = serverInfo;
         mFile = file;
+        mDeleteFile = deleteFile;
     }
 
     @Override
@@ -87,8 +90,10 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
             if (uploadData(rawData)) {
                 CFLog.d("Uploading " + mFile.getName() + " complete.");
-                if (!mFile.delete()) {
-                    CFLog.e("Could not delete file " + mFile.getName());
+                if(mDeleteFile) {
+                    if (!mFile.delete()) {
+                        CFLog.e("Could not delete file " + mFile.getName());
+                    }
                 }
             }
         } catch (IOException ex) {
