@@ -10534,6 +10534,37 @@ public final class DataProtos {
      * <code>optional uint64 end_time = 3;</code>
      */
     long getEndTime();
+
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    java.util.List<java.lang.Float> getWeightsList();
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    int getWeightsCount();
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    float getWeights(int index);
+
+    /**
+     * <code>optional uint32 sample_res_x = 7;</code>
+     */
+    boolean hasSampleResX();
+    /**
+     * <code>optional uint32 sample_res_x = 7;</code>
+     */
+    int getSampleResX();
+
+    /**
+     * <code>optional uint32 sample_res_y = 8;</code>
+     */
+    boolean hasSampleResY();
+    /**
+     * <code>optional uint32 sample_res_y = 8;</code>
+     */
+    int getSampleResY();
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationResult}
@@ -10602,6 +10633,37 @@ public final class DataProtos {
               endTime_ = input.readUInt64();
               break;
             }
+            case 53: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                weights_ = new java.util.ArrayList<java.lang.Float>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              weights_.add(input.readFloat());
+              break;
+            }
+            case 50: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+                weights_ = new java.util.ArrayList<java.lang.Float>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                weights_.add(input.readFloat());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000008;
+              sampleResX_ = input.readUInt32();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000010;
+              sampleResY_ = input.readUInt32();
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10610,6 +10672,9 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          weights_ = java.util.Collections.unmodifiableList(weights_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -10687,10 +10752,65 @@ public final class DataProtos {
       return endTime_;
     }
 
+    public static final int WEIGHTS_FIELD_NUMBER = 6;
+    private java.util.List<java.lang.Float> weights_;
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    public java.util.List<java.lang.Float>
+        getWeightsList() {
+      return weights_;
+    }
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    public int getWeightsCount() {
+      return weights_.size();
+    }
+    /**
+     * <code>repeated float weights = 6;</code>
+     */
+    public float getWeights(int index) {
+      return weights_.get(index);
+    }
+
+    public static final int SAMPLE_RES_X_FIELD_NUMBER = 7;
+    private int sampleResX_;
+    /**
+     * <code>optional uint32 sample_res_x = 7;</code>
+     */
+    public boolean hasSampleResX() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint32 sample_res_x = 7;</code>
+     */
+    public int getSampleResX() {
+      return sampleResX_;
+    }
+
+    public static final int SAMPLE_RES_Y_FIELD_NUMBER = 8;
+    private int sampleResY_;
+    /**
+     * <code>optional uint32 sample_res_y = 8;</code>
+     */
+    public boolean hasSampleResY() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional uint32 sample_res_y = 8;</code>
+     */
+    public int getSampleResY() {
+      return sampleResY_;
+    }
+
     private void initFields() {
       runId_ = 0L;
       startTime_ = 0L;
       endTime_ = 0L;
+      weights_ = java.util.Collections.emptyList();
+      sampleResX_ = 0;
+      sampleResY_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -10714,6 +10834,15 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeUInt64(3, endTime_);
       }
+      for (int i = 0; i < weights_.size(); i++) {
+        output.writeFloat(6, weights_.get(i));
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt32(7, sampleResX_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeUInt32(8, sampleResY_);
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -10734,6 +10863,20 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(3, endTime_);
+      }
+      {
+        int dataSize = 0;
+        dataSize = 4 * getWeightsList().size();
+        size += dataSize;
+        size += 1 * getWeightsList().size();
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(7, sampleResX_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(8, sampleResY_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -10858,6 +11001,12 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         endTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
+        weights_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        sampleResX_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        sampleResY_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -10898,6 +11047,19 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.endTime_ = endTime_;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          weights_ = java.util.Collections.unmodifiableList(weights_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.weights_ = weights_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.sampleResX_ = sampleResX_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.sampleResY_ = sampleResY_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -10922,6 +11084,22 @@ public final class DataProtos {
         }
         if (other.hasEndTime()) {
           setEndTime(other.getEndTime());
+        }
+        if (!other.weights_.isEmpty()) {
+          if (weights_.isEmpty()) {
+            weights_ = other.weights_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureWeightsIsMutable();
+            weights_.addAll(other.weights_);
+          }
+          onChanged();
+        }
+        if (other.hasSampleResX()) {
+          setSampleResX(other.getSampleResX());
+        }
+        if (other.hasSampleResY()) {
+          setSampleResY(other.getSampleResY());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -11042,6 +11220,136 @@ public final class DataProtos {
       public Builder clearEndTime() {
         bitField0_ = (bitField0_ & ~0x00000004);
         endTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Float> weights_ = java.util.Collections.emptyList();
+      private void ensureWeightsIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          weights_ = new java.util.ArrayList<java.lang.Float>(weights_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public java.util.List<java.lang.Float>
+          getWeightsList() {
+        return java.util.Collections.unmodifiableList(weights_);
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public int getWeightsCount() {
+        return weights_.size();
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public float getWeights(int index) {
+        return weights_.get(index);
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public Builder setWeights(
+          int index, float value) {
+        ensureWeightsIsMutable();
+        weights_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public Builder addWeights(float value) {
+        ensureWeightsIsMutable();
+        weights_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public Builder addAllWeights(
+          java.lang.Iterable<? extends java.lang.Float> values) {
+        ensureWeightsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, weights_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated float weights = 6;</code>
+       */
+      public Builder clearWeights() {
+        weights_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
+        onChanged();
+        return this;
+      }
+
+      private int sampleResX_ ;
+      /**
+       * <code>optional uint32 sample_res_x = 7;</code>
+       */
+      public boolean hasSampleResX() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional uint32 sample_res_x = 7;</code>
+       */
+      public int getSampleResX() {
+        return sampleResX_;
+      }
+      /**
+       * <code>optional uint32 sample_res_x = 7;</code>
+       */
+      public Builder setSampleResX(int value) {
+        bitField0_ |= 0x00000010;
+        sampleResX_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 sample_res_x = 7;</code>
+       */
+      public Builder clearSampleResX() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        sampleResX_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int sampleResY_ ;
+      /**
+       * <code>optional uint32 sample_res_y = 8;</code>
+       */
+      public boolean hasSampleResY() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <code>optional uint32 sample_res_y = 8;</code>
+       */
+      public int getSampleResY() {
+        return sampleResY_;
+      }
+      /**
+       * <code>optional uint32 sample_res_y = 8;</code>
+       */
+      public Builder setSampleResY(int value) {
+        bitField0_ |= 0x00000020;
+        sampleResY_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 sample_res_y = 8;</code>
+       */
+      public Builder clearSampleResY() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        sampleResY_ = 0;
         onChanged();
         return this;
       }
@@ -12335,14 +12643,15 @@ public final class DataProtos {
       "Result\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001" +
       "(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r" +
       "\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpixel\030" +
-      "\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"L\n\024PreCalib" +
-      "rationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_ti" +
-      "me\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\"\220\001\n\rCrayonMes" +
-      "sage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n" +
-      "\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app",
-      "_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013subm" +
-      "it_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPr" +
-      "otos"
+      "\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\211\001\n\024PreCali" +
+      "brationResult\022\016\n\006run_id\030\001 \001(\004\022\022\n\nstart_t" +
+      "ime\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\017\n\007weights\030\006" +
+      " \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sample_res" +
+      "_y\030\010 \001(\r\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 ",
+      "\001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017" +
+      "\n\007user_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013rem" +
+      "ote_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n\017e" +
+      "du.uci.crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -12397,7 +12706,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationResult_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "Weights", "SampleResX", "SampleResY", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new

@@ -3,7 +3,6 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gWeights;
-rs_script gScript;
 uint n_frames = 0;
 uint gTotalFrames = 1000;
 uint gMinSum;
