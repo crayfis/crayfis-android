@@ -421,16 +421,17 @@ public class RawCameraFrame {
                     // use quaternion algebra to calculate cosine of angle between vertical
                     // and phone's z axis (up to a sign that tends to have numerical instabilities)
 
-                    if(mFacingBack == mRotationZZ < CONFIG.getQualityOrientationCosine()) {
+                    if(Math.abs(mRotationZZ) < CONFIG.getQualityOrientationCosine()
+                            || mFacingBack != mRotationZZ>0) {
 
                         CFLog.w("Bad event: Orientation = " + mRotationZZ);
                         return false;
                     }
                 }
             case MODE_AUTO_DETECT:
-                if (getPixAvg() > CONFIG.getQualityBgAverage(mStatsWeighted)
+                if (getPixAvg() > CONFIG.getQualityBgAverage()
                         || getPixStd() > CONFIG.getQualityBgVariance()) {
-                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage(mStatsWeighted));
+                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
                     if(CFConfig.getInstance().getCameraSelectMode() == MODE_FACE_DOWN) {
                         CFApplication.badFlatEvents++;
                     }

@@ -202,9 +202,9 @@ public class UploadExposureService extends IntentService {
 
     private void lazyInit() {
         final CFApplication context = (CFApplication) getApplicationContext();
-        if (sAppBuild == null) {
-            sAppBuild = context.getBuildInformation();
-        }
+        // need to see whether this has changed
+        sAppBuild = context.getBuildInformation();
+
         if (sServerInfo == null) {
             sServerInfo = new ServerInfo(context);
         }

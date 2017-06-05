@@ -159,7 +159,7 @@ public class CFApplication extends Application {
      */
     public void setApplicationState(State applicationState) {
         final State currentState = mApplicationState;
-        if(applicationState == CALIBRATION && PreCalibrator.getInstance().dueForPreCalibration()) {
+        if(applicationState == CALIBRATION && PreCalibrator.getInstance().dueForPreCalibration(mCameraId)) {
             setApplicationState(PRECALIBRATION);
             return;
         }
@@ -196,7 +196,7 @@ public class CFApplication extends Application {
                 }
                 break;
             case PRECALIBRATION:
-                PreCalibrator.getInstance().clear();
+                PreCalibrator.getInstance().clear(mCameraId);
             case CALIBRATION:
             case DATA:
             case IDLE:
@@ -251,18 +251,22 @@ public class CFApplication extends Application {
      *
      * @return {@link edu.uci.crayfis.CFApplication.AppBuild}
      */
-    public synchronized AppBuild getBuildInformation() {
+    public AppBuild getBuildInformation() {
         if (mAppBuild == null) {
-            try {
-                mAppBuild = new AppBuild(this);
-            } catch (PackageManager.NameNotFoundException e) {
-                // Seriously, this should never happen but does warrant a RuntimeException if it does.
-                Crashlytics.logException(e);
-                throw new RuntimeException(e);
-            }
+            generateAppBuild();
         }
 
         return mAppBuild;
+    }
+
+    public synchronized void generateAppBuild() {
+        try {
+            mAppBuild = new AppBuild(this);
+        } catch (PackageManager.NameNotFoundException e) {
+            // Seriously, this should never happen but does warrant a RuntimeException if it does.
+            Crashlytics.logException(e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static Location getLastKnownLocation() {

@@ -1,6 +1,7 @@
 package edu.uci.crayfis.calibration;
 
 import android.content.Context;
+import android.hardware.Camera;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.Float2;
@@ -30,7 +31,7 @@ public class PreCalibrator {
 
     private RenderScript mRS;
     private ScriptC_weight mScriptCWeight;
-    private Allocation mWeights;
+    private Allocation[] mWeights = new Allocation[Camera.getNumberOfCameras()];
 
     private long start_time;
 
@@ -43,47 +44,45 @@ public class PreCalibrator {
         return sInstance;
     }
 
-    private PreCalibrator() {
-
-    }
+    private PreCalibrator() { }
 
     public void addFrame(RawCameraFrame frame) {
         frame.getAllocation();
+        int cameraId = frame.getCameraId();
 
-        if(mWeights == null || mWeights.getType().getX() != frame.getWidth()) {
+        if(mWeights[cameraId] == null
+                || mWeights[cameraId].getType().getX() != frame.getWidth()) {
 
             Type type = new Type.Builder(mRS, Element.F32(mRS))
                     .setX(frame.getWidth())
                     .setY(frame.getHeight())
                     .create();
 
-            mWeights = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
-            mScriptCWeight.set_gWeights(mWeights);
+            mWeights[frame.getCameraId()] = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
+            mScriptCWeight.set_gWeights(mWeights[cameraId]);
 
             start_time = System.currentTimeMillis();
         }
-
-        //Script.LaunchOptions lo = new Script.LaunchOptions()
-        //        .setX(BORDER, frame.getWidth()-BORDER)
-        //        .setY(BORDER, frame.getHeight()-BORDER);
 
         mScriptCWeight.forEach_update(frame.getAllocation());
 
     }
 
     public void processPreCalResults(Context context) {
-        mScriptCWeight.forEach_findMin(mWeights);
-        mScriptCWeight.forEach_normalizeWeights(mWeights, mWeights);
-        mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
 
         CFApplication application = (CFApplication)context.getApplicationContext();
+        int cameraId = application.getCameraId();
+
+        mScriptCWeight.forEach_findMin(mWeights[cameraId]);
+        mScriptCWeight.forEach_normalizeWeights(mWeights[cameraId], mWeights[cameraId]);
+        mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
 
         DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
                 .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setStartTime(start_time)
                 .setEndTime(System.currentTimeMillis());
 
-        addWeightsToBuffer(b, 1500);
+        addWeightsToBuffer(mWeights[cameraId], b, 1500);
 
         UploadExposureService.submitPreCalibrationResult(context, b.build());
     }
@@ -94,12 +93,12 @@ public class PreCalibrator {
      * @param maxSampleSize the upper bound for the width x height of the downsampled grid
      * @return an Iterable<> with the downsampled weights
      */
-    private void addWeightsToBuffer(DataProtos.PreCalibrationResult.Builder b, int maxSampleSize) {
+    private void addWeightsToBuffer(Allocation weights, DataProtos.PreCalibrationResult.Builder b, int maxSampleSize) {
 
-        int width = mWeights.getType().getX();
-        int height = mWeights.getType().getY();
+        int width = weights.getType().getX();
+        int height = weights.getType().getY();
         float[] weightArray = new float[width*height];
-        mWeights.copyTo(weightArray);
+        weights.copyTo(weightArray);
 
         // dimensions of each "block" that make up aspect ratio
         int blockSize = BigInteger.valueOf(height).gcd(BigInteger.valueOf(width)).intValue();
@@ -140,12 +139,13 @@ public class PreCalibrator {
         return mScriptCWeight;
     }
 
-    public void clear() {
-        mWeights = null;
+    public void clear(int cameraId) {
+        mWeights[cameraId] = null;
     }
 
-    public boolean dueForPreCalibration() {
-        return mWeights == null || CFApplication.getCameraSize().width != mWeights.getType().getX();
+    public boolean dueForPreCalibration(int cameraId) {
+        return mWeights[cameraId] == null
+                || CFApplication.getCameraSize().width != mWeights[cameraId].getType().getX();
     }
 
 }

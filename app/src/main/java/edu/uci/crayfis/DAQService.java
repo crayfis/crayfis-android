@@ -55,7 +55,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication mApplication;
-    private CFApplication.AppBuild mAppBuild;
     private String upload_url;
     private final int FOREGROUND_ID = 1;
 
@@ -81,8 +80,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             upload_proto = "http://";
         }
         upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-
-        mAppBuild = mApplication.getBuildInformation();
 
         // State changes
 
@@ -274,7 +271,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         switch (previousState) {
             case STABILIZATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                PreCalibrator.getInstance().clear();
+                PreCalibrator.getInstance().clear(mApplication.getCameraId());
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -282,8 +279,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     }
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        // The *only* valid way to get into calibration mode
-        // is after stabilization.
+        // first generate runconfig for a specific camera
+        if (run_config == null || mApplication.getCameraId() != run_config.getCameraId()) {
+            generateRunConfig();
+            UploadExposureService.submitRunConfig(context, run_config);
+        }
         switch (previousState) {
             case PRECALIBRATION:
                 PreCalibrator.getInstance().processPreCalResults(this);
@@ -292,11 +292,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                // generate runconfig for a specific camera
-                if (run_config == null) {
-                    generateRunConfig();
-                    UploadExposureService.submitRunConfig(context, run_config);
-                }
                 BUILDER.setWeighted(true);
                 break;
             default:
@@ -393,7 +388,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     // RunConfig generator //
     /////////////////////////
 
-    DataProtos.RunConfig run_config = null;
+    DataProtos.RunConfig run_config;
 
     public void generateRunConfig() {
         long run_start_time = System.currentTimeMillis();
@@ -403,10 +398,13 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
         DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
 
-        final UUID runId = mAppBuild.getRunId();
+        mApplication.generateAppBuild();
+        CFApplication.AppBuild build = mApplication.getBuildInformation();
+
+        final UUID runId = build.getRunId();
         b.setIdHi(runId.getMostSignificantBits());
         b.setIdLo(runId.getLeastSignificantBits());
-        b.setCrayfisBuild(mAppBuild.getBuildVersion());
+        b.setCrayfisBuild(build.getBuildVersion());
         b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
@@ -594,7 +592,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float battery_stop_threshold = 0.20f;
+    public final float battery_stop_threshold = 0.05f;
     public final float battery_start_threshold = 0.80f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
