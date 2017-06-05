@@ -64,69 +64,74 @@ public class PreCalibrator {
             start_time = System.currentTimeMillis();
         }
 
-        mScriptCWeight.forEach_update(frame.getAllocation());
+        mScriptCWeight.forEach_update(frame.getAllocation(), mWeights[cameraId]);
 
     }
 
     public void processPreCalResults(Context context) {
 
-        CFApplication application = (CFApplication)context.getApplicationContext();
-        int cameraId = application.getCameraId();
+        synchronized (mWeights) {
+            CFApplication application = (CFApplication) context.getApplicationContext();
+            int cameraId = application.getCameraId();
+            final int maxSampleSize = 1500;
 
-        mScriptCWeight.forEach_findMin(mWeights[cameraId]);
-        mScriptCWeight.forEach_normalizeWeights(mWeights[cameraId], mWeights[cameraId]);
-        mScriptCWeight.set_gMinSum(256*mScriptCWeight.get_gTotalFrames());
+            int width = mWeights[cameraId].getType().getX();
+            int height = mWeights[cameraId].getType().getY();
 
-        DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
-                .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
-                .setStartTime(start_time)
-                .setEndTime(System.currentTimeMillis());
+            // dimensions of each "block" that make up aspect ratio
+            int blockSize = BigInteger.valueOf(height).gcd(BigInteger.valueOf(width)).intValue();
 
-        addWeightsToBuffer(mWeights[cameraId], b, 1500);
+            int sampleStep = (int) Math.sqrt((width * height) / maxSampleSize);
 
-        UploadExposureService.submitPreCalibrationResult(context, b.build());
-    }
+            mScriptCWeight.set_gMinSum(256 * mScriptCWeight.get_gTotalFrames());
+            mScriptCWeight.set_sampleStep(sampleStep);
 
-    /**
-     * Downsamples mWeights to a desired size
-     *
-     * @param maxSampleSize the upper bound for the width x height of the downsampled grid
-     * @return an Iterable<> with the downsampled weights
-     */
-    private void addWeightsToBuffer(Allocation weights, DataProtos.PreCalibrationResult.Builder b, int maxSampleSize) {
-
-        int width = weights.getType().getX();
-        int height = weights.getType().getY();
-        float[] weightArray = new float[width*height];
-        weights.copyTo(weightArray);
-
-        // dimensions of each "block" that make up aspect ratio
-        int blockSize = BigInteger.valueOf(height).gcd(BigInteger.valueOf(width)).intValue();
-
-        int sampleStep = (int) Math.sqrt((width*height)/maxSampleSize);
-
-        while(blockSize % sampleStep != 0) {
-            sampleStep++;
-            if(sampleStep > blockSize) {
-                return;
+            while (blockSize % sampleStep != 0) {
+                sampleStep++;
+                if (sampleStep > blockSize) {
+                    return;
+                }
             }
-        }
 
-        CFLog.d("Downsample resolution: " + width/sampleStep + "x" + height/sampleStep);
+            int sampleResX = width / sampleStep;
+            int sampleResY = height / sampleStep;
 
-        Random r = new Random();
+            CFLog.d("Downsample resolution: " + sampleResX + "x" + sampleResY);
 
-        for(int iy=0; iy<height; iy+=sampleStep) {
-            for(int ix=0; ix<width; ix+=sampleStep) {
-                int rx = ix + r.nextInt(sampleStep);
-                int ry = iy + r.nextInt(sampleStep);
+            Type sampleType = new Type.Builder(mRS, Element.F32(mRS))
+                    .setX(sampleResX)
+                    .setY(sampleResY)
+                    .create();
 
-                b.addWeights(weightArray[rx + width*ry]);
+            Allocation downsample = Allocation.createTyped(mRS, sampleType, Allocation.USAGE_SCRIPT);
+
+            mScriptCWeight.forEach_downsampleWeights(downsample);
+
+            mScriptCWeight.forEach_findMin(downsample);
+            mScriptCWeight.forEach_normalizeWeights(downsample, downsample);
+            mScriptCWeight.set_gSampled(downsample);
+
+            mScriptCWeight.forEach_resampleWeights(mWeights[cameraId], mWeights[cameraId]);
+
+            float[] downsampleArray = new float[sampleResX * sampleResY];
+            downsample.copyTo(downsampleArray);
+
+            DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
+                    .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
+                    .setStartTime(start_time)
+                    .setEndTime(System.currentTimeMillis())
+                    .setSampleResX(sampleResX)
+                    .setSampleResY(sampleResY);
+
+            for (int iy = 0; iy < sampleResY; iy++) {
+                for (int ix = 0; ix < sampleResX; ix++) {
+                    b.addWeights(downsampleArray[ix + sampleResX * iy]);
+                }
             }
-        }
 
-        b.setSampleResX(width/sampleStep)
-                .setSampleResY(height/sampleStep);
+
+            UploadExposureService.submitPreCalibrationResult(context, b.build());
+        }
     }
 
 
@@ -140,7 +145,9 @@ public class PreCalibrator {
     }
 
     public void clear(int cameraId) {
-        mWeights[cameraId] = null;
+        synchronized (mWeights) {
+            mWeights[cameraId] = null;
+        }
     }
 
     public boolean dueForPreCalibration(int cameraId) {
