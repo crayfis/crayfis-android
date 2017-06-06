@@ -8,6 +8,12 @@ import android.renderscript.Float2;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -71,6 +77,9 @@ public class PreCalibrator {
     public void processPreCalResults(Context context) {
 
         synchronized (mWeights) {
+
+            // first, find appropriate dimensions to downsample
+
             CFApplication application = (CFApplication) context.getApplicationContext();
             int cameraId = application.getCameraId();
             final int maxSampleSize = 1500;
@@ -98,6 +107,8 @@ public class PreCalibrator {
 
             CFLog.d("Downsample resolution: " + sampleResX + "x" + sampleResY);
 
+            // next, downsample in RenderScript
+
             Type sampleType = new Type.Builder(mRS, Element.F32(mRS))
                     .setX(sampleResX)
                     .setY(sampleResY)
@@ -109,12 +120,30 @@ public class PreCalibrator {
 
             mScriptCWeight.forEach_findMin(downsample);
             mScriptCWeight.forEach_normalizeWeights(downsample, downsample);
-            mScriptCWeight.set_gSampled(downsample);
 
-            mScriptCWeight.forEach_resampleWeights(mWeights[cameraId], mWeights[cameraId]);
+            // finally, resample in OpenCV
 
             float[] downsampleArray = new float[sampleResX * sampleResY];
             downsample.copyTo(downsampleArray);
+
+            MatOfFloat downsampleMat = new MatOfFloat(downsampleArray);
+            Mat downsampleMat2D = downsampleMat.reshape(0, sampleResY);
+            Mat resampledMat2D = new Mat();
+
+            Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(), sampleStep, sampleStep, Imgproc.INTER_CUBIC);
+            Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
+            MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
+
+            mWeights[cameraId].copyFromUnchecked(resampledFloat.toArray());
+
+            downsampleMat.release();
+            resampledMat.release();
+            downsampleMat2D.release();
+            resampledMat2D.release();
+            resampledFloat.release();
+
+
+            // submit the PreCalibrationResult object
 
             DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
                     .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())

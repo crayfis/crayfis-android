@@ -3,7 +3,6 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gWeights;
-rs_allocation gSampled;
 uint n_frames = 0;
 uint gTotalFrames = 1000;
 uint gMinSum;
@@ -44,9 +43,5 @@ float RS_KERNEL downsampleWeights(uint32_t x, uint32_t y) {
     }
     return sum/(sampleStep*sampleStep);
 
-}
-
-float RS_KERNEL resampleWeights(float weight, uint32_t x, uint32_t y) {
-    return rsGetElementAt_float(gSampled, x/sampleStep, y/sampleStep);
 }
 
