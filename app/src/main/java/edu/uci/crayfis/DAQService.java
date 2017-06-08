@@ -1,7 +1,5 @@
 package edu.uci.crayfis;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -17,7 +15,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -25,7 +22,7 @@ import java.util.UUID;
 
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
-import edu.uci.crayfis.calibration.PreCalibrator;
+import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.CFLocation;
@@ -286,7 +283,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
         switch (previousState) {
             case PRECALIBRATION:
-                PreCalibrator.getInstance().processPreCalResults(this);
             case STABILIZATION:
                 L1cal.clear();
                 frame_times.clear();

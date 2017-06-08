@@ -1,16 +1,13 @@
 package edu.uci.crayfis;
 
-import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
@@ -19,17 +16,15 @@ import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
 import java.util.UUID;
 
-import edu.uci.crayfis.calibration.PreCalibrator;
+import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
@@ -37,11 +32,9 @@ import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 
 import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
-import static edu.uci.crayfis.CFApplication.State.DATA;
 import static edu.uci.crayfis.CFApplication.State.IDLE;
 import static edu.uci.crayfis.CFApplication.State.PRECALIBRATION;
 import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
-import static edu.uci.crayfis.CFApplication.State.STABILIZATION;
 
 /**
  * Extension of {@link android.app.Application}.

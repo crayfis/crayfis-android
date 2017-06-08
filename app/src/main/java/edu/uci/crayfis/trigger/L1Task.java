@@ -48,10 +48,11 @@ class L1Task implements Runnable {
     }
 
     protected boolean processPreCalibration() {
-        long count = ++mExposureBlock.count;
-        mL1Processor.mPreCal.addFrame(mFrame);
 
-        if (count == mL1Processor.CONFIG.getPreCalibrationSampleFrames()) {
+        // see if the PreCalibrator is done processing, and if so, go into calibration
+
+        if (!mL1Processor.mPreCal.addFrame(mFrame)) {
+            mL1Processor.mPreCal.processPreCalResults(mApplication);
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
 

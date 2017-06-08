@@ -1,10 +1,7 @@
 package edu.uci.crayfis.camera;
 
-import android.annotation.TargetApi;
-import android.content.res.Resources;
 import android.hardware.Camera;
 import android.location.Location;
-import android.os.Build;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -12,17 +9,13 @@ import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
-import java.util.Arrays;
-
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.R;
 import edu.uci.crayfis.ScriptC_weight;
-import edu.uci.crayfis.calibration.PreCalibrator;
+import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 

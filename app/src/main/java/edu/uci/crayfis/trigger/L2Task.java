@@ -26,6 +26,7 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.gallery.SavedImage;
 import edu.uci.crayfis.gallery.Utils;
+import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.ui.LayoutBlack;
 import edu.uci.crayfis.util.CFLog;
 
@@ -317,7 +318,7 @@ public class L2Task implements Runnable {
             int iy = (int) xy[1];
             int val = mFrame.getBytes()[iy*mFrame.getWidth() + ix] & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
-            CFLog.d("val = " + val + ", adjusted = " + adjustedVal);
+            CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
             RecoPixel p;
 
