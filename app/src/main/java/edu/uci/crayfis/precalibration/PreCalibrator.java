@@ -39,6 +39,7 @@ public class PreCalibrator {
     private Allocation mWeights;
     private final HotCellKiller HOTCELL_KILLER = new HotCellKiller();
     private int mCameraId = -1;
+    private int mResX;
 
     private int mFramesWeighting = 0;
     private Boolean mAlreadySent = false;
@@ -66,10 +67,9 @@ public class PreCalibrator {
     public boolean addFrame(RawCameraFrame frame) {
         mFramesWeighting++;
 
-        if(mWeights == null || frame.getCameraId() != mCameraId
-                || mWeights.getType().getX() != frame.getWidth()) {
-
+        if(mWeights == null) {
             mCameraId = frame.getCameraId();
+            mResX = frame.getWidth();
             Type type = new Type.Builder(mRS, Element.F32(mRS))
                     .setX(frame.getWidth())
                     .setY(frame.getHeight())
@@ -159,7 +159,7 @@ public class PreCalibrator {
 
             // finally, resample in OpenCV
 
-            resample(cameraId, sampleStep, sampleResY);
+            resample(cameraId, width, height);
 
             DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
                     .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
@@ -197,26 +197,25 @@ public class PreCalibrator {
         return sampleStep;
     }
 
-    private void resample(int cameraId, int scale, int downsampleRows) {
+    private void resample(int cameraId, int width, int height) {
 
         MatOfFloat downsampleMat = new MatOfFloat(mDownsampledWeights[cameraId]);
-        Mat downsampleMat2D = downsampleMat.reshape(0, downsampleRows);
+        Mat downsampleMat2D = downsampleMat.reshape(0,
+                (int)(Math.sqrt(mDownsampledWeights[cameraId].length*height/width))); // sampleResY
         Mat resampledMat2D = new Mat();
 
-        Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(), scale, scale, Imgproc.INTER_CUBIC);
+        Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(width,height), 0, 0, Imgproc.INTER_CUBIC);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
         MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
 
         float[] resampledArray = resampledFloat.toArray();
-        int width = resampledMat2D.rows();
-        CFLog.d("width = " + width);
 
         // kill hotcells in resampled frame
         for(HotCellKiller.Hotcell c: HOTCELL_KILLER.getHotcellCoords()) {
             resampledArray[c.x + width*c.y] = 0f;
         }
 
-        mWeights.copyFrom(resampledFloat.toArray());
+        mWeights.copyFrom(resampledArray);
         mScriptCWeight.set_gWeights(mWeights);
 
         downsampleMat.release();
@@ -247,8 +246,15 @@ public class PreCalibrator {
     }
 
     public boolean dueForPreCalibration(int cameraId) {
-        return mDownsampledWeights[cameraId] == null
-                || CFApplication.getCameraSize().width != mWeights.getType().getX();
+        Camera.Size sz = CFApplication.getCameraSize();
+        if(mDownsampledWeights[cameraId] != null && sz.width == mResX) {
+            resample(cameraId, sz.width, sz.height);
+            return false;
+        } else if(sz.width != mResX) {
+            for(int i=0; i<Camera.getNumberOfCameras(); i++) {
+                mDownsampledWeights[i] = null;
+            }
+        }
+        return true;
     }
-
 }
