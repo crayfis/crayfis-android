@@ -152,10 +152,6 @@ public class CFApplication extends Application {
      */
     public void setApplicationState(State applicationState) {
         final State currentState = mApplicationState;
-        if(applicationState == CALIBRATION && PreCalibrator.getInstance().dueForPreCalibration(mCameraId)) {
-            setApplicationState(PRECALIBRATION);
-            return;
-        }
         mApplicationState = applicationState;
 
         final Intent intent = new Intent(ACTION_STATE_CHANGE);

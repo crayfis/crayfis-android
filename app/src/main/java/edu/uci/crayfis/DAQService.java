@@ -266,7 +266,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private void doStateTransitionPreCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         switch (previousState) {
-            case STABILIZATION:
+            case CALIBRATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
                 PreCalibrator.getInstance().clear(mApplication.getCameraId());
                 break;
@@ -276,10 +276,14 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     }
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        // first generate runconfig for a specific camera
+        // first generate runconfig for specific camera
         if (run_config == null || mApplication.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
             UploadExposureService.submitRunConfig(context, run_config);
+        }
+        if(PreCalibrator.getInstance().dueForPreCalibration(mApplication.getCameraId())) {
+            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
+            return;
         }
         switch (previousState) {
             case PRECALIBRATION:
