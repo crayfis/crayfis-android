@@ -88,6 +88,7 @@ public class CFApplication extends Application {
     private int mCameraId = -1;
 
     private AppBuild mAppBuild;
+    private UUID[] mPrecalUUIDs = new UUID[Camera.getNumberOfCameras()];
 
     @Override
     public void onCreate() {
@@ -381,6 +382,11 @@ public class CFApplication extends Application {
             return mRunId;
         }
     }
+
+    public void setNewestPrecalUUID() { mPrecalUUIDs[mCameraId] = mAppBuild.getRunId(); }
+
+    public UUID getPrecalUUID(int cameraId) { return mPrecalUUIDs[cameraId]; }
+
 
     public void killTimer() {
         mStabilizationTimer.cancel();

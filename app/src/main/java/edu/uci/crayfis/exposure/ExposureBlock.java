@@ -23,6 +23,7 @@ public class ExposureBlock implements Parcelable {
 	public static final String TAG = "ExposureBlock";
 
 	public final UUID run_id;
+    public final UUID precal_id;
 
 	public final AcquisitionTime start_time;
 	public AcquisitionTime end_time;
@@ -75,6 +76,7 @@ public class ExposureBlock implements Parcelable {
     private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 
     public ExposureBlock(int xbn, UUID run_id,
+                         UUID precal_id,
                          String L1_config,
                          String L2_config,
                          int L1_threshold, int L2_threshold,
@@ -85,6 +87,7 @@ public class ExposureBlock implements Parcelable {
 
         this.xbn = xbn;
         this.run_id = run_id;
+        this.precal_id = precal_id;
         this.L1_trigger_config = L1Config.makeConfig(L1_config);
         this.L2_trigger_config = L2Config.makeConfig(L2_config);
         this.L1_threshold = L1_threshold;
@@ -103,6 +106,7 @@ public class ExposureBlock implements Parcelable {
 
     private ExposureBlock(@NonNull final Parcel parcel) {
         run_id = (UUID) parcel.readSerializable();
+        precal_id = (UUID) parcel.readSerializable();
         start_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         end_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
@@ -137,6 +141,7 @@ public class ExposureBlock implements Parcelable {
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeSerializable(run_id);
+        dest.writeSerializable(precal_id);
         dest.writeParcelable(start_time, flags);
         dest.writeParcelable(end_time, flags);
         dest.writeParcelable(start_loc, flags);
@@ -322,6 +327,7 @@ public class ExposureBlock implements Parcelable {
         buf.setEndTimeNtp(end_time.NTP);
 		
 		buf.setRunId(run_id.getLeastSignificantBits());
+        buf.setPrecalId(precal_id.getLeastSignificantBits());
 
         if (L1_processed > 0) {
             buf.setBgAvg(total_background / L1_processed);
