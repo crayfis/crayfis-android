@@ -13,6 +13,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -107,7 +108,6 @@ public class PreCalibrator {
 
             CFApplication application = (CFApplication) context.getApplicationContext();
             final int maxSampleSize = 1500;
-            //ArrayList<HotCellKiller.Hotcell> hotcellCoords = HOTCELL_KILLER.getHotcellCoords();
             mScriptCSumFrames = null;
 
             int width = mWeights.getType().getX();
@@ -168,10 +168,16 @@ public class PreCalibrator {
                     .setSampleResX(sampleResX)
                     .setSampleResY(sampleResY);
 
-            for (int iy = 0; iy < sampleResY; iy++) {
+            for(int iy = 0; iy < sampleResY; iy++) {
                 for (int ix = 0; ix < sampleResX; ix++) {
                     b.addWeights(mDownsampledWeights[cameraId][ix + sampleResX * iy]);
                 }
+            }
+
+            ArrayList<HotCellKiller.Hotcell> hotcells = HOTCELL_KILLER.getHotcellCoords(cameraId);
+            for(int i = 0; i<hotcells.size(); i++) {
+                b.addHotcellX(hotcells.get(i).x)
+                        .addHotcellY(hotcells.get(i).y);
             }
 
             // submit the PreCalibrationResult object
@@ -211,7 +217,7 @@ public class PreCalibrator {
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        for(HotCellKiller.Hotcell c: HOTCELL_KILLER.getHotcellCoords()) {
+        for(HotCellKiller.Hotcell c: HOTCELL_KILLER.getHotcellCoords(cameraId)) {
             resampledArray[c.x + width*c.y] = 0f;
         }
 
@@ -239,7 +245,7 @@ public class PreCalibrator {
             mDownsampledWeights[cameraId] = null;
             mWeights = null;
             mFramesWeighting = 0;
-            HOTCELL_KILLER.clearHotcells();
+            HOTCELL_KILLER.clearHotcells(cameraId);
             mScriptCSumFrames = new ScriptC_sumFrames(mRS);
             mAlreadySent = false;
         }
