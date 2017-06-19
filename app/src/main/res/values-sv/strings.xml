@@ -20,8 +20,8 @@
     <string name="settings_code_title">CRAYFIS användarkod"</string>
     <string name="settings_gallery_title">Aktivera galleri</string>
     <string name="settings_gallery_summary">Sparar och visar intressanta bilder</string>
-    <string name="settings_autostart_summary">Starta inte automatiskt</string>
-    <string name="settings_autostart_title">Klicka för att förebygga autostart</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">Om</string>
     <string name="menu_settings">Inställningar</string>
     <string name="menu_view_mode">Visningsläge</string>

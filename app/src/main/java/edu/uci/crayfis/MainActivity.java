@@ -87,24 +87,27 @@ public class MainActivity extends Activity  {
 		if (resultCode != RESULT_OK) {
 			finish();
 		} else {
-            if (requestCode == REQUEST_CODE_WELCOME) {
-                final Intent intent = new Intent(this, UserNotificationActivity.class);
-                intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
-                intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
-                startActivityForResult(intent, REQUEST_CODE_HOW_TO);
-			} else {
-				//This is so that if they have entered in an invalid user ID before, but
-				//then just decide to run it locally, it will reset the userID to empty
-				SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-				final SharedPreferences.Editor editor = sharedprefs.edit();
-				editor.putBoolean("firstRun", false);
-				editor.commit();
+            Intent intent;
+            switch(requestCode) {
+                case REQUEST_CODE_WELCOME:
+                    intent = new Intent(this, UserNotificationActivity.class);
+                    intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
+                    intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+                    startActivityForResult(intent, REQUEST_CODE_HOW_TO);
+                    break;
+                default:
+                    //This is so that if they have entered in an invalid user ID before, but
+                    //then just decide to run it locally, it will reset the userID to empty
+                    SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    final SharedPreferences.Editor editor = sharedprefs.edit();
+                    editor.putBoolean("firstRun", false);
+                    editor.commit();
 
-				// now start running
-				Intent intent = new Intent(this, DAQActivity.class);
-				startActivity(intent);
-				finish();
-			}
+                    // now start running
+                    intent = new Intent(this, DAQActivity.class);
+                    startActivity(intent);
+                    finish();
+            }
 		}
 	}
 

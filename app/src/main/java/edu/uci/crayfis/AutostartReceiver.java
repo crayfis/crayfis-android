@@ -1,5 +1,7 @@
 package edu.uci.crayfis;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,14 +15,12 @@ import java.util.Calendar;
 
 import edu.uci.crayfis.util.CFLog;
 
-public class MyBroadcastReceiver extends BroadcastReceiver {
+public class AutostartReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
 		CFLog.d("receiver: got action=" + intent.getAction());
-		
-		long plugged_in= System.currentTimeMillis();
 
         boolean isCharging = (intent.getAction().equals(android.content.Intent.ACTION_POWER_CONNECTED));
 
@@ -43,31 +43,30 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
         // check if autostart is selected
 		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-		boolean noAutoStart = sharedPrefs.getBoolean("prefNoAutoStart", false);
+		boolean autoStart = sharedPrefs.getBoolean("prefEnableAutoStart", false);
 
-		if (!noAutoStart)
-		{
-		int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
-	    int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter","0"));
-	    int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore","0"));
+		if (autoStart) {
 
-	    Calendar c = Calendar.getInstance(); 
-	    int hour = c.get(Calendar.HOUR_OF_DAY);
-	    if (hour > startAfter || hour < startBefore)
-	    {
-	    	while (System.currentTimeMillis()-plugged_in < startWait*1000)
-	    	{
-                // FIXME This is better served with AlarmManager
-	    	}	
-	    
-	    	// now launch
-	    	Intent it = new Intent(context, MainActivity.class);
-	    	it.setAction(Intent.ACTION_MAIN);
-	    	it.addCategory(Intent.CATEGORY_LAUNCHER);
-	    	it.setComponent(new ComponentName(context.getPackageName(), MainActivity.class.getName()));
-	    	it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-	    	context.getApplicationContext().startActivity(it);
-	    }
+			int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
+			int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter","0"));
+			int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore","0"));
+
+			Calendar c = Calendar.getInstance();
+			int hour = c.get(Calendar.HOUR_OF_DAY);
+			if (hour > startAfter || hour < startBefore) {
+				Intent it = new Intent(context, DAQService.class);
+				it.setAction(Intent.ACTION_MAIN);
+				it.addCategory(Intent.CATEGORY_LAUNCHER);
+				it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
+				it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+				PendingIntent pendingIntent = PendingIntent.getService(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT);
+
+				CFLog.d("startWait = " + startWait);
+				AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+				alarmManager.set(AlarmManager.RTC_WAKEUP, startWait*1000L, pendingIntent);
+
+			}
 		}
 	}
 

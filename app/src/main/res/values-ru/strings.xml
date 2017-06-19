@@ -21,8 +21,8 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Включить галерею</string>
     <string name="settings_gallery_summary">Сохраняет и показывает интересные изображения</string>
-    <string name="settings_autostart_summary">Выключить автостарт</string>
-    <string name="settings_autostart_title">Нажмите чтобы предотвратить автостарт</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">О программе</string>
     <string name="menu_settings">Настройки</string>
     <string name="menu_view_mode">Режим Просмотра</string>

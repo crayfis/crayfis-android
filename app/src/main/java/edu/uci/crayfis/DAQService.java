@@ -56,6 +56,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private CFApplication mApplication;
     private CFApplication.AppBuild mAppBuild;
     private String upload_url;
+
+    private NotificationCompat.Builder mNotificationBuilder;
     private final int FOREGROUND_ID = 1;
 
     private CFCamera mCFCamera;
@@ -136,13 +138,13 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         stackBuilder.addNextIntent(restartIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        mNotificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_just_a)
                 .setContentTitle(getString(R.string.notification_title))
-                .setContentText(getString(R.string.notification_message))
+                .setContentText(getString(R.string.notification_idle))
                 .setContentIntent(resultPendingIntent);
 
-        startForeground(FOREGROUND_ID, builder.build());
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         // tell service to restart if it gets killed
         return START_STICKY;
@@ -231,6 +233,10 @@ public class DAQService extends Service implements Camera.PreviewCallback {
      */
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
+        // notify user that we are no longer running
+        mNotificationBuilder.setContentText(getString(R.string.notification_idle));
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+
         switch(previousState) {
             case CALIBRATION:
             case DATA:
@@ -251,10 +257,15 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         // is after stabilizaton.
         switch (previousState) {
             case STABILIZATION:
+                // notify user that camera is running
+                mNotificationBuilder.setContentText(getString(R.string.notification_running));
+                startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+
                 L1cal.clear();
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
+
                 // generate runconfig for a specific camera
                 if (run_config == null) {
                     generateRunConfig();
