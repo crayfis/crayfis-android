@@ -47,6 +47,8 @@ public class PreCalibrator {
 
     private long start_time;
 
+    private int INTER = Imgproc.INTER_CUBIC;
+
     private static PreCalibrator sInstance = null;
 
     public static PreCalibrator getInstance() {
@@ -165,8 +167,10 @@ public class PreCalibrator {
                     .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                     .setStartTime(start_time)
                     .setEndTime(System.currentTimeMillis())
+                    .setBatteryTemp(CFApplication.getBatteryTemp())
                     .setSampleResX(sampleResX)
-                    .setSampleResY(sampleResY);
+                    .setSampleResY(sampleResY)
+                    .setInterpolation(INTER);
 
             for(int iy = 0; iy < sampleResY; iy++) {
                 for (int ix = 0; ix < sampleResX; ix++) {
@@ -210,7 +214,7 @@ public class PreCalibrator {
                 (int)(Math.sqrt(mDownsampledWeights[cameraId].length*height/width))); // sampleResY
         Mat resampledMat2D = new Mat();
 
-        Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(width,height), 0, 0, Imgproc.INTER_CUBIC);
+        Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(width,height), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
         MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
 

@@ -10617,6 +10617,15 @@ public final class DataProtos {
     long getEndTime();
 
     /**
+     * <code>optional uint32 battery_temp = 12;</code>
+     */
+    boolean hasBatteryTemp();
+    /**
+     * <code>optional uint32 battery_temp = 12;</code>
+     */
+    int getBatteryTemp();
+
+    /**
      * <code>repeated float weights = 6;</code>
      */
     java.util.List<java.lang.Float> getWeightsList();
@@ -10672,6 +10681,15 @@ public final class DataProtos {
      * <code>repeated uint32 hotcell_y = 10;</code>
      */
     int getHotcellY(int index);
+
+    /**
+     * <code>optional uint32 interpolation = 11;</code>
+     */
+    boolean hasInterpolation();
+    /**
+     * <code>optional uint32 interpolation = 11;</code>
+     */
+    int getInterpolation();
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationResult}
@@ -10741,9 +10759,9 @@ public final class DataProtos {
               break;
             }
             case 53: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 weights_ = new java.util.ArrayList<java.lang.Float>();
-                mutable_bitField0_ |= 0x00000008;
+                mutable_bitField0_ |= 0x00000010;
               }
               weights_.add(input.readFloat());
               break;
@@ -10751,9 +10769,9 @@ public final class DataProtos {
             case 50: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010) && input.getBytesUntilLimit() > 0) {
                 weights_ = new java.util.ArrayList<java.lang.Float>();
-                mutable_bitField0_ |= 0x00000008;
+                mutable_bitField0_ |= 0x00000010;
               }
               while (input.getBytesUntilLimit() > 0) {
                 weights_.add(input.readFloat());
@@ -10762,19 +10780,19 @@ public final class DataProtos {
               break;
             }
             case 56: {
-              bitField0_ |= 0x00000008;
+              bitField0_ |= 0x00000010;
               sampleResX_ = input.readUInt32();
               break;
             }
             case 64: {
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               sampleResY_ = input.readUInt32();
               break;
             }
             case 72: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
                 hotcellX_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000080;
               }
               hotcellX_.add(input.readUInt32());
               break;
@@ -10782,9 +10800,9 @@ public final class DataProtos {
             case 74: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
                 hotcellX_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000080;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hotcellX_.add(input.readUInt32());
@@ -10793,9 +10811,9 @@ public final class DataProtos {
               break;
             }
             case 80: {
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
                 hotcellY_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000080;
+                mutable_bitField0_ |= 0x00000100;
               }
               hotcellY_.add(input.readUInt32());
               break;
@@ -10803,14 +10821,24 @@ public final class DataProtos {
             case 82: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000100) == 0x00000100) && input.getBytesUntilLimit() > 0) {
                 hotcellY_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000080;
+                mutable_bitField0_ |= 0x00000100;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hotcellY_.add(input.readUInt32());
               }
               input.popLimit(limit);
+              break;
+            }
+            case 88: {
+              bitField0_ |= 0x00000040;
+              interpolation_ = input.readUInt32();
+              break;
+            }
+            case 96: {
+              bitField0_ |= 0x00000008;
+              batteryTemp_ = input.readUInt32();
               break;
             }
           }
@@ -10821,13 +10849,13 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e.getMessage()).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           weights_ = java.util.Collections.unmodifiableList(weights_);
         }
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
           hotcellX_ = java.util.Collections.unmodifiableList(hotcellX_);
         }
-        if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+        if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
           hotcellY_ = java.util.Collections.unmodifiableList(hotcellY_);
         }
         this.unknownFields = unknownFields.build();
@@ -10907,6 +10935,21 @@ public final class DataProtos {
       return endTime_;
     }
 
+    public static final int BATTERY_TEMP_FIELD_NUMBER = 12;
+    private int batteryTemp_;
+    /**
+     * <code>optional uint32 battery_temp = 12;</code>
+     */
+    public boolean hasBatteryTemp() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <code>optional uint32 battery_temp = 12;</code>
+     */
+    public int getBatteryTemp() {
+      return batteryTemp_;
+    }
+
     public static final int WEIGHTS_FIELD_NUMBER = 6;
     private java.util.List<java.lang.Float> weights_;
     /**
@@ -10935,7 +10978,7 @@ public final class DataProtos {
      * <code>optional uint32 sample_res_x = 7;</code>
      */
     public boolean hasSampleResX() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional uint32 sample_res_x = 7;</code>
@@ -10950,7 +10993,7 @@ public final class DataProtos {
      * <code>optional uint32 sample_res_y = 8;</code>
      */
     public boolean hasSampleResY() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional uint32 sample_res_y = 8;</code>
@@ -11003,15 +11046,32 @@ public final class DataProtos {
       return hotcellY_.get(index);
     }
 
+    public static final int INTERPOLATION_FIELD_NUMBER = 11;
+    private int interpolation_;
+    /**
+     * <code>optional uint32 interpolation = 11;</code>
+     */
+    public boolean hasInterpolation() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional uint32 interpolation = 11;</code>
+     */
+    public int getInterpolation() {
+      return interpolation_;
+    }
+
     private void initFields() {
       runId_ = 0L;
       startTime_ = 0L;
       endTime_ = 0L;
+      batteryTemp_ = 0;
       weights_ = java.util.Collections.emptyList();
       sampleResX_ = 0;
       sampleResY_ = 0;
       hotcellX_ = java.util.Collections.emptyList();
       hotcellY_ = java.util.Collections.emptyList();
+      interpolation_ = 0;
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11038,10 +11098,10 @@ public final class DataProtos {
       for (int i = 0; i < weights_.size(); i++) {
         output.writeFloat(6, weights_.get(i));
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeUInt32(7, sampleResX_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeUInt32(8, sampleResY_);
       }
       for (int i = 0; i < hotcellX_.size(); i++) {
@@ -11049,6 +11109,12 @@ public final class DataProtos {
       }
       for (int i = 0; i < hotcellY_.size(); i++) {
         output.writeUInt32(10, hotcellY_.get(i));
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeUInt32(11, interpolation_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeUInt32(12, batteryTemp_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -11077,11 +11143,11 @@ public final class DataProtos {
         size += dataSize;
         size += 1 * getWeightsList().size();
       }
-      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(7, sampleResX_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(8, sampleResY_);
       }
@@ -11102,6 +11168,14 @@ public final class DataProtos {
         }
         size += dataSize;
         size += 1 * getHotcellYList().size();
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(11, interpolation_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt32Size(12, batteryTemp_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -11226,16 +11300,20 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000002);
         endTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000004);
-        weights_ = java.util.Collections.emptyList();
+        batteryTemp_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
-        sampleResX_ = 0;
+        weights_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000010);
-        sampleResY_ = 0;
+        sampleResX_ = 0;
         bitField0_ = (bitField0_ & ~0x00000020);
-        hotcellX_ = java.util.Collections.emptyList();
+        sampleResY_ = 0;
         bitField0_ = (bitField0_ & ~0x00000040);
-        hotcellY_ = java.util.Collections.emptyList();
+        hotcellX_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000080);
+        hotcellY_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000100);
+        interpolation_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000200);
         return this;
       }
 
@@ -11276,29 +11354,37 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000004;
         }
         result.endTime_ = endTime_;
-        if (((bitField0_ & 0x00000008) == 0x00000008)) {
-          weights_ = java.util.Collections.unmodifiableList(weights_);
-          bitField0_ = (bitField0_ & ~0x00000008);
-        }
-        result.weights_ = weights_;
-        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.sampleResX_ = sampleResX_;
+        result.batteryTemp_ = batteryTemp_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
+          weights_ = java.util.Collections.unmodifiableList(weights_);
+          bitField0_ = (bitField0_ & ~0x00000010);
+        }
+        result.weights_ = weights_;
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.sampleResY_ = sampleResY_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
-          hotcellX_ = java.util.Collections.unmodifiableList(hotcellX_);
-          bitField0_ = (bitField0_ & ~0x00000040);
+        result.sampleResX_ = sampleResX_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
         }
-        result.hotcellX_ = hotcellX_;
+        result.sampleResY_ = sampleResY_;
         if (((bitField0_ & 0x00000080) == 0x00000080)) {
-          hotcellY_ = java.util.Collections.unmodifiableList(hotcellY_);
+          hotcellX_ = java.util.Collections.unmodifiableList(hotcellX_);
           bitField0_ = (bitField0_ & ~0x00000080);
         }
+        result.hotcellX_ = hotcellX_;
+        if (((bitField0_ & 0x00000100) == 0x00000100)) {
+          hotcellY_ = java.util.Collections.unmodifiableList(hotcellY_);
+          bitField0_ = (bitField0_ & ~0x00000100);
+        }
         result.hotcellY_ = hotcellY_;
+        if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.interpolation_ = interpolation_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11324,10 +11410,13 @@ public final class DataProtos {
         if (other.hasEndTime()) {
           setEndTime(other.getEndTime());
         }
+        if (other.hasBatteryTemp()) {
+          setBatteryTemp(other.getBatteryTemp());
+        }
         if (!other.weights_.isEmpty()) {
           if (weights_.isEmpty()) {
             weights_ = other.weights_;
-            bitField0_ = (bitField0_ & ~0x00000008);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureWeightsIsMutable();
             weights_.addAll(other.weights_);
@@ -11343,7 +11432,7 @@ public final class DataProtos {
         if (!other.hotcellX_.isEmpty()) {
           if (hotcellX_.isEmpty()) {
             hotcellX_ = other.hotcellX_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000080);
           } else {
             ensureHotcellXIsMutable();
             hotcellX_.addAll(other.hotcellX_);
@@ -11353,12 +11442,15 @@ public final class DataProtos {
         if (!other.hotcellY_.isEmpty()) {
           if (hotcellY_.isEmpty()) {
             hotcellY_ = other.hotcellY_;
-            bitField0_ = (bitField0_ & ~0x00000080);
+            bitField0_ = (bitField0_ & ~0x00000100);
           } else {
             ensureHotcellYIsMutable();
             hotcellY_.addAll(other.hotcellY_);
           }
           onChanged();
+        }
+        if (other.hasInterpolation()) {
+          setInterpolation(other.getInterpolation());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -11483,11 +11575,43 @@ public final class DataProtos {
         return this;
       }
 
+      private int batteryTemp_ ;
+      /**
+       * <code>optional uint32 battery_temp = 12;</code>
+       */
+      public boolean hasBatteryTemp() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <code>optional uint32 battery_temp = 12;</code>
+       */
+      public int getBatteryTemp() {
+        return batteryTemp_;
+      }
+      /**
+       * <code>optional uint32 battery_temp = 12;</code>
+       */
+      public Builder setBatteryTemp(int value) {
+        bitField0_ |= 0x00000008;
+        batteryTemp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 battery_temp = 12;</code>
+       */
+      public Builder clearBatteryTemp() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        batteryTemp_ = 0;
+        onChanged();
+        return this;
+      }
+
       private java.util.List<java.lang.Float> weights_ = java.util.Collections.emptyList();
       private void ensureWeightsIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
           weights_ = new java.util.ArrayList<java.lang.Float>(weights_);
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000010;
          }
       }
       /**
@@ -11544,7 +11668,7 @@ public final class DataProtos {
        */
       public Builder clearWeights() {
         weights_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
@@ -11554,7 +11678,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_x = 7;</code>
        */
       public boolean hasSampleResX() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional uint32 sample_res_x = 7;</code>
@@ -11566,7 +11690,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_x = 7;</code>
        */
       public Builder setSampleResX(int value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         sampleResX_ = value;
         onChanged();
         return this;
@@ -11575,7 +11699,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_x = 7;</code>
        */
       public Builder clearSampleResX() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         sampleResX_ = 0;
         onChanged();
         return this;
@@ -11586,7 +11710,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_y = 8;</code>
        */
       public boolean hasSampleResY() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional uint32 sample_res_y = 8;</code>
@@ -11598,7 +11722,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_y = 8;</code>
        */
       public Builder setSampleResY(int value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         sampleResY_ = value;
         onChanged();
         return this;
@@ -11607,7 +11731,7 @@ public final class DataProtos {
        * <code>optional uint32 sample_res_y = 8;</code>
        */
       public Builder clearSampleResY() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         sampleResY_ = 0;
         onChanged();
         return this;
@@ -11615,9 +11739,9 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Integer> hotcellX_ = java.util.Collections.emptyList();
       private void ensureHotcellXIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
           hotcellX_ = new java.util.ArrayList<java.lang.Integer>(hotcellX_);
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000080;
          }
       }
       /**
@@ -11674,16 +11798,16 @@ public final class DataProtos {
        */
       public Builder clearHotcellX() {
         hotcellX_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         onChanged();
         return this;
       }
 
       private java.util.List<java.lang.Integer> hotcellY_ = java.util.Collections.emptyList();
       private void ensureHotcellYIsMutable() {
-        if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+        if (!((bitField0_ & 0x00000100) == 0x00000100)) {
           hotcellY_ = new java.util.ArrayList<java.lang.Integer>(hotcellY_);
-          bitField0_ |= 0x00000080;
+          bitField0_ |= 0x00000100;
          }
       }
       /**
@@ -11740,7 +11864,39 @@ public final class DataProtos {
        */
       public Builder clearHotcellY() {
         hotcellY_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000100);
+        onChanged();
+        return this;
+      }
+
+      private int interpolation_ ;
+      /**
+       * <code>optional uint32 interpolation = 11;</code>
+       */
+      public boolean hasInterpolation() {
+        return ((bitField0_ & 0x00000200) == 0x00000200);
+      }
+      /**
+       * <code>optional uint32 interpolation = 11;</code>
+       */
+      public int getInterpolation() {
+        return interpolation_;
+      }
+      /**
+       * <code>optional uint32 interpolation = 11;</code>
+       */
+      public Builder setInterpolation(int value) {
+        bitField0_ |= 0x00000200;
+        interpolation_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint32 interpolation = 11;</code>
+       */
+      public Builder clearInterpolation() {
+        bitField0_ = (bitField0_ & ~0x00000200);
+        interpolation_ = 0;
         onChanged();
         return this;
       }
@@ -13035,16 +13191,17 @@ public final class DataProtos {
       "\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022" +
       "\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(" +
       "\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixe" +
-      "l\030\007 \003(\r\"\257\001\n\024PreCalibrationResult\022\016\n\006run_" +
+      "l\030\007 \003(\r\"\334\001\n\024PreCalibrationResult\022\016\n\006run_" +
       "id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time" +
-      "\030\003 \001(\004\022\017\n\007weights\030\006 \003(\002\022\024\n\014sample_res_x\030" +
-      "\007 \001(\r\022\024\n\014sample_res_y\030\010 \001(\r\022\021\n\thotcell_x",
-      "\030\t \003(\r\022\021\n\thotcell_y\030\n \003(\r\"\220\001\n\rCrayonMess" +
-      "age\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\t" +
-      "device_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_" +
-      "code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013submi" +
-      "t_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPro" +
-      "tos"
+      "\030\003 \001(\004\022\024\n\014battery_temp\030\014 \001(\r\022\017\n\007weights\030" +
+      "\006 \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sample_re",
+      "s_y\030\010 \001(\r\022\021\n\thotcell_x\030\t \003(\r\022\021\n\thotcell_" +
+      "y\030\n \003(\r\022\025\n\rinterpolation\030\013 \001(\r\"\220\001\n\rCrayo" +
+      "nMessage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(" +
+      "\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n" +
+      "\010app_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013" +
+      "submit_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDa" +
+      "taProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -13099,7 +13256,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationResult_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "BatteryTemp", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", "Interpolation", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
