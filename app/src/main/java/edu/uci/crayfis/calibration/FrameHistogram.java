@@ -24,6 +24,14 @@ class FrameHistogram extends FrameHistory<Integer> {
         }
     }
 
+    @Override
+    public void clear() {
+        synchronized (values) {
+            values.clear();
+            h.clear();
+        }
+    }
+
     public Histogram getHistogram() { return h; }
 
 }
