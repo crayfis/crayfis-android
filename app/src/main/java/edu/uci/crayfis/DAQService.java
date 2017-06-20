@@ -260,6 +260,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 // notify user that camera is running
                 mNotificationBuilder.setContentText(getString(R.string.notification_running));
                 startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+                mApplication.consecutiveIdles = 0;
 
                 L1cal.clear();
                 frame_times.clear();

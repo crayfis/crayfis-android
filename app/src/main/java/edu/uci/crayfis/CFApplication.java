@@ -7,6 +7,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -15,6 +16,7 @@ import android.hardware.Camera;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -60,7 +62,10 @@ public class CFApplication extends Application {
 
     private long stabilizationCountdownUpdateTick = 1000; // ms
     private long stabilizationDelay = 10000; // ms
+
     public boolean waitingForStabilization = false;
+    public int consecutiveIdles = 0;
+
     private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
         @Override
         public void onTick(long millisUntilFinished) {
@@ -69,6 +74,18 @@ public class CFApplication extends Application {
 
         @Override
         public void onFinish() {
+            consecutiveIdles++;// see if we should quit the app here
+            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+            Intent batteryStatus = registerReceiver(null, ifilter);
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                    (status == BatteryManager.BATTERY_STATUS_FULL));
+
+            if(consecutiveIdles >= 3 && !isCharging) {
+                // user is clearly uninterested in taking data right now
+                stopService(new Intent(CFApplication.this, DAQService.class));
+            }
+
             if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
                 waitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
@@ -202,12 +219,14 @@ public class CFApplication extends Application {
         if(nextId != mCameraId || mApplicationState == RECONFIGURE || mCameraId == -1) {
             CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
             mCameraId = nextId;
-            if(nextId == -1 && mApplicationState != IDLE) {
+            if(nextId == -1 && mApplicationState != IDLE ) {
+
                 setApplicationState(IDLE);
                 DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
                 waitingForStabilization = true;
                 mStabilizationTimer.start();
             }
+
             final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
             intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
