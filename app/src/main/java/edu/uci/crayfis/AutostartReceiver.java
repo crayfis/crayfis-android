@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
@@ -18,7 +19,7 @@ import edu.uci.crayfis.util.CFLog;
 public class AutostartReceiver extends BroadcastReceiver {
 
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public void onReceive(final Context context, Intent intent) {
 		// TODO Auto-generated method stub
 		CFLog.d("receiver: got action=" + intent.getAction());
 
@@ -54,17 +55,20 @@ public class AutostartReceiver extends BroadcastReceiver {
 			Calendar c = Calendar.getInstance();
 			int hour = c.get(Calendar.HOUR_OF_DAY);
 			if (hour > startAfter || hour < startBefore) {
-				Intent it = new Intent(context, DAQService.class);
+				final Intent it = new Intent(context, DAQService.class);
 				it.setAction(Intent.ACTION_MAIN);
 				it.addCategory(Intent.CATEGORY_LAUNCHER);
 				it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
 				it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				it.putExtra("Wait-time", startWait);
 
-				PendingIntent pendingIntent = PendingIntent.getService(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT);
-
-				CFLog.d("startWait = " + startWait);
-				AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-				alarmManager.set(AlarmManager.RTC_WAKEUP, startWait*1000L, pendingIntent);
+				Handler autostartHandler = new Handler();
+				autostartHandler.postDelayed(new Runnable() {
+					@Override
+					public void run() {
+						context.startService(it);
+					}
+				}, 1000L*startWait);
 
 			}
 		}
