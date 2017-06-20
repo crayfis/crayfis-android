@@ -340,18 +340,14 @@ public class DAQActivity extends AppCompatActivity {
         if (fragments.size() == 0) {
             return;
         }
-        CFLog.d("Size = " + fragments.size());
-
-        CFLog.d("Fragment = " + fragments.get(fragments.size()-1));
 
         final CFFragment activeFragment = (CFFragment) fragments.get(fragments.size()-1);
 
-        CFLog.d("CFFragment = " + activeFragment);
         final Resources res = getResources();
         tx1.setText(res.getString(R.string.crayfis_about) + "\n"
                 + res.getString(activeFragment.about()) + "\n\n"
                 + res.getString(R.string.swipe_help) + "\n"
-                + res.getString(R.string.more_details));
+                + res.getString(R.string.more_details) + " " + s);
 
 
         tx1.setAutoLinkMask(RESULT_OK);
@@ -360,7 +356,9 @@ public class DAQActivity extends AppCompatActivity {
         tx1.setBackgroundColor(Color.BLACK);
         Linkify.addLinks(s, Linkify.WEB_URLS);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle( getResources().getString(R.string.about_title)).setCancelable(false)
+        builder.setTitle(getResources().getString(R.string.about_title) + " ("
+                + ((CFApplication)getApplication()).getBuildInformation().getBuildVersion() + ")")
+                .setCancelable(false)
                 .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                     }
