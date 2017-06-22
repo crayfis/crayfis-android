@@ -54,7 +54,11 @@ public class AutostartReceiver extends BroadcastReceiver {
 
 			Calendar c = Calendar.getInstance();
 			int hour = c.get(Calendar.HOUR_OF_DAY);
-			if (hour > startAfter || hour < startBefore) {
+			// if two of these three are true, we should autostart
+			int b1 = (startAfter >= startBefore) ? 1 : 0;
+			int b2 = (hour >= startAfter) ? 1: 0;
+			int b3 = (hour < startBefore) ? 1 : 0;
+			if (b1 + b2 + b3 >= 2) {
 				final Intent it = new Intent(context, DAQService.class);
 				it.setAction(Intent.ACTION_MAIN);
 				it.addCategory(Intent.CATEGORY_LAUNCHER);

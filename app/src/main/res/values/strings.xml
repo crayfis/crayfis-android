@@ -100,6 +100,7 @@
     <string name="notification_title" translatable="false">CRAYFIS</string>
     <string name="notification_idle" translatable="false">Paused</string>
     <string name="notification_running" translatable="false">Taking data</string>
+    <string name="notification_quit" translatable="false">No cameras covered: quitting CRAYFIS</string>
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>

@@ -29,6 +29,7 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
+import java.util.Calendar;
 import java.util.UUID;
 
 import edu.uci.crayfis.camera.CFSensor;
@@ -60,34 +61,31 @@ public class CFApplication extends Application {
 
     private int errorId = 2;
 
-    private long stabilizationCountdownUpdateTick = 1000; // ms
-    private long stabilizationDelay = 10000; // ms
+    private final long STABILIZATION_COUNTDOWN_TICK = 1000; // ms
+    private final long STABILIZATION_DELAY = 10000; // ms
 
-    public boolean waitingForStabilization = false;
+    private boolean mWaitingForStabilization = false;
     public int consecutiveIdles = 0;
 
-    private CountDownTimer mStabilizationTimer = new CountDownTimer(stabilizationDelay, stabilizationCountdownUpdateTick) {
+    private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
+            // TODO: ideally, we want this to display on tick in the Status pane
             CFLog.d("Time left: " + millisUntilFinished / 1000L);
         }
 
         @Override
         public void onFinish() {
-            consecutiveIdles++;// see if we should quit the app here
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = registerReceiver(null, ifilter);
-            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-                    (status == BatteryManager.BATTERY_STATUS_FULL));
+            // see if we should quit the app here
+            consecutiveIdles++;
+            CFLog.d("" + consecutiveIdles + " consecutive IDLEs");
 
-            if(consecutiveIdles >= 3 && !isCharging) {
-                // user is clearly uninterested in taking data right now
-                stopService(new Intent(CFApplication.this, DAQService.class));
+            if(consecutiveIdles >= 3) {
+                handleUnresponsive();
             }
 
             if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
-                waitingForStabilization = false;
+                mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
                 // continue waiting
@@ -223,7 +221,7 @@ public class CFApplication extends Application {
 
                 setApplicationState(IDLE);
                 DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
-                waitingForStabilization = true;
+                mWaitingForStabilization = true;
                 mStabilizationTimer.start();
             }
 
@@ -231,6 +229,37 @@ public class CFApplication extends Application {
             intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
+        }
+    }
+
+    private void handleUnresponsive() {
+
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                (status == BatteryManager.BATTERY_STATUS_FULL));
+
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean autostart = sharedPrefs.getBoolean("prefEnableAutoStart", false);
+        boolean inAutostartWindow = false;
+        if(autostart) {
+            int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter", "0"));
+            int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore", "0"));
+            Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+
+            int b1 = (startAfter >= startBefore) ? 1 : 0;
+            int b2 = (hour >= startAfter) ? 1 : 0;
+            int b3 = (hour < startBefore) ? 1 : 0;
+
+            inAutostartWindow = b1 + b2 + b3 >= 2;
+        }
+
+
+        if(!isCharging || !inAutostartWindow) {
+            stopService(new Intent(this, DAQService.class));
+            userErrorMessage(getString(R.string.notification_quit), true);
         }
     }
 
@@ -405,6 +434,10 @@ public class CFApplication extends Application {
 
     public void killTimer() {
         mStabilizationTimer.cancel();
+    }
+
+    public boolean isWaitingForStabilization() {
+        return mWaitingForStabilization;
     }
 
     /**
