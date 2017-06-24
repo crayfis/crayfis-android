@@ -101,10 +101,12 @@ public final class ExposureBlockManager {
             retireExposureBlock(current_xb);
         }
 
+        int cameraId = APPLICATION.getCameraId();
+
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
-                APPLICATION.getPrecalUUID(APPLICATION.getCameraId()),
+                cameraId == -1 ? null : APPLICATION.getPrecalUUID(cameraId),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
