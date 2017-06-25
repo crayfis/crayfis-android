@@ -7,9 +7,16 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
 
+import com.google.protobuf.ByteString;
+
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
 import java.math.BigInteger;
@@ -36,7 +43,7 @@ public class PreCalibrator {
     private ScriptC_weight mScriptCWeight;
     private ScriptC_sumFrames mScriptCSumFrames;
 
-    private final float[][] mDownsampledWeights = new float[Camera.getNumberOfCameras()][];
+    private final byte[][] mCompressedWeights = new byte[Camera.getNumberOfCameras()][];
     private Allocation mWeights;
     private final HotCellKiller HOTCELL_KILLER = new HotCellKiller();
     private int mCameraId = -1;
@@ -47,7 +54,8 @@ public class PreCalibrator {
 
     private long start_time;
 
-    private int INTER = Imgproc.INTER_CUBIC;
+    private final int INTER = Imgproc.INTER_CUBIC;
+    private final String FORMAT = ".jpeg";
 
     private static PreCalibrator sInstance = null;
 
@@ -106,7 +114,7 @@ public class PreCalibrator {
      */
     public void processPreCalResults(Context context) {
 
-        synchronized (mDownsampledWeights) {
+        synchronized (mCompressedWeights) {
 
             CFApplication application = (CFApplication) context.getApplicationContext();
             final int maxSampleSize = 1500;
@@ -157,11 +165,26 @@ public class PreCalibrator {
             scriptCDownsample.forEach_normalizeWeights(downsampledAlloc, downsampledAlloc);
 
             downsampledAlloc.copyTo(downsampleArray);
-            mDownsampledWeights[cameraId] = downsampleArray;
 
-            // finally, resample in OpenCV
+            // compress with OpenCV
+            MatOfFloat downsampleMat = new MatOfFloat(downsampleArray);
+            MatOfByte downsampledBytes = new MatOfByte();
 
-            resample(cameraId, width, height);
+            downsampleMat.convertTo(downsampledBytes, CvType.CV_8U, 255);
+
+            Mat downsampleMat2D = downsampledBytes.reshape(0, sampleResY);
+            MatOfByte buf = new MatOfByte();
+            int[] paramArray = new int[] {Imgcodecs.CV_IMWRITE_JPEG_QUALITY, 100};
+            MatOfInt params = new MatOfInt(paramArray);
+            Imgcodecs.imencode(FORMAT, downsampleMat2D, buf, params);
+            mCompressedWeights[cameraId] = buf.toArray();
+            CFLog.d("Compressed bytes = " + mCompressedWeights.length);
+
+            downsampleMat.release();
+            downsampledBytes.release();
+            downsampleMat2D.release();
+            buf.release();
+            params.release();
 
             DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
                     .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
@@ -170,13 +193,9 @@ public class PreCalibrator {
                     .setBatteryTemp(CFApplication.getBatteryTemp())
                     .setSampleResX(sampleResX)
                     .setSampleResY(sampleResY)
-                    .setInterpolation(INTER);
-
-            for(int iy = 0; iy < sampleResY; iy++) {
-                for (int ix = 0; ix < sampleResX; ix++) {
-                    b.addWeights(mDownsampledWeights[cameraId][ix + sampleResX * iy]);
-                }
-            }
+                    .setInterpolation(INTER)
+                    .setCompressedWeights(ByteString.copyFrom(mCompressedWeights[cameraId]))
+                    .setCompressedFormat(FORMAT);
 
             ArrayList<HotCellKiller.Hotcell> hotcells = HOTCELL_KILLER.getHotcellCoords(cameraId);
             for(int i = 0; i<hotcells.size(); i++) {
@@ -207,14 +226,18 @@ public class PreCalibrator {
         return sampleStep;
     }
 
-    private void resample(int cameraId, int width, int height) {
+    private void decompress(int cameraId, int width, int height) {
 
-        MatOfFloat downsampleMat = new MatOfFloat(mDownsampledWeights[cameraId]);
-        Mat downsampleMat2D = downsampleMat.reshape(0,
-                (int)(Math.sqrt(mDownsampledWeights[cameraId].length*height/width))); // sampleResY
+        MatOfByte compressedMat = new MatOfByte(mCompressedWeights[cameraId]);
+        Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
+        Mat downsampleFloat = new Mat();
+        downsampleMat.convertTo(downsampleFloat, CvType.CV_32F, 1./255);
+        Mat downsampleFloat1D = downsampleFloat.reshape(0, downsampleFloat.cols() * downsampleFloat.rows());
+        MatOfFloat downsampleMatOfFloat = new MatOfFloat(downsampleFloat1D);
+
         Mat resampledMat2D = new Mat();
 
-        Imgproc.resize(downsampleMat2D, resampledMat2D, new Size(width,height), 0, 0, INTER);
+        Imgproc.resize(downsampleFloat, resampledMat2D, new Size(width,height), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
         MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
 
@@ -228,9 +251,12 @@ public class PreCalibrator {
         mWeights.copyFrom(resampledArray);
         mScriptCWeight.set_gWeights(mWeights);
 
+        compressedMat.release();
         downsampleMat.release();
+        downsampleFloat.release();
+        downsampleFloat1D.release();
+        downsampleMatOfFloat.release();
         resampledMat.release();
-        downsampleMat2D.release();
         resampledMat2D.release();
         resampledFloat.release();
 
@@ -245,8 +271,8 @@ public class PreCalibrator {
     }
 
     public void clear(int cameraId) {
-        synchronized (mDownsampledWeights) {
-            mDownsampledWeights[cameraId] = null;
+        synchronized (mCompressedWeights) {
+            mCompressedWeights[cameraId] = null;
             mWeights = null;
             mFramesWeighting = 0;
             HOTCELL_KILLER.clearHotcells(cameraId);
@@ -257,12 +283,12 @@ public class PreCalibrator {
 
     public boolean dueForPreCalibration(int cameraId) {
         Camera.Size sz = CFApplication.getCameraSize();
-        if(mDownsampledWeights[cameraId] != null && sz.width == mResX) {
-            resample(cameraId, sz.width, sz.height);
+        if(mCompressedWeights[cameraId] != null && sz.width == mResX) {
+            decompress(cameraId, sz.width, sz.height);
             return false;
         } else if(sz.width != mResX) {
             for(int i=0; i<Camera.getNumberOfCameras(); i++) {
-                mDownsampledWeights[i] = null;
+                mCompressedWeights[i] = null;
             }
         }
         return true;

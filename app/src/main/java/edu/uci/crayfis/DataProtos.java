@@ -10690,6 +10690,29 @@ public final class DataProtos {
      * <code>optional uint32 interpolation = 11;</code>
      */
     int getInterpolation();
+
+    /**
+     * <code>optional bytes compressed_weights = 13;</code>
+     */
+    boolean hasCompressedWeights();
+    /**
+     * <code>optional bytes compressed_weights = 13;</code>
+     */
+    com.google.protobuf.ByteString getCompressedWeights();
+
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    boolean hasCompressedFormat();
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    java.lang.String getCompressedFormat();
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    com.google.protobuf.ByteString
+        getCompressedFormatBytes();
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationResult}
@@ -10839,6 +10862,17 @@ public final class DataProtos {
             case 96: {
               bitField0_ |= 0x00000008;
               batteryTemp_ = input.readUInt32();
+              break;
+            }
+            case 106: {
+              bitField0_ |= 0x00000080;
+              compressedWeights_ = input.readBytes();
+              break;
+            }
+            case 114: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000100;
+              compressedFormat_ = bs;
               break;
             }
           }
@@ -11061,6 +11095,63 @@ public final class DataProtos {
       return interpolation_;
     }
 
+    public static final int COMPRESSED_WEIGHTS_FIELD_NUMBER = 13;
+    private com.google.protobuf.ByteString compressedWeights_;
+    /**
+     * <code>optional bytes compressed_weights = 13;</code>
+     */
+    public boolean hasCompressedWeights() {
+      return ((bitField0_ & 0x00000080) == 0x00000080);
+    }
+    /**
+     * <code>optional bytes compressed_weights = 13;</code>
+     */
+    public com.google.protobuf.ByteString getCompressedWeights() {
+      return compressedWeights_;
+    }
+
+    public static final int COMPRESSED_FORMAT_FIELD_NUMBER = 14;
+    private java.lang.Object compressedFormat_;
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    public boolean hasCompressedFormat() {
+      return ((bitField0_ & 0x00000100) == 0x00000100);
+    }
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    public java.lang.String getCompressedFormat() {
+      java.lang.Object ref = compressedFormat_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          compressedFormat_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string compressed_format = 14;</code>
+     */
+    public com.google.protobuf.ByteString
+        getCompressedFormatBytes() {
+      java.lang.Object ref = compressedFormat_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        compressedFormat_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private void initFields() {
       runId_ = 0L;
       startTime_ = 0L;
@@ -11072,6 +11163,8 @@ public final class DataProtos {
       hotcellX_ = java.util.Collections.emptyList();
       hotcellY_ = java.util.Collections.emptyList();
       interpolation_ = 0;
+      compressedWeights_ = com.google.protobuf.ByteString.EMPTY;
+      compressedFormat_ = "";
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11115,6 +11208,12 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeUInt32(12, batteryTemp_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        output.writeBytes(13, compressedWeights_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        output.writeBytes(14, getCompressedFormatBytes());
       }
       getUnknownFields().writeTo(output);
     }
@@ -11176,6 +11275,14 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(12, batteryTemp_);
+      }
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(13, compressedWeights_);
+      }
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(14, getCompressedFormatBytes());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -11314,6 +11421,10 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000100);
         interpolation_ = 0;
         bitField0_ = (bitField0_ & ~0x00000200);
+        compressedWeights_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000400);
+        compressedFormat_ = "";
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
 
@@ -11385,6 +11496,14 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000040;
         }
         result.interpolation_ = interpolation_;
+        if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+          to_bitField0_ |= 0x00000080;
+        }
+        result.compressedWeights_ = compressedWeights_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000100;
+        }
+        result.compressedFormat_ = compressedFormat_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11451,6 +11570,14 @@ public final class DataProtos {
         }
         if (other.hasInterpolation()) {
           setInterpolation(other.getInterpolation());
+        }
+        if (other.hasCompressedWeights()) {
+          setCompressedWeights(other.getCompressedWeights());
+        }
+        if (other.hasCompressedFormat()) {
+          bitField0_ |= 0x00000800;
+          compressedFormat_ = other.compressedFormat_;
+          onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
         return this;
@@ -11897,6 +12024,117 @@ public final class DataProtos {
       public Builder clearInterpolation() {
         bitField0_ = (bitField0_ & ~0x00000200);
         interpolation_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString compressedWeights_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>optional bytes compressed_weights = 13;</code>
+       */
+      public boolean hasCompressedWeights() {
+        return ((bitField0_ & 0x00000400) == 0x00000400);
+      }
+      /**
+       * <code>optional bytes compressed_weights = 13;</code>
+       */
+      public com.google.protobuf.ByteString getCompressedWeights() {
+        return compressedWeights_;
+      }
+      /**
+       * <code>optional bytes compressed_weights = 13;</code>
+       */
+      public Builder setCompressedWeights(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000400;
+        compressedWeights_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional bytes compressed_weights = 13;</code>
+       */
+      public Builder clearCompressedWeights() {
+        bitField0_ = (bitField0_ & ~0x00000400);
+        compressedWeights_ = getDefaultInstance().getCompressedWeights();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object compressedFormat_ = "";
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public boolean hasCompressedFormat() {
+        return ((bitField0_ & 0x00000800) == 0x00000800);
+      }
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public java.lang.String getCompressedFormat() {
+        java.lang.Object ref = compressedFormat_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            compressedFormat_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public com.google.protobuf.ByteString
+          getCompressedFormatBytes() {
+        java.lang.Object ref = compressedFormat_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          compressedFormat_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public Builder setCompressedFormat(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        compressedFormat_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public Builder clearCompressedFormat() {
+        bitField0_ = (bitField0_ & ~0x00000800);
+        compressedFormat_ = getDefaultInstance().getCompressedFormat();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string compressed_format = 14;</code>
+       */
+      public Builder setCompressedFormatBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000800;
+        compressedFormat_ = value;
         onChanged();
         return this;
       }
@@ -13191,17 +13429,18 @@ public final class DataProtos {
       "\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022" +
       "\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(" +
       "\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixe" +
-      "l\030\007 \003(\r\"\334\001\n\024PreCalibrationResult\022\016\n\006run_" +
+      "l\030\007 \003(\r\"\223\002\n\024PreCalibrationResult\022\016\n\006run_" +
       "id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time" +
       "\030\003 \001(\004\022\024\n\014battery_temp\030\014 \001(\r\022\017\n\007weights\030" +
       "\006 \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sample_re",
       "s_y\030\010 \001(\r\022\021\n\thotcell_x\030\t \003(\r\022\021\n\thotcell_" +
-      "y\030\n \003(\r\022\025\n\rinterpolation\030\013 \001(\r\"\220\001\n\rCrayo" +
-      "nMessage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(" +
-      "\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n" +
-      "\010app_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013" +
-      "submit_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDa" +
-      "taProtos"
+      "y\030\n \003(\r\022\025\n\rinterpolation\030\013 \001(\r\022\032\n\022compre" +
+      "ssed_weights\030\r \001(\014\022\031\n\021compressed_format\030" +
+      "\016 \001(\t\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014" +
+      "\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007u" +
+      "ser_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote" +
+      "_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n\017edu." +
+      "uci.crayfisB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -13256,7 +13495,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationResult_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", "BatteryTemp", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", "Interpolation", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "BatteryTemp", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", "Interpolation", "CompressedWeights", "CompressedFormat", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
