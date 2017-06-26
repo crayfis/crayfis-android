@@ -1,16 +1,13 @@
 package edu.uci.crayfis;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
+import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
-
-import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
 
 /**
  * Global configuration class.
@@ -21,6 +18,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
+    private static final String KEY_PRECAL = "precal_";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
@@ -46,8 +44,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
+    private static final int N_CAMERAS = Camera.getNumberOfCameras();
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
+    private static final String[] DEFAULT_PRECAL = null;
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
@@ -55,7 +55,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final float DEFAULT_NORMALIZED_VAL = 10;
     private static final float DEFAULT_BG_AVG_CUT = 2f;
     private static final float DEFAULT_BG_VAR_CUT = 5;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
@@ -70,10 +69,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
-    private static final int DEFAULT_CAMERA_SELECT_MODE = MODE_FACE_DOWN;
+    private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
 
     private String mL1Trigger;
     private String mL2Trigger;
+    private String[] mPrecal;
     private int mL1Threshold;
     private int mL2Threshold;
     private int mWeightingSampleFrames;
@@ -81,7 +81,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private float mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
     private int mExposureBlockPeriod;
-    private float mNormalizedVal;
     private float mQualityBgAverage;
     private float mQualityBgVariance;
     private double mQualityOrientCosine;
@@ -102,6 +101,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // FIXME: shouldn't we initialize based on the persistent config values?
         mL1Trigger = DEFAULT_L1_TRIGGER;
         mL2Trigger = DEFAULT_L2_TRIGGER;
+        //mPrecal = DEFAULT_PRECAL;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
         mWeightingSampleFrames = DEFAULT_WEIGHTING_FRAMES;
@@ -109,7 +109,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
-        mNormalizedVal = DEFAULT_NORMALIZED_VAL;
         mQualityBgAverage = DEFAULT_BG_AVG_CUT;
         mQualityBgVariance = DEFAULT_BG_VAR_CUT;
         mQualityOrientCosine = Math.cos(DEFAULT_ORIENT_CUT);
@@ -133,6 +132,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public String getL2Trigger() {
         return mL2Trigger;
+    }
+
+    public String getPrecal(int cameraId) {
+        return mPrecal[cameraId];
+    }
+
+    public void setPrecal(int cameraId, String utf8) {
+        mPrecal[cameraId] = utf8;
     }
 
     /**
@@ -219,8 +226,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return float
      */
     public float getQualityPixFraction() { return mQualityPixFraction; }
-
-    public float getNormalizedVal() { return mNormalizedVal; }
 
     /**
      * Get the maximum average pixel value (before any cuts) allowed before the
@@ -362,6 +367,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
 
+        mPrecal = new String[N_CAMERAS];
+        for(int i=0; i<N_CAMERAS; i++) {
+            mPrecal[i] = sharedPreferences.getString(KEY_PRECAL + i, null);
+        }
+
     }
 
     /**
@@ -372,6 +382,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
+        if (serverCommand.getPrecal() != null) {
+            mPrecal = serverCommand.getPrecal();
+        }
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
         }
@@ -416,7 +429,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getAccountName() != null) {
             mAccountName = serverCommand.getAccountName();
-
         }
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
@@ -442,8 +454,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
-        sharedPreferences.edit()
-                .putString(KEY_L1_TRIGGER, mL1Trigger)
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        for(int i=0; i<N_CAMERAS; i++) {
+            editor.putString(KEY_PRECAL + i, mPrecal[i]);
+        }
+
+        editor.putString(KEY_L1_TRIGGER, mL1Trigger)
                 .putString(KEY_L2_TRIGGER, mL2Trigger)
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)

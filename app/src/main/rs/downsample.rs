@@ -9,7 +9,7 @@ static const float gOffset = 0.5; // maximum value that camera is presumed to ro
 uint sampleStep;
 
 uchar RS_KERNEL normalizeWeights(uint in) {
-    return (uchar) (255*gMinSum/(in + gTotalFrames*gOffset));
+    return (uchar)(255*gMinSum/(in + gTotalFrames*gOffset*sampleStep*sampleStep));
 }
 
 uint RS_KERNEL downsampleSums(uint32_t x, uint32_t y) {

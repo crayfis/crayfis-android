@@ -592,7 +592,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float battery_stop_threshold = 0.05f;
+    public final float battery_stop_threshold = 0.20f;
     public final float battery_start_threshold = 0.80f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
