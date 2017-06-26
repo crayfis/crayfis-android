@@ -283,25 +283,37 @@ public class ExposureBlock implements Parcelable {
 	}
 	
 	public DataProtos.ExposureBlock buildProto() {
-		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder();
+		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
+                .setDaqState(translateState(daq_state))
+                .setL1Pass((int) L1_pass)
+                .setL1Processed((int) L1_processed)
+                .setL1Skip((int) L1_skip)
+                .setL1Thresh(L1_threshold)
+                .setL1Conf(L1_trigger_config.toString())
 		
-		buf.setDaqState(translateState(daq_state));
-		
-		buf.setL1Pass((int) L1_pass);
-		buf.setL1Processed((int) L1_processed);
-		buf.setL1Skip((int) L1_skip);
-		buf.setL1Thresh(L1_threshold);
-        buf.setL1Conf(L1_trigger_config.toString());
-		
-		buf.setL2Pass((int) L2_pass);
-		buf.setL2Processed((int) L2_processed);
-		buf.setL2Skip((int) L2_skip);
-		buf.setL2Thresh(L2_threshold);
-        buf.setL2Conf(L2_trigger_config.toString());
-		
-		buf.setGpsLat(start_loc.getLatitude());
-		buf.setGpsLon(start_loc.getLongitude());
-        buf.setGpsFixtime(start_loc.getTime());
+		        .setL2Pass((int) L2_pass)
+		        .setL2Processed((int) L2_processed)
+		        .setL2Skip((int) L2_skip)
+		        .setL2Thresh(L2_threshold)
+                .setL2Conf(L2_trigger_config.toString())
+
+				.setGpsLat(start_loc.getLatitude())
+		        .setGpsLon(start_loc.getLongitude())
+                .setGpsFixtime(start_loc.getTime())
+
+                .setStartTime(start_time.Sys)
+                .setEndTime(end_time.Sys)
+                .setStartTimeNano(start_time.Nano)
+                .setEndTimeNano(end_time.Nano)
+                .setStartTimeNtp(start_time.NTP)
+                .setEndTimeNtp(end_time.NTP)
+
+                .setRunId(run_id.getLeastSignificantBits())
+
+                .setBatteryTemp(batteryTemp)
+                .setXbn(xbn)
+                .setAborted(aborted);
+
         if (start_loc.hasAccuracy()) {
             buf.setGpsAccuracy(start_loc.getAccuracy());
         } else {
@@ -310,36 +322,24 @@ public class ExposureBlock implements Parcelable {
         if (start_loc.hasAltitude()) {
             buf.setGpsAltitude(start_loc.getAltitude());
         }
-        buf.setBatteryTemp(batteryTemp);
+
 
 		if (res_x > 0 || res_y > 0) {
-			buf.setResX(res_x);
-			buf.setResY(res_y);
+			buf.setResX(res_x).setResY(res_y);
 		}
-
-		buf.setStartTime(start_time.Sys);
-		buf.setEndTime(end_time.Sys);
-
-        buf.setStartTimeNano(start_time.Nano);
-        buf.setEndTimeNano(end_time.Nano);
-
-        buf.setStartTimeNtp(start_time.NTP);
-        buf.setEndTimeNtp(end_time.NTP);
-		
-		buf.setRunId(run_id.getLeastSignificantBits());
-        buf.setPrecalId(precal_id.getLeastSignificantBits());
 
         if (L1_processed > 0) {
             buf.setBgAvg(total_background / L1_processed);
         }
 
-		buf.setXbn(xbn);
-		
-		buf.setAborted(aborted);
+        // should be null for PRECALIBRATION
+        if(daq_state != CFApplication.State.PRECALIBRATION) {
+            buf.setPrecalId(precal_id.getLeastSignificantBits());
+        }
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.
-		if (daq_state != CFApplication.State.CALIBRATION) {
+		if (daq_state == CFApplication.State.DATA) {
 			for (RecoEvent evt : events) {
                 try {
                     buf.addEvents(evt.buildProto());

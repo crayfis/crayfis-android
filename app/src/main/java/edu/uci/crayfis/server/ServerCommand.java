@@ -16,6 +16,7 @@ import java.util.HashSet;
 public class ServerCommand {
 
     @SerializedName("set_precal") private String[] mPrecal;
+    @SerializedName("set_precal_id") private long[] mPrecalId;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_L1_trig") private String mL1Trigger;
@@ -74,6 +75,9 @@ public class ServerCommand {
 
     @Nullable
     public String[] getPrecal() { return mPrecal; }
+
+    @Nullable
+    public long[] getPrecalId() { return mPrecalId; }
 
     /**
      * Get the L1 threshold.

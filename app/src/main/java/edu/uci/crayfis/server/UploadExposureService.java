@@ -215,28 +215,27 @@ public class UploadExposureService extends IntentService {
 
     @Nullable
     private AbstractMessage getAbstractMessage(@NonNull final Intent intent) {
-        if (intent != null) {
-            final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
-            if (exposureBlock != null) {
-                return exposureBlock.buildProto();
-            }
 
-            final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
-            if (runConfig != null) {
-                return runConfig;
-            }
+        final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
+        if (exposureBlock != null) {
+            return exposureBlock.buildProto();
+        }
 
-            final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
-                    getSerializableExtra(CALIBRATION_RESULT);
-            if (calibrationResult != null) {
-                return calibrationResult;
-            }
+        final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
+        if (runConfig != null) {
+            return runConfig;
+        }
 
-            final AbstractMessage preCalibrationResult = (DataProtos.PreCalibrationResult) intent.
-                    getSerializableExtra(PRECALIBRATION_RESULT);
-            if (preCalibrationResult != null) {
-                return preCalibrationResult;
-            }
+        final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
+                getSerializableExtra(CALIBRATION_RESULT);
+        if (calibrationResult != null) {
+            return calibrationResult;
+        }
+
+        final AbstractMessage preCalibrationResult = (DataProtos.PreCalibrationResult) intent.
+                getSerializableExtra(PRECALIBRATION_RESULT);
+        if (preCalibrationResult != null) {
+            return preCalibrationResult;
         }
         return null;
     }
