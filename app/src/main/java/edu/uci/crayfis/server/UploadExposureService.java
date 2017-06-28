@@ -195,8 +195,6 @@ public class UploadExposureService extends IntentService {
             rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
             // FIXME: This doesn't trigger the run config upload.
         } else if (message instanceof DataProtos.PreCalibrationResult) {
-            CFApplication application = (CFApplication) getApplicationContext();
-            application.setNewestPrecalUUID();
             rtn.addPrecalibrationResults((DataProtos.PreCalibrationResult) message);
         }
 

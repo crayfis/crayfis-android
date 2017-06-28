@@ -185,7 +185,7 @@ public class PreCalibrator {
             Imgcodecs.imencode(FORMAT, downsampleMat2D, buf, params);
             byte[] bytes = buf.toArray();
             CFLog.d("Compressed bytes = " + bytes.length);
-            CONFIG.setPrecal(cameraId, Base64.encodeToString(bytes, Base64.DEFAULT));
+            CONFIG.setPrecalWeights(cameraId, Base64.encodeToString(bytes, Base64.DEFAULT));
 
             downsampledBytes.release();
             downsampleMat2D.release();
@@ -234,7 +234,7 @@ public class PreCalibrator {
 
     private void decompress(int cameraId, int width, int height) {
 
-        byte[] bytes = Base64.decode(CONFIG.getPrecal(cameraId), Base64.DEFAULT);
+        byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
         MatOfByte compressedMat = new MatOfByte(bytes);
         CFLog.d("Size = " + compressedMat.size().toString());
@@ -296,12 +296,12 @@ public class PreCalibrator {
 
     public boolean dueForPreCalibration(int cameraId) {
         Camera.Size sz = CFApplication.getCameraSize();
-        if(CONFIG.getPrecal(cameraId) != null && sz.width == mResX) {
+        if(CONFIG.getPrecalWeights(cameraId) != null && sz.width == mResX) {
             decompress(cameraId, sz.width, sz.height);
             return false;
         } else if(sz.width != mResX) {
             for(int i=0; i<Camera.getNumberOfCameras(); i++) {
-                CONFIG.setPrecal(cameraId, null);
+                CONFIG.setPrecalWeights(cameraId, null);
             }
         }
         return true;

@@ -5,6 +5,7 @@ import android.support.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.HashSet;
+import java.util.UUID;
 
 /**
  * Wrapper class for parsing a server command response.  This uses objects rather than primitives
@@ -15,8 +16,8 @@ import java.util.HashSet;
  */
 public class ServerCommand {
 
-    @SerializedName("set_precal") private String[] mPrecal;
-    @SerializedName("set_precal_id") private long[] mPrecalId;
+    @SerializedName("set_precal") private String[] mPrecalWeights;
+    @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_L1_trig") private String mL1Trigger;
@@ -74,10 +75,10 @@ public class ServerCommand {
     }
 
     @Nullable
-    public String[] getPrecal() { return mPrecal; }
+    public String[] getPrecalWeights() { return mPrecalWeights; }
 
     @Nullable
-    public long[] getPrecalId() { return mPrecalId; }
+    public UUID[] getPrecalId() { return mPrecalUUID; }
 
     /**
      * Get the L1 threshold.

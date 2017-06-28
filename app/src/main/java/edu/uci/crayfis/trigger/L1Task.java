@@ -52,6 +52,7 @@ class L1Task implements Runnable {
         // see if the PreCalibrator is done processing, and if so, go into calibration
 
         if (!mL1Processor.mPreCal.addFrame(mFrame)) {
+            mApplication.setNewestPrecalUUID();
             mL1Processor.mPreCal.processPreCalResults(mApplication);
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }

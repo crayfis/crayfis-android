@@ -20,8 +20,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
-    private static final String KEY_PRECAL = "precal_";
-    private static final String KEY_PRECAL_ID = "precal_id_";
+    private static final String KEY_PRECAL_WEIGHTS = "precal_weights";
+    private static final String KEY_PRECAL_MOST = "precal_uuid_most_";
+    private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
@@ -75,8 +76,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private String mL1Trigger;
     private String mL2Trigger;
-    private String[] mPrecal;
-    private long[] mPrecalId;
+    private String[] mPrecalWeights;
+    private UUID[] mPrecalUUID;
     private int mL1Threshold;
     private int mL2Threshold;
     private int mWeightingSampleFrames;
@@ -136,20 +137,20 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mL2Trigger;
     }
 
-    public String getPrecal(int cameraId) {
-        return mPrecal[cameraId];
+    public String getPrecalWeights(int cameraId) {
+        return mPrecalWeights[cameraId];
     }
 
-    public void setPrecal(int cameraId, String s) {
-        mPrecal[cameraId] = s;
+    public void setPrecalWeights(int cameraId, String s) {
+        mPrecalWeights[cameraId] = s;
     }
 
-    public long getPrecalUUID(int cameraId) {
-        return mPrecalId[cameraId];
+    public UUID getPrecalId(int cameraId) {
+        return mPrecalUUID[cameraId];
     }
 
-    public void setPrecalUUID(int cameraId, long precalId) {
-        mPrecalId[cameraId] = precalId;
+    public void setPrecalId(int cameraId, UUID precalId) {
+        mPrecalUUID[cameraId] = precalId;
     }
 
     /**
@@ -377,10 +378,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
 
-        mPrecal = new String[N_CAMERAS];
+        mPrecalWeights = new String[N_CAMERAS];
+        mPrecalUUID = new UUID[N_CAMERAS];
         for(int i=0; i<N_CAMERAS; i++) {
-            mPrecal[i] = sharedPreferences.getString(KEY_PRECAL + i, null);
-            mPrecalId[i] = sharedPreferences.getLong(KEY_PRECAL_ID + i, 0L);
+            mPrecalWeights[i] = sharedPreferences.getString(KEY_PRECAL_WEIGHTS + i, null);
+            long mostSignificant = sharedPreferences.getLong(KEY_PRECAL_MOST + i, 0L);
+            long leastSignificant = sharedPreferences.getLong(KEY_PRECAL_LEAST + i, 0L);
+            mPrecalUUID[i] = new UUID(mostSignificant, leastSignificant);
         }
 
     }
@@ -393,11 +397,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
-        if (serverCommand.getPrecal() != null) {
-            mPrecal = serverCommand.getPrecal();
+        if (serverCommand.getPrecalWeights() != null) {
+            mPrecalWeights = serverCommand.getPrecalWeights();
         }
         if (serverCommand.getPrecalId() != null) {
-            mPrecalId = serverCommand.getPrecalId();
+            mPrecalUUID = serverCommand.getPrecalId();
         }
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
@@ -471,8 +475,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         for(int i=0; i<N_CAMERAS; i++) {
-            editor.putString(KEY_PRECAL + i, mPrecal[i])
-                    .putLong(KEY_PRECAL_ID + i, mPrecalId[i]);
+            editor.putString(KEY_PRECAL_WEIGHTS + i, mPrecalWeights[i])
+                    .putLong(KEY_PRECAL_MOST + i, mPrecalUUID[i].getMostSignificantBits())
+                    .putLong(KEY_PRECAL_LEAST + i, mPrecalUUID[i].getLeastSignificantBits());
         }
 
         editor.putString(KEY_L1_TRIGGER, mL1Trigger)
