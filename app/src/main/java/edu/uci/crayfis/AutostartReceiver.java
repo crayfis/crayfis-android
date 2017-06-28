@@ -1,7 +1,5 @@
 package edu.uci.crayfis;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -12,8 +10,6 @@ import android.preference.PreferenceManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
 
-import java.util.Calendar;
-
 import edu.uci.crayfis.util.CFLog;
 
 public class AutostartReceiver extends BroadcastReceiver {
@@ -22,6 +18,8 @@ public class AutostartReceiver extends BroadcastReceiver {
 	public void onReceive(final Context context, Intent intent) {
 		// TODO Auto-generated method stub
 		CFLog.d("receiver: got action=" + intent.getAction());
+
+		CFApplication application = (CFApplication) context.getApplicationContext();
 
         boolean isCharging = (intent.getAction().equals(android.content.Intent.ACTION_POWER_CONNECTED));
 
@@ -42,39 +40,27 @@ public class AutostartReceiver extends BroadcastReceiver {
         // don't autostart if not charging
         if (!isCharging) return;
 
-        // check if autostart is selected
-		SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-		boolean autoStart = sharedPrefs.getBoolean("prefEnableAutoStart", false);
+        // check if autostart is available
 
-		if (autoStart) {
+		if (application.inAutostartWindow()) {
 
+			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
 			int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
-			int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter","0"));
-			int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore","0"));
 
-			Calendar c = Calendar.getInstance();
-			int hour = c.get(Calendar.HOUR_OF_DAY);
-			// if two of these three are true, we should autostart
-			int b1 = (startAfter >= startBefore) ? 1 : 0;
-			int b2 = (hour >= startAfter) ? 1: 0;
-			int b3 = (hour < startBefore) ? 1 : 0;
-			if (b1 + b2 + b3 >= 2) {
-				final Intent it = new Intent(context, DAQService.class);
-				it.setAction(Intent.ACTION_MAIN);
-				it.addCategory(Intent.CATEGORY_LAUNCHER);
-				it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
-				it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-				it.putExtra("Wait-time", startWait);
+			final Intent it = new Intent(context, DAQService.class);
+			it.setAction(Intent.ACTION_MAIN);
+			it.addCategory(Intent.CATEGORY_LAUNCHER);
+			it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
+			it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-				Handler autostartHandler = new Handler();
-				autostartHandler.postDelayed(new Runnable() {
+			Handler autostartHandler = new Handler();
+			autostartHandler.postDelayed(new Runnable() {
 					@Override
 					public void run() {
 						context.startService(it);
 					}
 				}, 1000L*startWait);
 
-			}
 		}
 	}
 

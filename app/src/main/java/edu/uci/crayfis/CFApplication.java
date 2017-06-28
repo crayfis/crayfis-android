@@ -240,27 +240,27 @@ public class CFApplication extends Application {
         boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
                 (status == BatteryManager.BATTERY_STATUS_FULL));
 
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean autostart = sharedPrefs.getBoolean("prefEnableAutoStart", false);
-        boolean inAutostartWindow = false;
-        if(autostart) {
-            int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter", "0"));
-            int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore", "0"));
-            Calendar c = Calendar.getInstance();
-            int hour = c.get(Calendar.HOUR_OF_DAY);
 
-            int b1 = (startAfter >= startBefore) ? 1 : 0;
-            int b2 = (hour >= startAfter) ? 1 : 0;
-            int b3 = (hour < startBefore) ? 1 : 0;
-
-            inAutostartWindow = b1 + b2 + b3 >= 2;
-        }
-
-
-        if(!isCharging || !inAutostartWindow) {
+        if(!isCharging || !inAutostartWindow()) {
             stopService(new Intent(this, DAQService.class));
             userErrorMessage(getString(R.string.notification_quit), true);
         }
+    }
+
+    public boolean inAutostartWindow() {
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if(!sharedPrefs.getBoolean("prefEnableAutoStart", false)) return false;
+
+        int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter", "0"));
+        int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore", "0"));
+        Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+
+        int b1 = (startAfter >= startBefore) ? 1 : 0;
+        int b2 = (hour >= startAfter) ? 1 : 0;
+        int b3 = (hour < startBefore) ? 1 : 0;
+
+        return b1 + b2 + b3 >= 2;
     }
 
     public void userErrorMessage(String mess, boolean fatal) {
