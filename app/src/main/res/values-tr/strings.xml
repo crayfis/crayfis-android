@@ -21,8 +21,8 @@
     <string name="settings_code_title">CRAYFIS Kullanici kodu"</string>
     <string name="settings_gallery_title">Galeriyi etkinlestir</string>
     <string name="settings_gallery_summary">Ilginc goruntuleri gosterir ve kayitlar</string>
-    <string name="settings_autostart_summary">Otomatik baslatma</string>
-    <string name="settings_autostart_title">Otobaslatmayi onlemek icin tikla</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">Hakkinda</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_view_mode">Goruntu modu</string>

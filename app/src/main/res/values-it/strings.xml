@@ -21,8 +21,8 @@
     <string name="settings_code_title">Codice utente CRAYFIS"</string>
     <string name="settings_gallery_title">Abilita carrellata</string>
     <string name="settings_gallery_summary">Salva e mostra le immagini interessanti</string>
-    <string name="settings_autostart_summary">Non avviare automaticamente</string>
-    <string name="settings_autostart_title">Clicca per impedire l\'avvio automatico</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">Informazioni</string>
     <string name="menu_settings">Impostazioni</string>
     <string name="menu_view_mode">Modalitá di visualizzazione</string>

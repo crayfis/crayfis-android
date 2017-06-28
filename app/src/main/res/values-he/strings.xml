@@ -25,8 +25,8 @@
     <string name="settings_code_title">CRAYFIS קוד משתמש של"</string>
     <string name="settings_gallery_title">אפשר גלריה</string>
     <string name="settings_gallery_summary">שמור והצג תמונות מעניינות</string>
-    <string name="settings_autostart_summary">אל תפעיל מחדש באופן אוטומטי</string>
-    <string name="settings_autostart_title">הקלק למנוע הפעלה מחדש באופן אוטומטי</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">אודות</string>
     <string name="menu_settings">הגדרות</string>
     <string name="menu_view_mode">מצב תצוגה</string>

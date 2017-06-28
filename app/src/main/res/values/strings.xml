@@ -29,8 +29,8 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Enable gallery</string>
     <string name="settings_gallery_summary">Saves and displays interesting images</string>
-    <string name="settings_autostart_summary">Do not autostart</string>
-    <string name="settings_autostart_title">Click to prevent autostart</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="settings_pref_resolution_summary" translatable="false">Resolution</string>
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_camera_select_mode_summary" translatable="false">Expert use only!</string>
@@ -98,7 +98,9 @@
     <string name="pager_dev">Developer</string>
     <string name="feedback" translatable="false">Feedback</string>
     <string name="notification_title" translatable="false">CRAYFIS</string>
-    <string name="notification_message" translatable="false">Taking data</string>
+    <string name="notification_idle" translatable="false">Paused</string>
+    <string name="notification_running" translatable="false">Taking data</string>
+    <string name="notification_quit" translatable="false">No cameras covered: quitting CRAYFIS</string>
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>
