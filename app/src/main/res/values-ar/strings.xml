@@ -20,8 +20,7 @@
     <string name="settings_code_title">رمز مستخدم كرايفس</string>
     <string name="settings_gallery_title">أمكن الألبوم</string>
     <string name="settings_gallery_summary">يقوم بتخزين و عرض الصور المثيرة للاهتمام</string>
-    <string name="settings_autostart_summary">لا تبدأ تلقائياً</string>
-    <string name="settings_autostart_title">اضغط لتمنع التشغيل التلقائي</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">عن</string>
     <string name="menu_settings">الإعدادات</string>
     <string name="menu_view_mode">نظام المشاهدة</string>
@@ -75,5 +74,6 @@
         <item quantity="one">%d عدد المرشحين:</item>
         <item quantity="other">%d عدد المرشحين:</item>
     </plurals>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
 
 </resources>

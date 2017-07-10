@@ -53,6 +53,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication mApplication;
     private String upload_url;
+
+    private NotificationCompat.Builder mNotificationBuilder;
     private final int FOREGROUND_ID = 1;
 
     private CFCamera mCFCamera;
@@ -131,13 +133,13 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         stackBuilder.addNextIntent(restartIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+        mNotificationBuilder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.drawable.ic_just_a)
                 .setContentTitle(getString(R.string.notification_title))
-                .setContentText(getString(R.string.notification_message))
+                .setContentText(getString(R.string.notification_idle))
                 .setContentIntent(resultPendingIntent);
 
-        startForeground(FOREGROUND_ID, builder.build());
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         // tell service to restart if it gets killed
         return START_STICKY;
@@ -248,6 +250,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
      */
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         mApplication.changeCamera();
+
+        // notify user that we are no longer running
+        mNotificationBuilder.setContentText(getString(R.string.notification_idle));
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+
         switch(previousState) {
             case PRECALIBRATION:
             case CALIBRATION:
@@ -281,6 +288,12 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             generateRunConfig();
             UploadExposureService.submitRunConfig(context, run_config);
         }
+
+        // notify user that camera is running
+        mNotificationBuilder.setContentText(getString(R.string.notification_running));
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+        mApplication.consecutiveIdles = 0;
+
         if(PreCalibrator.getInstance().dueForPreCalibration(mApplication.getCameraId())) {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
@@ -658,7 +671,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             }
             // if we are in idle mode, restart if everything is okay
             else if (batteryPct >= battery_start_threshold && !batteryOverheated
-                    && !mApplication.waitingForStabilization) {
+                    && !mApplication.isWaitingForStabilization()) {
 
                 CFLog.d("Returning to stabilization");
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);

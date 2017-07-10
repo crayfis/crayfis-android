@@ -20,8 +20,8 @@
     <string name="settings_code_title">CRAYFIS用户码"</string>
     <string name="settings_gallery_title">启用图库</string>
     <string name="settings_gallery_summary">保存并显示所关注的影像</string>
-    <string name="settings_autostart_summary">禁止自动启动</string>
-    <string name="settings_autostart_title">点击以阻止自动启动</string>
+    <string name="settings_autostart_summary">Automatically take data while charging</string>
+    <string name="settings_autostart_title">Click to allow autostart</string>
     <string name="menu_about">关于</string>
     <string name="menu_settings">设置</string>
     <string name="menu_view_mode">显示模式</string>
