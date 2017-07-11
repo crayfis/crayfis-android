@@ -237,7 +237,6 @@ public class PreCalibrator {
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
         MatOfByte compressedMat = new MatOfByte(bytes);
-        CFLog.d("Size = " + compressedMat.size().toString());
         Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
         Mat downsampleFloat = new Mat();
         downsampleMat.convertTo(downsampleFloat, CvType.CV_32F, 1./255);

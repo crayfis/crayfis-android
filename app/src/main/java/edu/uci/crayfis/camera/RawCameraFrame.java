@@ -12,6 +12,8 @@ import android.support.annotation.NonNull;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.ScriptC_weight;
@@ -58,6 +60,8 @@ public class RawCameraFrame {
     private ScriptC_weight mScriptCWeight;
     private Allocation ain;
     private Allocation aout;
+
+    private static final ReentrantLock lock = new ReentrantLock();
 
     private Mat mGrayMat;
 
@@ -222,6 +226,9 @@ public class RawCameraFrame {
      */
     public synchronized Allocation getAllocation() {
         ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
+        if(mStatsWeighted) {
+            mScriptCWeight.forEach_weight(ain, ain);
+        }
         return ain;
     }
 
@@ -242,6 +249,8 @@ public class RawCameraFrame {
                 // update with weighted pixels
                 ain.copyTo(adjustedBytes);
 
+                lock.unlock();
+
                 // probably a better way to do this, but this
                 // works for preventing native memory leaks
 
@@ -261,6 +270,7 @@ public class RawCameraFrame {
      * Clear memory from RawCameraFrame
      */
     public void retire() {
+        lock.unlock();
         synchronized (mCamera) {
             if (mBytes != null) {
                 mCamera.addCallbackBuffer(mBytes);
@@ -359,24 +369,26 @@ public class RawCameraFrame {
             return;
         }
         int[] hist = new int[256];
-
-        synchronized (mScriptIntrinsicHistogram) {
-            getAllocation();
-            if(mStatsWeighted) {
-                mScriptCWeight.forEach_weight(ain, ain);
-            }
-            mScriptIntrinsicHistogram.forEach(ain);
-            aout.copyTo(hist);
-        }
-
         int max = 0;
         int sum = 0;
+
+        lock.lock();
+        getAllocation();
+        mScriptIntrinsicHistogram.forEach(ain);
+        aout.copyTo(hist);
+
         for(int i=0; i<256; i++) {
             sum += i*hist[i];
             if(hist[i] != 0) {
                 max = i;
             }
         }
+
+        aout.copyTo(hist);
+        if(hist[max] == 0) {
+            CFLog.d("BAD");
+        }
+
         mPixMax = max;
         mPixAvg = (double)sum/mLength;
 
@@ -397,9 +409,9 @@ public class RawCameraFrame {
     }
 
     public double getPixStd() {
-        if (mPixStd < 0) {
-            calculateStatistics();
-        }
+        //if (mPixStd < 0) {
+        //    calculateStatistics();
+        //}
         return mPixStd;
     }
 
