@@ -40,13 +40,17 @@ import edu.uci.crayfis.util.CFLog;
 
 public class PreCalibrator {
 
-    private RenderScript mRS;
-    private ScriptC_weight mScriptCWeight;
+    private Allocation mSumAlloc;
     private ScriptC_sumFrames mScriptCSumFrames;
 
-    private Allocation mSumAlloc;
-    private final HotCellKiller HOTCELL_KILLER = new HotCellKiller();
+    private final Context CONTEXT;
+    private RenderScript RS;
+    private final ScriptC_weight SCRIPT_C_WEIGHT;
+
+    private final HotCellKiller HOTCELL_KILLER;
     private final CFConfig CONFIG = CFConfig.getInstance();
+
+
     private int mCameraId = -1;
     private int mResX;
 
@@ -60,14 +64,19 @@ public class PreCalibrator {
 
     private static PreCalibrator sInstance = null;
 
-    public static PreCalibrator getInstance() {
+    public static PreCalibrator getInstance(Context ctx) {
         if(sInstance == null) {
-            sInstance = new PreCalibrator();
+            sInstance = new PreCalibrator(ctx);
         }
         return sInstance;
     }
 
-    private PreCalibrator() { }
+    private PreCalibrator(Context ctx) {
+        CONTEXT = ctx;
+        RS = RenderScript.create(ctx);
+        SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
+        HOTCELL_KILLER = new HotCellKiller(RS);
+    }
 
     /**
      * This is the entry point of the PreCalibrator pipeline.  Sends to RenderScript to process
@@ -83,12 +92,12 @@ public class PreCalibrator {
             if(mSumAlloc == null) {
                 mCameraId = frame.getCameraId();
                 mResX = frame.getWidth();
-                Type type = new Type.Builder(mRS, Element.U32(mRS))
+                Type type = new Type.Builder(RS, Element.U32(RS))
                         .setX(frame.getWidth())
                         .setY(frame.getHeight())
                         .create();
 
-                mSumAlloc = Allocation.createTyped(mRS, type, Allocation.USAGE_SCRIPT);
+                mSumAlloc = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
                 mScriptCSumFrames.set_gSum(mSumAlloc);
 
                 start_time = System.currentTimeMillis();
@@ -111,13 +120,12 @@ public class PreCalibrator {
     /**
      * Normalizes weights, downsamples and resamples, kills hotcells, and uploads the PreCalibrationResult
      *
-     * @param context Application context
      */
-    public void processPreCalResults(Context context) {
+    public void processPreCalResults() {
 
         synchronized (mSumAlloc) {
 
-            CFApplication application = (CFApplication) context.getApplicationContext();
+            CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
             final int MAX_SAMPLE_SIZE = 1500;
             mScriptCSumFrames = null;
 
@@ -130,7 +138,7 @@ public class PreCalibrator {
             int sampleStep = getSampleStep(width, height, MAX_SAMPLE_SIZE);
 
             int totalFrames = CONFIG.getWeightingSampleFrames();
-            ScriptC_downsample scriptCDownsample = new ScriptC_downsample(mRS);
+            ScriptC_downsample scriptCDownsample = new ScriptC_downsample(RS);
 
             scriptCDownsample.set_gSum(mSumAlloc);
             scriptCDownsample.set_sampleStep(sampleStep);
@@ -143,19 +151,19 @@ public class PreCalibrator {
 
             // next, we downsample (average) sums in RenderScript
 
-            Type sampleType = new Type.Builder(mRS, Element.U32(mRS))
+            Type sampleType = new Type.Builder(RS, Element.U32(RS))
                     .setX(sampleResX)
                     .setY(sampleResY)
                     .create();
 
-            Type byteType = new Type.Builder(mRS, Element.U8(mRS))
+            Type byteType = new Type.Builder(RS, Element.U8(RS))
                     .setX(sampleResX)
                     .setY(sampleResY)
                     .create();
 
 
-            Allocation downsampledAlloc = Allocation.createTyped(mRS, sampleType, Allocation.USAGE_SCRIPT);
-            Allocation byteAlloc = Allocation.createTyped(mRS, byteType, Allocation.USAGE_SCRIPT);
+            Allocation downsampledAlloc = Allocation.createTyped(RS, sampleType, Allocation.USAGE_SCRIPT);
+            Allocation byteAlloc = Allocation.createTyped(RS, byteType, Allocation.USAGE_SCRIPT);
 
             scriptCDownsample.forEach_downsampleSums(downsampledAlloc);
             int[] downsampleArray = new int[sampleResX * sampleResY];
@@ -211,7 +219,7 @@ public class PreCalibrator {
 
             // submit the PreCalibrationResult object
 
-            UploadExposureService.submitPreCalibrationResult(context, b.build());
+            UploadExposureService.submitPreCalibrationResult(CONTEXT, b.build());
 
         }
     }
@@ -256,13 +264,13 @@ public class PreCalibrator {
             resampledArray[c.x + width*c.y] = 0f;
         }
 
-        Type weightType = new Type.Builder(mRS, Element.F32(mRS))
+        Type weightType = new Type.Builder(RS, Element.F32(RS))
                 .setX(width)
                 .setY(height)
                 .create();
-        Allocation weights = Allocation.createTyped(mRS, weightType, Allocation.USAGE_SCRIPT);
+        Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
         weights.copyFrom(resampledArray);
-        mScriptCWeight.set_gWeights(weights);
+        SCRIPT_C_WEIGHT.set_gWeights(weights);
 
         compressedMat.release();
         downsampleMat.release();
@@ -275,20 +283,16 @@ public class PreCalibrator {
 
     }
 
-    public ScriptC_weight getScriptCWeight(RenderScript rs) {
-        if(mScriptCWeight == null) {
-            mRS = rs;
-            mScriptCWeight = new ScriptC_weight(rs);
-        }
-        return mScriptCWeight;
+    public ScriptC_weight getScriptCWeight() {
+        return SCRIPT_C_WEIGHT;
     }
 
     public void clear(int cameraId) {
-        synchronized (mScriptCWeight) {
+        synchronized (SCRIPT_C_WEIGHT) {
             mSumAlloc = null;
             mFramesWeighting = 0;
             HOTCELL_KILLER.clearHotcells(cameraId);
-            mScriptCSumFrames = new ScriptC_sumFrames(mRS);
+            mScriptCSumFrames = new ScriptC_sumFrames(RS);
             mAlreadySent = false;
         }
     }

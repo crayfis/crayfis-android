@@ -29,9 +29,9 @@ public class L1Processor {
 
     public L1Processor(CFApplication application) {
         mApplication = application;
-        mL2Processor = new L2Processor(mApplication);
+        mL2Processor = new L2Processor(application);
         mL1Cal = L1Calibrator.getInstance();
-        mPreCal = PreCalibrator.getInstance();
+        mPreCal = PreCalibrator.getInstance(application);
     }
 
     private Runnable makeTask(RawCameraFrame frame) {

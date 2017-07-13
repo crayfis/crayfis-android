@@ -1,5 +1,6 @@
 package edu.uci.crayfis.camera;
 
+import android.content.Context;
 import android.hardware.Camera;
 import android.location.Location;
 import android.renderscript.Allocation;
@@ -8,6 +9,7 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -69,6 +71,7 @@ public class RawCameraFrame {
      * Class for creating immutable RawCameraFrames
      */
     public static class Builder {
+        private Context bContext;
         private byte[] bBytes;
         private Camera bCamera;
         private int bCameraId;
@@ -89,8 +92,8 @@ public class RawCameraFrame {
         private Allocation bout;
         private boolean bWeighted;
 
-        public Builder() {
-
+        public Builder(Context context) {
+            bContext = context;
         }
 
         public Builder setBytes(byte[] bytes) {
@@ -115,7 +118,7 @@ public class RawCameraFrame {
             bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bout);
-            bScriptCWeight = PreCalibrator.getInstance().getScriptCWeight(rs);
+            bScriptCWeight = PreCalibrator.getInstance(bContext).getScriptCWeight();
 
             return this;
         }
@@ -270,7 +273,9 @@ public class RawCameraFrame {
      * Clear memory from RawCameraFrame
      */
     public void retire() {
-        lock.unlock();
+        if(lock.isHeldByCurrentThread()) {
+            lock.unlock();
+        }
         synchronized (mCamera) {
             if (mBytes != null) {
                 mCamera.addCallbackBuffer(mBytes);
@@ -382,11 +387,6 @@ public class RawCameraFrame {
             if(hist[i] != 0) {
                 max = i;
             }
-        }
-
-        aout.copyTo(hist);
-        if(hist[max] == 0) {
-            CFLog.d("BAD");
         }
 
         mPixMax = max;

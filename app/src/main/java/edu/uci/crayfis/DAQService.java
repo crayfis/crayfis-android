@@ -95,6 +95,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         // Frame Processing
 
         mL1Processor = new L1Processor(mApplication);
+        mPreCal = PreCalibrator.getInstance(context);
 
         if (L1cal == null) {
             L1cal = L1Calibrator.getInstance();
@@ -275,7 +276,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         switch (previousState) {
             case CALIBRATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                PreCalibrator.getInstance().clear(mApplication.getCameraId());
+                mPreCal.clear(mApplication.getCameraId());
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -294,7 +295,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(PreCalibrator.getInstance().dueForPreCalibration(mApplication.getCameraId())) {
+        if(mPreCal.dueForPreCalibration(mApplication.getCameraId())) {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
@@ -470,12 +471,13 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     // Frame processing //
     //////////////////////
 
-    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder();
+    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder(this);
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
 
-    private L1Calibrator L1cal = null;
+    private L1Calibrator L1cal;
+    private PreCalibrator mPreCal;
 
     private FrameHistory<Long> frame_times;
     private double target_L1_eff;

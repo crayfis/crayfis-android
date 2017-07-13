@@ -53,7 +53,7 @@ class L1Task implements Runnable {
 
         if (!mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
-            mL1Processor.mPreCal.processPreCalResults(mApplication);
+            mL1Processor.mPreCal.processPreCalResults();
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
 

@@ -1,6 +1,8 @@
 package edu.uci.crayfis.precalibration;
 
+import android.content.Context;
 import android.hardware.Camera;
+import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -20,12 +22,13 @@ import edu.uci.crayfis.util.CFLog;
 class HotCellKiller {
 
     private final List<ArrayList<Hotcell>> HOTCELL_COORDS = new ArrayList<>(Camera.getNumberOfCameras());
+    private final RenderScript RS;
 
-    HotCellKiller() {
+    HotCellKiller(RenderScript rs) {
         for(int i=0; i<Camera.getNumberOfCameras(); i++) {
             HOTCELL_COORDS.add(new ArrayList<Hotcell>(10));
-
         }
+        RS = rs;
     }
 
     boolean addFrame(RawCameraFrame frame) {

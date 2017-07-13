@@ -200,7 +200,7 @@ public class CFApplication extends Application {
                 }
                 break;
             case PRECALIBRATION:
-                PreCalibrator.getInstance().clear(mCameraId);
+                PreCalibrator.getInstance(this).clear(mCameraId);
             case CALIBRATION:
             case DATA:
             case IDLE:
