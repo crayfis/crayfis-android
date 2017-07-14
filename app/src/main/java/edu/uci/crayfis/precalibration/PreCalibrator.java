@@ -22,6 +22,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Set;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -205,10 +206,10 @@ public class PreCalibrator {
                     .setCompressedWeights(ByteString.copyFrom(bytes))
                     .setCompressedFormat(FORMAT);
 
-            ArrayList<HotCellKiller.Hotcell> hotcells = HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId);
-            for (int i = 0; i < hotcells.size(); i++) {
-                b.addHotcellX(hotcells.get(i).x)
-                        .addHotcellY(hotcells.get(i).y);
+            Set<Integer> hotcells = HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId);
+            for (Integer pos: hotcells) {
+                b.addHotcellX(pos % width)
+                        .addHotcellY(pos / width);
             }
 
             int maxNonZero = HOTCELL_KILLER.secondHist.length-1;
@@ -262,8 +263,8 @@ public class PreCalibrator {
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        for(HotCellKiller.Hotcell c: HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId)) {
-            resampledArray[c.x + width*c.y] = 0f;
+        for(Integer pos: HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId)) {
+            resampledArray[pos] = 0f;
         }
 
         Type weightType = new Type.Builder(RS, Element.F32(RS))

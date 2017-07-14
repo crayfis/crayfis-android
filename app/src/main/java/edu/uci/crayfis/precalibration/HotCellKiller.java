@@ -32,7 +32,7 @@ import edu.uci.crayfis.util.CFLog;
 
 class HotCellKiller {
 
-    final List<ArrayList<Hotcell>> HOTCELL_COORDS = new ArrayList<>(Camera.getNumberOfCameras());
+    final List<Set<Integer>> HOTCELL_COORDS = new ArrayList<>(Camera.getNumberOfCameras());
     int[] secondHist;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
@@ -46,7 +46,7 @@ class HotCellKiller {
 
     HotCellKiller(RenderScript rs) {
         for(int i=0; i<Camera.getNumberOfCameras(); i++) {
-            HOTCELL_COORDS.add(new ArrayList<Hotcell>(10));
+            HOTCELL_COORDS.add(new HashSet<Integer>(10));
         }
         RS = rs;
         SCRIPT_C_FIND_SECOND = new ScriptC_findSecond(RS);
@@ -107,7 +107,9 @@ class HotCellKiller {
         CFLog.d("cutoff = " + cutoff);
 
         // copy to OpenCV to locate hot pixels
+        byte[] maxArray = new byte[area];
         byte[] secondArray = new byte[area];
+        aMax.copyTo(maxArray);
         aSecond.copyTo(secondArray);
         MatOfByte secondMat = new MatOfByte(secondArray);
 
@@ -126,9 +128,25 @@ class HotCellKiller {
             int x = pos % width;
             int y = pos / width;
 
-            CFLog.d("New hotcell found at (" + x + "," + y + ")");
-            HOTCELL_COORDS.get(cameraId).add(new Hotcell(x,y));
+            //CFLog.d("New hotcell found at (" + x + "," + y + ")");
+            HOTCELL_COORDS.get(cameraId).add(pos);
+
+            for(int dx=x-1; dx<=x+1; dx++) {
+                for(int dy=y-1; dy<=y+1; dy++) {
+                    try {
+                        int adjMax = maxArray[dx + width * dy] & 0xFF;
+                        if (adjMax >= cutoff) {
+                            HOTCELL_COORDS.get(cameraId).add(dx + width * dy);
+                            CFLog.d("Adjacent hotcell found at (" + dx + "," + dy + "," + adjMax + ")");
+                        }
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // don't crash if we're on the border
+                    }
+                }
+            }
         }
+
+        CFLog.d("Total hotcells found: " + HOTCELL_COORDS.get(cameraId).size());
 
     }
 
@@ -140,17 +158,4 @@ class HotCellKiller {
         aMax = null;
         aSecond = null;
     }
-
-    class Hotcell {
-
-        int x;
-        int y;
-
-        Hotcell(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-    }
-
 }
