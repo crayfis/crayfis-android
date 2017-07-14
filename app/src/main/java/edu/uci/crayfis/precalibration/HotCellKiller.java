@@ -141,10 +141,6 @@ class HotCellKiller {
         aSecond = null;
     }
 
-    ArrayList<Hotcell> getHotcellCoords(int cameraId) {
-        return HOTCELL_COORDS.get(cameraId);
-    }
-
     class Hotcell {
 
         int x;

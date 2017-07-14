@@ -205,10 +205,18 @@ public class PreCalibrator {
                     .setCompressedWeights(ByteString.copyFrom(bytes))
                     .setCompressedFormat(FORMAT);
 
-            ArrayList<HotCellKiller.Hotcell> hotcells = HOTCELL_KILLER.getHotcellCoords(cameraId);
+            ArrayList<HotCellKiller.Hotcell> hotcells = HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId);
             for (int i = 0; i < hotcells.size(); i++) {
                 b.addHotcellX(hotcells.get(i).x)
                         .addHotcellY(hotcells.get(i).y);
+            }
+
+            int maxNonZero = HOTCELL_KILLER.secondHist.length-1;
+            while(HOTCELL_KILLER.secondHist[maxNonZero] == 0) {
+                maxNonZero--;
+            }
+            for(int i=0; i<=maxNonZero; i++) {
+                b.addSecondHist(HOTCELL_KILLER.secondHist[i]);
             }
 
             // submit the PreCalibrationResult object
@@ -254,7 +262,7 @@ public class PreCalibrator {
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        for(HotCellKiller.Hotcell c: HOTCELL_KILLER.getHotcellCoords(cameraId)) {
+        for(HotCellKiller.Hotcell c: HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId)) {
             resampledArray[c.x + width*c.y] = 0f;
         }
 

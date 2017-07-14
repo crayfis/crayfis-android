@@ -10713,6 +10713,19 @@ public final class DataProtos {
      */
     com.google.protobuf.ByteString
         getCompressedFormatBytes();
+
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    java.util.List<java.lang.Integer> getSecondHistList();
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    int getSecondHistCount();
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    int getSecondHist(int index);
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationResult}
@@ -10875,6 +10888,27 @@ public final class DataProtos {
               compressedFormat_ = bs;
               break;
             }
+            case 120: {
+              if (!((mutable_bitField0_ & 0x00001000) == 0x00001000)) {
+                secondHist_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00001000;
+              }
+              secondHist_.add(input.readUInt32());
+              break;
+            }
+            case 122: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00001000) == 0x00001000) && input.getBytesUntilLimit() > 0) {
+                secondHist_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField0_ |= 0x00001000;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                secondHist_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10891,6 +10925,9 @@ public final class DataProtos {
         }
         if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
           hotcellY_ = java.util.Collections.unmodifiableList(hotcellY_);
+        }
+        if (((mutable_bitField0_ & 0x00001000) == 0x00001000)) {
+          secondHist_ = java.util.Collections.unmodifiableList(secondHist_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -11152,6 +11189,28 @@ public final class DataProtos {
       }
     }
 
+    public static final int SECOND_HIST_FIELD_NUMBER = 15;
+    private java.util.List<java.lang.Integer> secondHist_;
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getSecondHistList() {
+      return secondHist_;
+    }
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    public int getSecondHistCount() {
+      return secondHist_.size();
+    }
+    /**
+     * <code>repeated uint32 second_hist = 15;</code>
+     */
+    public int getSecondHist(int index) {
+      return secondHist_.get(index);
+    }
+
     private void initFields() {
       runId_ = 0L;
       startTime_ = 0L;
@@ -11165,6 +11224,7 @@ public final class DataProtos {
       interpolation_ = 0;
       compressedWeights_ = com.google.protobuf.ByteString.EMPTY;
       compressedFormat_ = "";
+      secondHist_ = java.util.Collections.emptyList();
     }
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
@@ -11214,6 +11274,9 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeBytes(14, getCompressedFormatBytes());
+      }
+      for (int i = 0; i < secondHist_.size(); i++) {
+        output.writeUInt32(15, secondHist_.get(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -11283,6 +11346,15 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(14, getCompressedFormatBytes());
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < secondHist_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(secondHist_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getSecondHistList().size();
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSerializedSize = size;
@@ -11425,6 +11497,8 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000400);
         compressedFormat_ = "";
         bitField0_ = (bitField0_ & ~0x00000800);
+        secondHist_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00001000);
         return this;
       }
 
@@ -11504,6 +11578,11 @@ public final class DataProtos {
           to_bitField0_ |= 0x00000100;
         }
         result.compressedFormat_ = compressedFormat_;
+        if (((bitField0_ & 0x00001000) == 0x00001000)) {
+          secondHist_ = java.util.Collections.unmodifiableList(secondHist_);
+          bitField0_ = (bitField0_ & ~0x00001000);
+        }
+        result.secondHist_ = secondHist_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -11577,6 +11656,16 @@ public final class DataProtos {
         if (other.hasCompressedFormat()) {
           bitField0_ |= 0x00000800;
           compressedFormat_ = other.compressedFormat_;
+          onChanged();
+        }
+        if (!other.secondHist_.isEmpty()) {
+          if (secondHist_.isEmpty()) {
+            secondHist_ = other.secondHist_;
+            bitField0_ = (bitField0_ & ~0x00001000);
+          } else {
+            ensureSecondHistIsMutable();
+            secondHist_.addAll(other.secondHist_);
+          }
           onChanged();
         }
         this.mergeUnknownFields(other.getUnknownFields());
@@ -12135,6 +12224,72 @@ public final class DataProtos {
   }
   bitField0_ |= 0x00000800;
         compressedFormat_ = value;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> secondHist_ = java.util.Collections.emptyList();
+      private void ensureSecondHistIsMutable() {
+        if (!((bitField0_ & 0x00001000) == 0x00001000)) {
+          secondHist_ = new java.util.ArrayList<java.lang.Integer>(secondHist_);
+          bitField0_ |= 0x00001000;
+         }
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getSecondHistList() {
+        return java.util.Collections.unmodifiableList(secondHist_);
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public int getSecondHistCount() {
+        return secondHist_.size();
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public int getSecondHist(int index) {
+        return secondHist_.get(index);
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public Builder setSecondHist(
+          int index, int value) {
+        ensureSecondHistIsMutable();
+        secondHist_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public Builder addSecondHist(int value) {
+        ensureSecondHistIsMutable();
+        secondHist_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public Builder addAllSecondHist(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureSecondHistIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, secondHist_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 second_hist = 15;</code>
+       */
+      public Builder clearSecondHist() {
+        secondHist_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00001000);
         onChanged();
         return this;
       }
@@ -13429,18 +13584,19 @@ public final class DataProtos {
       "\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022" +
       "\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(" +
       "\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixe" +
-      "l\030\007 \003(\r\"\223\002\n\024PreCalibrationResult\022\016\n\006run_" +
+      "l\030\007 \003(\r\"\250\002\n\024PreCalibrationResult\022\016\n\006run_" +
       "id\030\001 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_time" +
       "\030\003 \001(\004\022\024\n\014battery_temp\030\014 \001(\r\022\017\n\007weights\030" +
       "\006 \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sample_re",
       "s_y\030\010 \001(\r\022\021\n\thotcell_x\030\t \003(\r\022\021\n\thotcell_" +
       "y\030\n \003(\r\022\025\n\rinterpolation\030\013 \001(\r\022\032\n\022compre" +
       "ssed_weights\030\r \001(\014\022\031\n\021compressed_format\030" +
-      "\016 \001(\t\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014" +
-      "\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007u" +
-      "ser_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote" +
-      "_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB\035\n\017edu." +
-      "uci.crayfisB\nDataProtos"
+      "\016 \001(\t\022\023\n\013second_hist\030\017 \003(\r\"\220\001\n\rCrayonMes" +
+      "sage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n" +
+      "\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app" +
+      "_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013subm" +
+      "it_time\030\007 \001(\rB\035\n\017edu.uci.crayfisB\nDataPr" +
+      "otos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -13495,7 +13651,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationResult_descriptor,
-        new java.lang.String[] { "RunId", "StartTime", "EndTime", "BatteryTemp", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", "Interpolation", "CompressedWeights", "CompressedFormat", });
+        new java.lang.String[] { "RunId", "StartTime", "EndTime", "BatteryTemp", "Weights", "SampleResX", "SampleResY", "HotcellX", "HotcellY", "Interpolation", "CompressedWeights", "CompressedFormat", "SecondHist", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(7);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
