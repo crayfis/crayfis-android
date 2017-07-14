@@ -27,6 +27,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
     private static final String KEY_WEIGHTING = "weighting_sample_frames";
+    private static final String KEY_HOTCELL = "hotcell_sample_frames";
+    private static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
     private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
@@ -54,6 +56,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
+    private static final int DEFAULT_HOTCELL_FRAMES = 1000;
+    private static final float DEFAULT_HOTCELL_THRESH = .00005f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
@@ -81,6 +85,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private int mL1Threshold;
     private int mL2Threshold;
     private int mWeightingSampleFrames;
+    private int mHotcellSampleFrames;
+    private float mHotcellThresh;
     private int mCalibrationSampleFrames;
     private float mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
@@ -108,6 +114,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
         mWeightingSampleFrames = DEFAULT_WEIGHTING_FRAMES;
+        mHotcellSampleFrames = DEFAULT_HOTCELL_FRAMES;
+        mHotcellThresh = DEFAULT_HOTCELL_THRESH;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
         mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
@@ -192,6 +200,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public int getWeightingSampleFrames() {
         return mWeightingSampleFrames;
     }
+
+    public int getHotcellSampleFrames() { return mHotcellSampleFrames; }
+
+    public float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * How many frames to sample during calibration.  More frames is longer but gives better
@@ -357,6 +369,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
         mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
         mWeightingSampleFrames = sharedPreferences.getInt(KEY_WEIGHTING, DEFAULT_WEIGHTING_FRAMES);
+        mHotcellSampleFrames = sharedPreferences.getInt(KEY_HOTCELL, DEFAULT_HOTCELL_FRAMES);
+        mHotcellThresh = sharedPreferences.getFloat(KEY_HOTCELL_THRESH, DEFAULT_HOTCELL_THRESH);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
         mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
@@ -414,6 +428,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getWeightingSampleFrames() != null) {
             mWeightingSampleFrames = serverCommand.getWeightingSampleFrames();
+        }
+        if (serverCommand.getHotcellSampleFrames() != null) {
+            mHotcellSampleFrames = serverCommand.getHotcellSampleFrames();
+        }
+        if (serverCommand.getHotcellThresh() != null) {
+            mHotcellThresh = serverCommand.getHotcellThresh();
         }
         if (serverCommand.getCalibrationSampleFrames() != null) {
             mCalibrationSampleFrames = serverCommand.getCalibrationSampleFrames();
@@ -485,6 +505,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)
                 .putInt(KEY_WEIGHTING, mWeightingSampleFrames)
+                .putInt(KEY_HOTCELL, mHotcellSampleFrames)
+                .putFloat(KEY_HOTCELL_THRESH, mHotcellThresh)
                 .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
                 .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)

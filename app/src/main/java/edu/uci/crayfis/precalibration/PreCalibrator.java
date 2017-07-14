@@ -55,7 +55,6 @@ public class PreCalibrator {
     private int mResX;
 
     private int mFramesWeighting = 0;
-    private Boolean mAlreadySent = false;
 
     private long start_time;
 
@@ -105,12 +104,7 @@ public class PreCalibrator {
 
             mScriptCSumFrames.forEach_update(frame.getAllocation(), mSumAlloc);
         } else if(!HOTCELL_KILLER.addFrame(frame)) {
-            synchronized (mAlreadySent) {
-                if(!mAlreadySent) {
-                    mAlreadySent = true;
-                    return false;
-                }
-            }
+            return false;
         }
 
         return true;
@@ -293,7 +287,6 @@ public class PreCalibrator {
             mFramesWeighting = 0;
             HOTCELL_KILLER.clearHotcells(cameraId);
             mScriptCSumFrames = new ScriptC_sumFrames(RS);
-            mAlreadySent = false;
         }
     }
 

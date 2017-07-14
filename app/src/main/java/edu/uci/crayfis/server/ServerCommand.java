@@ -25,6 +25,8 @@ public class ServerCommand {
     @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
     @SerializedName("weighting_sample_frames") private Integer mWeightingSampleFrames;
+    @SerializedName("hotcell_sample_frames") private Integer mHotcellSampleFrames;
+    @SerializedName("hotcell_thresh") private Float mHotcellThresh;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
@@ -121,6 +123,12 @@ public class ServerCommand {
 
     @Nullable
     public Integer getWeightingSampleFrames() { return mWeightingSampleFrames; }
+
+    @Nullable
+    public Integer getHotcellSampleFrames() { return mHotcellSampleFrames; }
+
+    @Nullable
+    public Float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * Get the calibration sample frames.
