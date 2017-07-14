@@ -128,7 +128,6 @@ class HotCellKiller {
             int x = pos % width;
             int y = pos / width;
 
-            //CFLog.d("New hotcell found at (" + x + "," + y + ")");
             HOTCELL_COORDS.get(cameraId).add(pos);
 
             for(int dx=x-1; dx<=x+1; dx++) {
@@ -137,7 +136,6 @@ class HotCellKiller {
                         int adjMax = maxArray[dx + width * dy] & 0xFF;
                         if (adjMax >= cutoff) {
                             HOTCELL_COORDS.get(cameraId).add(dx + width * dy);
-                            CFLog.d("Adjacent hotcell found at (" + dx + "," + dy + "," + adjMax + ")");
                         }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         // don't crash if we're on the border

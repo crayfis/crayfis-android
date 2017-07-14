@@ -204,12 +204,12 @@ public class PreCalibrator {
                     .setSampleResY(sampleResY)
                     .setInterpolation(INTER)
                     .setCompressedWeights(ByteString.copyFrom(bytes))
-                    .setCompressedFormat(FORMAT);
+                    .setCompressedFormat(FORMAT)
+                    .setResX(width);
 
             Set<Integer> hotcells = HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId);
             for (Integer pos: hotcells) {
-                b.addHotcellX(pos % width)
-                        .addHotcellY(pos / width);
+                b.addHotcell(pos);
             }
 
             int maxNonZero = HOTCELL_KILLER.secondHist.length-1;

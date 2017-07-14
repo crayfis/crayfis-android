@@ -56,8 +56,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
-    private static final int DEFAULT_HOTCELL_FRAMES = 1000;
-    private static final float DEFAULT_HOTCELL_THRESH = .00005f;
+    private static final int DEFAULT_HOTCELL_FRAMES = 5000;
+    private static final float DEFAULT_HOTCELL_THRESH = .0001f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
