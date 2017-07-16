@@ -4,7 +4,10 @@ import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -17,6 +20,7 @@ import java.util.UUID;
 public class ServerCommand {
 
     @SerializedName("set_precal") private String[] mPrecalWeights;
+    @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
     @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
@@ -78,6 +82,9 @@ public class ServerCommand {
 
     @Nullable
     public String[] getPrecalWeights() { return mPrecalWeights; }
+
+    @Nullable
+    public List<Set<String>> getHotcells() { return mHotcells; }
 
     @Nullable
     public UUID[] getPrecalId() { return mPrecalUUID; }

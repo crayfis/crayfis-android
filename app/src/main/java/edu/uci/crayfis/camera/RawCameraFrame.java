@@ -52,7 +52,6 @@ public class RawCameraFrame {
     private int mPixMax = -1;
     private double mPixAvg = -1;
     private double mPixStd = -1;
-    private boolean mStatsWeighted = false;
     private Boolean mBufferClaimed = false;
     private ExposureBlock mExposureBlock;
 
@@ -90,7 +89,6 @@ public class RawCameraFrame {
         private ScriptC_weight bScriptCWeight;
         private Allocation bin;
         private Allocation bout;
-        private boolean bWeighted;
 
         public Builder(Context context) {
             bContext = context;
@@ -101,7 +99,7 @@ public class RawCameraFrame {
             return this;
         }
 
-        public Builder setCamera(Camera camera, RenderScript rs) {
+        public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
 
             bCamera = camera;
             Camera.Parameters params = camera.getParameters();
@@ -109,6 +107,11 @@ public class RawCameraFrame {
             bFrameWidth = sz.width;
             bFrameHeight = sz.height;
             bLength = bFrameWidth * bFrameHeight;
+
+            bCameraId = cameraId;
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
 
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(bFrameWidth)
@@ -118,16 +121,7 @@ public class RawCameraFrame {
             bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bout);
-            bScriptCWeight = PreCalibrator.getInstance(bContext).getScriptCWeight();
 
-            return this;
-        }
-
-        public Builder setCameraId(int cameraId) {
-            bCameraId = cameraId;
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(cameraId, cameraInfo);
-            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
             return this;
         }
 
@@ -166,15 +160,15 @@ public class RawCameraFrame {
             return this;
         }
 
-        public Builder setWeighted(boolean weighted) {
-            bWeighted = weighted;
+        public Builder setWeights(ScriptC_weight weights) {
+            bScriptCWeight = weights;
             return this;
         }
 
         public RawCameraFrame build() {
             return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
                     bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
-                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout, bWeighted);
+                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout);
         }
     }
 
@@ -195,8 +189,7 @@ public class RawCameraFrame {
                            final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                            final ScriptC_weight scriptCWeight,
                            final Allocation in,
-                           final Allocation out,
-                           final boolean weighted) {
+                           final Allocation out) {
         mBytes = bytes;
         mCamera = camera;
         mCameraId = cameraId;
@@ -215,7 +208,6 @@ public class RawCameraFrame {
         mScriptCWeight = scriptCWeight;
         ain = in;
         aout = out;
-        mStatsWeighted = weighted;
     }
 
     public byte[] getBytes() {
@@ -229,7 +221,7 @@ public class RawCameraFrame {
      */
     public synchronized Allocation getAllocation() {
         ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
-        if(mStatsWeighted) {
+        if(mScriptCWeight != null) {
             mScriptCWeight.forEach_weight(ain, ain);
         }
         return ain;

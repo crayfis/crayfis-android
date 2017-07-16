@@ -1,7 +1,5 @@
 package edu.uci.crayfis.precalibration;
 
-import android.content.Context;
-import android.hardware.Camera;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -14,11 +12,8 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import edu.uci.crayfis.CFConfig;
@@ -32,8 +27,8 @@ import edu.uci.crayfis.util.CFLog;
 
 class HotCellKiller {
 
-    final List<Set<Integer>> HOTCELL_COORDS = new ArrayList<>(Camera.getNumberOfCameras());
-    int[] secondHist;
+    private final Set<Integer> HOTCELL_COORDS = new HashSet<>();
+    private int[] secondHist;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
@@ -45,9 +40,6 @@ class HotCellKiller {
     private Integer mCount = 0;
 
     HotCellKiller(RenderScript rs) {
-        for(int i=0; i<Camera.getNumberOfCameras(); i++) {
-            HOTCELL_COORDS.add(new HashSet<Integer>(10));
-        }
         RS = rs;
         SCRIPT_C_FIND_SECOND = new ScriptC_findSecond(RS);
     }
@@ -128,14 +120,14 @@ class HotCellKiller {
             int x = pos % width;
             int y = pos / width;
 
-            HOTCELL_COORDS.get(cameraId).add(pos);
+            HOTCELL_COORDS.add(pos);
 
             for(int dx=x-1; dx<=x+1; dx++) {
                 for(int dy=y-1; dy<=y+1; dy++) {
                     try {
                         int adjMax = maxArray[dx + width * dy] & 0xFF;
                         if (adjMax >= cutoff) {
-                            HOTCELL_COORDS.get(cameraId).add(dx + width * dy);
+                            HOTCELL_COORDS.add(dx + width * dy);
                         }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         // don't crash if we're on the border
@@ -144,16 +136,25 @@ class HotCellKiller {
             }
         }
 
-        CFLog.d("Total hotcells found: " + HOTCELL_COORDS.get(cameraId).size());
+        CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
+        CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
     }
 
-    void clearHotcells(int cameraId) {
+    void clear() {
         synchronized (HOTCELL_COORDS) {
-            HOTCELL_COORDS.get(cameraId).clear();
+            HOTCELL_COORDS.clear();
         }
         mCount = 0;
         aMax = null;
         aSecond = null;
+    }
+
+    Iterator<Integer> getHotcells() {
+        return HOTCELL_COORDS.iterator();
+    }
+
+    int getSecondHist(int bin) {
+        return secondHist[bin];
     }
 }

@@ -160,8 +160,7 @@ public class CFCamera implements Camera.ErrorCallback {
             mCamera.setPreviewTexture(mTexture);
 
 
-            BUILDER.setCamera(mCamera, mRS)
-                    .setCameraId(cameraId);
+            BUILDER.setCamera(mCamera, cameraId, mRS);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);

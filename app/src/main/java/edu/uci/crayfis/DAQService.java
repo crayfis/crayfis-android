@@ -234,7 +234,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             case RECONFIGURE:
             case IDLE:
                 mApplication.changeCamera();
-                BUILDER.setWeighted(false);
+                BUILDER.setWeights(null);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -276,7 +276,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         switch (previousState) {
             case CALIBRATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                mPreCal.clear(mApplication.getCameraId());
+                mPreCal.clear();
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -306,7 +306,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                BUILDER.setWeighted(true);
+                BUILDER.setWeights(mPreCal.getScriptCWeight(mApplication.getCameraId()));
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());

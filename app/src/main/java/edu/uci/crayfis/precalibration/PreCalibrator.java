@@ -22,6 +22,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Set;
 
 import edu.uci.crayfis.CFApplication;
@@ -207,17 +208,17 @@ public class PreCalibrator {
                     .setCompressedFormat(FORMAT)
                     .setResX(width);
 
-            Set<Integer> hotcells = HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId);
-            for (Integer pos: hotcells) {
-                b.addHotcell(pos);
+            Iterator<Integer> hotcellIterator = HOTCELL_KILLER.getHotcells();
+            while(hotcellIterator.hasNext()) {
+                b.addHotcell(hotcellIterator.next());
             }
 
-            int maxNonZero = HOTCELL_KILLER.secondHist.length-1;
-            while(HOTCELL_KILLER.secondHist[maxNonZero] == 0) {
+            int maxNonZero = 255;
+            while(HOTCELL_KILLER.getSecondHist(maxNonZero) == 0) {
                 maxNonZero--;
             }
             for(int i=0; i<=maxNonZero; i++) {
-                b.addSecondHist(HOTCELL_KILLER.secondHist[i]);
+                b.addSecondHist(HOTCELL_KILLER.getSecondHist(i));
             }
 
             // submit the PreCalibrationResult object
@@ -243,7 +244,9 @@ public class PreCalibrator {
         return sampleStep;
     }
 
-    private void decompress(int cameraId, int width, int height) {
+    public ScriptC_weight getScriptCWeight(int cameraId) {
+
+        Camera.Size sz = CFApplication.getCameraSize();
 
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
@@ -256,20 +259,20 @@ public class PreCalibrator {
 
         Mat resampledMat2D = new Mat();
 
-        Imgproc.resize(downsampleFloat, resampledMat2D, new Size(width,height), 0, 0, INTER);
+        Imgproc.resize(downsampleFloat, resampledMat2D, new Size(sz.width, sz.height), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
         MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
 
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        for(Integer pos: HOTCELL_KILLER.HOTCELL_COORDS.get(cameraId)) {
+        for(Integer pos: CONFIG.getHotcells(cameraId)) {
             resampledArray[pos] = 0f;
         }
 
         Type weightType = new Type.Builder(RS, Element.F32(RS))
-                .setX(width)
-                .setY(height)
+                .setX(sz.width)
+                .setY(sz.height)
                 .create();
         Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
         weights.copyFrom(resampledArray);
@@ -284,31 +287,20 @@ public class PreCalibrator {
         resampledMat2D.release();
         resampledFloat.release();
 
-    }
-
-    public ScriptC_weight getScriptCWeight() {
         return SCRIPT_C_WEIGHT;
     }
 
-    public void clear(int cameraId) {
+    public void clear() {
         synchronized (SCRIPT_C_WEIGHT) {
             mSumAlloc = null;
             mFramesWeighting = 0;
-            HOTCELL_KILLER.clearHotcells(cameraId);
+            HOTCELL_KILLER.clear();
             mScriptCSumFrames = new ScriptC_sumFrames(RS);
         }
     }
 
     public boolean dueForPreCalibration(int cameraId) {
         Camera.Size sz = CFApplication.getCameraSize();
-        if(CONFIG.getPrecalWeights(cameraId) != null && sz.width == mResX) {
-            decompress(cameraId, sz.width, sz.height);
-            return false;
-        } else if(sz.width != mResX) {
-            for(int i=0; i<Camera.getNumberOfCameras(); i++) {
-                CONFIG.setPrecalWeights(cameraId, null);
-            }
-        }
-        return true;
+        return CONFIG.getPrecalWeights(cameraId) == null || sz.width != mResX;
     }
 }
