@@ -47,13 +47,22 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected boolean processPreCalibration() {
+    protected boolean processWeights() {
 
-        // see if the PreCalibrator is done processing, and if so, go into calibration
 
-        if (!mL1Processor.mPreCal.addFrame(mFrame)) {
+        if(mL1Processor.mPreCal.WEIGHT_FINDER.addFrame(mFrame) == mL1Processor.CONFIG.getWeightingSampleFrames()) {
+            mL1Processor.mPreCal.WEIGHT_FINDER.process();
+            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION_HOTCELLS);
+        }
+
+        return false;
+    }
+
+    protected boolean processHotcells() {
+
+        if(mL1Processor.mPreCal.HOTCELL_KILLER.addFrame(mFrame) == mL1Processor.CONFIG.getHotcellSampleFrames()) {
+            mL1Processor.mPreCal.HOTCELL_KILLER.process();
             mApplication.setNewestPrecalUUID();
-            mL1Processor.mPreCal.processPreCalResults();
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
 
@@ -137,8 +146,11 @@ class L1Task implements Runnable {
 
         boolean stopProcessing;
         switch (mExposureBlock.daq_state) {
-            case PRECALIBRATION:
-                stopProcessing = processPreCalibration();
+            case PRECALIBRATION_WEIGHTS:
+                stopProcessing = processWeights();
+                break;
+            case PRECALIBRATION_HOTCELLS:
+                stopProcessing = processHotcells();
                 break;
             case CALIBRATION:
                 stopProcessing = processCalibration();

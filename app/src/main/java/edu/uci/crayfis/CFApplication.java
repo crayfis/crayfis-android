@@ -34,10 +34,6 @@ import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 
-import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
-import static edu.uci.crayfis.CFApplication.State.IDLE;
-import static edu.uci.crayfis.CFApplication.State.PRECALIBRATION;
-import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -100,7 +96,7 @@ public class CFApplication extends Application {
     public static int badFlatEvents = 0;
 
     private State mApplicationState;
-    private int mCameraId = -1;
+    private static int mCameraId = -1;
 
     private AppBuild mAppBuild;
 
@@ -175,7 +171,7 @@ public class CFApplication extends Application {
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
-    public int getCameraId() { return mCameraId; }
+    public static int getCameraId() { return mCameraId; }
 
     public void changeCamera() {
         int nextId = -1;
@@ -199,7 +195,8 @@ public class CFApplication extends Application {
                         nextId = 1;
                 }
                 break;
-            case PRECALIBRATION:
+            case PRECALIBRATION_WEIGHTS:
+            case PRECALIBRATION_HOTCELLS:
                 PreCalibrator.getInstance(this).clear();
             case CALIBRATION:
             case DATA:
@@ -208,12 +205,12 @@ public class CFApplication extends Application {
                 nextId = -1;
         }
 
-        if(nextId != mCameraId || mApplicationState == RECONFIGURE || mCameraId == -1) {
+        if(nextId != mCameraId || mApplicationState == State.RECONFIGURE || mCameraId == -1) {
             CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
             mCameraId = nextId;
-            if(nextId == -1 && mApplicationState != IDLE ) {
+            if(nextId == -1 && mApplicationState != State.IDLE ) {
 
-                setApplicationState(IDLE);
+                setApplicationState(State.IDLE);
                 DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
                 mWaitingForStabilization = true;
                 mStabilizationTimer.start();
@@ -446,7 +443,8 @@ public class CFApplication extends Application {
      */
     public enum State {
         INIT,
-        PRECALIBRATION,
+        PRECALIBRATION_WEIGHTS,
+        PRECALIBRATION_HOTCELLS,
         CALIBRATION,
         DATA,
         STABILIZATION,

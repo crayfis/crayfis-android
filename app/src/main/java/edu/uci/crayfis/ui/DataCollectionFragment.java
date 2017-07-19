@@ -92,7 +92,8 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
-            case PRECALIBRATION:
+            case PRECALIBRATION_WEIGHTS:
+            case PRECALIBRATION_HOTCELLS:
                 mStatus.setText(getString(R.string.precalibration));
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);

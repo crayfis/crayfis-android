@@ -192,8 +192,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 case STABILIZATION:
                     doStateTransitionStabilization(previous);
                     break;
-                case PRECALIBRATION:
-                    doStateTransitionPreCalibration(previous);
+                case PRECALIBRATION_WEIGHTS:
+                    doStateTransitionWeights(previous);
+                    break;
+                case PRECALIBRATION_HOTCELLS:
+                    doStateTransitionHotcells(previous);
                     break;
                 case CALIBRATION:
                     doStateTransitionCalibration(previous);
@@ -257,7 +260,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         switch(previousState) {
-            case PRECALIBRATION:
+            case PRECALIBRATION_WEIGHTS:
+            case PRECALIBRATION_HOTCELLS:
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
@@ -272,11 +276,22 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
     }
 
-    private void doStateTransitionPreCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+    private void doStateTransitionWeights(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         switch (previousState) {
             case CALIBRATION:
-                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
+                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION_WEIGHTS);
                 mPreCal.clear();
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+        }
+    }
+
+    private void doStateTransitionHotcells(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+        switch (previousState) {
+            case PRECALIBRATION_WEIGHTS:
+                BUILDER.setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
+                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION_HOTCELLS);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -285,7 +300,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         // first generate runconfig for specific camera
-        if (run_config == null || mApplication.getCameraId() != run_config.getCameraId()) {
+        if (run_config == null || CFApplication.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
             UploadExposureService.submitRunConfig(context, run_config);
         }
@@ -295,18 +310,20 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(mPreCal.dueForPreCalibration(mApplication.getCameraId())) {
-            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
+        if(mPreCal.dueForPreCalibration(CFApplication.getCameraId())) {
+            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION_WEIGHTS);
             return;
         }
         switch (previousState) {
-            case PRECALIBRATION:
+            case PRECALIBRATION_HOTCELLS:
+                mApplication.setNewestPrecalUUID();
+                mPreCal.submitPrecalibrationResult();
             case STABILIZATION:
                 L1cal.clear();
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                BUILDER.setWeights(mPreCal.getScriptCWeight(mApplication.getCameraId()));
+                BUILDER.setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -422,7 +439,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
-        b.setCameraId(mApplication.getCameraId());
+        b.setCameraId(CFApplication.getCameraId());
         b.setCameraParams(CFApplication.getCameraParams().flatten());
 
 
@@ -712,12 +729,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
         public DataCollectionStatsView.Status getDataCollectionStatus() {
             final Camera.Size sz = CFApplication.getCameraSize();
-            final DataCollectionStatsView.Status dstatus = new DataCollectionStatsView.Status.Builder()
+            return new DataCollectionStatsView.Status.Builder()
                     .setTotalEvents(L2Processor.mL2Count)
                     .setTotalPixels((long)L1Processor.mL1CountData * sz.height * sz.width)
                     .setTotalFrames(L1Processor.mL1CountData)
                     .build();
-            return dstatus;
         }
 
         public String getDevText() {
@@ -730,8 +746,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                     + "State: " + mApplication.getApplicationState() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                     + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
-                    + "L1 Threshold:" + (CONFIG != null ? CONFIG.getL1Threshold() : -1) + (CONFIG.getTriggerLock() ? "*" : "")
-                    + ", L2 Threshold:" + (CONFIG != null ? CONFIG.getL2Threshold() : -1) + "\n"
+                    + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
+                    + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
                     + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", batteryTemp/10.) + "C from "

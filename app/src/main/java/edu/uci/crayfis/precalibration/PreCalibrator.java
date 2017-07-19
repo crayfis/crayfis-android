@@ -42,26 +42,19 @@ import edu.uci.crayfis.util.CFLog;
 
 public class PreCalibrator {
 
-    private Allocation mSumAlloc;
-    private ScriptC_sumFrames mScriptCSumFrames;
-
     private final Context CONTEXT;
     private RenderScript RS;
     private final ScriptC_weight SCRIPT_C_WEIGHT;
 
-    private final HotCellKiller HOTCELL_KILLER;
+    public final WeightFinder WEIGHT_FINDER;
+    public final HotCellKiller HOTCELL_KILLER;
     private final CFConfig CONFIG = CFConfig.getInstance();
 
+    private final DataProtos.PreCalibrationResult.Builder BUILDER;
 
-    private int mCameraId = -1;
     private int mResX;
 
-    private int mFramesWeighting = 0;
-
-    private long start_time;
-
     private final int INTER = Imgproc.INTER_CUBIC;
-    private final String FORMAT = ".jpeg";
 
     private static PreCalibrator sInstance = null;
 
@@ -76,177 +69,36 @@ public class PreCalibrator {
         CONTEXT = ctx;
         RS = RenderScript.create(ctx);
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
-        HOTCELL_KILLER = new HotCellKiller(RS);
+        BUILDER = DataProtos.PreCalibrationResult.newBuilder();
+
+        WEIGHT_FINDER = new WeightFinder(RS, BUILDER);
+        HOTCELL_KILLER = new HotCellKiller(RS, BUILDER);
     }
 
-    /**
-     * This is the entry point of the PreCalibrator pipeline.  Sends to RenderScript to process
-     * weights, or if weights have been calibrated, to HotCellKiller to find hotcell coordinates
-     *
-     * @param frame RawCameraFrame to process
-     * @return false if done processing, true otherwise
-     */
-    public boolean addFrame(RawCameraFrame frame) {
-        mFramesWeighting++;
-
-        if(mFramesWeighting < CONFIG.getWeightingSampleFrames()) {
-            if(mSumAlloc == null) {
-                mCameraId = frame.getCameraId();
-                mResX = frame.getWidth();
-                Type type = new Type.Builder(RS, Element.U32(RS))
-                        .setX(frame.getWidth())
-                        .setY(frame.getHeight())
-                        .create();
-
-                mSumAlloc = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
-                mScriptCSumFrames.set_gSum(mSumAlloc);
-
-                start_time = System.currentTimeMillis();
-            }
-
-            mScriptCSumFrames.forEach_update(frame.getAllocation(), mSumAlloc);
-        } else if(!HOTCELL_KILLER.addFrame(frame)) {
-            return false;
-        }
-
-        return true;
-
-    }
 
     /**
-     * Normalizes weights, downsamples and resamples, kills hotcells, and uploads the PreCalibrationResult
-     *
+     * Normalizes weights, downsamples, kills hotcells, and uploads the PreCalibrationResult
      */
-    public void processPreCalResults() {
-
-        synchronized (mSumAlloc) {
+    public void submitPrecalibrationResult() {
 
             CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-            final int MAX_SAMPLE_SIZE = 1500;
-            mScriptCSumFrames = null;
 
-            int width = mSumAlloc.getType().getX();
-            int height = mSumAlloc.getType().getY();
-            int cameraId = mCameraId; // make sure this doesn't move from underneath us
-
-            // first, find appropriate dimensions to downsample
-
-            int sampleStep = getSampleStep(width, height, MAX_SAMPLE_SIZE);
-
-            int totalFrames = CONFIG.getWeightingSampleFrames();
-            ScriptC_downsample scriptCDownsample = new ScriptC_downsample(RS);
-
-            scriptCDownsample.set_gSum(mSumAlloc);
-            scriptCDownsample.set_sampleStep(sampleStep);
-            scriptCDownsample.set_gTotalFrames(totalFrames);
-
-            int sampleResX = width / sampleStep;
-            int sampleResY = height / sampleStep;
-
-            CFLog.d("Downsample resolution: " + sampleResX + "x" + sampleResY);
-
-            // next, we downsample (average) sums in RenderScript
-
-            Type sampleType = new Type.Builder(RS, Element.U32(RS))
-                    .setX(sampleResX)
-                    .setY(sampleResY)
-                    .create();
-
-            Type byteType = new Type.Builder(RS, Element.U8(RS))
-                    .setX(sampleResX)
-                    .setY(sampleResY)
-                    .create();
-
-
-            Allocation downsampledAlloc = Allocation.createTyped(RS, sampleType, Allocation.USAGE_SCRIPT);
-            Allocation byteAlloc = Allocation.createTyped(RS, byteType, Allocation.USAGE_SCRIPT);
-
-            scriptCDownsample.forEach_downsampleSums(downsampledAlloc);
-            int[] downsampleArray = new int[sampleResX * sampleResY];
-            downsampledAlloc.copyTo(downsampleArray);
-            mSumAlloc = null;
-
-
-            int minSum = 256 * totalFrames * sampleStep*sampleStep;
-            for (int sum : downsampleArray) {
-                if (sum < minSum) {
-                    minSum = sum;
-                }
-            }
-
-            scriptCDownsample.set_gMinSum(minSum + 0.5f*totalFrames*sampleStep*sampleStep);
-            scriptCDownsample.forEach_normalizeWeights(downsampledAlloc, byteAlloc);
-
-            byte[] byteNormalizedArray = new byte[sampleResX*sampleResY];
-            byteAlloc.copyTo(byteNormalizedArray);
-
-            // compress with OpenCV
-            MatOfByte downsampledBytes = new MatOfByte(byteNormalizedArray);
-            Mat downsampleMat2D = downsampledBytes.reshape(0, sampleResY);
-            MatOfByte buf = new MatOfByte();
-            int[] paramArray = new int[]{Imgcodecs.CV_IMWRITE_JPEG_QUALITY, 100};
-            MatOfInt params = new MatOfInt(paramArray);
-            Imgcodecs.imencode(FORMAT, downsampleMat2D, buf, params);
-            byte[] bytes = buf.toArray();
-            CFLog.d("Compressed bytes = " + bytes.length);
-            CONFIG.setPrecalWeights(cameraId, Base64.encodeToString(bytes, Base64.DEFAULT));
-
-            downsampledBytes.release();
-            downsampleMat2D.release();
-            buf.release();
-            params.release();
-
-            DataProtos.PreCalibrationResult.Builder b = DataProtos.PreCalibrationResult.newBuilder()
-                    .setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
-                    .setStartTime(start_time)
+            BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                     .setEndTime(System.currentTimeMillis())
                     .setBatteryTemp(CFApplication.getBatteryTemp())
-                    .setSampleResX(sampleResX)
-                    .setSampleResY(sampleResY)
-                    .setInterpolation(INTER)
-                    .setCompressedWeights(ByteString.copyFrom(bytes))
-                    .setCompressedFormat(FORMAT)
-                    .setResX(width);
-
-            Iterator<Integer> hotcellIterator = HOTCELL_KILLER.getHotcells();
-            while(hotcellIterator.hasNext()) {
-                b.addHotcell(hotcellIterator.next());
-            }
-
-            int maxNonZero = 255;
-            while(HOTCELL_KILLER.getSecondHist(maxNonZero) == 0) {
-                maxNonZero--;
-            }
-            for(int i=0; i<=maxNonZero; i++) {
-                b.addSecondHist(HOTCELL_KILLER.getSecondHist(i));
-            }
+                    .setInterpolation(INTER);
 
             // submit the PreCalibrationResult object
 
-            UploadExposureService.submitPreCalibrationResult(CONTEXT, b.build());
+            UploadExposureService.submitPreCalibrationResult(CONTEXT, BUILDER.build());
 
-        }
     }
 
-    private int getSampleStep(int w, int h, int maxArea) {
-        // dimensions of each "block" that make up aspect ratio
-        int blockSize = BigInteger.valueOf(h).gcd(BigInteger.valueOf(w)).intValue();
-
-        int sampleStep = (int) Math.sqrt((w * h) / maxArea);
-
-        while (blockSize % sampleStep != 0) {
-            sampleStep++;
-            if (sampleStep > blockSize) {
-                return -1;
-            }
-        }
-
-        return sampleStep;
-    }
 
     public ScriptC_weight getScriptCWeight(int cameraId) {
 
         Camera.Size sz = CFApplication.getCameraSize();
+        mResX = sz.width;
 
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
@@ -266,8 +118,11 @@ public class PreCalibrator {
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        for(Integer pos: CONFIG.getHotcells(cameraId)) {
-            resampledArray[pos] = 0f;
+        Set<Integer> hotcells = CONFIG.getHotcells(cameraId);
+        if(hotcells != null) {
+            for (Integer pos : hotcells) {
+                resampledArray[pos] = 0f;
+            }
         }
 
         Type weightType = new Type.Builder(RS, Element.F32(RS))
@@ -292,10 +147,9 @@ public class PreCalibrator {
 
     public void clear() {
         synchronized (SCRIPT_C_WEIGHT) {
-            mSumAlloc = null;
-            mFramesWeighting = 0;
+            WEIGHT_FINDER.clear();
             HOTCELL_KILLER.clear();
-            mScriptCSumFrames = new ScriptC_sumFrames(RS);
+            BUILDER.setStartTime(System.currentTimeMillis());
         }
     }
 

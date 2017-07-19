@@ -1,5 +1,6 @@
 package edu.uci.crayfis.precalibration;
 
+import android.hardware.Camera;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -13,10 +14,11 @@ import org.opencv.core.MatOfByte;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 
+import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_findSecond;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
@@ -25,66 +27,45 @@ import edu.uci.crayfis.util.CFLog;
  * Created by Jeff on 6/6/2017.
  */
 
-class HotCellKiller {
+public class HotCellKiller {
 
     private final Set<Integer> HOTCELL_COORDS = new HashSet<>();
-    private int[] secondHist;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private final RenderScript RS;
-    private final ScriptC_findSecond SCRIPT_C_FIND_SECOND;
+    private ScriptC_findSecond mScriptCFindSecond;
     private Allocation aMax;
     private Allocation aSecond;
 
-    private Integer mCount = 0;
+    private final DataProtos.PreCalibrationResult.Builder BUILDER;
+    
+    private int mCount = 0;
 
-    HotCellKiller(RenderScript rs) {
+    HotCellKiller(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
         RS = rs;
-        SCRIPT_C_FIND_SECOND = new ScriptC_findSecond(RS);
+        mScriptCFindSecond = new ScriptC_findSecond(RS);
+        BUILDER = b;
     }
 
-    boolean addFrame(RawCameraFrame frame) {
-
-        mCount++;
-
-        if(aMax == null) {
-
-            Type type = new Type.Builder(RS, Element.U8(RS))
-                    .setX(frame.getWidth())
-                    .setY(frame.getHeight())
-                    .create();
-            aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
-            aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
-            SCRIPT_C_FIND_SECOND.set_aMax(aMax);
-            SCRIPT_C_FIND_SECOND.set_aSecond(aSecond);
-        }
-
-        SCRIPT_C_FIND_SECOND.forEach_order(frame.getAllocation());
-
-        synchronized (mCount) {
-            if(mCount >= CONFIG.getHotcellSampleFrames()) {
-                mCount = 0;
-                findHotcells(frame.getCameraId());
-                return false;
-            }
-        }
-        return true;
+    public int addFrame(RawCameraFrame frame) {
+        mScriptCFindSecond.forEach_order(frame.getAllocation());
+        return ++mCount;
     }
 
-    private void findHotcells(int cameraId) {
-
+    public void process() {
+        int cameraId = CFApplication.getCameraId();
         ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
         Allocation aout = Allocation.createSized(RS, Element.U32(RS), 256, Allocation.USAGE_SCRIPT);
         histogram.setOutput(aout);
         histogram.forEach(aSecond);
 
-        secondHist = new int[256];
+        int[] secondHist = new int[256];
         aout.copyTo(secondHist);
 
         for(int i=0; i<secondHist.length; i++) {
             if(secondHist[i] != 0)
-            CFLog.d("hist[" + i + "] = " + secondHist[i]);
+                CFLog.d("hist[" + i + "] = " + secondHist[i]);
         }
 
         int area = aMax.getType().getX() * aMax.getType().getY();
@@ -139,22 +120,35 @@ class HotCellKiller {
         CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
         CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
+        for(Integer pos: HOTCELL_COORDS) {
+            BUILDER.addHotcell(pos);
+        }
+
+        int maxNonZero = 255;
+        while (secondHist[maxNonZero] == 0) {
+            maxNonZero--;
+        }
+        for (int i = 0; i <= maxNonZero; i++) {
+            BUILDER.addSecondHist(secondHist[i]);
+        }
     }
+
 
     void clear() {
         synchronized (HOTCELL_COORDS) {
             HOTCELL_COORDS.clear();
         }
+
+        Camera.Size sz = CFApplication.getCameraSize();
+
+        Type type = new Type.Builder(RS, Element.U8(RS))
+                .setX(sz.width)
+                .setY(sz.height)
+                .create();
+        aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
+        aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
+        mScriptCFindSecond.set_aMax(aMax);
+        mScriptCFindSecond.set_aSecond(aSecond);
         mCount = 0;
-        aMax = null;
-        aSecond = null;
-    }
-
-    Iterator<Integer> getHotcells() {
-        return HOTCELL_COORDS.iterator();
-    }
-
-    int getSecondHist(int bin) {
-        return secondHist[bin];
     }
 }

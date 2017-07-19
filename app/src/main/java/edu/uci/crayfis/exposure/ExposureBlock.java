@@ -333,7 +333,7 @@ public class ExposureBlock implements Parcelable {
         }
 
         // should be null for PRECALIBRATION
-        if(daq_state != CFApplication.State.PRECALIBRATION) {
+        if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
             buf.setPrecalId(precal_id.getLeastSignificantBits());
         }
 		

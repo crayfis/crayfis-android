@@ -55,7 +55,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
-    private static final int N_CAMERAS = Camera.getNumberOfCameras();
+    private final int N_CAMERAS;
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
@@ -86,7 +86,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private String mL1Trigger;
     private String mL2Trigger;
-    private List<Set<String>> mHotcells = new ArrayList<>(N_CAMERAS);
+    private List<Set<String>> mHotcells;
     private String[] mPrecalWeights;
     private UUID[] mPrecalUUID;
     private int mL1Threshold;
@@ -116,6 +116,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
+        N_CAMERAS = Camera.getNumberOfCameras();
+
         mL1Trigger = DEFAULT_L1_TRIGGER;
         mL2Trigger = DEFAULT_L2_TRIGGER;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -142,6 +144,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
+
+        mHotcells = new ArrayList<>(N_CAMERAS);
     }
 
     public String getL1Trigger() {
@@ -161,6 +165,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public Set<Integer> getHotcells(int cameraId) {
+        if(mHotcells.get(cameraId) == null) return null;
         Set<Integer> intSet = new HashSet<>(mHotcells.get(cameraId).size());
         for(String pos: mHotcells.get(cameraId)) {
             intSet.add(Integer.parseInt(pos,16));
