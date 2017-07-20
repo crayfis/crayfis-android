@@ -51,8 +51,7 @@ class L1Task implements Runnable {
 
 
         if(mL1Processor.mPreCal.WEIGHT_FINDER.addFrame(mFrame) == mL1Processor.CONFIG.getWeightingSampleFrames()) {
-            mL1Processor.mPreCal.WEIGHT_FINDER.process();
-            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION_HOTCELLS);
+            mL1Processor.mPreCal.processResults(mApplication);
         }
 
         return false;
@@ -61,9 +60,7 @@ class L1Task implements Runnable {
     protected boolean processHotcells() {
 
         if(mL1Processor.mPreCal.HOTCELL_KILLER.addFrame(mFrame) == mL1Processor.CONFIG.getHotcellSampleFrames()) {
-            mL1Processor.mPreCal.HOTCELL_KILLER.process();
-            mApplication.setNewestPrecalUUID();
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+            mL1Processor.mPreCal.processResults(mApplication);
         }
 
         return false;

@@ -2,6 +2,9 @@ package edu.uci.crayfis.precalibration;
 
 import android.content.Context;
 import android.hardware.Camera;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -32,6 +35,7 @@ import edu.uci.crayfis.ScriptC_downsample;
 import edu.uci.crayfis.ScriptC_sumFrames;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
@@ -73,6 +77,30 @@ public class PreCalibrator {
 
         WEIGHT_FINDER = new WeightFinder(RS, BUILDER);
         HOTCELL_KILLER = new HotCellKiller(RS, BUILDER);
+    }
+
+
+    public void processResults(CFApplication application) {
+
+        Runnable runnable;
+        CFApplication.State nextState;
+
+        switch (application.getApplicationState()) {
+            case PRECALIBRATION_WEIGHTS:
+                runnable = WEIGHT_FINDER.processWeightsTask;
+                nextState = CFApplication.State.PRECALIBRATION_HOTCELLS;
+                break;
+            case PRECALIBRATION_HOTCELLS:
+                runnable = HOTCELL_KILLER.processHotcellsTask;
+                nextState = CFApplication.State.CALIBRATION;
+                break;
+            default:
+                CFLog.e("PreCalibrator recieving calls in non-precalibration state");
+                return;
+        }
+
+        runnable.run();
+        application.setApplicationState(nextState);
     }
 
 
