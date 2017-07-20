@@ -62,7 +62,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final Set<String> DEFAULT_HOTCELLS = null;
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
-    private static final int DEFAULT_HOTCELL_FRAMES = 10000;
+    private static final int DEFAULT_HOTCELL_FRAMES = 1000;
     private static final float DEFAULT_HOTCELL_THRESH = .0001f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
@@ -146,6 +146,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
 
         mHotcells = new ArrayList<>(N_CAMERAS);
+        for(int i=0; i<N_CAMERAS; i++) {
+            mHotcells.add(new HashSet<String>());
+        }
+        CFLog.d("mHotcells: " + mHotcells.size());
     }
 
     public String getL1Trigger() {
@@ -165,7 +169,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public Set<Integer> getHotcells(int cameraId) {
-        if(mHotcells.get(cameraId) == null) return null;
         Set<Integer> intSet = new HashSet<>(mHotcells.get(cameraId).size());
         for(String pos: mHotcells.get(cameraId)) {
             intSet.add(Integer.parseInt(pos,16));
@@ -174,12 +177,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public void setHotcells(int cameraId, Set<Integer> hotcells) {
-        mHotcells.remove(cameraId);
-        Set<String> stringSet = new HashSet<>(hotcells.size());
+        mHotcells.get(cameraId).clear();
         for(Integer pos: hotcells) {
-            stringSet.add(Integer.toHexString(pos));
+            mHotcells.get(cameraId).add(Integer.toHexString(pos));
         }
-        mHotcells.set(cameraId, stringSet);
     }
 
     public UUID getPrecalId(int cameraId) {
