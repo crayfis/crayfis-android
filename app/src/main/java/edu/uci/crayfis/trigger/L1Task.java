@@ -49,7 +49,6 @@ class L1Task implements Runnable {
 
     protected boolean processWeights() {
 
-
         if(mL1Processor.mPreCal.WEIGHT_FINDER.addFrame(mFrame) == mL1Processor.CONFIG.getWeightingSampleFrames()) {
             mL1Processor.mPreCal.processResults(mApplication);
         }
@@ -61,6 +60,8 @@ class L1Task implements Runnable {
 
         if(mL1Processor.mPreCal.HOTCELL_KILLER.addFrame(mFrame) == mL1Processor.CONFIG.getHotcellSampleFrames()) {
             mL1Processor.mPreCal.processResults(mApplication);
+            mApplication.setNewestPrecalUUID();
+            mL1Processor.mPreCal.submitPrecalibrationResult();
         }
 
         return false;

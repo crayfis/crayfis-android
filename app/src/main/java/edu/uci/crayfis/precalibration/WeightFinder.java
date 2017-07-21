@@ -1,7 +1,6 @@
 package edu.uci.crayfis.precalibration;
 
 import android.hardware.Camera;
-import android.os.AsyncTask;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -71,7 +70,7 @@ public class WeightFinder {
 
             scriptCDownsample.set_gSum(mSumAlloc);
             scriptCDownsample.set_sampleStep(sampleStep);
-            scriptCDownsample.set_gTotalFrames(totalFrames);
+            scriptCDownsample.set_gPixPerSample((float)totalFrames*sampleStep*sampleStep);
 
             int sampleResX = width / sampleStep;
             int sampleResY = height / sampleStep;
@@ -104,8 +103,11 @@ public class WeightFinder {
                     minSum = sum;
                 }
             }
+            CFLog.d("minSum = " + minSum);
 
-            scriptCDownsample.set_gMinSum(minSum + 0.5f * totalFrames * sampleStep * sampleStep);
+            double maxWeight = Math.log1p((float)totalFrames*sampleStep*sampleStep/++minSum);
+
+            scriptCDownsample.set_gMaxWeight((float)maxWeight);
             scriptCDownsample.forEach_normalizeWeights(downsampledAlloc, byteAlloc);
 
             byte[] byteNormalizedArray = new byte[sampleResX * sampleResY];

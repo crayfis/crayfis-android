@@ -21,6 +21,8 @@ public class ServerCommand {
 
     @SerializedName("set_precal") private String[] mPrecalWeights;
     @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
+    @SerializedName("set_last_precal_time") private long[] mLastPrecalTime;
+    @SerializedName("set_last_precal_res_x") private int[] mLastPrecalResX;
     @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
@@ -88,6 +90,12 @@ public class ServerCommand {
 
     @Nullable
     public UUID[] getPrecalId() { return mPrecalUUID; }
+
+    @Nullable
+    public long[] getLastPrecalTime() { return mLastPrecalTime; }
+
+    @Nullable
+    public int[] getLastPrecalResX() { return mLastPrecalResX; }
 
     /**
      * Get the L1 threshold.

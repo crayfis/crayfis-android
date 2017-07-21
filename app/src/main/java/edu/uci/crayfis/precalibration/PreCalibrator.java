@@ -56,7 +56,7 @@ public class PreCalibrator {
 
     private final DataProtos.PreCalibrationResult.Builder BUILDER;
 
-    private int mResX;
+    private final long DUE_FOR_PRECAL_TIME = 7*24*3600*1000; // after 1 week, check weights and hotcells again
 
     private final int INTER = Imgproc.INTER_CUBIC;
 
@@ -109,16 +109,17 @@ public class PreCalibrator {
      */
     public void submitPrecalibrationResult() {
 
-            CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+        CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+        CONFIG.setLastPrecalTime(CFApplication.getCameraId(), System.currentTimeMillis());
 
-            BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
-                    .setEndTime(System.currentTimeMillis())
-                    .setBatteryTemp(CFApplication.getBatteryTemp())
-                    .setInterpolation(INTER);
+        BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
+                .setEndTime(System.currentTimeMillis())
+                .setBatteryTemp(CFApplication.getBatteryTemp())
+                .setInterpolation(INTER);
 
-            // submit the PreCalibrationResult object
+        // submit the PreCalibrationResult object
 
-            UploadExposureService.submitPreCalibrationResult(CONTEXT, BUILDER.build());
+        UploadExposureService.submitPreCalibrationResult(CONTEXT, BUILDER.build());
 
     }
 
@@ -126,7 +127,6 @@ public class PreCalibrator {
     public ScriptC_weight getScriptCWeight(int cameraId) {
 
         Camera.Size sz = CFApplication.getCameraSize();
-        mResX = sz.width;
 
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
@@ -182,7 +182,13 @@ public class PreCalibrator {
     }
 
     public boolean dueForPreCalibration(int cameraId) {
+
         Camera.Size sz = CFApplication.getCameraSize();
-        return CONFIG.getPrecalWeights(cameraId) == null || sz.width != mResX;
+        boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;
+        if(CONFIG.getPrecalWeights(cameraId) == null || sz.width != CONFIG.getLastPrecalResX(cameraId) || expired) {
+            CONFIG.setLastPrecalResX(cameraId, sz.width);
+            return true;
+        }
+        return false;
     }
 }

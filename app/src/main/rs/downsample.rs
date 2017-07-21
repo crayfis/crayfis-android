@@ -3,26 +3,25 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gSum;
-uint gTotalFrames;
-float gMinSum;
-static const float gOffset = 0.5; // maximum value that camera is presumed to round down
+float gPixPerSample;
+float gMaxWeight;
 uint sampleStep;
 
 uchar RS_KERNEL normalizeWeights(uint in) {
-    return (uchar)(255*gMinSum/(in + gTotalFrames*gOffset*sampleStep*sampleStep));
+    float inv_mean = gPixPerSample/++in;
+    float weight = log1p(inv_mean)/gMaxWeight;
+    //rsDebug("weight =",weight);
+    return (uchar)(255*weight);
 }
 
 uint RS_KERNEL downsampleSums(uint32_t x, uint32_t y) {
     uint sum = 0;
-    uint maxSum = 0;
     for(uint ix=x*sampleStep; ix<(x+1)*sampleStep; ix++) {
         for(uint iy=y*sampleStep; iy<(y+1)*sampleStep; iy++) {
             uint isum = rsGetElementAt_uint(gSum, ix, iy);
             sum += isum;
-            if(isum > maxSum) {
-                maxSum = isum;
-            }
         }
     }
+    //rsDebug("sum = ", sum);
     return sum;
 }

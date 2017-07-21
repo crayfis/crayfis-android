@@ -28,6 +28,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_HOTCELLS = "hotcells_";
     private static final String KEY_PRECAL_MOST = "precal_uuid_most_";
     private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
+    private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
+    private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
@@ -60,9 +62,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
-    private static final Set<String> DEFAULT_HOTCELLS = null;
+    private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
-    private static final int DEFAULT_HOTCELL_FRAMES = 1000;
+    private static final int DEFAULT_HOTCELL_FRAMES = 10000;
     private static final float DEFAULT_HOTCELL_THRESH = .0001f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
@@ -89,6 +91,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private List<Set<String>> mHotcells;
     private String[] mPrecalWeights;
     private UUID[] mPrecalUUID;
+    private long[] mLastPrecalTime;
+    private int[] mLastPrecalResX;
     private int mL1Threshold;
     private int mL2Threshold;
     private int mWeightingSampleFrames;
@@ -149,7 +153,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         for(int i=0; i<N_CAMERAS; i++) {
             mHotcells.add(new HashSet<String>());
         }
-        CFLog.d("mHotcells: " + mHotcells.size());
     }
 
     public String getL1Trigger() {
@@ -189,6 +192,22 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public void setPrecalId(int cameraId, UUID precalId) {
         mPrecalUUID[cameraId] = precalId;
+    }
+
+    public long getLastPrecalTime(int cameraId) {
+        return mLastPrecalTime[cameraId];
+    }
+
+    public void setLastPrecalTime(int cameraId, long t) {
+        mLastPrecalTime[cameraId] = t;
+    }
+
+    public int getLastPrecalResX(int cameraId) {
+        return mLastPrecalResX[cameraId];
+    }
+
+    public void setLastPrecalResX(int cameraId, int resX) {
+        mLastPrecalResX[cameraId] = resX;
     }
 
     /**
@@ -424,12 +443,16 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
         mPrecalWeights = new String[N_CAMERAS];
         mPrecalUUID = new UUID[N_CAMERAS];
+        mLastPrecalTime = new long[N_CAMERAS];
+        mLastPrecalResX = new int[N_CAMERAS];
         for(int i=0; i<N_CAMERAS; i++) {
             mPrecalWeights[i] = sharedPreferences.getString(KEY_WEIGHTS + i, null);
             mHotcells.add(i, sharedPreferences.getStringSet(KEY_HOTCELLS + i, DEFAULT_HOTCELLS));
             long mostSignificant = sharedPreferences.getLong(KEY_PRECAL_MOST + i, 0L);
             long leastSignificant = sharedPreferences.getLong(KEY_PRECAL_LEAST + i, 0L);
             mPrecalUUID[i] = new UUID(mostSignificant, leastSignificant);
+            mLastPrecalTime[i] = sharedPreferences.getLong(KEY_LAST_PRECAL_TIME + i, 0);
+            mLastPrecalResX[i] = sharedPreferences.getInt(KEY_LAST_PRECAL_RES_X + i, -1);
         }
 
     }
@@ -447,6 +470,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getHotcells() != null) {
             mHotcells = serverCommand.getHotcells();
+        }
+        if (serverCommand.getLastPrecalTime() != null) {
+            mLastPrecalTime = serverCommand.getLastPrecalTime();
+        }
+        if (serverCommand.getLastPrecalResX() != null) {
+            mLastPrecalResX = serverCommand.getLastPrecalResX();
         }
         if (serverCommand.getPrecalId() != null) {
             mPrecalUUID = serverCommand.getPrecalId();
@@ -532,7 +561,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             editor.putString(KEY_WEIGHTS + i, mPrecalWeights[i])
                     .putStringSet(KEY_HOTCELLS + i, mHotcells.get(i))
                     .putLong(KEY_PRECAL_MOST + i, mPrecalUUID[i].getMostSignificantBits())
-                    .putLong(KEY_PRECAL_LEAST + i, mPrecalUUID[i].getLeastSignificantBits());
+                    .putLong(KEY_PRECAL_LEAST + i, mPrecalUUID[i].getLeastSignificantBits())
+                    .putLong(KEY_LAST_PRECAL_TIME + i, mLastPrecalTime[i])
+                    .putInt(KEY_LAST_PRECAL_RES_X + i, mLastPrecalResX[i]);
         }
 
         editor.putString(KEY_L1_TRIGGER, mL1Trigger)
