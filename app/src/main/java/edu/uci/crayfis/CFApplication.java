@@ -195,8 +195,7 @@ public class CFApplication extends Application {
                         nextId = 1;
                 }
                 break;
-            case PRECALIBRATION_WEIGHTS:
-            case PRECALIBRATION_HOTCELLS:
+            case PRECALIBRATION:
                 PreCalibrator.getInstance(this).clear();
             case CALIBRATION:
             case DATA:
@@ -443,8 +442,7 @@ public class CFApplication extends Application {
      */
     public enum State {
         INIT,
-        PRECALIBRATION_WEIGHTS,
-        PRECALIBRATION_HOTCELLS,
+        PRECALIBRATION,
         CALIBRATION,
         DATA,
         STABILIZATION,

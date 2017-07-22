@@ -50,8 +50,7 @@ public class PreCalibrator {
     private RenderScript RS;
     private final ScriptC_weight SCRIPT_C_WEIGHT;
 
-    public final WeightFinder WEIGHT_FINDER;
-    public final HotCellKiller HOTCELL_KILLER;
+    private PrecalComponent mActiveComponent;
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private final DataProtos.PreCalibrationResult.Builder BUILDER;
@@ -74,40 +73,25 @@ public class PreCalibrator {
         RS = RenderScript.create(ctx);
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         BUILDER = DataProtos.PreCalibrationResult.newBuilder();
-
-        WEIGHT_FINDER = new WeightFinder(RS, BUILDER);
-        HOTCELL_KILLER = new HotCellKiller(RS, BUILDER);
     }
 
-
-    public void processResults(CFApplication application) {
-
-        Runnable runnable;
-        CFApplication.State nextState;
-
-        switch (application.getApplicationState()) {
-            case PRECALIBRATION_WEIGHTS:
-                runnable = WEIGHT_FINDER.processWeightsTask;
-                nextState = CFApplication.State.PRECALIBRATION_HOTCELLS;
-                break;
-            case PRECALIBRATION_HOTCELLS:
-                runnable = HOTCELL_KILLER.processHotcellsTask;
-                nextState = CFApplication.State.CALIBRATION;
-                break;
-            default:
-                CFLog.e("PreCalibrator recieving calls in non-precalibration state");
-                return;
+    public boolean addFrame(RawCameraFrame frame) {
+        if(mActiveComponent.addFrame(frame)) {
+            if(mActiveComponent instanceof HotCellKiller) {
+                mActiveComponent = new WeightFinder(RS, BUILDER);
+            } else if(mActiveComponent instanceof WeightFinder) {
+                submitPrecalibrationResult();
+                return true;
+            }
         }
-
-        runnable.run();
-        application.setApplicationState(nextState);
+        return false;
     }
 
 
     /**
      * Normalizes weights, downsamples, kills hotcells, and uploads the PreCalibrationResult
      */
-    public void submitPrecalibrationResult() {
+    private void submitPrecalibrationResult() {
 
         CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
         CONFIG.setLastPrecalTime(CFApplication.getCameraId(), System.currentTimeMillis());
@@ -174,11 +158,8 @@ public class PreCalibrator {
     }
 
     public void clear() {
-        synchronized (SCRIPT_C_WEIGHT) {
-            WEIGHT_FINDER.clear();
-            HOTCELL_KILLER.clear();
-            BUILDER.setStartTime(System.currentTimeMillis());
-        }
+        BUILDER.setStartTime(System.currentTimeMillis());
+        mActiveComponent = new HotCellKiller(RS, BUILDER);
     }
 
     public boolean dueForPreCalibration(int cameraId) {

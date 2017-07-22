@@ -27,120 +27,21 @@ import edu.uci.crayfis.util.CFLog;
  * Created by Jeff on 6/6/2017.
  */
 
-public class HotCellKiller {
+public class HotCellKiller extends PrecalComponent {
 
-    private final Set<Integer> HOTCELL_COORDS = new HashSet<>();
+    private final Set<Integer> HOTCELL_COORDS;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private final RenderScript RS;
     private ScriptC_findSecond mScriptCFindSecond;
     private Allocation aMax;
     private Allocation aSecond;
 
-    private final DataProtos.PreCalibrationResult.Builder BUILDER;
-    
-    private int mCount = 0;
-
     HotCellKiller(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
-        RS = rs;
+        super(rs, b);
+        CFLog.i("HotCellKiller created");
         mScriptCFindSecond = new ScriptC_findSecond(RS);
-        BUILDER = b;
-    }
-
-    public int addFrame(RawCameraFrame frame) {
-        mScriptCFindSecond.forEach_order(frame.getAllocation());
-        return ++mCount;
-    }
-
-    Runnable processHotcellsTask = new Runnable() {
-        @Override
-        public void run() {
-            int cameraId = CFApplication.getCameraId();
-            ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
-            Allocation aout = Allocation.createSized(RS, Element.U32(RS), 256, Allocation.USAGE_SCRIPT);
-            histogram.setOutput(aout);
-            histogram.forEach(aSecond);
-
-            int[] secondHist = new int[256];
-            aout.copyTo(secondHist);
-
-            for(int i=0; i<secondHist.length; i++) {
-                if(secondHist[i] != 0)
-                    CFLog.d("hist[" + i + "] = " + secondHist[i]);
-            }
-
-            int area = aMax.getType().getX() * aMax.getType().getY();
-            int target = (int) (CONFIG.getHotcellThresh() * area);
-            int pixRemaining = area;
-
-            int cutoff=0; // minimum value in aSecond considered as "hot"
-            while(pixRemaining > target) {
-                pixRemaining -= secondHist[cutoff];
-                cutoff++;
-            }
-            CFLog.d("cutoff = " + cutoff);
-
-            // copy to OpenCV to locate hot pixels
-            byte[] maxArray = new byte[area];
-            byte[] secondArray = new byte[area];
-            aMax.copyTo(maxArray);
-            aSecond.copyTo(secondArray);
-            MatOfByte secondMat = new MatOfByte(secondArray);
-
-            Mat threshMat = new Mat();
-            Mat hotcellCoordsMat = new Mat();
-
-            Imgproc.threshold(secondMat, threshMat, cutoff-1, 0, Imgproc.THRESH_TOZERO);
-            secondMat.release();
-            Core.findNonZero(threshMat, hotcellCoordsMat);
-            threshMat.release();
-
-            for(int i=0; i<hotcellCoordsMat.total(); i++) {
-                double[] hotcellCoords = hotcellCoordsMat.get(i,0);
-                int pos = (int) hotcellCoords[1];
-                int width = aSecond.getType().getX();
-                int x = pos % width;
-                int y = pos / width;
-
-                HOTCELL_COORDS.add(pos);
-
-                for(int dx=x-1; dx<=x+1; dx++) {
-                    for(int dy=y-1; dy<=y+1; dy++) {
-                        try {
-                            int adjMax = maxArray[dx + width * dy] & 0xFF;
-                            if (adjMax >= cutoff) {
-                                HOTCELL_COORDS.add(dx + width * dy);
-                            }
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            // don't crash if we're on the border
-                        }
-                    }
-                }
-            }
-
-            CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
-            CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
-
-            for(Integer pos: HOTCELL_COORDS) {
-                BUILDER.addHotcell(pos);
-            }
-
-            int maxNonZero = 255;
-            while (secondHist[maxNonZero] == 0) {
-                maxNonZero--;
-            }
-            for (int i = 0; i <= maxNonZero; i++) {
-                BUILDER.addSecondHist(secondHist[i]);
-            }
-        }
-    };
-
-
-    void clear() {
-        synchronized (HOTCELL_COORDS) {
-            HOTCELL_COORDS.clear();
-        }
+        sampleFrames = CONFIG.getHotcellSampleFrames();
 
         Camera.Size sz = CFApplication.getCameraSize();
 
@@ -152,6 +53,94 @@ public class HotCellKiller {
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         mScriptCFindSecond.set_aMax(aMax);
         mScriptCFindSecond.set_aSecond(aSecond);
-        mCount = 0;
+        HOTCELL_COORDS = new HashSet<>();
+    }
+
+    @Override
+    boolean addFrame(RawCameraFrame frame) {
+        mScriptCFindSecond.forEach_order(frame.getAllocation());
+        return super.addFrame(frame);
+    }
+
+    @Override
+    void process() {
+        super.process();
+        int cameraId = CFApplication.getCameraId();
+        ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
+        Allocation aout = Allocation.createSized(RS, Element.U32(RS), 256, Allocation.USAGE_SCRIPT);
+        histogram.setOutput(aout);
+        histogram.forEach(aSecond);
+
+        int[] secondHist = new int[256];
+        aout.copyTo(secondHist);
+
+        for(int i=0; i<secondHist.length; i++) {
+            if(secondHist[i] != 0)
+                CFLog.d("hist[" + i + "] = " + secondHist[i]);
+            }
+
+        int area = aMax.getType().getX() * aMax.getType().getY();
+        int target = (int) (CONFIG.getHotcellThresh() * area);
+        int pixRemaining = area;
+
+        int cutoff=0; // minimum value in aSecond considered as "hot"
+        while(pixRemaining > target) {
+            pixRemaining -= secondHist[cutoff];
+            cutoff++;
+        }
+        CFLog.d("cutoff = " + cutoff);
+
+        // copy to OpenCV to locate hot pixels
+        byte[] maxArray = new byte[area];
+        byte[] secondArray = new byte[area];
+        aMax.copyTo(maxArray);
+        aSecond.copyTo(secondArray);
+        MatOfByte secondMat = new MatOfByte(secondArray);
+
+        Mat threshMat = new Mat();
+        Mat hotcellCoordsMat = new Mat();
+
+        Imgproc.threshold(secondMat, threshMat, cutoff-1, 0, Imgproc.THRESH_TOZERO);
+        secondMat.release();
+        Core.findNonZero(threshMat, hotcellCoordsMat);
+        threshMat.release();
+
+        for(int i=0; i<hotcellCoordsMat.total(); i++) {
+            double[] hotcellCoords = hotcellCoordsMat.get(i,0);
+            int pos = (int) hotcellCoords[1];
+            int width = aSecond.getType().getX();
+            int x = pos % width;
+            int y = pos / width;
+
+            HOTCELL_COORDS.add(pos);
+
+            for(int dx=x-1; dx<=x+1; dx++) {
+                for(int dy=y-1; dy<=y+1; dy++) {
+                    try {
+                        int adjMax = maxArray[dx + width * dy] & 0xFF;
+                        if (adjMax >= cutoff) {
+                            HOTCELL_COORDS.add(dx + width * dy);
+                        }
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        // don't crash if we're on the border
+                    }
+                }
+            }
+        }
+
+        CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
+        CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
+
+        for(Integer pos: HOTCELL_COORDS) {
+            BUILDER.addHotcell(pos);
+        }
+
+        int maxNonZero = 255;
+        while (secondHist[maxNonZero] == 0) {
+            maxNonZero--;
+        }
+        for (int i = 0; i <= maxNonZero; i++) {
+            BUILDER.addSecondHist(secondHist[i]);
+        }
     }
 }

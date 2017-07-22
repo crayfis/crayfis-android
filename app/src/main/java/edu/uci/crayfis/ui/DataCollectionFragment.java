@@ -84,7 +84,6 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication.State appState = ((CFApplication) activity.getApplication()).getApplicationState();
-        CFLog.d("AppState = " + appState);
         switch(appState) {
             case STABILIZATION:
                 mStatus.setText(R.string.stabilization);
@@ -92,8 +91,7 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
-            case PRECALIBRATION_WEIGHTS:
-            case PRECALIBRATION_HOTCELLS:
+            case PRECALIBRATION:
                 mStatus.setText(getString(R.string.precalibration));
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);

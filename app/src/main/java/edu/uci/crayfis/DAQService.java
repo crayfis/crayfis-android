@@ -192,11 +192,8 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 case STABILIZATION:
                     doStateTransitionStabilization(previous);
                     break;
-                case PRECALIBRATION_WEIGHTS:
-                    doStateTransitionWeights(previous);
-                    break;
-                case PRECALIBRATION_HOTCELLS:
-                    doStateTransitionHotcells(previous);
+                case PRECALIBRATION:
+                    doStateTransitionPrecalibration(previous);
                     break;
                 case CALIBRATION:
                     doStateTransitionCalibration(previous);
@@ -260,8 +257,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         switch(previousState) {
-            case PRECALIBRATION_WEIGHTS:
-            case PRECALIBRATION_HOTCELLS:
+            case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
@@ -276,22 +272,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
     }
 
-    private void doStateTransitionWeights(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+    private void doStateTransitionPrecalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         switch (previousState) {
             case CALIBRATION:
-                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION_WEIGHTS);
+                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
                 mPreCal.clear();
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
-    }
-
-    private void doStateTransitionHotcells(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        switch (previousState) {
-            case PRECALIBRATION_WEIGHTS:
-                //BUILDER.setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
-                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION_HOTCELLS);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -311,13 +296,12 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         mApplication.consecutiveIdles = 0;
 
         if(mPreCal.dueForPreCalibration(CFApplication.getCameraId())) {
-            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION_WEIGHTS);
+            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
         switch (previousState) {
             case STABILIZATION:
-            case PRECALIBRATION_WEIGHTS:
-            case PRECALIBRATION_HOTCELLS:
+            case PRECALIBRATION:
                 L1cal.clear();
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
