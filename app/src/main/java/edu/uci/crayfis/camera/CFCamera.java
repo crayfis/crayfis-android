@@ -65,7 +65,7 @@ public class CFCamera implements Camera.ErrorCallback {
         BUILDER = frameBuilder;
         APPLICATION = (CFApplication) context.getApplicationContext();
         CONFIG = CFConfig.getInstance();
-        mRS = RenderScript.create(context);
+        mRS = APPLICATION.getRenderScript();
         mPreviewCallback = previewCallback;
 
         mBroadcastManager = LocalBroadcastManager.getInstance(context);

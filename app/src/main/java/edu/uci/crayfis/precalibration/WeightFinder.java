@@ -43,7 +43,7 @@ public class WeightFinder extends PrecalComponent {
         sampleFrames = CONFIG.getWeightingSampleFrames();
 
         Camera.Size sz = CFApplication.getCameraSize();
-        Type type = new Type.Builder(RS, Element.U32(RS))
+        Type type = new Type.Builder(RS, Element.I32(RS))
                 .setX(sz.width)
                 .setY(sz.height)
                 .create();
@@ -76,7 +76,13 @@ public class WeightFinder extends PrecalComponent {
 
         scriptCDownsample.set_gSum(mSumAlloc);
         scriptCDownsample.set_sampleStep(sampleStep);
-        scriptCDownsample.set_gPixPerSample((float)totalFrames*sampleStep*sampleStep);
+        scriptCDownsample.set_gTotalFrames(totalFrames);
+
+        for(int pos: CONFIG.getHotcells(cameraId)) {
+            int x = pos % width;
+            int y = pos / width;
+            scriptCDownsample.invoke_killHotcell(x, y);
+        }
 
         int sampleResX = width / sampleStep;
         int sampleResY = height / sampleStep;
@@ -85,7 +91,7 @@ public class WeightFinder extends PrecalComponent {
 
         // next, we downsample (average) sums in RenderScript
 
-        Type sampleType = new Type.Builder(RS, Element.U32(RS))
+        Type sampleType = new Type.Builder(RS, Element.F32(RS))
                 .setX(sampleResX)
                 .setY(sampleResY)
                 .create();
@@ -100,18 +106,20 @@ public class WeightFinder extends PrecalComponent {
         Allocation byteAlloc = Allocation.createTyped(RS, byteType, Allocation.USAGE_SCRIPT);
 
         scriptCDownsample.forEach_downsampleSums(downsampledAlloc);
-        int[] downsampleArray = new int[sampleResX * sampleResY];
+        float[] downsampleArray = new float[sampleResX * sampleResY];
         downsampledAlloc.copyTo(downsampleArray);
 
-        int minSum = 256 * totalFrames * sampleStep * sampleStep;
-        for (int sum : downsampleArray) {
-            if (sum < minSum) {
-                minSum = sum;
+        float minAvg = 256f;
+        for (float avg : downsampleArray) {
+            if (avg < minAvg) {
+                minAvg = avg;
             }
         }
-        CFLog.d("minSum = " + minSum);
+        CFLog.d("minSum = " + minAvg*sampleStep*sampleStep*totalFrames);
 
-        double maxWeight = Math.log1p((float)totalFrames*sampleStep*sampleStep/++minSum);
+        double maxWeight = Math.log1p(1f/minAvg);
+
+        CFLog.d("maxWeight = " + maxWeight);
 
         scriptCDownsample.set_gMaxWeight((float)maxWeight);
         scriptCDownsample.forEach_normalizeWeights(downsampledAlloc, byteAlloc);

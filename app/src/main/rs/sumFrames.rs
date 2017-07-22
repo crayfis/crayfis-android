@@ -4,7 +4,7 @@
 
 rs_allocation gSum;
 
-uint RS_KERNEL update(uchar in, uint32_t x, uint32_t y) {
-    uint old_weight = rsGetElementAt_uint(gSum, x, y);
+int RS_KERNEL update(uchar in, uint32_t x, uint32_t y) {
+    int old_weight = rsGetElementAt_int(gSum, x, y);
     return old_weight + in;
 }

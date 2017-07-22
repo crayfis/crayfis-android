@@ -17,6 +17,7 @@ import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -100,6 +101,8 @@ public class CFApplication extends Application {
 
     private AppBuild mAppBuild;
 
+    private RenderScript mRS;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -120,6 +123,7 @@ public class CFApplication extends Application {
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
         startService(intent);
+        mRS = RenderScript.create(this);
     }
 
     /**
@@ -331,6 +335,10 @@ public class CFApplication extends Application {
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
+
+    public RenderScript getRenderScript() {
+        return mRS;
+    }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);

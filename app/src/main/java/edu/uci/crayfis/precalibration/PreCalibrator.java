@@ -2,40 +2,28 @@ package edu.uci.crayfis.precalibration;
 
 import android.content.Context;
 import android.hardware.Camera;
-import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
 import android.util.Base64;
 
-import com.google.protobuf.ByteString;
-
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.Set;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
-import edu.uci.crayfis.ScriptC_downsample;
-import edu.uci.crayfis.ScriptC_sumFrames;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.RawCameraFrame;
-import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
@@ -70,7 +58,7 @@ public class PreCalibrator {
 
     private PreCalibrator(Context ctx) {
         CONTEXT = ctx;
-        RS = RenderScript.create(ctx);
+        RS = ((CFApplication)CONTEXT.getApplicationContext()).getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         BUILDER = DataProtos.PreCalibrationResult.newBuilder();
     }
@@ -94,7 +82,10 @@ public class PreCalibrator {
     private void submitPrecalibrationResult() {
 
         CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+        int cameraId = CFApplication.getCameraId();
+        Camera.Size sz = CFApplication.getCameraSize();
         CONFIG.setLastPrecalTime(CFApplication.getCameraId(), System.currentTimeMillis());
+        CONFIG.setLastPrecalResX(cameraId, sz.width);
 
         BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setEndTime(System.currentTimeMillis())
@@ -158,8 +149,12 @@ public class PreCalibrator {
     }
 
     public void clear() {
-        BUILDER.setStartTime(System.currentTimeMillis());
+        int cameraId = CFApplication.getCameraId();
         mActiveComponent = new HotCellKiller(RS, BUILDER);
+
+        // reset the Precalibration info for this camera
+        CONFIG.setPrecalWeights(cameraId, null);
+        CONFIG.setHotcells(cameraId, new HashSet<Integer>(Camera.getNumberOfCameras()));
     }
 
     public boolean dueForPreCalibration(int cameraId) {
@@ -167,7 +162,7 @@ public class PreCalibrator {
         Camera.Size sz = CFApplication.getCameraSize();
         boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;
         if(CONFIG.getPrecalWeights(cameraId) == null || sz.width != CONFIG.getLastPrecalResX(cameraId) || expired) {
-            CONFIG.setLastPrecalResX(cameraId, sz.width);
+            BUILDER.setStartTime(System.currentTimeMillis());
             return true;
         }
         return false;

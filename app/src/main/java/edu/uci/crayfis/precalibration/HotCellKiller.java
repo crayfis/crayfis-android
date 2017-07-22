@@ -75,9 +75,10 @@ public class HotCellKiller extends PrecalComponent {
         aout.copyTo(secondHist);
 
         for(int i=0; i<secondHist.length; i++) {
-            if(secondHist[i] != 0)
+            if (secondHist[i] != 0) {
                 CFLog.d("hist[" + i + "] = " + secondHist[i]);
             }
+        }
 
         int area = aMax.getType().getX() * aMax.getType().getY();
         int target = (int) (CONFIG.getHotcellThresh() * area);
