@@ -76,11 +76,11 @@ public class L2Task implements Runnable {
 
     RecoEvent mEvent = null;
 
-    final L2Config mConfig;
+    final Config mConfig;
 
     final Utils mUtils;
 
-    L2Task(L2Processor l2processor, RawCameraFrame frame, L2Config config) {
+    L2Task(L2Processor l2processor, RawCameraFrame frame, Config config) {
         mFrame = frame;
         mL2Processor = l2processor;
 
@@ -307,8 +307,9 @@ public class L2Task implements Runnable {
         Imgproc.threshold(grayMat, threshMat, xb.L2_threshold, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
+        long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
 
-        for(int i=0; i<l2PixelCoords.total(); i++) {
+        for(int i=0; i<pixN; i++) {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
