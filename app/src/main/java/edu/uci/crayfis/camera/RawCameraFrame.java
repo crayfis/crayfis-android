@@ -70,7 +70,6 @@ public class RawCameraFrame {
      * Class for creating immutable RawCameraFrames
      */
     public static class Builder {
-        private Context bContext;
         private byte[] bBytes;
         private Camera bCamera;
         private int bCameraId;
@@ -90,8 +89,8 @@ public class RawCameraFrame {
         private Allocation bin;
         private Allocation bout;
 
-        public Builder(Context context) {
-            bContext = context;
+        public Builder() {
+
         }
 
         public Builder setBytes(byte[] bytes) {

@@ -471,7 +471,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     // Frame processing //
     //////////////////////
 
-    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder(this);
+    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder();
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
