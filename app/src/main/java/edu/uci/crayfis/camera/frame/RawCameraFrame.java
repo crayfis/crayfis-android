@@ -262,7 +262,6 @@ public abstract class RawCameraFrame {
                            final Allocation in,
                            final Allocation out) {
 
-        CFLog.d("Building RCF");
         mCameraId = cameraId;
         mFacingBack = facingBack;
         mFrameWidth = frameWidth;
@@ -291,7 +290,7 @@ public abstract class RawCameraFrame {
      *
      * @return allocation of bytes
      */
-    public synchronized Allocation getWeightedAllocation() {
+    public Allocation getWeightedAllocation() {
         return aWeighted;
     }
 
@@ -308,13 +307,19 @@ public abstract class RawCameraFrame {
     /**
      * Clear memory from RawCameraFrame
      */
-    public void retire() { }
+    public void retire() {
+        if(lock.isHeldByCurrentThread()) {
+            CFLog.d("Unlocked (retire) by " + Thread.currentThread().getName());
+            lock.unlock();
+        }
+    }
 
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
     public void claim() {
         mBufferClaimed = true;
+        getGrayMat();
     }
 
     // notify the XB that we are totally done processing this frame.

@@ -4,14 +4,17 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.renderscript.Allocation;
@@ -19,16 +22,16 @@ import android.renderscript.Element;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 
@@ -43,11 +46,15 @@ class CFCamera2 extends CFCamera {
     private HandlerThread mBackgroundThread;
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
     private CameraDevice mCameraDevice;
+    private CameraCharacteristics mCameraCharacteristics;
 
     private CaptureRequest.Builder mPreviewRequestBuilder;
+    private CaptureRequest mPreviewRequest;
     private Size mPreviewSize;
+    private Range<Integer> mTargetFpsRange = new Range<>(0,0);
     private CameraCaptureSession mCaptureSession;
     private Allocation ain;
+
 
     CFCamera2() {
         super();
@@ -98,9 +105,9 @@ class CFCamera2 extends CFCamera {
             mCaptureSession = cameraCaptureSession;
             try {
 
+                mPreviewRequest = mPreviewRequestBuilder.build();
                 // Finally, we start displaying the camera preview.
-                mCaptureSession.setRepeatingRequest(mPreviewRequestBuilder.build(),
-                        mCaptureCallback, mBackgroundHandler);
+                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -139,13 +146,6 @@ class CFCamera2 extends CFCamera {
         }
     };
 
-    private Allocation.OnBufferAvailableListener mBufferAvailableListener = new Allocation.OnBufferAvailableListener() {
-        @Override
-        public void onBufferAvailable(Allocation a) {
-
-        }
-    };
-
 
     private void createCameraPreviewSession() {
         try {
@@ -153,14 +153,64 @@ class CFCamera2 extends CFCamera {
             mPreviewRequestBuilder
                     = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
-            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, 0);
+            // make preview as close to RAW as possible
+
+            mPreviewRequestBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK, true);
+
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_CAPTURE_INTENT, CameraMetadata.CONTROL_CAPTURE_INTENT_MANUAL);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION, CameraMetadata.CONTROL_AF_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE, CameraMetadata.COLOR_CORRECTION_ABERRATION_MODE_OFF);
+
+            //TODO: More color correction?
+
+            mPreviewRequestBuilder.set(CaptureRequest.EDGE_MODE, CameraMetadata.EDGE_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CameraMetadata.NOISE_REDUCTION_MODE_OFF);
+
+            Range<Integer>[] availableFpsRanges
+                    = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
+            String rangeString = "Available ranges: ";
+            if(availableFpsRanges != null) {
+                for (Range<Integer> r: availableFpsRanges) {
+                    rangeString += r.toString() + " ";
+                    if((r.getUpper() > mTargetFpsRange.getUpper() || r.getLower() > mTargetFpsRange.getLower())
+                            && mTargetFpsRange.getUpper() <= 30) {
+                        mTargetFpsRange = r;
+                    }
+                }
+                CFLog.d(rangeString);
+                CFLog.d("Target range = " + mTargetFpsRange.toString());
+            }
+
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,
+                    mCameraCharacteristics.get(CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY));
+
+            mPreviewRequestBuilder.set(CaptureRequest.SHADING_MODE, CameraMetadata.SHADING_MODE_OFF);
+
+            Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+            Long frameDuration = mPreviewRequestBuilder.get(CaptureRequest.SENSOR_FRAME_DURATION);
+            if(frameDuration == null) {
+                frameDuration = 33000000L;
+            }
+
+            if(exposureTimes != null) {
+                mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
+                        Math.min(exposureTimes.getUpper(), frameDuration));
+            }
+
+
+
+
 
             ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
                     .setX(mPreviewSize.getWidth())
                     .setY(mPreviewSize.getHeight())
                     .setYuvFormat(ImageFormat.YUV_420_888)
                     .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
-            ain.setOnBufferAvailableListener(mBufferAvailableListener);
+
 
             // Here, we create a CameraCaptureSession for camera preview.
 
@@ -203,9 +253,11 @@ class CFCamera2 extends CFCamera {
 
             String[] idList = manager.getCameraIdList();
             String idString = idList[cameraId];
-            CameraCharacteristics cc = manager.getCameraCharacteristics(idString);
 
-            mPreviewSize = CONFIG.getTargetResolution().getClosestSize(cc);
+            mCameraCharacteristics = manager.getCameraCharacteristics(idString);
+
+            mPreviewSize = CONFIG.getTargetResolution().getClosestSize(mCameraCharacteristics);
+
             mResX = mPreviewSize.getWidth();
             mResY = mPreviewSize.getHeight();
             RCF_BUILDER.setCamera2(manager, cameraId, mPreviewSize, mApplication.getRenderScript());
@@ -245,8 +297,15 @@ class CFCamera2 extends CFCamera {
     @Override
     public String getParams() {
         String paramtxt = super.getParams();
-        paramtxt += "size: " + mPreviewSize.toString() + ", ";
-        //TODO: post relevant params here
+        paramtxt += "Size: " + mPreviewSize.toString() + ", ";
+
+        if(mPreviewRequest != null) {
+            for (CaptureRequest.Key<?> k : mPreviewRequest.getKeys()) {
+                paramtxt += k.getName() + ": "
+                        + (mPreviewRequest.get(k) != null ?
+                        mPreviewRequest.get(k).toString() : "null") + ", ";
+            }
+        }
         return paramtxt;
     }
 

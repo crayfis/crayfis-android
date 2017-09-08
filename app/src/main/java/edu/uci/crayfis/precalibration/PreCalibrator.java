@@ -58,12 +58,15 @@ public class PreCalibrator {
 
     private PreCalibrator(Context ctx) {
         CONTEXT = ctx;
-        RS = ((CFApplication)CONTEXT.getApplicationContext()).getRenderScript();
+        RS = CFApplication.getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
     }
 
     public boolean addFrame(RawCameraFrame frame) {
+        if(mActiveComponent == null) {
+            mActiveComponent = new HotCellKiller(RS, PRECAL_BUILDER);
+        }
         if(mActiveComponent.addFrame(frame)) {
             if(mActiveComponent instanceof HotCellKiller) {
                 mActiveComponent = new WeightFinder(RS, PRECAL_BUILDER);
@@ -150,7 +153,7 @@ public class PreCalibrator {
 
     public void clear() {
         int cameraId = CFApplication.getCameraId();
-        mActiveComponent = new HotCellKiller(RS, PRECAL_BUILDER);
+        mActiveComponent = null;
 
         // reset the Precalibration info for this camera
         CONFIG.setPrecalWeights(cameraId, null);

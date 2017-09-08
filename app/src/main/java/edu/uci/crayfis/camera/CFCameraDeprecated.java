@@ -80,12 +80,10 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             previewSize = CONFIG.getTargetResolution().getClosestSize(mCamera);
             CFLog.i("selected preview size="+previewSize);
 
-            CFLog.d("setup: size is width=" + previewSize.width + " height =" + previewSize.height);
             param.setPreviewSize(previewSize.width, previewSize.height);
 
             mParams = param;
             mCamera.setParameters(mParams);
-            CFLog.d("params: Camera params are " + param.flatten());
 
             // update the current application settings to reflect new camera size.
             mResX = previewSize.width;

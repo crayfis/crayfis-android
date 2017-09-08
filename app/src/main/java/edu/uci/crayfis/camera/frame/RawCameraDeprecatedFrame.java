@@ -63,50 +63,41 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
     @Override
     public Mat getGrayMat() {
 
-        synchronized (aWeighted){
+        if(mGrayMat == null) {
 
-            if(mGrayMat == null) {
+            //FIXME: this is way too much copying
+            byte[] adjustedBytes = new byte[mRawBytes.length];
 
-                //FIXME: this is way too much copying
-                byte[] adjustedBytes = new byte[mRawBytes.length];
+            // update with weighted pixels
+            aWeighted.copyTo(adjustedBytes);
 
-                // update with weighted pixels
-                aWeighted.copyTo(adjustedBytes);
+            lock.unlock();
 
-                lock.unlock();
+            // probably a better way to do this, but this
+            // works for preventing native memory leaks
 
-                // probably a better way to do this, but this
-                // works for preventing native memory leaks
+            Mat mat1 = new MatOfByte(adjustedBytes);
+            Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat1.release();
+            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+            mat2.release();
 
-                Mat mat1 = new MatOfByte(adjustedBytes);
-                Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
-                mat1.release();
-                mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
-                mat2.release();
-
-                mCamera.addCallbackBuffer(adjustedBytes);
-            }
+            mCamera.addCallbackBuffer(adjustedBytes);
         }
+
         return super.getGrayMat();
     }
 
     @Override
     public void retire() {
-        if(lock.isHeldByCurrentThread()) {
-            lock.unlock();
-        }
+        super.retire();
+
         synchronized (mCamera) {
             if (mRawBytes != null) {
                 mCamera.addCallbackBuffer(mRawBytes);
                 mRawBytes = null;
             }
         }
-    }
-
-    @Override
-    public void claim() {
-        super.claim();
-        getGrayMat();
     }
 
 }
