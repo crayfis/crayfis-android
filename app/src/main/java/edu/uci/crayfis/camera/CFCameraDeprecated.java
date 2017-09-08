@@ -43,7 +43,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
                 onError(1, mCamera);
                 return;
             } else {
-                mApplication.userErrorMessage(mApplication.getResources().getString(R.string.camera_error),true);
+                mApplication.userErrorMessage(R.string.camera_error,true);
                 return;
             }
         }
@@ -93,7 +93,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
         } catch (Exception e) {
             e.printStackTrace();
-            mApplication.userErrorMessage(mApplication.getResources().getString(R.string.camera_error),true);
+            mApplication.userErrorMessage(R.string.camera_error, true);
             return;
         }
 
@@ -120,7 +120,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             super.setUpAndConfigureCamera(cameraId);
 
         } catch (Exception e) {
-            mApplication.userErrorMessage(mApplication.getResources().getString(R.string.camera_error),true);
+            mApplication.userErrorMessage(R.string.camera_error, true);
         }
     }
 

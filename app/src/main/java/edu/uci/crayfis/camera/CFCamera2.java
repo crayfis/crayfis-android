@@ -26,6 +26,8 @@ import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.R;
 import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
@@ -187,7 +189,7 @@ class CFCamera2 extends CFCamera {
         // make sure we have permission to use the camera
         if (ContextCompat.checkSelfPermission(mApplication, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            // TODO: bug the user about this
+            mApplication.userErrorMessage(R.string.quit_permission, true);
             return;
         }
 
@@ -196,7 +198,7 @@ class CFCamera2 extends CFCamera {
 
         try {
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                throw new RuntimeException("Time out waiting to lock camera opening.");
+                mApplication.userErrorMessage(R.string.camera_error, true);
             }
 
             String[] idList = manager.getCameraIdList();
@@ -238,32 +240,6 @@ class CFCamera2 extends CFCamera {
         } finally {
             mCameraOpenCloseLock.release();
         }
-
-        /*
-        mBackgroundHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                // first, shut down the camera
-                CFLog.e("Running runnable");
-                try {
-                    mCameraOpenCloseLock.acquire();
-                    if (null != mCaptureSession) {
-                        mCaptureSession.close();
-                        mCaptureSession = null;
-                    }
-                    if (null != mCameraDevice) {
-                        mCameraDevice.close();
-                        mCameraDevice = null;
-                    }
-                    mPreviewSize = null;
-                } catch (InterruptedException e) {
-                    throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
-                } finally {
-                    mCameraOpenCloseLock.release();
-                }
-            }
-        });
-        */
     }
 
     @Override

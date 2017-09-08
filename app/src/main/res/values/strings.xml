@@ -93,7 +93,7 @@
     <string name="fatal_error_title">CRAYFIS Error</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
     <string name="camera_error">CRAYFIS could not open the camera.</string>
-    <string name="sensor_error" translatable="false">Unusual sensor output:\n ry switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
+    <string name="sensor_error" translatable="false">Unusual sensor output:\n Try switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>
@@ -105,7 +105,11 @@
     <string name="notification_title" translatable="false">CRAYFIS</string>
     <string name="notification_idle" translatable="false">Paused</string>
     <string name="notification_running" translatable="false">Taking data</string>
-    <string name="notification_quit" translatable="false">No cameras covered: quitting CRAYFIS</string>
+    <string name="notification_quit" translatable="false">CRAYFIS has encountered an error and quit</string>
+    <string name="quit_title" translatable="false">CRAYFIS is quitting for the following reason:</string>
+    <string name="quit_no_cameras" translatable="false">No covered cameras available</string>
+    <string name="quit_permission" translatable="false">CRAYFIS no longer has permission to use the camera. \n Please restart the app.</string>
+
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
         <item quantity="other">%d frames</item>

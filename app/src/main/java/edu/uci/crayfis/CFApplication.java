@@ -19,6 +19,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Size;
@@ -232,7 +233,7 @@ public class CFApplication extends Application {
 
         if(!isCharging || !inAutostartWindow()) {
             stopService(new Intent(this, DAQService.class));
-            userErrorMessage(getString(R.string.notification_quit), true);
+            userErrorMessage(R.string.quit_no_cameras, true);
         }
     }
 
@@ -252,14 +253,15 @@ public class CFApplication extends Application {
         return b1 + b2 + b3 >= 2;
     }
 
-    public void userErrorMessage(String mess, boolean fatal) {
+    public void userErrorMessage(@StringRes int id, boolean fatal) {
 
+        String mess = getResources().getString(id);
         if(fatal) {
             CFLog.e("Error: " + mess);
             Notification notification = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.ic_just_a)
                     .setContentTitle(getString(R.string.notification_title))
-                    .setContentText(mess)
+                    .setContentText(getString(R.string.notification_quit))
                     .setContentIntent(null)
                     .build();
 
