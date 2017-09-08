@@ -7,7 +7,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.ViewUtil;
+import edu.uci.crayfis.util.ViewUtil;
 
 /**
  * Show the user the status of the application.

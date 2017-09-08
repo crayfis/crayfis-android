@@ -12,8 +12,6 @@ import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -22,11 +20,10 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.gallery.SavedImage;
 import edu.uci.crayfis.gallery.Utils;
-import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.ui.LayoutBlack;
 import edu.uci.crayfis.util.CFLog;
 
@@ -35,7 +32,6 @@ import edu.uci.crayfis.util.CFLog;
  */
 public class L2Task implements Runnable {
 
-    private static final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication mApplication;
 
     public static class Config extends L2Config {
@@ -317,7 +313,7 @@ public class L2Task implements Runnable {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = mFrame.getBytes()[iy*mFrame.getWidth() + ix] & 0xFF;
+            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 

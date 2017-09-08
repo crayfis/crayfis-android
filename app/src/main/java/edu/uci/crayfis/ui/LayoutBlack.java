@@ -18,7 +18,6 @@ import android.hardware.Camera;
 import android.content.Context;
 import java.util.ArrayList;
 
-import edu.uci.crayfis.CFUtil;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.trigger.L2Task;
 import edu.uci.crayfis.widget.SplashView;

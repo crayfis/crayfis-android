@@ -21,6 +21,7 @@ import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Size;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -28,8 +29,8 @@ import com.crashlytics.android.Crashlytics;
 import java.util.Calendar;
 import java.util.UUID;
 
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.precalibration.PreCalibrator;
-import edu.uci.crayfis.camera.CFSensor;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.ui.DataCollectionFragment;
@@ -76,7 +77,7 @@ public class CFApplication extends Application {
                 handleUnresponsive();
             }
 
-            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
+            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
@@ -88,10 +89,7 @@ public class CFApplication extends Application {
     };
 
     //private static final String SHARED_PREFS_NAME = "global";
-    private static Location mLastKnownLocation;
     private static long mStartTimeNano;
-    private static Camera.Parameters mParams;
-    private static Camera.Size mCameraSize;
     private static int mBatteryTemp;
 
     public static int badFlatEvents = 0;
@@ -101,7 +99,7 @@ public class CFApplication extends Application {
 
     private AppBuild mAppBuild;
 
-    private RenderScript mRS;
+    private static RenderScript mRS;
 
     @Override
     public void onCreate() {
@@ -169,10 +167,12 @@ public class CFApplication extends Application {
         final State currentState = mApplicationState;
         mApplicationState = applicationState;
 
-        final Intent intent = new Intent(ACTION_STATE_CHANGE);
-        intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
-        intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        if(applicationState != State.INIT) {
+            final Intent intent = new Intent(ACTION_STATE_CHANGE);
+            intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
+            intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        }
     }
 
     public static int getCameraId() { return mCameraId; }
@@ -182,21 +182,13 @@ public class CFApplication extends Application {
         switch(mApplicationState) {
             case RECONFIGURE:
                 nextId = mCameraId;
+                break;
+            case INIT:
             case STABILIZATION:
                 // switch cameras and try again
-                switch(CFConfig.getInstance().getCameraSelectMode()) {
-                    case MODE_FACE_DOWN:
-                    case MODE_AUTO_DETECT:
-                        nextId = mCameraId + 1;
-                        if(nextId >= Camera.getNumberOfCameras()) {
-                            nextId = -1;
-                        }
-                        break;
-                    case MODE_BACK_LOCK:
-                        nextId = 0;
-                        break;
-                    case MODE_FRONT_LOCK:
-                        nextId = 1;
+                nextId = mCameraId + 1;
+                if(nextId >= Camera.getNumberOfCameras()) {
+                    nextId = -1;
                 }
                 break;
             case PRECALIBRATION:
@@ -208,22 +200,25 @@ public class CFApplication extends Application {
                 nextId = -1;
         }
 
-        if(nextId != mCameraId || mApplicationState == State.RECONFIGURE || mCameraId == -1) {
+        if(nextId == -1 && mApplicationState != State.IDLE ) {
+
+            setApplicationState(State.IDLE);
+            DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+            mWaitingForStabilization = true;
+            mStabilizationTimer.start();
+        }
+
+        if(nextId != mCameraId || mApplicationState == State.RECONFIGURE) {
             CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
             mCameraId = nextId;
-            if(nextId == -1 && mApplicationState != State.IDLE ) {
-
-                setApplicationState(State.IDLE);
-                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
-                mWaitingForStabilization = true;
-                mStabilizationTimer.start();
-            }
 
             final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
             intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
         }
+
+
     }
 
     private void handleUnresponsive() {
@@ -306,25 +301,6 @@ public class CFApplication extends Application {
         }
     }
 
-    public static Location getLastKnownLocation() {
-        return mLastKnownLocation;
-    }
-
-    public static void setLastKnownLocation(Location lastKnownLocation) {
-        mLastKnownLocation = lastKnownLocation;
-    }
-
-    public static Camera.Parameters getCameraParams() { return mParams; }
-
-    public static Camera.Size getCameraSize() {
-        return mCameraSize;
-    }
-
-    public static void setCameraParams(Camera.Parameters params) {
-        mParams = params;
-        mCameraSize = params.getPreviewSize();
-    }
-
     public static int getBatteryTemp() {
         return mBatteryTemp;
     }
@@ -336,7 +312,7 @@ public class CFApplication extends Application {
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
 
-    public RenderScript getRenderScript() {
+    public static RenderScript getRenderScript() {
         return mRS;
     }
 

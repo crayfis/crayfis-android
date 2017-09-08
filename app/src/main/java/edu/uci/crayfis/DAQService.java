@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.hardware.Camera;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
@@ -23,11 +22,8 @@ import java.util.UUID;
 import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.precalibration.PreCalibrator;
-import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.CFLocation;
-import edu.uci.crayfis.camera.CFSensor;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
@@ -42,7 +38,7 @@ import edu.uci.crayfis.widget.DataCollectionStatsView;
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements Camera.PreviewCallback {
+public class DAQService extends Service implements RawCameraFrame.Callback {
 
 
 
@@ -58,8 +54,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private final int FOREGROUND_ID = 1;
 
     private CFCamera mCFCamera;
-    private CFSensor mCFSensor;
-    private CFLocation mCFLocation;
 
     @Override
     public void onCreate() {
@@ -67,6 +61,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
         mApplication = (CFApplication)getApplication();
         context = getApplicationContext();
+        mApplication.setApplicationState(CFApplication.State.INIT);
+
+        mCFCamera = CFCamera.getInstance();
+        mCFCamera.register(context);
+        mCFCamera.setCallback(this);
 
         String server_address = context.getString(R.string.server_address);
         String server_port = context.getString(R.string.server_port);
@@ -87,11 +86,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         mBroadcastManager.registerReceiver(CAMERA_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_CAMERA_CHANGE));
 
 
-        mCFCamera = CFCamera.getInstance(context, BUILDER, this);
-        mCFSensor = CFSensor.getInstance(context, BUILDER);
-        mCFLocation = CFLocation.getInstance(context, BUILDER);
-
-
         // Frame Processing
 
         mL1Processor = new L1Processor(mApplication);
@@ -106,7 +100,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
         xbManager = ExposureBlockManager.getInstance(this);
 
-
         // System check
 
         starttime = System.currentTimeMillis();
@@ -120,8 +113,9 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         mHardwareCheckTimer = new Timer();
         mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
 
+        // start camera
 
-        mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+        mApplication.changeCamera();
     }
 
     @Override
@@ -158,8 +152,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
 
         mCFCamera.unregister();
-        mCFSensor.unregister();
-        mCFLocation.unregister();
 
         xbManager.flushCommittedBlocks(true);
 
@@ -228,13 +220,14 @@ public class DAQService extends Service implements Camera.PreviewCallback {
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        // all the work here done in camera initialization
+
         switch (previousState) {
-            case INIT:
-            case RECONFIGURE:
             case IDLE:
+            case RECONFIGURE:
                 mApplication.changeCamera();
-                BUILDER.setWeights(null);
+            case INIT:
+                xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
+                mCFCamera.getFrameBuilder().setWeights(null);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -250,7 +243,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        mApplication.changeCamera();
 
         // notify user that we are no longer running
         mNotificationBuilder.setContentText(getString(R.string.notification_idle));
@@ -261,6 +253,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
+                mApplication.changeCamera();
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
@@ -306,7 +299,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                BUILDER.setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
+                mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -423,8 +416,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
         /* get a bunch of camera info */
         b.setCameraId(CFApplication.getCameraId());
-        b.setCameraParams(CFApplication.getCameraParams().flatten());
-
+        b.setCameraParams(mCFCamera.getParams());
 
 
 
@@ -471,7 +463,6 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     // Frame processing //
     //////////////////////
 
-    private final RawCameraFrame.Builder BUILDER = new RawCameraFrame.Builder();
     private ExposureBlockManager xbManager;
     // helper that dispatches L1 inputs to be processed by the L1 trigger.
     private L1Processor mL1Processor = null;
@@ -494,39 +485,23 @@ public class DAQService extends Service implements Camera.PreviewCallback {
     private Context context;
 
 
-
-    /**
-     * Called each time a new image arrives in the data stream.
-     */
     @Override
-    public void onPreviewFrame(byte[] bytes, Camera camera) {
-
-        // record the (approximate) acquisition time
-        // FIXME: can we do better than this, perhaps at Camera API level?
-        AcquisitionTime acq_time = new AcquisitionTime();
-
+    public void onRawCameraFrame(RawCameraFrame frame) {
         try {
-            // get a reference to the current xb, so it doesn't change from underneath us
-            ExposureBlock xb = xbManager.getCurrentExposureBlock();
-
-            // pack the image bytes along with other event info into a RawCameraFrame object
-
-            RawCameraFrame frame = BUILDER.setBytes(bytes)
-                    .setAcquisitionTime(acq_time)
-                    .setLocation(CFApplication.getLastKnownLocation())
-                    .setExposureBlock(xb)
-                    .build();
+            if(frame.getExposureBlock() == null) {
+                CFLog.e("No exposure block");
+            }
 
             // try to assign the frame to the current XB
-            boolean assigned = xb.assignFrame(frame);
+            boolean assigned = frame.getExposureBlock().assignFrame(frame);
 
             // track the acquisition times for FPS calculation
             synchronized(frame_times) {
-                frame_times.addValue(acq_time.Nano);
+                frame_times.addValue(frame.getAcquiredTimeNano());
             }
             // update the FPS and Calibration calculation periodically
             if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
-                    && xb.daq_state == CFApplication.State.DATA) {
+                    && frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
                 updateCalibration();
             }
 
@@ -644,7 +619,7 @@ public class DAQService extends Service implements Camera.PreviewCallback {
             // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
             // update new frames
-            BUILDER.setBatteryTemp(newTemp);
+            mCFCamera.getFrameBuilder().setBatteryTemp(newTemp);
             // update new exposure blocks
             CFApplication.setBatteryTemp(newTemp);
             CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
@@ -711,10 +686,10 @@ public class DAQService extends Service implements Camera.PreviewCallback {
         }
 
         public DataCollectionStatsView.Status getDataCollectionStatus() {
-            final Camera.Size sz = CFApplication.getCameraSize();
+            final int area = mCFCamera.getResX() * mCFCamera.getResY();
             return new DataCollectionStatsView.Status.Builder()
                     .setTotalEvents(L2Processor.mL2Count)
-                    .setTotalPixels((long)L1Processor.mL1CountData * sz.height * sz.width)
+                    .setTotalPixels((long)L1Processor.mL1CountData * area)
                     .setTotalFrames(L1Processor.mL1CountData)
                     .build();
         }
@@ -739,10 +714,11 @@ public class DAQService extends Service implements Camera.PreviewCallback {
 
             devtxt += mCFCamera.getStatus();
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
-            devtxt += "xb avg: " + String.format("%1.4f",xb.getPixAverage()) + " max: " + String.format("%1.2f",xb.getPixMax()) + "\n";
+            if(xb != null) {
+                devtxt += "xb avg: " + String.format("%1.4f", xb.getPixAverage()) + " max: " + String.format("%1.2f", xb.getPixMax()) + "\n";
+            }
             devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
                     + "Upload server = " + upload_url + "\n";
-            devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
             return devtxt;
 
         }

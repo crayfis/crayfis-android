@@ -7,47 +7,79 @@ import android.os.Bundle;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**
  * Created by Jeff on 4/16/2017.
  */
 
-public class CFLocation implements com.google.android.gms.location.LocationListener, GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener {
+class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+
+    Location currentLocation;
 
     // New API
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
+    private long mLastConnectionAttempt;
+    private com.google.android.gms.location.LocationListener mLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location)
+        {
+            // set the location; if this is false newLocation() will disregard it
+            mLastLocation = location;
+            updateLocation(location, false);
+            if(System.currentTimeMillis() - mLastConnectionAttempt > 300000) {
+                mGoogleApiClient.connect();
+            }
+        }
+    };
 
     // Old API
     private LocationManager mLocationManager;
-    private android.location.LocationListener mLocationListener;
     private Location mLastLocationDeprecated;
+    private android.location.LocationListener mLocationListenerDeprecated = new android.location.LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            // Called when a new location is found by the network location
+            // provider.
+            //CFLog.d("onLocationChangedDeprecated: new  location = "+location);
 
-    private final RawCameraFrame.Builder BUILDER;
+            mLastLocationDeprecated = location;
 
-    private static CFLocation sInstance;
+            // update the location in case the Google method failed
+            updateLocation(location,true);
 
-    public static CFLocation getInstance(Context context, RawCameraFrame.Builder frameBuilder) {
-        if(sInstance == null) {
-            sInstance = new CFLocation(context, frameBuilder);
         }
-        return sInstance;
-    }
 
-    private CFLocation(Context context, final RawCameraFrame.Builder frameBuilder) {
-        BUILDER = frameBuilder;
+        @Override
+        public void onStatusChanged(String provider, int status,
+                                    Bundle extras) {
+        }
 
-        register(context);
-    }
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
 
-    private void register(Context context) {
-        newLocation(new Location("BLANK"), false);
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+    };
+
+
+    private final RawCameraFrame.Builder RCF_BUILDER;
+    private final Context CONTEXT;
+
+    CFLocation(Context context, final RawCameraFrame.Builder frameBuilder) {
+        CONTEXT = context;
+        RCF_BUILDER = frameBuilder;
+
+        updateLocation(new Location("BLANK"), false);
 
         mGoogleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
@@ -56,26 +88,76 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
                 .build();
 
         mGoogleApiClient.connect();
-        // backup location if Google play isn't working or installed
-        mLocationManager = (LocationManager) context
-                .getSystemService(Context.LOCATION_SERVICE);
-
-        try {
-            mLastLocationDeprecated = getLocationDeprecated();
-        } catch(SecurityException e) {
-            // TODO: tell the user to turn on location settings
-        }
-
-        newLocation(mLastLocationDeprecated, true);
+        mLastConnectionAttempt = System.currentTimeMillis();
     }
 
-    public void unregister() {
+    void unregister() {
         mGoogleApiClient.disconnect();
         if(mLocationManager != null) {
-            mLocationManager.removeUpdates(mLocationListener);
+            mLocationManager.removeUpdates(mLocationListenerDeprecated);
             mLocationManager = null;
         }
-        sInstance = null;
+    }
+
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        // get rid of old API if present
+        if(mLocationManager != null) {
+            mLocationManager.removeUpdates(mLocationListenerDeprecated);
+            mLocationManager = null;
+        }
+
+        // get last known location
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        CFLog.d("onConnected: asking for location = "+mLastLocation);
+
+        // set the location; if this is false updateLocation() will disregard it
+        updateLocation(mLastLocation, false);
+
+        // request updates as well
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(5000);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result)
+    {
+        if (mLocationManager == null) {
+            // backup location if Google play isn't working or installed
+            mLocationManager = (LocationManager) CONTEXT.getSystemService(Context.LOCATION_SERVICE);
+
+            try {
+                // ask for updates from network and GPS
+                try {
+                    mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListenerDeprecated);
+                    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListenerDeprecated);
+                } catch (RuntimeException e)
+                { // some phones do not support
+                }
+                // get the last known coordinates for an initial value
+                Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                if (null == location) {
+                    location = new Location("BLANK");
+                }
+                mLastLocationDeprecated = location;
+            } catch(SecurityException e) {
+                // TODO: tell the user to turn on location settings
+            }
+        }
+
+        updateLocation(mLastLocationDeprecated, true);
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause)
+    {
+        onConnectionFailed(null);
     }
 
     private boolean location_valid(Location location)
@@ -87,7 +169,7 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
 
     }
 
-    private void newLocation(Location location, boolean deprecated)
+    private void updateLocation(Location location, boolean deprecated)
     {
 
         if (!deprecated)
@@ -95,8 +177,7 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
             //  Google location API
             // as long as it's valid, update the data
             if (location != null)
-                CFApplication.setLastKnownLocation(location);
-                BUILDER.setLocation(location);
+                currentLocation = location;
         } else {
             // deprecated interface as backup
 
@@ -104,104 +185,20 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
             if (location_valid(location))
             {
                 // do we not have a valid current location?
-                if (!location_valid(CFApplication.getLastKnownLocation()))
+                if (!location_valid(mLastLocation))
                 {
                     // use the deprecated info if it's the best we have
-                    CFApplication.setLastKnownLocation(location);
-                    BUILDER.setLocation(location);
+                    currentLocation = location;
                 }
             }
 
         }
-        //CFLog.d("## newLocation data "+location+" deprecated? "+deprecated+" -> current location is "+CFApplication.getLastKnownLocation());
 
+        RCF_BUILDER.setLocation(currentLocation);
     }
 
-    private Location getLocationDeprecated() throws SecurityException
-    {
-        if (mLocationListener==null) {
-            mLocationListener = new android.location.LocationListener() {
-                // deprecated location update interface
-                public void onLocationChanged(Location location) {
-                    // Called when a new location is found by the network location
-                    // provider.
-                    //CFLog.d("onLocationChangedDeprecated: new  location = "+location);
 
-                    mLastLocationDeprecated = location;
-
-                    // update the location in case the Google method failed
-                    newLocation(location,true);
-
-                }
-
-                public void onStatusChanged(String provider, int status,
-                                            Bundle extras) {
-                }
-
-                public void onProviderEnabled(String provider) {
-                }
-
-                public void onProviderDisabled(String provider) {
-                }
-            };
-        }
-
-        // ask for updates from network and GPS
-        try {
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, mLocationListener);
-        } catch (RuntimeException e)
-        { // some phones do not support
-        }
-        // get the last known coordinates for an initial value
-        Location location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if (null == location) {
-            location = new Location("BLANK");
-        }
-        return location;
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-
-        // first get last known location
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        CFLog.d("onConnected: asking for location = "+mLastLocation);
-
-        // set the location; if this is false newLocation() will disregard it
-        newLocation(mLastLocation,false);
-
-        // request updates as well
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, this);
-
-
-    }
-
-    // Google location update interface
-    public void onLocationChanged(Location location)
-    {
-        //CFLog.d("onLocationChanged: new  location = "+mLastLocation);
-
-        // set the location; if this is false newLocation() will disregard it
-        newLocation(location,false);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result)
-    {
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause)
-    {
-    }
-
-    public String getStatus() {
+    String getStatus() {
         return (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude()
                 + ", lat=" + mLastLocation.getLatitude()
                 + ") accuracy = " + mLastLocation.getAccuracy()
@@ -212,8 +209,8 @@ public class CFLocation implements com.google.android.gms.location.LocationListe
                 + ") accuracy = " + mLastLocationDeprecated.getAccuracy()
                 + " provider = " + mLastLocationDeprecated.getProvider()
                 + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                + (CFApplication.getLastKnownLocation() != null ? " Official location = (long=" + CFApplication.getLastKnownLocation().getLongitude()
-                +" lat="+CFApplication.getLastKnownLocation().getLatitude() : "") + "\n";
+                + (currentLocation != null ? " Official location = (long=" + currentLocation.getLongitude()
+                +" lat="+currentLocation.getLatitude() : "") + "\n";
 
     }
 

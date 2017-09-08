@@ -37,7 +37,7 @@ import java.net.InetAddress;
  * }
  * </pre>
  */
-public class SntpClient
+class SntpClient
 {
 
     private static SntpClient mInstance = null;

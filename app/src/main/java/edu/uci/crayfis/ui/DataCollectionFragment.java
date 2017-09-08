@@ -1,16 +1,12 @@
 package edu.uci.crayfis.ui;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -23,12 +19,12 @@ import android.widget.TextView;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.CFUtil;
+import edu.uci.crayfis.camera.CFCamera;
+import edu.uci.crayfis.util.CFUtil;
 import edu.uci.crayfis.DAQActivity;
 import edu.uci.crayfis.DAQService;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.server.UploadExposureTask;
-import edu.uci.crayfis.util.CFLog;
 import edu.uci.crayfis.widget.DataCollectionStatsView;
 
 /**
@@ -213,7 +209,7 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication application = (CFApplication) activity.getApplication();
-        if (!isLocationValid(CFApplication.getLastKnownLocation())) {
+        if (!isLocationValid(CFCamera.getInstance().getLastKnownLocation())) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);

@@ -23,9 +23,9 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_weight;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.CFCamera;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.server.UploadExposureService;
-import edu.uci.crayfis.util.CFLog;
 
 
 /**
@@ -41,7 +41,7 @@ public class PreCalibrator {
     private PrecalComponent mActiveComponent;
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private final DataProtos.PreCalibrationResult.Builder BUILDER;
+    private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
 
     private final long DUE_FOR_PRECAL_TIME = 7*24*3600*1000; // after 1 week, check weights and hotcells again
 
@@ -60,13 +60,13 @@ public class PreCalibrator {
         CONTEXT = ctx;
         RS = ((CFApplication)CONTEXT.getApplicationContext()).getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
-        BUILDER = DataProtos.PreCalibrationResult.newBuilder();
+        PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
     }
 
     public boolean addFrame(RawCameraFrame frame) {
         if(mActiveComponent.addFrame(frame)) {
             if(mActiveComponent instanceof HotCellKiller) {
-                mActiveComponent = new WeightFinder(RS, BUILDER);
+                mActiveComponent = new WeightFinder(RS, PRECAL_BUILDER);
             } else if(mActiveComponent instanceof WeightFinder) {
                 submitPrecalibrationResult();
                 return true;
@@ -83,25 +83,22 @@ public class PreCalibrator {
 
         CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
         int cameraId = CFApplication.getCameraId();
-        Camera.Size sz = CFApplication.getCameraSize();
         CONFIG.setLastPrecalTime(CFApplication.getCameraId(), System.currentTimeMillis());
-        CONFIG.setLastPrecalResX(cameraId, sz.width);
+        CONFIG.setLastPrecalResX(cameraId, CFCamera.getInstance().getResX());
 
-        BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
+        PRECAL_BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(CFApplication.getBatteryTemp())
                 .setInterpolation(INTER);
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitPreCalibrationResult(CONTEXT, BUILDER.build());
+        UploadExposureService.submitPreCalibrationResult(CONTEXT, PRECAL_BUILDER.build());
 
     }
 
 
     public ScriptC_weight getScriptCWeight(int cameraId) {
-
-        Camera.Size sz = CFApplication.getCameraSize();
 
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
 
@@ -114,7 +111,10 @@ public class PreCalibrator {
 
         Mat resampledMat2D = new Mat();
 
-        Imgproc.resize(downsampleFloat, resampledMat2D, new Size(sz.width, sz.height), 0, 0, INTER);
+        int resX = CFCamera.getInstance().getResX();
+        int resY = CFCamera.getInstance().getResY();
+
+        Imgproc.resize(downsampleFloat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
         MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
 
@@ -129,8 +129,8 @@ public class PreCalibrator {
         }
 
         Type weightType = new Type.Builder(RS, Element.F32(RS))
-                .setX(sz.width)
-                .setY(sz.height)
+                .setX(resX)
+                .setY(resY)
                 .create();
         Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
         weights.copyFrom(resampledArray);
@@ -150,7 +150,7 @@ public class PreCalibrator {
 
     public void clear() {
         int cameraId = CFApplication.getCameraId();
-        mActiveComponent = new HotCellKiller(RS, BUILDER);
+        mActiveComponent = new HotCellKiller(RS, PRECAL_BUILDER);
 
         // reset the Precalibration info for this camera
         CONFIG.setPrecalWeights(cameraId, null);
@@ -159,10 +159,9 @@ public class PreCalibrator {
 
     public boolean dueForPreCalibration(int cameraId) {
 
-        Camera.Size sz = CFApplication.getCameraSize();
         boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;
-        if(CONFIG.getPrecalWeights(cameraId) == null || sz.width != CONFIG.getLastPrecalResX(cameraId) || expired) {
-            BUILDER.setStartTime(System.currentTimeMillis());
+        if(CONFIG.getPrecalWeights(cameraId) == null || CFCamera.getInstance().getResX() != CONFIG.getLastPrecalResX(cameraId) || expired) {
+            PRECAL_BUILDER.setStartTime(System.currentTimeMillis());
             return true;
         }
         return false;

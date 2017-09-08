@@ -6,7 +6,6 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
-import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -20,14 +19,15 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_findSecond;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.CFCamera;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**
  * Created by Jeff on 6/6/2017.
  */
 
-public class HotCellKiller extends PrecalComponent {
+class HotCellKiller extends PrecalComponent {
 
     private final Set<Integer> HOTCELL_COORDS;
 
@@ -43,11 +43,9 @@ public class HotCellKiller extends PrecalComponent {
         mScriptCFindSecond = new ScriptC_findSecond(RS);
         sampleFrames = CONFIG.getHotcellSampleFrames();
 
-        Camera.Size sz = CFApplication.getCameraSize();
-
         Type type = new Type.Builder(RS, Element.U8(RS))
-                .setX(sz.width)
-                .setY(sz.height)
+                .setX(CFCamera.getInstance().getResX())
+                .setY(CFCamera.getInstance().getResY())
                 .create();
         aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
@@ -58,7 +56,7 @@ public class HotCellKiller extends PrecalComponent {
 
     @Override
     boolean addFrame(RawCameraFrame frame) {
-        mScriptCFindSecond.forEach_order(frame.getAllocation());
+        mScriptCFindSecond.forEach_order(frame.getWeightedAllocation());
         return super.addFrame(frame);
     }
 
@@ -133,7 +131,7 @@ public class HotCellKiller extends PrecalComponent {
         CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
         for(Integer pos: HOTCELL_COORDS) {
-            BUILDER.addHotcell(pos);
+            RCF_BUILDER.addHotcell(pos);
         }
 
         int maxNonZero = 255;
@@ -141,7 +139,7 @@ public class HotCellKiller extends PrecalComponent {
             maxNonZero--;
         }
         for (int i = 0; i <= maxNonZero; i++) {
-            BUILDER.addSecondHist(secondHist[i]);
+            RCF_BUILDER.addSecondHist(secondHist[i]);
         }
     }
 }

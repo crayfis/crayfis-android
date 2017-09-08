@@ -1,7 +1,11 @@
-package edu.uci.crayfis.camera;
+package edu.uci.crayfis.camera.frame;
 
-import android.content.Context;
+import android.annotation.TargetApi;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -9,7 +13,7 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
+import android.util.Size;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -19,10 +23,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.ScriptC_weight;
-import edu.uci.crayfis.precalibration.PreCalibrator;
+import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
+import static android.content.Context.CAMERA_SERVICE;
 import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
 import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
 import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
@@ -32,39 +37,42 @@ import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
  * Representation of a single frame from the camera.  This tracks the image data along with the
  * location of the device and the time the frame was captured.
  */
-public class RawCameraFrame {
+public abstract class RawCameraFrame {
 
-    private byte[] mBytes;
+    byte[] mRawBytes;
 
-    private Camera mCamera;
-    private int mCameraId;
-    private boolean mFacingBack;
-    private int mFrameWidth;
-    private int mFrameHeight;
-    private int mLength;
+    private final int mCameraId;
+    private final boolean mFacingBack;
+
+    final int mFrameWidth;
+    final int mFrameHeight;
+    final int mLength;
 
     private final AcquisitionTime mAcquiredTime;
-    private Location mLocation;
-    private float[] mOrientation;
-    private float mRotationZZ;
-    private float mPressure;
-    private int mBatteryTemp;
+    private final long mTimestamp;
+    private final Location mLocation;
+    private final float[] mOrientation;
+    private final float mRotationZZ;
+    private final float mPressure;
+    private final int mBatteryTemp;
+    private final ExposureBlock mExposureBlock;
+
     private int mPixMax = -1;
     private double mPixAvg = -1;
     private double mPixStd = -1;
+
     private Boolean mBufferClaimed = false;
-    private ExposureBlock mExposureBlock;
 
     // RenderScript objects
 
     private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
-    private ScriptC_weight mScriptCWeight;
-    private Allocation ain;
+    ScriptC_weight mScriptCWeight;
+    Allocation aWeighted;
     private Allocation aout;
 
-    private static final ReentrantLock lock = new ReentrantLock();
+    static final ReentrantLock lock = new ReentrantLock();
 
-    private Mat mGrayMat;
+    Mat mGrayMat;
 
     /**
      * Class for creating immutable RawCameraFrames
@@ -72,22 +80,29 @@ public class RawCameraFrame {
     public static class Builder {
         private byte[] bBytes;
         private Camera bCamera;
+
+        private Allocation bAlloc;
+
         private int bCameraId;
         private boolean bFacingBack;
         private int bFrameWidth;
         private int bFrameHeight;
         private int bLength;
         private AcquisitionTime bAcquisitionTime;
+        private long bTimestamp;
         private Location bLocation;
         private float[] bOrientation;
         private float bRotationZZ;
         private float bPressure;
         private int bBatteryTemp;
         private ExposureBlock bExposureBlock;
+
         private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
         private ScriptC_weight bScriptCWeight;
-        private Allocation bin;
-        private Allocation bout;
+        private Allocation bWeighted;
+        private Allocation bOut;
+
+        private Boolean bDeprecated;
 
         public Builder() {
 
@@ -98,7 +113,14 @@ public class RawCameraFrame {
             return this;
         }
 
+        public Builder setAlloc(Allocation alloc) {
+            bAlloc = alloc;
+            return this;
+        }
+
         public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
+
+            bDeprecated = true;
 
             bCamera = camera;
             Camera.Parameters params = camera.getParameters();
@@ -112,20 +134,57 @@ public class RawCameraFrame {
             Camera.getCameraInfo(cameraId, cameraInfo);
             bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
 
-            Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
-            Type type = tb.setX(bFrameWidth)
-                    .setY(bFrameHeight)
-                    .create();
-            bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
-            bin = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
-            bout = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
-            bScriptIntrinsicHistogram.setOutput(bout);
+            setRenderScript(rs, bFrameWidth, bFrameHeight);
+            return this;
+        }
+
+        @TargetApi(21)
+        public Builder setCamera2(CameraManager manager, int cameraId, Size sz, RenderScript rs) {
+
+            bDeprecated = false;
+
+            bFrameWidth = sz.getWidth();
+            bFrameHeight = sz.getHeight();
+            bLength = bFrameWidth * bFrameHeight;
+
+            bCameraId = cameraId;
+            try {
+                String[] idList = manager.getCameraIdList();
+                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
+                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+                if (lensFacing != null) {
+                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
+                }
+            } catch (CameraAccessException e) {
+                CFLog.e("CameraAccessException");
+            }
+
+            setRenderScript(rs, bFrameWidth, bFrameHeight);
 
             return this;
         }
 
+        private void setRenderScript(RenderScript rs, int width, int height) {
+            Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
+            Type type = tb.setX(width)
+                    .setY(height)
+                    .create();
+
+            bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
+            bOut = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
+            bScriptIntrinsicHistogram.setOutput(bOut);
+        }
+        
+        
+
         public Builder setAcquisitionTime(AcquisitionTime acquisitionTime) {
             bAcquisitionTime = acquisitionTime;
+            return this;
+        }
+
+        public Builder setTimestamp(long timestamp) {
+            bTimestamp = timestamp;
             return this;
         }
 
@@ -165,20 +224,33 @@ public class RawCameraFrame {
         }
 
         public RawCameraFrame build() {
-            return new RawCameraFrame(bBytes, bCamera, bCameraId, bFacingBack, bFrameWidth, bFrameHeight,
-                    bLength, bAcquisitionTime, bLocation, bOrientation, bRotationZZ, bPressure, bBatteryTemp,
-                    bExposureBlock, bScriptIntrinsicHistogram, bScriptCWeight, bin, bout);
+
+            if(bDeprecated == null) {
+                CFLog.e("Camera has not been set");
+                return null;
+            }
+            if(bDeprecated) {
+                return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
+                        bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                        bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
+                        bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+            }
+            else {
+                return new RawCamera2Frame(bAlloc, bCameraId, bFacingBack,
+                        bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                        bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
+                        bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+            }
         }
     }
 
-    private RawCameraFrame(@NonNull final byte[] bytes,
-                           final Camera camera,
-                           final int cameraId,
+    RawCameraFrame(final int cameraId,
                            final boolean facingBack,
                            final int frameWidth,
                            final int frameHeight,
                            final int length,
                            final AcquisitionTime acquisitionTime,
+                           final long timestamp,
                            final Location location,
                            final float[] orientation,
                            final float rotationZZ,
@@ -189,14 +261,15 @@ public class RawCameraFrame {
                            final ScriptC_weight scriptCWeight,
                            final Allocation in,
                            final Allocation out) {
-        mBytes = bytes;
-        mCamera = camera;
+
+        CFLog.d("Building RCF");
         mCameraId = cameraId;
         mFacingBack = facingBack;
         mFrameWidth = frameWidth;
         mFrameHeight = frameHeight;
         mLength = length;
         mAcquiredTime = acquisitionTime;
+        mTimestamp = timestamp;
         mLocation = location;
         mOrientation = orientation;
         mRotationZZ = rotationZZ;
@@ -205,12 +278,12 @@ public class RawCameraFrame {
         mExposureBlock = exposureBlock;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
         mScriptCWeight = scriptCWeight;
-        ain = in;
+        aWeighted = in;
         aout = out;
     }
 
-    public byte[] getBytes() {
-        return mBytes;
+    public byte getRawByteAt(int x, int y) {
+        return mRawBytes[x + mFrameWidth * y];
     }
 
     /**
@@ -218,70 +291,29 @@ public class RawCameraFrame {
      *
      * @return allocation of bytes
      */
-    public synchronized Allocation getAllocation() {
-        ain.copy1DRangeFromUnchecked(0, mLength, mBytes);
-        if(mScriptCWeight != null) {
-            mScriptCWeight.forEach_weight(ain, ain);
-        }
-        return ain;
+    public synchronized Allocation getWeightedAllocation() {
+        return aWeighted;
     }
 
 
     /**
-     * Return Mat from image buffer, create if necessary
+     * Return Mat from image buffer, create if necessary, and recycle buffer to camera
      *
      * @return 2D OpenCV::Mat
      */
     public Mat getGrayMat() {
-        if (mGrayMat == null) {
-
-            synchronized (mBytes) {
-
-                //FIXME: this is way too much copying
-                byte[] adjustedBytes = new byte[mBytes.length];
-
-                // update with weighted pixels
-                ain.copyTo(adjustedBytes);
-
-                lock.unlock();
-
-                // probably a better way to do this, but this
-                // works for preventing native memory leaks
-
-                Mat mat1 = new MatOfByte(adjustedBytes);
-                Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
-                mat1.release();
-                mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
-                mat2.release();
-
-                mCamera.addCallbackBuffer(adjustedBytes);
-            }
-        }
         return mGrayMat;
     }
 
     /**
      * Clear memory from RawCameraFrame
      */
-    public void retire() {
-        if(lock.isHeldByCurrentThread()) {
-            lock.unlock();
-        }
-        synchronized (mCamera) {
-            if (mBytes != null) {
-                mCamera.addCallbackBuffer(mBytes);
-                mBytes = null;
-            }
-        }
-    }
+    public void retire() { }
 
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
     public void claim() {
-        if(mGrayMat == null) {
-            getGrayMat();
-        }
         mBufferClaimed = true;
     }
 
@@ -295,7 +327,7 @@ public class RawCameraFrame {
                 mGrayMat = null;
             }
         }
-        mBytes = null;
+        mRawBytes = null;
     }
 
     public boolean isOutstanding() {
@@ -328,6 +360,8 @@ public class RawCameraFrame {
      * @return long
      */
     public long getAcquiredTimeNano() { return mAcquiredTime.Nano; }
+
+    public long getTimestamp() { return mTimestamp; }
 
     /**
      * Get the location for this.
@@ -369,8 +403,8 @@ public class RawCameraFrame {
         int sum = 0;
 
         lock.lock();
-        getAllocation();
-        mScriptIntrinsicHistogram.forEach(ain);
+        getWeightedAllocation();
+        mScriptIntrinsicHistogram.forEach(aWeighted);
         aout.copyTo(hist);
 
         for(int i=0; i<256; i++) {
@@ -442,5 +476,13 @@ public class RawCameraFrame {
             default:
                 throw new RuntimeException("Invalid camera select mode");
         }
+    }
+
+    /**
+     * Interface for listening for frames
+     */
+    public interface Callback {
+
+        void onRawCameraFrame(RawCameraFrame frame);
     }
 }

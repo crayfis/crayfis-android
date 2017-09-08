@@ -13,7 +13,7 @@ import java.util.UUID;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.AcquisitionTime;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.trigger.L1Config;
 import edu.uci.crayfis.trigger.L2Config;
 import edu.uci.crayfis.trigger.L2Task.RecoEvent;
@@ -82,7 +82,8 @@ public class ExposureBlock implements Parcelable {
                          int L1_threshold, int L2_threshold,
                          Location start_loc,
                          int batteryTemp,
-                         CFApplication.State daq_state, Camera.Size sz) {
+                         CFApplication.State daq_state,
+                         int resx, int resy) {
         start_time = new AcquisitionTime();
 
         this.xbn = xbn;
@@ -95,8 +96,8 @@ public class ExposureBlock implements Parcelable {
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
-        this.res_x = sz.width;
-        this.res_y = sz.height;
+        this.res_x = resx;
+        this.res_y = resy;
 
         frames_dropped = 0;
         L1_processed = L1_pass = L1_skip = 0;

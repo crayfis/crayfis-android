@@ -8,36 +8,27 @@ import android.hardware.SensorManager;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.ui.DataCollectionFragment;
-import edu.uci.crayfis.util.CFLog;
 
 /**
  * Created by Jeff on 4/15/2017.
  */
 
-public class CFSensor implements SensorEventListener {
+class CFSensor implements SensorEventListener {
 
     private SensorManager mSensorManager;
     private float[] orientation = new float[3];
-    private static float[] rotationMatrix = new float[9];
+    private float[] rotationMatrix = new float[9];
     private float[] magnetic;
     private float[] gravity;
     private float pressure = 0;
 
     private final CFApplication APPLICATION;
-    private final RawCameraFrame.Builder BUILDER;
+    private final RawCameraFrame.Builder RCF_BUILDER;
 
-    private static CFSensor sInstance;
-
-    public static CFSensor getInstance(Context context, RawCameraFrame.Builder frameBuilder) {
-        if(sInstance == null) {
-            sInstance = new CFSensor(context, frameBuilder);
-        }
-        return sInstance;
-    }
-
-    private CFSensor(Context context, final RawCameraFrame.Builder frameBuilder) {
-        BUILDER = frameBuilder;
+    CFSensor(Context context, final RawCameraFrame.Builder frameBuilder) {
+        RCF_BUILDER = frameBuilder;
         APPLICATION = (CFApplication)context.getApplicationContext();
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -61,9 +52,8 @@ public class CFSensor implements SensorEventListener {
         mSensorManager.registerListener(this, pressureSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    public void unregister() {
+    void unregister() {
         mSensorManager.unregisterListener(this);
-        sInstance = null;
     }
 
     @Override
@@ -71,7 +61,7 @@ public class CFSensor implements SensorEventListener {
         switch(event.sensor.getType()) {
             case Sensor.TYPE_PRESSURE:
                 pressure = event.values[0];
-                BUILDER.setPressure(pressure);
+                RCF_BUILDER.setPressure(pressure);
                 return;
             case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
@@ -86,7 +76,7 @@ public class CFSensor implements SensorEventListener {
         }
 
         SensorManager.getOrientation(rotationMatrix, orientation);
-        BUILDER.setOrientation(orientation)
+        RCF_BUILDER.setOrientation(orientation)
                 .setRotationZZ(rotationMatrix[8]);
     }
 
@@ -103,11 +93,11 @@ public class CFSensor implements SensorEventListener {
         }
     }
 
-    public static boolean isFlat() {
+    boolean isFlat() {
         return Math.abs(rotationMatrix[8]) >= CFConfig.getInstance().getQualityOrientationCosine();
     }
 
-    public String getStatus() {
+    String getStatus() {
         return "Orientation = " + String.format("%1.2f", orientation[0]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[1]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[2]*180/Math.PI) + " -> "

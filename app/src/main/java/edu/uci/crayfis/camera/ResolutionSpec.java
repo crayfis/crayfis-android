@@ -1,8 +1,14 @@
 package edu.uci.crayfis.camera;
 
+import android.annotation.TargetApi;
 import android.hardware.Camera;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.params.StreamConfigurationMap;
+import android.renderscript.Allocation;
 import android.support.annotation.Nullable;
+import android.util.Size;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -90,5 +96,28 @@ public class ResolutionSpec {
 
         // return the elt with the smallest difference from the requested # of pixels.
         return availableSizes.get(0);
+    }
+
+    @TargetApi(21)
+    public Size getClosestSize(CameraCharacteristics cc) {
+        StreamConfigurationMap map = cc.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+        if(map != null) {
+            Size[] outputSizes = map.getOutputSizes(Allocation.class);
+            List<Size> availableSizes = Arrays.asList(outputSizes);
+            // sort to match the total # of pixels in the requested spec.
+            final int targetArea = width*height;
+            Collections.sort(availableSizes, new Comparator<Size>() {
+                @Override
+                public int compare(Size s0, Size s1) {
+                    return Math.abs(targetArea - s0.getWidth()*s0.getHeight())
+                            - Math.abs(targetArea - s1.getWidth()*s1.getHeight());
+                }
+            });
+
+            // return the elt with the smallest difference from the requested # of pixels.
+            return availableSizes.get(0);
+        }
+
+        return null;
     }
 }

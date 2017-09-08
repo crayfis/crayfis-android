@@ -11,6 +11,8 @@ import java.util.LinkedList;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.camera.CFCamera;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
@@ -77,21 +79,21 @@ public final class ExposureBlockManager {
             newExposureBlock(app_state);
         }
 
-        if ((app_state == CFApplication.State.CALIBRATION) && (current_xb.daq_state == CFApplication.State.CALIBRATION)) {
-            // if we are in calibration mode, keep the XB running until calibration is complete.
-            return current_xb;
-        } else {
-            // otherwise, check and see whether this XB is too old
-            if (current_xb.nanoAge() > ((long) CONFIG.getExposureBlockPeriod() * 1000000000L)) {
-                newExposureBlock(app_state);
-            }
+        // if we are in (pre)calibration mode, keep the XB running until calibration is complete.
+        else if ((app_state == CFApplication.State.DATA) && (current_xb.daq_state == CFApplication.State.DATA)
+                && current_xb.nanoAge() > ((long) CONFIG.getExposureBlockPeriod() * 1000000000L)) {
 
-            return current_xb;
+            newExposureBlock(app_state);
         }
+
+        return current_xb;
     }
 
     public synchronized void newExposureBlock(CFApplication.State state) {
-        if(CFApplication.getCameraSize() == null) {
+
+        CFCamera camera = CFCamera.getInstance();
+
+        if(camera.getResX() == 0) {
             // camera error -- don't crash
             return;
         }
@@ -110,9 +112,11 @@ public final class ExposureBlockManager {
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
-                new Location(CFApplication.getLastKnownLocation()),
+                camera.getLastKnownLocation(),
                 CFApplication.getBatteryTemp(),
-                state, APPLICATION.getCameraSize());
+                state, camera.getResX(), camera.getResY());
+
+        CFCamera.getInstance().getFrameBuilder().setExposureBlock(current_xb);
 
         mTotalXBs++;
 

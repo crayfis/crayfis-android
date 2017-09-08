@@ -6,7 +6,7 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.precalibration.PreCalibrator;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 
 /**
  * Created by cshimmin on 5/4/16.
@@ -14,18 +14,18 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 
 public class L1Processor {
 
-    public final CFApplication mApplication;
+    final CFApplication mApplication;
 
     L1Calibrator mL1Cal;
     PreCalibrator mPreCal;
     public static int mL1Count = 0;
     public static int mL1CountData;
 
-    public int mBufferBalance = 0;
+    int mBufferBalance = 0;
 
-    public L2Processor mL2Processor = null;
+    L2Processor mL2Processor = null;
 
-    public final CFConfig CONFIG = CFConfig.getInstance();
+    final CFConfig CONFIG = CFConfig.getInstance();
 
     public L1Processor(CFApplication application) {
         mApplication = application;

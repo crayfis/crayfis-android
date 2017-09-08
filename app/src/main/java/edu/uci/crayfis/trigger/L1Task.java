@@ -1,8 +1,7 @@
 package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 

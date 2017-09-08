@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -96,7 +96,7 @@ public class L2TaskMaxN extends L2Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = mFrame.getBytes() [iy*mFrame.getWidth() + ix] & 0xFF;
+            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
             RecoPixel p;

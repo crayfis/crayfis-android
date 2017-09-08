@@ -21,14 +21,15 @@ import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_downsample;
 import edu.uci.crayfis.ScriptC_sumFrames;
-import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.camera.CFCamera;
+import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**
  * Created by Jeff on 7/18/2017.
  */
 
-public class WeightFinder extends PrecalComponent {
+class WeightFinder extends PrecalComponent {
 
     private Allocation mSumAlloc;
     private ScriptC_sumFrames mScriptCSumFrames;
@@ -42,10 +43,9 @@ public class WeightFinder extends PrecalComponent {
         mScriptCSumFrames = new ScriptC_sumFrames(RS);
         sampleFrames = CONFIG.getWeightingSampleFrames();
 
-        Camera.Size sz = CFApplication.getCameraSize();
         Type type = new Type.Builder(RS, Element.I32(RS))
-                .setX(sz.width)
-                .setY(sz.height)
+                .setX(CFCamera.getInstance().getResX())
+                .setY(CFCamera.getInstance().getResY())
                 .create();
 
         mSumAlloc = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
@@ -54,7 +54,7 @@ public class WeightFinder extends PrecalComponent {
 
     @Override
     boolean addFrame(RawCameraFrame frame) {
-        mScriptCSumFrames.forEach_update(frame.getAllocation(), mSumAlloc);
+        mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
         return super.addFrame(frame);
     }
 
@@ -143,7 +143,7 @@ public class WeightFinder extends PrecalComponent {
         buf.release();
         params.release();
 
-        BUILDER.setSampleResX(sampleResX)
+        RCF_BUILDER.setSampleResX(sampleResX)
                 .setSampleResY(sampleResY)
                 .setCompressedWeights(ByteString.copyFrom(bytes))
                 .setCompressedFormat(FORMAT)
