@@ -1,6 +1,7 @@
 package edu.uci.crayfis.camera.frame;
 
 import android.annotation.TargetApi;
+import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
@@ -44,9 +45,10 @@ public abstract class RawCameraFrame {
     private final int mCameraId;
     private final boolean mFacingBack;
 
-    final int mFrameWidth;
-    final int mFrameHeight;
-    final int mLength;
+    private final int mFrameWidth;
+    private final int mFrameHeight;
+    private final int mLength;
+    private final int mBufferSize;
 
     private final AcquisitionTime mAcquiredTime;
     private final long mTimestamp;
@@ -70,7 +72,7 @@ public abstract class RawCameraFrame {
     Allocation aWeighted;
     private Allocation aout;
 
-    static final ReentrantLock lock = new ReentrantLock();
+    private static final ReentrantLock lock = new ReentrantLock();
 
     Mat mGrayMat;
 
@@ -85,9 +87,12 @@ public abstract class RawCameraFrame {
 
         private int bCameraId;
         private boolean bFacingBack;
+
         private int bFrameWidth;
         private int bFrameHeight;
         private int bLength;
+        private int bBufferSize;
+
         private AcquisitionTime bAcquisitionTime;
         private long bTimestamp;
         private Location bLocation;
@@ -128,6 +133,7 @@ public abstract class RawCameraFrame {
             bFrameWidth = sz.width;
             bFrameHeight = sz.height;
             bLength = bFrameWidth * bFrameHeight;
+            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
 
             bCameraId = cameraId;
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -146,6 +152,7 @@ public abstract class RawCameraFrame {
             bFrameWidth = sz.getWidth();
             bFrameHeight = sz.getHeight();
             bLength = bFrameWidth * bFrameHeight;
+            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
 
             bCameraId = cameraId;
             try {
@@ -231,13 +238,13 @@ public abstract class RawCameraFrame {
             }
             if(bDeprecated) {
                 return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
-                        bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                        bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
                         bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
                         bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
             }
             else {
                 return new RawCamera2Frame(bAlloc, bCameraId, bFacingBack,
-                        bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                        bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
                         bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
                         bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
             }
@@ -245,28 +252,30 @@ public abstract class RawCameraFrame {
     }
 
     RawCameraFrame(final int cameraId,
-                           final boolean facingBack,
-                           final int frameWidth,
-                           final int frameHeight,
-                           final int length,
-                           final AcquisitionTime acquisitionTime,
-                           final long timestamp,
-                           final Location location,
-                           final float[] orientation,
-                           final float rotationZZ,
-                           final float pressure,
-                           final int batteryTemp,
-                           final ExposureBlock exposureBlock,
-                           final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
-                           final ScriptC_weight scriptCWeight,
-                           final Allocation in,
-                           final Allocation out) {
+                   final boolean facingBack,
+                   final int frameWidth,
+                   final int frameHeight,
+                   final int length,
+                   final int bufferSize,
+                   final AcquisitionTime acquisitionTime,
+                   final long timestamp,
+                   final Location location,
+                   final float[] orientation,
+                   final float rotationZZ,
+                   final float pressure,
+                   final int batteryTemp,
+                   final ExposureBlock exposureBlock,
+                   final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
+                   final ScriptC_weight scriptCWeight,
+                   final Allocation in,
+                   final Allocation out) {
 
         mCameraId = cameraId;
         mFacingBack = facingBack;
         mFrameWidth = frameWidth;
         mFrameHeight = frameHeight;
         mLength = length;
+        mBufferSize = bufferSize;
         mAcquiredTime = acquisitionTime;
         mTimestamp = timestamp;
         mLocation = location;
@@ -301,7 +310,32 @@ public abstract class RawCameraFrame {
      * @return 2D OpenCV::Mat
      */
     public Mat getGrayMat() {
+        if(mGrayMat == null) {
+            createGrayMat();
+        }
         return mGrayMat;
+    }
+
+    byte[] createGrayMat() {
+        //FIXME: this is way too much copying
+        byte[] adjustedBytes = new byte[mBufferSize];
+
+        // update with weighted pixels
+        aWeighted.copyTo(adjustedBytes);
+
+        lock.unlock();
+
+
+        // probably a better way to do this, but this
+        // works for preventing native memory leaks
+
+        Mat mat1 = new MatOfByte(adjustedBytes);
+        Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+        mat1.release();
+        mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+        mat2.release();
+
+        return adjustedBytes;
     }
 
     /**
@@ -404,23 +438,34 @@ public abstract class RawCameraFrame {
             return;
         }
         int[] hist = new int[256];
-        int max = 0;
+        int max = 255;
         int sum = 0;
+        double sumDevSq = 0;
 
         lock.lock();
         getWeightedAllocation();
         mScriptIntrinsicHistogram.forEach(aWeighted);
         aout.copyTo(hist);
 
-        for(int i=0; i<256; i++) {
+        // find max first, so sums are easier
+        while(hist[max] == 0) {
+            max--;
+        }
+
+        // then find average and standard deviation
+        for(int i=0; i<=max; i++) {
             sum += i*hist[i];
-            if(hist[i] != 0) {
-                max = i;
-            }
         }
 
         mPixMax = max;
         mPixAvg = (double)sum/mLength;
+
+        for(int i=0; i<=max; i++) {
+            double dev = i - mPixAvg;
+            sumDevSq += hist[i]*dev*dev;
+        }
+
+        mPixStd = Math.sqrt(sumDevSq/(mLength-1));
 
     }
 

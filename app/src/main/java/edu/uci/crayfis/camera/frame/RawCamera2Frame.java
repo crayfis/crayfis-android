@@ -29,6 +29,7 @@ class RawCamera2Frame extends RawCameraFrame {
                     final int frameWidth,
                     final int frameHeight,
                     final int length,
+                    final int bufferSize,
                     final AcquisitionTime acquisitionTime,
                     final long timestamp,
                     final Location location,
@@ -42,7 +43,7 @@ class RawCamera2Frame extends RawCameraFrame {
                     final Allocation in,
                     final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, bufferSize, acquisitionTime, timestamp,
                 location, orientation, rotationZZ, pressure, batteryTemp, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
@@ -71,31 +72,6 @@ class RawCamera2Frame extends RawCameraFrame {
         return super.getWeightedAllocation();
     }
 
-    @Override
-    public Mat getGrayMat() {
-
-        if(mGrayMat == null) {
-
-            //FIXME: this is way too much copying
-            byte[] adjustedBytes = new byte[aWeighted.getBytesSize()];
-
-            // update with weighted pixels
-            aWeighted.copyTo(adjustedBytes);
-
-            lock.unlock();
-
-
-            // probably a better way to do this, but this
-            // works for preventing native memory leaks
-
-            Mat mat1 = new MatOfByte(adjustedBytes);
-            Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
-            mat1.release();
-            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
-            mat2.release();
-        }
-        return super.getGrayMat();
-    }
 
     @Override
     public void clear() {
