@@ -40,6 +40,7 @@ public class PreCalibrator {
 
     private PrecalComponent mActiveComponent;
     private final CFConfig CONFIG = CFConfig.getInstance();
+    private final CFCamera CAMERA = CFCamera.getInstance();
 
     private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
 
@@ -85,9 +86,9 @@ public class PreCalibrator {
     private void submitPrecalibrationResult() {
 
         CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-        int cameraId = CFApplication.getCameraId();
-        CONFIG.setLastPrecalTime(CFApplication.getCameraId(), System.currentTimeMillis());
-        CONFIG.setLastPrecalResX(cameraId, CFCamera.getInstance().getResX());
+        int cameraId = CAMERA.getCameraId();
+        CONFIG.setLastPrecalTime(cameraId, System.currentTimeMillis());
+        CONFIG.setLastPrecalResX(cameraId, CAMERA.getResX());
 
         PRECAL_BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setEndTime(System.currentTimeMillis())
@@ -114,8 +115,8 @@ public class PreCalibrator {
 
         Mat resampledMat2D = new Mat();
 
-        int resX = CFCamera.getInstance().getResX();
-        int resY = CFCamera.getInstance().getResY();
+        int resX = CAMERA.getResX();
+        int resY = CAMERA.getResY();
 
         Imgproc.resize(downsampleFloat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
@@ -152,7 +153,7 @@ public class PreCalibrator {
     }
 
     public void clear() {
-        int cameraId = CFApplication.getCameraId();
+        int cameraId = CAMERA.getCameraId();
         mActiveComponent = null;
 
         // reset the Precalibration info for this camera
@@ -163,7 +164,7 @@ public class PreCalibrator {
     public boolean dueForPreCalibration(int cameraId) {
 
         boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;
-        if(CONFIG.getPrecalWeights(cameraId) == null || CFCamera.getInstance().getResX() != CONFIG.getLastPrecalResX(cameraId) || expired) {
+        if(CONFIG.getPrecalWeights(cameraId) == null || CAMERA.getResX() != CONFIG.getLastPrecalResX(cameraId) || expired) {
             PRECAL_BUILDER.setStartTime(System.currentTimeMillis());
             return true;
         }

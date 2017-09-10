@@ -103,7 +103,7 @@ public final class ExposureBlockManager {
             retireExposureBlock(current_xb);
         }
 
-        int cameraId = APPLICATION.getCameraId();
+        int cameraId = camera.getCameraId();
 
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,
@@ -116,7 +116,7 @@ public final class ExposureBlockManager {
                 CFApplication.getBatteryTemp(),
                 state, camera.getResX(), camera.getResY());
 
-        CFCamera.getInstance().getFrameBuilder().setExposureBlock(current_xb);
+        camera.getFrameBuilder().setExposureBlock(current_xb);
 
         mTotalXBs++;
 

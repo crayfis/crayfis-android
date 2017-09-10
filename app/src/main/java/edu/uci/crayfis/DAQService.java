@@ -115,7 +115,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         // start camera
 
-        mApplication.changeCamera();
+        mCFCamera.changeCamera();
     }
 
     @Override
@@ -224,7 +224,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         switch (previousState) {
             case IDLE:
             case RECONFIGURE:
-                mApplication.changeCamera();
+                mCFCamera.changeCamera();
             case INIT:
                 xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
                 mCFCamera.getFrameBuilder().setWeights(null);
@@ -253,7 +253,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
-                mApplication.changeCamera();
+                mCFCamera.changeCamera();
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
@@ -278,7 +278,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         // first generate runconfig for specific camera
-        if (run_config == null || CFApplication.getCameraId() != run_config.getCameraId()) {
+        if (run_config == null || mCFCamera.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
             UploadExposureService.submitRunConfig(context, run_config);
         }
@@ -288,7 +288,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(mPreCal.dueForPreCalibration(CFApplication.getCameraId())) {
+        if(mPreCal.dueForPreCalibration(mCFCamera.getCameraId())) {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
@@ -299,7 +299,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(CFApplication.getCameraId()));
+                mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -322,7 +322,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         }
 
         // tear down and then reconfigure the camera
-        mApplication.changeCamera();
+        mCFCamera.changeCamera();
 
         // if we were idling, go back to that state.
         if (previousState == CFApplication.State.IDLE) {
@@ -415,7 +415,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
-        b.setCameraId(CFApplication.getCameraId());
+        b.setCameraId(mCFCamera.getCameraId());
         b.setCameraParams(mCFCamera.getParams());
 
 

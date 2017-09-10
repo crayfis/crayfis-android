@@ -79,7 +79,7 @@ class CFCamera2 extends CFCamera {
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            mApplication.changeCamera();
+            changeCamera();
         }
 
         @Override
@@ -88,7 +88,7 @@ class CFCamera2 extends CFCamera {
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            mApplication.changeCamera();
+            changeCamera();
         }
     };
 
@@ -223,16 +223,28 @@ class CFCamera2 extends CFCamera {
     }
 
     @Override
-    synchronized void setUpAndConfigureCamera(int cameraId) {
+    synchronized void startNewCamera() {
 
-        super.setUpAndConfigureCamera(cameraId);
+        super.startNewCamera();
 
-        if(mCameraDevice != null && mPreviewSize != null) {
-            CFLog.e("Camera already open");
-            return;
+        try {
+            mCameraOpenCloseLock.acquire();
+            if (null != mCaptureSession) {
+                mCaptureSession.close();
+                mCaptureSession = null;
+            }
+            if (null != mCameraDevice) {
+                mCameraDevice.close();
+                mCameraDevice = null;
+            }
+            mPreviewSize = null;
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
+        } finally {
+            mCameraOpenCloseLock.release();
         }
 
-        if(cameraId == -1) {
+        if(mCameraId == -1) {
             return;
         }
 
@@ -252,7 +264,7 @@ class CFCamera2 extends CFCamera {
             }
 
             String[] idList = manager.getCameraIdList();
-            String idString = idList[cameraId];
+            String idString = idList[mCameraId];
 
             mCameraCharacteristics = manager.getCameraCharacteristics(idString);
 
@@ -260,7 +272,7 @@ class CFCamera2 extends CFCamera {
 
             mResX = mPreviewSize.getWidth();
             mResY = mPreviewSize.getHeight();
-            RCF_BUILDER.setCamera2(manager, cameraId, mPreviewSize, mApplication.getRenderScript());
+            RCF_BUILDER.setCamera2(manager, mCameraId, mPreviewSize, mApplication.getRenderScript());
 
             manager.openCamera(idString, mCameraDeviceCallback, mBackgroundHandler);
 
@@ -271,28 +283,6 @@ class CFCamera2 extends CFCamera {
         }
     }
 
-    @Override
-    synchronized void unSetupCamera() {
-
-        super.unSetupCamera();
-
-        try {
-            mCameraOpenCloseLock.acquire();
-            if (null != mCaptureSession) {
-                mCaptureSession.close();
-                mCaptureSession = null;
-            }
-            if (null != mCameraDevice) {
-                mCameraDevice.close();
-                mCameraDevice = null;
-            }
-            mPreviewSize = null;
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
-        } finally {
-            mCameraOpenCloseLock.release();
-        }
-    }
 
     @Override
     public String getParams() {

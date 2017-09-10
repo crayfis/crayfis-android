@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
 import android.renderscript.RenderScript;
@@ -12,6 +13,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.exposure.ExposureBlockManager;
+import edu.uci.crayfis.precalibration.PreCalibrator;
+import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 
 import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
@@ -30,18 +34,6 @@ public abstract class CFCamera {
 
     CFApplication mApplication;
     final CFConfig CONFIG;
-    private LocalBroadcastManager mBroadcastManager;
-    private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            unSetupCamera();
-            setUpAndConfigureCamera(intent.getIntExtra(EXTRA_NEW_CAMERA, 0));
-
-            if(mApplication.getApplicationState() == CFApplication.State.INIT) {
-                mApplication.setApplicationState(CFApplication.State.STABILIZATION);
-            }
-        }
-    };
     final RenderScript RS;
 
     private CFSensor mCFSensor;
@@ -49,8 +41,11 @@ public abstract class CFCamera {
 
     RawCameraFrame.Callback mCallback;
 
+    int mCameraId = -1;
+
     int mResX;
     int mResY;
+
 
     private static CFCamera sInstance;
 
@@ -78,23 +73,78 @@ public abstract class CFCamera {
         mApplication = (CFApplication) context;
         mCFSensor = new CFSensor(context, RCF_BUILDER);
         mCFLocation = new CFLocation(context, RCF_BUILDER);
-
-        mBroadcastManager = LocalBroadcastManager.getInstance(context);
-        mBroadcastManager.registerReceiver(CAMERA_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_CAMERA_CHANGE));
     }
 
     public void unregister() {
-        unSetupCamera();
-        mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
+        startNewCamera();
         mCFSensor.unregister();
         mCFLocation.unregister();
     }
 
-    synchronized void setUpAndConfigureCamera(int cameraId) {
+    public void changeCamera() {
+        changeCamera(mCameraId);
+    }
+
+    public void changeCamera(int currentId) {
+        if(currentId != mCameraId) {
+            return;
+        }
+
+        int nextId = -1;
+        CFApplication.State state = mApplication.getApplicationState();
+        switch(state) {
+            case RECONFIGURE:
+                nextId = currentId;
+                break;
+            case INIT:
+                nextId = 0;
+                break;
+            case STABILIZATION:
+                // switch cameras and try again
+                nextId = currentId + 1;
+                if(nextId >= Camera.getNumberOfCameras()) {
+                    nextId = -1;
+                }
+                break;
+            case PRECALIBRATION:
+                PreCalibrator.getInstance(mApplication).clear();
+            case CALIBRATION:
+            case DATA:
+            case IDLE:
+                // take a break for a while
+                nextId = -1;
+        }
+
+        if(mCameraId == nextId && state != CFApplication.State.RECONFIGURE) {
+            return;
+        }
+
+        mCameraId = nextId;
+
+        if(nextId == -1 && state != CFApplication.State.IDLE ) {
+
+            DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+            mApplication.startStabilizationTimer();
+        }
+
+        ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
+        xbManager.abortExposureBlock();
+
+        CFLog.d("cameraId:" + currentId + " -> "+ nextId);
+
+        if(state == CFApplication.State.INIT) {
+            mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+        }
+        startNewCamera();
 
     }
 
-    synchronized void unSetupCamera() {
+    synchronized void startNewCamera() {
+
+    }
+
+    public int getCameraId() {
+        return mCameraId;
     }
 
     public String getParams() {
@@ -102,7 +152,7 @@ public abstract class CFCamera {
     }
 
     public String getStatus() {
-        String devtxt = "Camera ID: " + mApplication.getCameraId() + ", Mode = ";
+        String devtxt = "Camera ID: " + mCameraId + ", Mode = ";
         switch (CONFIG.getCameraSelectMode()) {
             case MODE_FACE_DOWN:
                 devtxt += "FACE-DOWN\n";

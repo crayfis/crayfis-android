@@ -1,6 +1,7 @@
 package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -39,7 +40,7 @@ class L1Task implements Runnable {
     protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
-            mApplication.changeCamera();
+            CFCamera.getInstance().changeCamera(mFrame.getCameraId());
             return true;
         }
 

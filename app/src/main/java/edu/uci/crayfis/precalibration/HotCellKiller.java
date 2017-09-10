@@ -15,7 +15,6 @@ import org.opencv.imgproc.Imgproc;
 import java.util.HashSet;
 import java.util.Set;
 
-import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_findSecond;
@@ -32,6 +31,7 @@ class HotCellKiller extends PrecalComponent {
     private final Set<Integer> HOTCELL_COORDS;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
+    private final CFCamera CAMERA = CFCamera.getInstance();
 
     private ScriptC_findSecond mScriptCFindSecond;
     private Allocation aMax;
@@ -44,8 +44,8 @@ class HotCellKiller extends PrecalComponent {
         sampleFrames = CONFIG.getHotcellSampleFrames();
 
         Type type = new Type.Builder(RS, Element.U8(RS))
-                .setX(CFCamera.getInstance().getResX())
-                .setY(CFCamera.getInstance().getResY())
+                .setX(CAMERA.getResX())
+                .setY(CAMERA.getResY())
                 .create();
         aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
@@ -63,7 +63,7 @@ class HotCellKiller extends PrecalComponent {
     @Override
     void process() {
         super.process();
-        int cameraId = CFApplication.getCameraId();
+        int cameraId = CAMERA.getCameraId();
         ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
         Allocation aout = Allocation.createSized(RS, Element.U32(RS), 256, Allocation.USAGE_SCRIPT);
         histogram.setOutput(aout);

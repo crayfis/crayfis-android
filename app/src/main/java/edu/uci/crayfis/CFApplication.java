@@ -77,9 +77,8 @@ public class CFApplication extends MultiDexApplication {
 
             if(consecutiveIdles >= 3) {
                 handleUnresponsive();
-            }
-
-            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFCamera.getInstance().isFlat()) {
+            } else if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
+                    || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
@@ -97,7 +96,6 @@ public class CFApplication extends MultiDexApplication {
     public static int badFlatEvents = 0;
 
     private State mApplicationState;
-    private static int mCameraId = -1;
 
     private AppBuild mAppBuild;
 
@@ -175,52 +173,6 @@ public class CFApplication extends MultiDexApplication {
             intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         }
-    }
-
-    public static int getCameraId() { return mCameraId; }
-
-    public void changeCamera() {
-        int nextId = -1;
-        switch(mApplicationState) {
-            case RECONFIGURE:
-                nextId = mCameraId;
-                break;
-            case INIT:
-            case STABILIZATION:
-                // switch cameras and try again
-                nextId = mCameraId + 1;
-                if(nextId >= Camera.getNumberOfCameras()) {
-                    nextId = -1;
-                }
-                break;
-            case PRECALIBRATION:
-                PreCalibrator.getInstance(this).clear();
-            case CALIBRATION:
-            case DATA:
-            case IDLE:
-                // take a break for a while
-                nextId = -1;
-        }
-
-        if(nextId == -1 && mApplicationState != State.IDLE ) {
-
-            setApplicationState(State.IDLE);
-            DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
-            mWaitingForStabilization = true;
-            mStabilizationTimer.start();
-        }
-
-        if(nextId != mCameraId || mApplicationState == State.RECONFIGURE) {
-            CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
-            mCameraId = nextId;
-
-            final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
-            intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
-        }
-
-
     }
 
     private void handleUnresponsive() {
@@ -413,8 +365,17 @@ public class CFApplication extends MultiDexApplication {
         }
     }
 
-    public void setNewestPrecalUUID() { CFConfig.getInstance().setPrecalId(mCameraId, mAppBuild.getRunId()); }
+    public void setNewestPrecalUUID() {
+        final CFConfig CONFIG = CFConfig.getInstance();
+        final CFCamera CAMERA = CFCamera.getInstance();
+        CONFIG.setPrecalId(CAMERA.getCameraId(), mAppBuild.getRunId());
+    }
 
+    public void startStabilizationTimer() {
+        setApplicationState(State.IDLE);
+        mStabilizationTimer.start();
+        mWaitingForStabilization = true;
+    }
 
     public void killTimer() {
         mStabilizationTimer.cancel();

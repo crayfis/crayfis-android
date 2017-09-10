@@ -35,7 +35,8 @@ class WeightFinder extends PrecalComponent {
     private ScriptC_sumFrames mScriptCSumFrames;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-    final String FORMAT = ".jpeg";
+    private final CFCamera CAMERA = CFCamera.getInstance();
+    private final String FORMAT = ".jpeg";
 
     WeightFinder(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
         super(rs, b);
@@ -44,8 +45,8 @@ class WeightFinder extends PrecalComponent {
         sampleFrames = CONFIG.getWeightingSampleFrames();
 
         Type type = new Type.Builder(RS, Element.I32(RS))
-                .setX(CFCamera.getInstance().getResX())
-                .setY(CFCamera.getInstance().getResY())
+                .setX(CAMERA.getResX())
+                .setY(CAMERA.getResY())
                 .create();
 
         mSumAlloc = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
@@ -63,7 +64,7 @@ class WeightFinder extends PrecalComponent {
 
         final int MAX_SAMPLE_SIZE = 1500;
 
-        int cameraId = CFApplication.getCameraId();
+        int cameraId = CAMERA.getCameraId();
         int width = mSumAlloc.getType().getX();
         int height = mSumAlloc.getType().getY();
 
