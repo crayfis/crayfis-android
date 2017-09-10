@@ -92,6 +92,7 @@ public class L2Task implements Runnable {
         public long time;
         public long time_nano;
         public long time_ntp;
+        public long time_target;
         public int batteryTemp;
         public Location location;
         public float[] orientation;
@@ -115,6 +116,7 @@ public class L2Task implements Runnable {
             time = parcel.readLong();
             time_nano = parcel.readLong();
             time_ntp = parcel.readLong();
+            time_target = parcel.readLong();
             batteryTemp = parcel.readInt();
             location = parcel.readParcelable(Location.class.getClassLoader());
             orientation = parcel.createFloatArray();
@@ -133,6 +135,7 @@ public class L2Task implements Runnable {
             buf.setTimestamp(time);
             buf.setTimestampNano(time_nano);
             buf.setTimestampNtp(time_ntp);
+            buf.setTimestampTarget(time_target);
             buf.setPressure(pressure);
             buf.setBatteryTemp(batteryTemp);
             buf.setGpsLat(location.getLatitude());
@@ -175,6 +178,7 @@ public class L2Task implements Runnable {
             dest.writeLong(time);
             dest.writeLong(time_nano);
             dest.writeLong(time_ntp);
+            dest.writeLong(time_target);
             dest.writeInt(batteryTemp);
             dest.writeParcelable(location, flags);
             dest.writeFloatArray(orientation);
@@ -271,6 +275,7 @@ public class L2Task implements Runnable {
         event.time = mFrame.getAcquiredTime();
         event.time_nano = mFrame.getAcquiredTimeNano();
         event.time_ntp = mFrame.getAcquiredTimeNTP();
+        event.time_target = mFrame.getTimestamp();
         event.location = mFrame.getLocation();
         event.orientation = mFrame.getOrientation();
         event.pressure = mFrame.getPressure();

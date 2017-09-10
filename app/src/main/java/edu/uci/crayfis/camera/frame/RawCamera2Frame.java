@@ -6,9 +6,6 @@ import android.renderscript.Allocation;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -52,24 +49,23 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public synchronized byte getRawByteAt(int x, int y) {
-        if (mRawBytes == null) {
-            mRawBytes = new byte[aRaw.getBytesSize()];
-            aRaw.copyTo(mRawBytes);
-            aRaw = null;
-        }
-        return super.getRawByteAt(x, y);
-    }
-
-    @Override
     public synchronized Allocation getWeightedAllocation() {
+        super.getWeightedAllocation();
         if(mScriptCWeight != null) {
             mScriptCWeight.set_gInYuv(aRaw);
             mScriptCWeight.forEach_weightYuv(aWeighted);
         } else {
             aWeighted = aRaw;
         }
-        return super.getWeightedAllocation();
+        return aWeighted;
+    }
+
+    @Override
+    public void claim() {
+        mRawBytes = new byte[aRaw.getBytesSize()];
+        aRaw.copyTo(mRawBytes);
+        aRaw = null;
+        super.claim();
     }
 
 

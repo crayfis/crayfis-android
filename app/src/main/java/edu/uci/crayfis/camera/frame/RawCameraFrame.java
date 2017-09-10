@@ -63,7 +63,7 @@ public abstract class RawCameraFrame {
     private double mPixAvg = -1;
     private double mPixStd = -1;
 
-    private Boolean mBufferClaimed = false;
+    Boolean mBufferClaimed = false;
 
     // RenderScript objects
 
@@ -72,9 +72,10 @@ public abstract class RawCameraFrame {
     Allocation aWeighted;
     private Allocation aout;
 
-    private static final ReentrantLock lock = new ReentrantLock();
+    // lock to make sure allocation doesn't change as we're performing weighting
+    private static final ReentrantLock weightingLock = new ReentrantLock();
 
-    Mat mGrayMat;
+    private Mat mGrayMat;
 
     /**
      * Class for creating immutable RawCameraFrames
@@ -291,6 +292,11 @@ public abstract class RawCameraFrame {
     }
 
     public byte getRawByteAt(int x, int y) {
+        // we don't need to worry about unweighted bytes until
+        // after L1 processing
+        if(!mBufferClaimed) {
+            claim();
+        }
         return mRawBytes[x + mFrameWidth * y];
     }
 
@@ -300,7 +306,8 @@ public abstract class RawCameraFrame {
      * @return allocation of bytes
      */
     public Allocation getWeightedAllocation() {
-        return aWeighted;
+        weightingLock.lock();
+        return null;
     }
 
 
@@ -310,20 +317,21 @@ public abstract class RawCameraFrame {
      * @return 2D OpenCV::Mat
      */
     public Mat getGrayMat() {
-        if(mGrayMat == null) {
-            createGrayMat();
+        if(!mBufferClaimed) {
+            claim();
         }
         return mGrayMat;
     }
 
-    byte[] createGrayMat() {
+    byte[] createMatAndReturnBuffer() {
+
         //FIXME: this is way too much copying
         byte[] adjustedBytes = new byte[mBufferSize];
 
         // update with weighted pixels
         aWeighted.copyTo(adjustedBytes);
 
-        lock.unlock();
+        weightingLock.unlock();
 
 
         // probably a better way to do this, but this
@@ -342,9 +350,8 @@ public abstract class RawCameraFrame {
      * Clear memory from RawCameraFrame
      */
     public void retire() {
-        if(lock.isHeldByCurrentThread()) {
-            CFLog.d("Unlocked (retire) by " + Thread.currentThread().getName());
-            lock.unlock();
+        if(weightingLock.isHeldByCurrentThread()) {
+            weightingLock.unlock();
         }
     }
 
@@ -353,7 +360,7 @@ public abstract class RawCameraFrame {
      */
     public void claim() {
         mBufferClaimed = true;
-        getGrayMat();
+        createMatAndReturnBuffer();
     }
 
     // notify the XB that we are totally done processing this frame.
@@ -442,13 +449,11 @@ public abstract class RawCameraFrame {
         int sum = 0;
         double sumDevSq = 0;
 
-        lock.lock();
-        getWeightedAllocation();
-        mScriptIntrinsicHistogram.forEach(aWeighted);
+        mScriptIntrinsicHistogram.forEach(getWeightedAllocation());
         aout.copyTo(hist);
 
         // find max first, so sums are easier
-        while(hist[max] == 0) {
+        while(hist[max] == 0 && max > 0) {
             max--;
         }
 
@@ -484,9 +489,9 @@ public abstract class RawCameraFrame {
     }
 
     public double getPixStd() {
-        //if (mPixStd < 0) {
-        //    calculateStatistics();
-        //}
+        if (mPixStd < 0) {
+            calculateStatistics();
+        }
         return mPixStd;
     }
 

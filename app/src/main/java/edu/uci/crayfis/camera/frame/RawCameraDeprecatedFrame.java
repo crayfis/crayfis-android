@@ -53,20 +53,19 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     @Override
     public synchronized Allocation getWeightedAllocation() {
+        super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
         if(mScriptCWeight != null) {
             mScriptCWeight.forEach_weight(aWeighted, aWeighted);
         }
-        return super.getWeightedAllocation();
+        return aWeighted;
     }
 
 
     @Override
-    public Mat getGrayMat() {
-        if(mGrayMat == null) {
-            mCamera.addCallbackBuffer(createGrayMat());
-        }
-        return super.getGrayMat();
+    public void claim() {
+        mCamera.addCallbackBuffer(super.createMatAndReturnBuffer());
+        mBufferClaimed = true;
     }
 
     @Override
