@@ -1,14 +1,10 @@
 package edu.uci.crayfis.camera;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
 import android.renderscript.RenderScript;
-import android.support.v4.content.LocalBroadcastManager;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -18,7 +14,6 @@ import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.util.CFLog;
 
-import static edu.uci.crayfis.CFApplication.EXTRA_NEW_CAMERA;
 import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
 import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
 import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
@@ -76,9 +71,11 @@ public abstract class CFCamera {
     }
 
     public void unregister() {
+        mCameraId = -1;
         startNewCamera();
         mCFSensor.unregister();
         mCFLocation.unregister();
+        sInstance = null;
     }
 
     public void changeCamera() {

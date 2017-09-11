@@ -9,6 +9,7 @@
 	<string name="pref_threshold">Threshold</string>
 	<string name="pref_startwait">Waits to start after plugin</string>
 	<string name="pref_startafter">Only runs after this time</string>
+    <string name="pref_enable_notif" translatable="false">pref_enable_notif</string>
     <string name="settings_startafter_summary">The app will not autostart after this time</string>
     <string name="settings_startbefore_summary" translatable="false">The app will not autostart before this time</string>
 
@@ -29,9 +30,11 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Enable gallery</string>
     <string name="settings_gallery_summary">Saves and displays interesting images</string>
+    <string name="settings_notif_title" translatable="false">Enable notifications</string>
+    <string name="settings_notif_summary" translatable="false">Allow CRAYFIS to post notifications to your phone when app finishes</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
     <string name="settings_autostart_title">Click to allow autostart</string>
-    <string name="settings_pref_resolution_summary" translatable="false">Resolution</string>
+    <string name="settings_pref_resolution_summary" translatable="false">Decrease resolution if camera is working too hard</string>
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_camera_select_mode_summary" translatable="false">Expert use only!</string>
     <string name="settings_camera_select_mode_title" translatable="false">Camera select mode</string>
@@ -93,7 +96,7 @@
     <string name="fatal_error_title">CRAYFIS Error</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
     <string name="camera_error">CRAYFIS could not open the camera.</string>
-    <string name="sensor_error" translatable="false">Unusual sensor output:\n Try switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
+    <string name="sensor_error" translatable="false">Unusual sensor output:\nTry switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>
@@ -105,10 +108,12 @@
     <string name="notification_title" translatable="false">CRAYFIS</string>
     <string name="notification_idle" translatable="false">Paused</string>
     <string name="notification_running" translatable="false">Taking data</string>
-    <string name="notification_quit" translatable="false">CRAYFIS has encountered an error and quit</string>
+    <string name="notification_quit" translatable="false">CRAYFIS has safely ended data-taking.</string>
+    <string name="notification_stats" translatable="false">Total frames: %d\tPixels saved: %d</string>
+    <string name="notification_error" translatable="false">CRAYFIS has encountered an error and quit.</string>
     <string name="quit_title" translatable="false">CRAYFIS is quitting for the following reason:</string>
     <string name="quit_no_cameras" translatable="false">No covered cameras available</string>
-    <string name="quit_permission" translatable="false">CRAYFIS no longer has permission to use the camera. \n Please restart the app.</string>
+    <string name="quit_permission" translatable="false">CRAYFIS no longer has permission to use the camera. \nPlease restart the app.</string>
 
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>

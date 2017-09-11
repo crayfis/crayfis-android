@@ -58,11 +58,6 @@ class CFCamera2 extends CFCamera {
 
     CFCamera2() {
         super();
-
-        // first, setup thread for camera
-        mBackgroundThread = new HandlerThread("CFCamera2");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
     }
 
     private CameraDevice.StateCallback mCameraDeviceCallback = new CameraDevice.StateCallback() {
@@ -227,6 +222,24 @@ class CFCamera2 extends CFCamera {
 
         super.startNewCamera();
 
+        // first, setup thread for camera
+
+        // quit the existing camera thread
+        if(mBackgroundThread != null) {
+            mBackgroundThread.quitSafely();
+            try {
+                mBackgroundThread.join();
+                mBackgroundThread = null;
+                mBackgroundHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mBackgroundThread = new HandlerThread("CFCamera2");
+        mBackgroundThread.start();
+        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+
         try {
             mCameraOpenCloseLock.acquire();
             if (null != mCaptureSession) {
@@ -315,18 +328,6 @@ class CFCamera2 extends CFCamera {
     public void unregister() {
 
         super.unregister();
-
-        //quit the camera thread
-        if(mBackgroundThread != null) {
-            mBackgroundThread.quitSafely();
-            try {
-                mBackgroundThread.join();
-                mBackgroundThread = null;
-                mBackgroundHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
 }

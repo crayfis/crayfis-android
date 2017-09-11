@@ -1,6 +1,5 @@
 package edu.uci.crayfis;
 
-import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -9,8 +8,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
@@ -23,7 +20,6 @@ import android.support.annotation.StringRes;
 import android.support.multidex.MultiDexApplication;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Size;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -32,10 +28,10 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
-import edu.uci.crayfis.ui.DataCollectionFragment;
+import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.util.CFLog;
 
 
@@ -47,9 +43,6 @@ public class CFApplication extends MultiDexApplication {
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
-
-    public static final String ACTION_CAMERA_CHANGE = "camera_change";
-    public static final String EXTRA_NEW_CAMERA = "new_camera";
 
     public static final String ACTION_FATAL_ERROR = "fatal_error";
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
@@ -186,7 +179,7 @@ public class CFApplication extends MultiDexApplication {
 
         if(!isCharging || !inAutostartWindow()) {
             stopService(new Intent(this, DAQService.class));
-            userErrorMessage(R.string.quit_no_cameras, true);
+            finishAndQuit(R.string.quit_no_cameras);
         }
     }
 
@@ -206,30 +199,53 @@ public class CFApplication extends MultiDexApplication {
         return b1 + b2 + b3 >= 2;
     }
 
-    public void userErrorMessage(@StringRes int id, boolean fatal) {
+    public void userErrorMessage(@StringRes int id, boolean quit) {
+        userErrorMessage(id, quit, false);
+    }
 
-        String mess = getResources().getString(id);
-        if(fatal) {
-            CFLog.e("Error: " + mess);
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_just_a)
-                    .setContentTitle(getString(R.string.notification_title))
-                    .setContentText(getString(R.string.notification_quit))
-                    .setContentIntent(null)
-                    .build();
+    public void finishAndQuit(@StringRes int id) {
+        userErrorMessage(id, true, true);
+    }
 
-            NotificationManager notificationManager
-                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(errorId, notification);
-            errorId++;
+    private void userErrorMessage(@StringRes int id, boolean quit, boolean safeExit) {
+
+        String dialogMessage = getString(id);
+        if(quit) {
+            CFLog.e("Error: " + dialogMessage);
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+            if(sharedPrefs.getBoolean(getString(R.string.pref_enable_notif), true)) {
+
+                String title;
+                String text;
+                if(safeExit) {
+                    title = getString(R.string.notification_quit);
+                    text = String.format(getString(R.string.notification_stats),
+                            L1Processor.mL1CountData, L2Processor.mL2Count);
+                } else {
+                    title = getString(R.string.notification_error);
+                    text = dialogMessage;
+                }
+                Notification notification = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_just_a)
+                        .setContentTitle(title)
+                        .setContentText(text)
+                        .setContentIntent(null)
+                        .build();
+
+                NotificationManager notificationManager
+                        = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(errorId, notification);
+                errorId++;
+            }
 
             // make sure to kill activity if open
             Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
+            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
             LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
             stopService(new Intent(this, DAQService.class));
         } else {
-            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, dialogMessage, Toast.LENGTH_LONG).show();
         }
     }
 

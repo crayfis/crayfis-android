@@ -13,6 +13,7 @@ import com.google.protobuf.AbstractMessage;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import edu.uci.crayfis.BuildConfig;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
@@ -73,7 +74,7 @@ public class UploadExposureService extends IntentService {
     private static boolean sValidId = true;
     private static boolean sStartUploading;
 
-    public static final boolean IS_PUBLIC = true;
+    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
 
     /**
      * Helper for submitting an {@link edu.uci.crayfis.exposure.ExposureBlock}.
@@ -155,10 +156,14 @@ public class UploadExposureService extends IntentService {
                 }
                 final AbstractMessage uploadMessage = builder.build();
                 final File file = saveMessageToCache(uploadMessage);
-                if (file != null) {
+                if (file != null && !IS_PUBLIC) {
                     CFLog.d("Queueing upload task");
-                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file, !IS_PUBLIC).
+                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
                             execute();
+                } else {
+                    // make sure we save things like precalibration result
+                    CFApplication application = (CFApplication) this.getApplication();
+                    application.savePreferences();
                 }
             }
         }

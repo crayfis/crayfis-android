@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 
+import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -28,6 +29,7 @@ import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.trigger.L1Processor;
 import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.ui.DataCollectionFragment;
@@ -63,6 +65,17 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         context = getApplicationContext();
         mApplication.setApplicationState(CFApplication.State.INIT);
 
+        final File files[] = getFilesDir().listFiles();
+        int foundFiles = 0;
+        for (int i = 0; i < files.length && foundFiles < 5; i++) {
+            if (files[i].getName().endsWith(".bin")) {
+                new UploadExposureTask(mApplication,
+                        new UploadExposureService.ServerInfo(this), files[i])
+                        .execute();
+                foundFiles++;
+            }
+        }
+
         mCFCamera = CFCamera.getInstance();
         mCFCamera.register(context);
         mCFCamera.setCallback(this);
@@ -83,7 +96,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         mBroadcastManager = LocalBroadcastManager.getInstance(context);
         mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-        mBroadcastManager.registerReceiver(CAMERA_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_CAMERA_CHANGE));
 
 
         // Frame Processing
@@ -156,7 +168,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         xbManager.flushCommittedBlocks(true);
 
         mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
-        mBroadcastManager.unregisterReceiver(CAMERA_CHANGE_RECEIVER);
 
         mHardwareCheckTimer.cancel();
         mApplication.killTimer();
@@ -202,13 +213,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 default:
                     throw new IllegalFsmStateException(previous + " -> " + current);
             }
-        }
-    };
-
-    private final BroadcastReceiver CAMERA_CHANGE_RECEIVER = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            xbManager.abortExposureBlock();
         }
     };
 

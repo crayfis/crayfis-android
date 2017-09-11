@@ -32,7 +32,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -56,13 +55,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
 import java.util.List;
 
 import edu.uci.crayfis.navdrawer.NavDrawerAdapter;
 import edu.uci.crayfis.navdrawer.NavHelper;
-import edu.uci.crayfis.server.UploadExposureService;
-import edu.uci.crayfis.server.UploadExposureTask;
 import edu.uci.crayfis.ui.CFFragment;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 import edu.uci.crayfis.ui.LayoutFeedback;
@@ -132,24 +128,10 @@ public class DAQActivity extends AppCompatActivity {
         Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
         //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
 
-        final File files[] = getFilesDir().listFiles();
-        int foundFiles = 0;
-        for (int i = 0; i < files.length && foundFiles < 5; i++) {
-            if (files[i].getName().endsWith(".bin")) {
-                new UploadExposureTask((CFApplication) getApplication(),
-                        new UploadExposureService.ServerInfo(this), files[i], true)
-                        .execute();
-                foundFiles++;
-            }
-        }
-
         setContentView(R.layout.activity_daq);
         configureNavigation();
 
         context = getApplicationContext();
-
-        LocalBroadcastManager.getInstance(this)
-                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -180,6 +162,9 @@ public class DAQActivity extends AppCompatActivity {
         super.onResume();
 
         CFLog.d("DAQActivity onResume");
+
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
 
         // in case this isn't already running
         DAQIntent = new Intent(this, DAQService.class);
@@ -220,7 +205,7 @@ public class DAQActivity extends AppCompatActivity {
 
         // give back brightness control
         Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
-
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(FATAL_ERROR_RECEIVER);
     }
 
     @Override

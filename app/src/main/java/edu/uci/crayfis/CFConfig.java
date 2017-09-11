@@ -71,7 +71,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final float DEFAULT_BG_AVG_CUT = 5f;
-    private static final float DEFAULT_BG_VAR_CUT = 5f;
+    private static final float DEFAULT_BG_VAR_CUT = 30f;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
