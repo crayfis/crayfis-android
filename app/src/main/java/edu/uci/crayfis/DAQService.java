@@ -76,9 +76,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             }
         }
 
-        mCFCamera = CFCamera.getInstance();
-        mCFCamera.register(context);
-        mCFCamera.setCallback(this);
 
         String server_address = context.getString(R.string.server_address);
         String server_port = context.getString(R.string.server_port);
@@ -127,7 +124,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         // start camera
 
-        mCFCamera.changeCamera();
+        mCFCamera = CFCamera.getInstance();
+        mCFCamera.setCallback(this);
+        mCFCamera.register(context);
     }
 
     @Override

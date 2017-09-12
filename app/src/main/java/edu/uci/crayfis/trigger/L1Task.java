@@ -40,7 +40,7 @@ class L1Task implements Runnable {
     protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
-            CFCamera.getInstance().changeCamera(mFrame.getCameraId());
+            CFCamera.getInstance().changeCameraFrom(mFrame.getCameraId());
             return true;
         }
 

@@ -231,9 +231,9 @@ class CFCamera2 extends CFCamera {
     }
 
     @Override
-    public synchronized void changeCamera(int currentId) {
+    public synchronized void changeCameraFrom(int currentId) {
 
-        super.changeCamera(currentId);
+        super.changeCameraFrom(currentId);
 
         // first, setup thread for camera
 

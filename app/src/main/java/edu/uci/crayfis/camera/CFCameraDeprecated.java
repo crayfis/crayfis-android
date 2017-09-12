@@ -39,9 +39,9 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
      * Sets up the camera if it is not already setup.
      */
     @Override
-    public synchronized void changeCamera(int currentId) {
+    public synchronized void changeCameraFrom(int currentId) {
 
-        super.changeCamera(currentId);
+        super.changeCameraFrom(currentId);
 
         // first, tear down camera
         if(mCamera != null) {
@@ -155,7 +155,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
     public void onError(int errorId, Camera camera) {
         if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
-        changeCamera(mCameraId);
+        changeCameraFrom(mCameraId);
     }
 
     @Override

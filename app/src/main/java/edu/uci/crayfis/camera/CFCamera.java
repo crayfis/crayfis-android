@@ -72,6 +72,7 @@ public abstract class CFCamera {
         mApplication = (CFApplication) context;
         mCFSensor = new CFSensor(context, RCF_BUILDER);
         mCFLocation = new CFLocation(context, RCF_BUILDER);
+        changeCamera();
     }
 
     public void unregister() {
@@ -83,10 +84,10 @@ public abstract class CFCamera {
     }
 
     public void changeCamera() {
-        changeCamera(mCameraId);
+        changeCameraFrom(mCameraId);
     }
 
-    public void changeCamera(int currentId) {
+    public void changeCameraFrom(int currentId) {
         if(currentId != mCameraId) {
             return;
         }
