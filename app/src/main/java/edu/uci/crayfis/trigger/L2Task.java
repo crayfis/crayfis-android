@@ -312,9 +312,11 @@ public class L2Task implements Runnable {
         Imgproc.threshold(grayMat, threshMat, xb.L2_threshold, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
-        long npix = Math.min(l2PixelCoords.total(), mConfig.npix);
 
-        for(int i=0; i<npix; i++) {
+        long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
+
+        for(int i=0; i<pixN; i++) {
+
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
