@@ -109,7 +109,7 @@
     <string name="notification_idle" translatable="false">Paused</string>
     <string name="notification_running" translatable="false">Taking data</string>
     <string name="notification_quit" translatable="false">CRAYFIS has safely ended data-taking.</string>
-    <string name="notification_stats" translatable="false">Total frames: %d\tPixels saved: %d</string>
+    <string name="notification_stats" translatable="false">Total frames: %d\t Pixels saved: %d</string>
     <string name="notification_error" translatable="false">CRAYFIS has encountered an error and quit.</string>
     <string name="quit_title" translatable="false">CRAYFIS is quitting for the following reason:</string>
     <string name="quit_no_cameras" translatable="false">No covered cameras available</string>

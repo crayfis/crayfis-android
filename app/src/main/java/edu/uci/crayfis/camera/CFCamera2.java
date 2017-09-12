@@ -12,6 +12,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
@@ -122,8 +123,8 @@ class CFCamera2 extends CFCamera {
                                      long timestamp, long frameNumber) {
 
             super.onCaptureStarted(session, request, timestamp, frameNumber);
-            RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                    .setTimestamp(timestamp);
+            RCF_BUILDER.setAcquisitionTime(new AcquisitionTime());
+            mTimeStamps.add(timestamp);
         }
 
         @Override
@@ -134,10 +135,22 @@ class CFCamera2 extends CFCamera {
             super.onCaptureCompleted(session, request, result);
             ain.ioReceive();
 
+
+
             if(mCallback != null) {
                 mCallback.onRawCameraFrame(RCF_BUILDER.setAlloc(ain)
+                        .setTimestamp(mTimeStamps.poll())
                         .build());
             }
+        }
+
+        @Override
+        public void onCaptureFailed(@NonNull CameraCaptureSession session,
+                                    @NonNull CaptureRequest request,
+                                    @NonNull CaptureFailure failure) {
+
+            super.onCaptureFailed(session, request, failure);
+            mTimeStamps.poll();
         }
     };
 
@@ -218,9 +231,9 @@ class CFCamera2 extends CFCamera {
     }
 
     @Override
-    synchronized void startNewCamera() {
+    public synchronized void changeCamera(int currentId) {
 
-        super.startNewCamera();
+        super.changeCamera(currentId);
 
         // first, setup thread for camera
 

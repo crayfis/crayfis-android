@@ -492,9 +492,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     @Override
     public void onRawCameraFrame(RawCameraFrame frame) {
         try {
-            if(frame.getExposureBlock() == null) {
-                CFLog.e("No exposure block");
-            }
 
             // try to assign the frame to the current XB
             boolean assigned = frame.getExposureBlock().assignFrame(frame);

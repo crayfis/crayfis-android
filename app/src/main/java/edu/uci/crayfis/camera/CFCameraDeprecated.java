@@ -25,6 +25,13 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
     CFCameraDeprecated() {
         super();
         mTexture = new SurfaceTexture(10);
+
+        mTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
+            @Override
+            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+                mTimeStamps.add(surfaceTexture.getTimestamp());
+            }
+        });
     }
 
 
@@ -32,9 +39,9 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
      * Sets up the camera if it is not already setup.
      */
     @Override
-    synchronized void startNewCamera() {
+    public synchronized void changeCamera(int currentId) {
 
-        super.startNewCamera();
+        super.changeCamera(currentId);
 
         // first, tear down camera
         if(mCamera != null) {

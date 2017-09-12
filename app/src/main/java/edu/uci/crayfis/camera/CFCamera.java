@@ -6,6 +6,8 @@ import android.location.Location;
 import android.os.Build;
 import android.renderscript.RenderScript;
 
+import java.util.ArrayDeque;
+
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.camera.frame.RawCameraFrame;
@@ -41,6 +43,8 @@ public abstract class CFCamera {
     int mResX;
     int mResY;
 
+    ArrayDeque<Long> mTimeStamps = new ArrayDeque<>();
+
 
     private static CFCamera sInstance;
 
@@ -72,7 +76,7 @@ public abstract class CFCamera {
 
     public void unregister() {
         mCameraId = -1;
-        startNewCamera();
+        changeCamera();
         mCFSensor.unregister();
         mCFLocation.unregister();
         sInstance = null;
@@ -127,16 +131,13 @@ public abstract class CFCamera {
         ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
         xbManager.abortExposureBlock();
 
-        CFLog.d("cameraId:" + currentId + " -> "+ nextId);
+        CFLog.i("cameraId:" + currentId + " -> "+ nextId);
 
         if(state == CFApplication.State.INIT) {
             mApplication.setApplicationState(CFApplication.State.STABILIZATION);
         }
-        startNewCamera();
 
-    }
-
-    synchronized void startNewCamera() {
+        mTimeStamps.clear();
 
     }
 
