@@ -69,6 +69,7 @@ public abstract class CFCamera {
     }
     
     public void register(Context context) {
+        if(mCallback == null) return;
         mApplication = (CFApplication) context;
         mCFSensor = new CFSensor(context, RCF_BUILDER);
         mCFLocation = new CFLocation(context, RCF_BUILDER);

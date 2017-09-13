@@ -6,9 +6,13 @@ import android.renderscript.Allocation;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
+import java.util.concurrent.Semaphore;
+
+import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.exposure.ExposureBlock;
+import edu.uci.crayfis.trigger.L1Processor;
 import edu.uci.crayfis.util.CFLog;
 
 /**
@@ -19,6 +23,8 @@ import edu.uci.crayfis.util.CFLog;
 class RawCamera2Frame extends RawCameraFrame {
 
     private Allocation aRaw;
+
+    private static Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
@@ -44,8 +50,11 @@ class RawCamera2Frame extends RawCameraFrame {
                 location, orientation, rotationZZ, pressure, batteryTemp, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
+        if(exposureBlock.daq_state == CFApplication.State.DATA) {
+            mRawLock.acquireUninterruptibly();
+        }
         aRaw = alloc;
-
+        aRaw.ioReceive();
     }
 
     @Override
@@ -64,14 +73,16 @@ class RawCamera2Frame extends RawCameraFrame {
     public void claim() {
         mRawBytes = new byte[aRaw.getBytesSize()];
         aRaw.copyTo(mRawBytes);
-        aRaw = null;
+        mRawLock.release();
         super.claim();
     }
 
-
     @Override
-    public void clear() {
-        super.clear();
-        aRaw = null;
+    public void retire() {
+        if(mRawLock.availablePermits() == 0) {
+            mRawLock.release();
+        }
+        super.retire();
     }
+
 }

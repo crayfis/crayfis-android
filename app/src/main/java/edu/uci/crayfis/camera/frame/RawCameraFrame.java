@@ -84,7 +84,7 @@ public abstract class RawCameraFrame {
         private byte[] bBytes;
         private Camera bCamera;
 
-        private Allocation bAlloc;
+        private Allocation bRaw;
 
         private int bCameraId;
         private boolean bFacingBack;
@@ -120,7 +120,7 @@ public abstract class RawCameraFrame {
         }
 
         public Builder setAlloc(Allocation alloc) {
-            bAlloc = alloc;
+            bRaw = alloc;
             return this;
         }
 
@@ -244,7 +244,7 @@ public abstract class RawCameraFrame {
                         bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
             }
             else {
-                return new RawCamera2Frame(bAlloc, bCameraId, bFacingBack,
+                return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
                         bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
                         bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
                         bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);

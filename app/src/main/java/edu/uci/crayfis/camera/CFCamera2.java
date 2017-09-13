@@ -54,7 +54,6 @@ class CFCamera2 extends CFCamera {
     private Size mPreviewSize;
     private Range<Integer> mTargetFpsRange = new Range<>(0,0);
     private CameraCaptureSession mCaptureSession;
-    private Allocation ain;
 
 
     CFCamera2() {
@@ -133,15 +132,9 @@ class CFCamera2 extends CFCamera {
                                        @NonNull TotalCaptureResult result) {
 
             super.onCaptureCompleted(session, request, result);
-            ain.ioReceive();
 
-
-
-            if(mCallback != null) {
-                mCallback.onRawCameraFrame(RCF_BUILDER.setAlloc(ain)
-                        .setTimestamp(mTimeStamps.poll())
-                        .build());
-            }
+            mCallback.onRawCameraFrame(RCF_BUILDER.setTimestamp(mTimeStamps.poll())
+                    .build());
         }
 
         @Override
@@ -213,11 +206,13 @@ class CFCamera2 extends CFCamera {
 
 
 
-            ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
+            Allocation ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
                     .setX(mPreviewSize.getWidth())
                     .setY(mPreviewSize.getHeight())
                     .setYuvFormat(ImageFormat.YUV_420_888)
                     .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
+
+            RCF_BUILDER.setAlloc(ain);
 
 
             // Here, we create a CameraCaptureSession for camera preview.
