@@ -55,6 +55,11 @@ public abstract class CFCamera {
 
     }
 
+    /**
+     * Gets the current instance CFCamera
+     *
+     * @return CFCamera
+     */
     public static CFCamera getInstance() {
 
         if(sInstance == null) {
@@ -67,7 +72,12 @@ public abstract class CFCamera {
         }
         return sInstance;
     }
-    
+
+    /**
+     * Instates camera, sensors, and location services
+     *
+     * @param context The Application context
+     */
     public void register(Context context) {
         if(mCallback == null) return;
         mApplication = (CFApplication) context;
@@ -76,6 +86,9 @@ public abstract class CFCamera {
         changeCamera();
     }
 
+    /**
+     * Unregisters cameras, sensors, and location services
+     */
     public void unregister() {
         mCameraId = -1;
         changeCamera();
@@ -84,11 +97,20 @@ public abstract class CFCamera {
         sInstance = null;
     }
 
+    /**
+     * Tear down camera and, if appropriate, start a new stream.
+     */
     public void changeCamera() {
         changeCameraFrom(mCameraId);
     }
 
-    public void changeCameraFrom(int currentId) {
+    /**
+     * The same as changeCamera(), except marks the ID of a bad frame to avoid changing camera
+     * multiple times unnecessarily
+     *
+     * @param currentId The cameraId of the bad frame
+     */
+    public synchronized void changeCameraFrom(int currentId) {
         if(currentId != mCameraId) {
             return;
         }
@@ -118,10 +140,6 @@ public abstract class CFCamera {
                 nextId = -1;
         }
 
-        if(mCameraId == nextId && state != CFApplication.State.RECONFIGURE) {
-            return;
-        }
-
         mCameraId = nextId;
 
         if(nextId == -1 && state != CFApplication.State.IDLE ) {
@@ -147,10 +165,20 @@ public abstract class CFCamera {
         return mCameraId;
     }
 
+    /**
+     * Obtain a detailed string of camera settings to be included in the RunConfig file
+     *
+     * @return String
+     */
     public String getParams() {
         return "";
     }
 
+    /**
+     * Obtain a String to be displayed in the Developer panel.
+     *
+     * @return String
+     */
     public String getStatus() {
         String devtxt = "Camera ID: " + mCameraId + ", Mode = ";
         switch (CONFIG.getCameraSelectMode()) {

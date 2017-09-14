@@ -54,16 +54,27 @@ class HotCellKiller extends PrecalComponent {
         HOTCELL_COORDS = new HashSet<>();
     }
 
+    /**
+     * Keeps allocations of running largest and second-largest values for each pixel
+     *
+     * @param frame RawCameraFrame
+     * @return true if we have reached the requisite number of frames, false otherwise
+     */
     @Override
     boolean addFrame(RawCameraFrame frame) {
         mScriptCFindSecond.forEach_order(frame.getWeightedAllocation());
         return super.addFrame(frame);
     }
 
+    /**
+     *
+     */
     @Override
     void process() {
         super.process();
         int cameraId = CAMERA.getCameraId();
+
+        // set up Allocations for histogram
         ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
         Allocation aout = Allocation.createSized(RS, Element.U32(RS), 256, Allocation.USAGE_SCRIPT);
         histogram.setOutput(aout);
@@ -78,11 +89,12 @@ class HotCellKiller extends PrecalComponent {
             }
         }
 
+        // find minimum value in aSecond considered as "hot"
         int area = aMax.getType().getX() * aMax.getType().getY();
         int target = (int) (CONFIG.getHotcellThresh() * area);
         int pixRemaining = area;
 
-        int cutoff=0; // minimum value in aSecond considered as "hot"
+        int cutoff=0;
         while(pixRemaining > target) {
             pixRemaining -= secondHist[cutoff];
             cutoff++;
@@ -113,6 +125,7 @@ class HotCellKiller extends PrecalComponent {
 
             HOTCELL_COORDS.add(pos);
 
+            // check pixels adjacent to hotcells, and see if max values are above the cutoff
             for(int dx=x-1; dx<=x+1; dx++) {
                 for(int dy=y-1; dy<=y+1; dy++) {
                     try {
@@ -127,11 +140,12 @@ class HotCellKiller extends PrecalComponent {
             }
         }
 
+        // store in CFConfig and protobuf file
         CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
         CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
         for(Integer pos: HOTCELL_COORDS) {
-            RCF_BUILDER.addHotcell(pos);
+            PRECAL_BUILDER.addHotcell(pos);
         }
 
         int maxNonZero = 255;
@@ -139,7 +153,7 @@ class HotCellKiller extends PrecalComponent {
             maxNonZero--;
         }
         for (int i = 0; i <= maxNonZero; i++) {
-            RCF_BUILDER.addSecondHist(secondHist[i]);
+            PRECAL_BUILDER.addSecondHist(secondHist[i]);
         }
     }
 }

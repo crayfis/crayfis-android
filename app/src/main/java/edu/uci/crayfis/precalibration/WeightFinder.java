@@ -53,12 +53,22 @@ class WeightFinder extends PrecalComponent {
         mScriptCSumFrames.set_gSum(mSumAlloc);
     }
 
+    /**
+     * Performs a running element-wise addition for each pixel in the frame
+     *
+     * @param frame RawCameraFrame
+     * @return true if we have reached the requisite number of frames, false otherwise
+     */
     @Override
     boolean addFrame(RawCameraFrame frame) {
         mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
         return super.addFrame(frame);
     }
 
+    /**
+     * Calculates weights based on running sum, then compresses and stores them in a protobuf file
+     * and in the SharedPreferences
+     */
     @Override
     void process() {
 
@@ -106,6 +116,7 @@ class WeightFinder extends PrecalComponent {
         Allocation downsampledAlloc = Allocation.createTyped(RS, sampleType, Allocation.USAGE_SCRIPT);
         Allocation byteAlloc = Allocation.createTyped(RS, byteType, Allocation.USAGE_SCRIPT);
 
+        // we find the block with the smallest average pix_val to normalize
         scriptCDownsample.forEach_downsampleSums(downsampledAlloc);
         float[] downsampleArray = new float[sampleResX * sampleResY];
         downsampledAlloc.copyTo(downsampleArray);
@@ -118,6 +129,8 @@ class WeightFinder extends PrecalComponent {
         }
         CFLog.d("minSum = " + minAvg*sampleStep*sampleStep*totalFrames);
 
+        // we use log(1 + 1/mu) as our weights, which takes into account the nonlinearity of
+        // truncation on the sums, assuming exponentially distributed noise for simplicity
         double maxWeight = Math.log1p(1f/minAvg);
 
         CFLog.d("maxWeight = " + maxWeight);
@@ -137,6 +150,8 @@ class WeightFinder extends PrecalComponent {
         Imgcodecs.imencode(FORMAT, downsampleMat2D, buf, params);
         byte[] bytes = buf.toArray();
         CFLog.d("Compressed bytes = " + bytes.length);
+
+        // now store weights in CFConfig and PreCalibration Result
         CONFIG.setPrecalWeights(cameraId, Base64.encodeToString(bytes, Base64.DEFAULT));
 
         downsampledBytes.release();
@@ -144,13 +159,21 @@ class WeightFinder extends PrecalComponent {
         buf.release();
         params.release();
 
-        RCF_BUILDER.setSampleResX(sampleResX)
+        PRECAL_BUILDER.setSampleResX(sampleResX)
                 .setSampleResY(sampleResY)
                 .setCompressedWeights(ByteString.copyFrom(bytes))
                 .setCompressedFormat(FORMAT)
                 .setResX(width);
     }
 
+    /**
+     * Find the appropriate factor to scale down by evenly, given a maximum area after downsample
+     *
+     * @param w Initial x resolution
+     * @param h Initial y resolution
+     * @param maxArea Maximum number of cells allowed after downsample
+     * @return
+     */
     private int getSampleStep(int w, int h, int maxArea) {
         // dimensions of each "block" that make up aspect ratio
         int blockSize = BigInteger.valueOf(h).gcd(BigInteger.valueOf(w)).intValue();

@@ -124,6 +124,14 @@ public abstract class RawCameraFrame {
             return this;
         }
 
+        /**
+         * Method for configuring Builder to create RawCameraDeprecatedFrames
+         *
+         * @param camera Camera
+         * @param cameraId int
+         * @param rs RenderScript context
+         * @return Builder
+         */
         public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
 
             bDeprecated = true;
@@ -145,6 +153,15 @@ public abstract class RawCameraFrame {
             return this;
         }
 
+        /**
+         * Method for configuring Builder to create RawCamera2Frames
+         *
+         * @param manager CameraManager
+         * @param cameraId int
+         * @param sz output Size
+         * @param rs RenderScript context
+         * @return Builder
+         */
         @TargetApi(21)
         public Builder setCamera2(CameraManager manager, int cameraId, Size sz, RenderScript rs) {
 
@@ -312,7 +329,7 @@ public abstract class RawCameraFrame {
 
 
     /**
-     * Return Mat from image buffer, create if necessary, and recycle buffer to camera
+     * Return Mat of luminance channel
      *
      * @return 2D OpenCV::Mat
      */
@@ -323,6 +340,11 @@ public abstract class RawCameraFrame {
         return mGrayMat;
     }
 
+    /**
+     * Create Mat from Allocation and recycle buffer to camera
+     *
+     * @return byte[]
+     */
     byte[] createMatAndReturnBuffer() {
 
         //FIXME: this is way too much copying
@@ -347,7 +369,7 @@ public abstract class RawCameraFrame {
     }
 
     /**
-     * Clear memory from RawCameraFrame
+     * Return the image buffer to be used by the camera, and free all locks
      */
     public void retire() {
         if(weightingLock.isHeldByCurrentThread()) {
@@ -363,7 +385,9 @@ public abstract class RawCameraFrame {
         createMatAndReturnBuffer();
     }
 
-    // notify the XB that we are totally done processing this frame.
+    /**
+     * Notify the ExposureBlock we are done with this frame, and free all memory
+     */
     public void clear() {
         mExposureBlock.clearFrame(this);
         // make sure we null the image buffer so that its memory can be freed.
@@ -407,6 +431,11 @@ public abstract class RawCameraFrame {
      */
     public long getAcquiredTimeNano() { return mAcquiredTime.Nano; }
 
+    /**
+     * Get the timestamp associated with the target to which the camera is rendering frames.
+     *
+     * @return long
+     */
     public long getTimestamp() { return mTimestamp; }
 
     /**
@@ -495,6 +524,9 @@ public abstract class RawCameraFrame {
         return mPixStd;
     }
 
+    /**
+     * @return false if one or more criteria for quality is not met, based on CameraSelectMode
+     */
     public boolean isQuality() {
         final CFConfig CONFIG = CFConfig.getInstance();
         switch(CONFIG.getCameraSelectMode()) {

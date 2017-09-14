@@ -14,6 +14,7 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
@@ -60,6 +61,9 @@ class CFCamera2 extends CFCamera {
         super();
     }
 
+    /**
+     * Callback for opening the camera
+     */
     private CameraDevice.StateCallback mCameraDeviceCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
@@ -87,6 +91,9 @@ class CFCamera2 extends CFCamera {
         }
     };
 
+    /**
+     * Callback for creating a CameraCaptureSession
+     */
     private CameraCaptureSession.StateCallback mStateCallback = new CameraCaptureSession.StateCallback() {
 
         @Override
@@ -112,9 +119,13 @@ class CFCamera2 extends CFCamera {
         public void onConfigureFailed(
                 @NonNull CameraCaptureSession cameraCaptureSession) {
             CFLog.e("Configure failed");
+            changeCamera();
         }
     };
 
+    /**
+     * Callback for captured frames
+     */
     private CameraCaptureSession.CaptureCallback mCaptureCallback =  new CameraCaptureSession.CaptureCallback() {
         @Override
         public void onCaptureStarted(@NonNull CameraCaptureSession session,
@@ -122,7 +133,6 @@ class CFCamera2 extends CFCamera {
                                      long timestamp, long frameNumber) {
 
             super.onCaptureStarted(session, request, timestamp, frameNumber);
-            RCF_BUILDER.setAcquisitionTime(new AcquisitionTime());
             mTimeStamps.add(timestamp);
         }
 
@@ -133,7 +143,8 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            mCallback.onRawCameraFrame(RCF_BUILDER.setTimestamp(mTimeStamps.poll())
+            mCallback.onRawCameraFrame(RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                    .setTimestamp(mTimeStamps.poll())
                     .build());
         }
 
@@ -143,11 +154,15 @@ class CFCamera2 extends CFCamera {
                                     @NonNull CaptureFailure failure) {
 
             super.onCaptureFailed(session, request, failure);
+            // remove bad timestamp from the ArrayDeque
             mTimeStamps.poll();
         }
     };
 
 
+    /**
+     * Configures and starts CameraCaptureSession with a CaptureRequest.Builder
+     */
     private void createCameraPreviewSession() {
         try {
             // We set up a CaptureRequest.Builder with the output Surface.

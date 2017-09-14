@@ -48,7 +48,7 @@ public class PreCalibrator {
 
     private final int INTER = Imgproc.INTER_CUBIC;
 
-    private static PreCalibrator sInstance = null;
+    private static PreCalibrator sInstance;
 
     public static PreCalibrator getInstance(Context ctx) {
         if(sInstance == null) {
@@ -64,6 +64,12 @@ public class PreCalibrator {
         PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
     }
 
+    /**
+     * Passes frame to the appropriate PrecalComponent
+     *
+     * @param frame RawCameraFrame
+     * @return true if ready to switch to CALIBRATION, false otherwise
+     */
     public boolean addFrame(RawCameraFrame frame) {
         if(mActiveComponent == null) {
             mActiveComponent = new HotCellKiller(RS, PRECAL_BUILDER);
@@ -102,6 +108,13 @@ public class PreCalibrator {
     }
 
 
+    /**
+     * Creates and returns a weighting Script which includes a zero weight for hotcells.
+     *
+     * @param cameraId The integer ID for the camera to be weighted.  For Camera2, this is the
+     *                 index of the String ID found in CameraManager.getCameraIdList()
+     * @return RenderScript ScriptC with a forEach(ain, aout) method.
+     */
     public ScriptC_weight getScriptCWeight(int cameraId) {
 
         byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
@@ -152,15 +165,24 @@ public class PreCalibrator {
         return SCRIPT_C_WEIGHT;
     }
 
+    /**
+     * Resets the Precalibration info for this camera
+     */
     public void clear() {
         int cameraId = CAMERA.getCameraId();
         mActiveComponent = null;
 
-        // reset the Precalibration info for this camera
         CONFIG.setPrecalWeights(cameraId, null);
         CONFIG.setHotcells(cameraId, new HashSet<Integer>(Camera.getNumberOfCameras()));
     }
 
+    /**
+     * Determines whether it has been sufficiently long to warrant a new PreCalibration
+     *
+     * @param cameraId The integer ID for the camera to be weighted.  For Camera2, this is the
+     *                 index of the String ID found in CameraManager.getCameraIdList()
+     * @return true if it has been at least a week since the camera in question has been precalibrated
+     */
     public boolean dueForPreCalibration(int cameraId) {
 
         boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;

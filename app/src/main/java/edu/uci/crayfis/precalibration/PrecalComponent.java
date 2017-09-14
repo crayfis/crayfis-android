@@ -15,11 +15,11 @@ abstract class PrecalComponent {
     private int count;
 
     final RenderScript RS;
-    final DataProtos.PreCalibrationResult.Builder RCF_BUILDER;
+    final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
 
     PrecalComponent(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
         RS = rs;
-        RCF_BUILDER = b;
+        PRECAL_BUILDER = b;
         count = 0;
     }
 
