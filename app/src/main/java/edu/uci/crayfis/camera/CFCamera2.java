@@ -4,7 +4,6 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -16,7 +15,6 @@ import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.renderscript.Allocation;
@@ -29,7 +27,6 @@ import android.util.Size;
 import android.view.Surface;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -55,6 +52,10 @@ class CFCamera2 extends CFCamera {
     private Size mPreviewSize;
     private Range<Integer> mTargetFpsRange = new Range<>(0,0);
     private CameraCaptureSession mCaptureSession;
+
+    private Allocation ain;
+    private Integer mBuffersQueued = 0;
+    private int mTryAcquires = 0;
 
 
     CFCamera2() {
@@ -127,14 +128,6 @@ class CFCamera2 extends CFCamera {
      * Callback for captured frames
      */
     private CameraCaptureSession.CaptureCallback mCaptureCallback =  new CameraCaptureSession.CaptureCallback() {
-        @Override
-        public void onCaptureStarted(@NonNull CameraCaptureSession session,
-                                     @NonNull CaptureRequest request,
-                                     long timestamp, long frameNumber) {
-
-            super.onCaptureStarted(session, request, timestamp, frameNumber);
-            mTimeStamps.add(timestamp);
-        }
 
         @Override
         public void onCaptureCompleted(@NonNull CameraCaptureSession session,
@@ -143,19 +136,29 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            mCallback.onRawCameraFrame(RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                    .setTimestamp(mTimeStamps.poll())
-                    .build());
+            synchronized (mBuffersQueued) {
+                mTimeStamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
+
+                while (mBuffersQueued > 0 && !mTimeStamps.isEmpty()) {
+                    RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                            .setTimestamp(mTimeStamps.poll())
+                            .build();
+                    mBuffersQueued--;
+                    mCallback.onRawCameraFrame(frame);
+                }
+            }
+
         }
+    };
 
+    private Allocation.OnBufferAvailableListener mOnBufferAvailableListener
+            = new Allocation.OnBufferAvailableListener() {
         @Override
-        public void onCaptureFailed(@NonNull CameraCaptureSession session,
-                                    @NonNull CaptureRequest request,
-                                    @NonNull CaptureFailure failure) {
-
-            super.onCaptureFailed(session, request, failure);
-            // remove bad timestamp from the ArrayDeque
-            mTimeStamps.poll();
+        public void onBufferAvailable(Allocation a) {
+            synchronized (mBuffersQueued) {
+                mBuffersQueued++;
+                //CFLog.d("buffers = " + mBuffersQueued);
+            }
         }
     };
 
@@ -218,18 +221,6 @@ class CFCamera2 extends CFCamera {
             }
 
 
-
-
-
-            Allocation ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
-                    .setX(mPreviewSize.getWidth())
-                    .setY(mPreviewSize.getHeight())
-                    .setYuvFormat(ImageFormat.YUV_420_888)
-                    .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
-
-            RCF_BUILDER.setAlloc(ain);
-
-
             // Here, we create a CameraCaptureSession for camera preview.
 
             Surface asurface = ain.getSurface();
@@ -273,6 +264,10 @@ class CFCamera2 extends CFCamera {
                 mCameraDevice.close();
                 mCameraDevice = null;
             }
+            if (null != ain) {
+                ain.destroy();
+                ain = null;
+            }
             mPreviewSize = null;
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
@@ -308,7 +303,16 @@ class CFCamera2 extends CFCamera {
 
             mResX = mPreviewSize.getWidth();
             mResY = mPreviewSize.getHeight();
-            RCF_BUILDER.setCamera2(manager, mCameraId, mPreviewSize, mApplication.getRenderScript());
+
+            ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
+                    .setX(mPreviewSize.getWidth())
+                    .setY(mPreviewSize.getHeight())
+                    .setYuvFormat(ImageFormat.YUV_420_888)
+                    .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
+
+            ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
+
+            RCF_BUILDER.setCamera2(manager, mCameraId, ain, mApplication.getRenderScript());
 
             manager.openCamera(idString, mCameraDeviceCallback, mBackgroundHandler);
 

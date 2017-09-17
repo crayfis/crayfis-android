@@ -1,6 +1,6 @@
 package edu.uci.crayfis.trigger;
 
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**

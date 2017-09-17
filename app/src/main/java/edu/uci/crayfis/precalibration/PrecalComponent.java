@@ -1,9 +1,10 @@
 package edu.uci.crayfis.precalibration;
 
+import android.os.HandlerThread;
 import android.renderscript.RenderScript;
 
 import edu.uci.crayfis.DataProtos;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 
 /**
  * Created by Jeff on 7/21/2017.

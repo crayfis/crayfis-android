@@ -1,4 +1,4 @@
-package edu.uci.crayfis.camera.frame;
+package edu.uci.crayfis.camera;
 
 import android.hardware.Camera;
 import android.location.Location;
@@ -6,11 +6,7 @@ import android.renderscript.Allocation;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-
 import edu.uci.crayfis.ScriptC_weight;
-import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.exposure.ExposureBlock;
 
 /**
@@ -52,13 +48,12 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
 
     @Override
-    public synchronized Allocation getWeightedAllocation() {
+    protected synchronized void weightAllocation() {
         super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
         if(mScriptCWeight != null) {
             mScriptCWeight.forEach_weight(aWeighted, aWeighted);
         }
-        return aWeighted;
     }
 
 

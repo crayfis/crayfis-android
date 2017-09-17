@@ -24,7 +24,7 @@ import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exception.IllegalFsmStateException;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.exposure.ExposureBlockManager;

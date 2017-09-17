@@ -1,4 +1,4 @@
-package edu.uci.crayfis.camera.frame;
+package edu.uci.crayfis.camera;
 
 import android.annotation.TargetApi;
 import android.graphics.ImageFormat;
@@ -13,8 +13,6 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
-import android.support.annotation.NonNull;
-import android.util.Size;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
@@ -24,11 +22,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.ScriptC_weight;
-import edu.uci.crayfis.camera.AcquisitionTime;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
-import static android.content.Context.CAMERA_SERVICE;
 import static edu.uci.crayfis.CFApplication.MODE_AUTO_DETECT;
 import static edu.uci.crayfis.CFApplication.MODE_BACK_LOCK;
 import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
@@ -119,11 +115,6 @@ public abstract class RawCameraFrame {
             return this;
         }
 
-        public Builder setAlloc(Allocation alloc) {
-            bRaw = alloc;
-            return this;
-        }
-
         /**
          * Method for configuring Builder to create RawCameraDeprecatedFrames
          *
@@ -158,17 +149,20 @@ public abstract class RawCameraFrame {
          *
          * @param manager CameraManager
          * @param cameraId int
-         * @param sz output Size
+         * @param alloc Allocation camera buffer
          * @param rs RenderScript context
          * @return Builder
          */
         @TargetApi(21)
-        public Builder setCamera2(CameraManager manager, int cameraId, Size sz, RenderScript rs) {
+        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
 
             bDeprecated = false;
+            bRaw = alloc;
 
-            bFrameWidth = sz.getWidth();
-            bFrameHeight = sz.getHeight();
+            Type type = alloc.getType();
+
+            bFrameWidth = type.getX();
+            bFrameHeight = type.getY();
             bLength = bFrameWidth * bFrameHeight;
             bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
 
@@ -318,14 +312,23 @@ public abstract class RawCameraFrame {
     }
 
     /**
-     * Copies byte array into an allocation
+     * Returns Allocation of bytes, weighted if appropriate
      *
      * @return allocation of bytes
      */
-    public Allocation getWeightedAllocation() {
-        weightingLock.lock();
-        return null;
+    public synchronized Allocation getWeightedAllocation() {
+        if(!weightingLock.isHeldByCurrentThread()) {
+            // weighting has already been done
+            weightingLock.lock();
+            weightAllocation();
+        }
+        return aWeighted;
     }
+
+    /**
+     * Applies ScriptC_weight to bytes if applicable
+     */
+    protected void weightAllocation() {  }
 
 
     /**
@@ -345,7 +348,7 @@ public abstract class RawCameraFrame {
      *
      * @return byte[]
      */
-    byte[] createMatAndReturnBuffer() {
+    protected byte[] createMatAndReturnBuffer() {
 
         //FIXME: this is way too much copying
         byte[] adjustedBytes = new byte[mBufferSize];
@@ -469,6 +472,7 @@ public abstract class RawCameraFrame {
     public int getHeight() { return mFrameHeight; }
 
     private void calculateStatistics() {
+
         if (mPixMax >= 0) {
             // somebody beat us to it! nothing to do.
             return;

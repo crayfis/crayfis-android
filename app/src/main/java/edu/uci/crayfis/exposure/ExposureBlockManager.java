@@ -2,7 +2,6 @@ package edu.uci.crayfis.exposure;
 
 import java.util.ArrayList;
 import android.content.Context;
-import android.location.Location;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
@@ -12,7 +11,6 @@ import java.util.LinkedList;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 

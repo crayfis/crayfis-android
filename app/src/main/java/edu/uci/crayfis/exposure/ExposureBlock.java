@@ -1,6 +1,5 @@
 package edu.uci.crayfis.exposure;
 
-import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -13,7 +12,7 @@ import java.util.UUID;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.AcquisitionTime;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.trigger.L1Config;
 import edu.uci.crayfis.trigger.L2Config;
 import edu.uci.crayfis.trigger.L2Task.RecoEvent;

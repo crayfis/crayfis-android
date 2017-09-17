@@ -1,7 +1,6 @@
 package edu.uci.crayfis.calibration;
 
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
-import edu.uci.crayfis.util.CFLog;
+import edu.uci.crayfis.camera.RawCameraFrame;
 
 public class L1Calibrator {
     private final FrameHistogram maxPixels;

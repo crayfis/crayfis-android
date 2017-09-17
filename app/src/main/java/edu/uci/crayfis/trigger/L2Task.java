@@ -17,10 +17,9 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 
 import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.gallery.SavedImage;
 import edu.uci.crayfis.gallery.Utils;

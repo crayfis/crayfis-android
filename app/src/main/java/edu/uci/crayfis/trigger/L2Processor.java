@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.calibration.Histogram;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 
 public class L2Processor {
     final CFApplication mApplication;

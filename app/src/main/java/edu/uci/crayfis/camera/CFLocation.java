@@ -11,8 +11,6 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**

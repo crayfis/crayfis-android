@@ -1,6 +1,5 @@
 package edu.uci.crayfis.precalibration;
 
-import android.hardware.Camera;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -16,13 +15,12 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import java.math.BigInteger;
 
-import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_downsample;
 import edu.uci.crayfis.ScriptC_sumFrames;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**

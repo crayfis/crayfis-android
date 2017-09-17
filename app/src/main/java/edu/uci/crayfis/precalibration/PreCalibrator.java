@@ -24,7 +24,7 @@ import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.UploadExposureService;
 
 

@@ -1,6 +1,5 @@
 package edu.uci.crayfis.camera;
 
-import android.content.Context;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
@@ -8,7 +7,6 @@ import android.hardware.Camera;
 import java.util.List;
 
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.util.CFLog;
 
 /**

@@ -6,7 +6,7 @@ import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.precalibration.PreCalibrator;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 
 /**
  * Created by cshimmin on 5/4/16.

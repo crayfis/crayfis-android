@@ -8,7 +8,6 @@ import android.hardware.SensorManager;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.ui.DataCollectionFragment;
 
 /**

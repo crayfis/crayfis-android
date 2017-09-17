@@ -10,7 +10,6 @@ import java.util.ArrayDeque;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.ui.DataCollectionFragment;
@@ -221,6 +220,7 @@ public abstract class CFCamera {
     }
 
     public Location getLastKnownLocation() {
+        if(mCFLocation == null) return null;
         return mCFLocation.currentLocation;
     }
 }

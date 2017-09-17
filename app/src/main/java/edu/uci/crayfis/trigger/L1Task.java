@@ -2,7 +2,7 @@ package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.camera.CFCamera;
-import edu.uci.crayfis.camera.frame.RawCameraFrame;
+import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
 
@@ -43,7 +43,6 @@ class L1Task implements Runnable {
             CFCamera.getInstance().changeCameraFrom(mFrame.getCameraId());
             return true;
         }
-
         return false;
     }
 
@@ -130,6 +129,7 @@ class L1Task implements Runnable {
     }
 
     private void processFrame() {
+
         if (processInitial()) { return; }
 
         boolean stopProcessing;
@@ -164,6 +164,7 @@ class L1Task implements Runnable {
 
     @Override
     public void run() {
+
         ++mL1Processor.mL1Count;
 
         processFrame();
