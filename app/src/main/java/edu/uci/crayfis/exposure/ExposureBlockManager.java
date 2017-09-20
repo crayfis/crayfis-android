@@ -114,6 +114,7 @@ public final class ExposureBlockManager {
                 CFApplication.getBatteryTemp(),
                 state, camera.getResX(), camera.getResY());
 
+        // start assigning frames to new xb
         camera.getFrameBuilder().setExposureBlock(current_xb);
 
         mTotalXBs++;

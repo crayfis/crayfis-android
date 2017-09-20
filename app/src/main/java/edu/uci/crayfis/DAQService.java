@@ -492,8 +492,12 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onRawCameraFrame(RawCameraFrame frame) {
         try {
 
-            // try to assign the frame to the current XB
-            boolean assigned = frame.getExposureBlock().assignFrame(frame);
+            // if we fail to assign the block to the XB, just drop it.
+            if (!frame.getExposureBlock().assignFrame(frame)) {
+                CFLog.e("Cannot assign frame to current XB! Dropping frame.");
+                frame.retire();
+                return;
+            }
 
             // track the acquisition times for FPS calculation
             synchronized(frame_times) {
@@ -503,14 +507,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
                     && frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
                 updateCalibration();
-            }
-
-            // if we failed to assign the block to the XB, just drop it.
-            if (!assigned) {
-                // FIXME: can we maybe do something smarter here, like try to get the next XB?
-                CFLog.e("Cannot assign frame to current XB! Dropping frame.");
-                frame.retire();
-                return;
+                // also see if we need a new XB
+                xbManager.getCurrentExposureBlock();
             }
 
             // If we made it here, we can submit the XB to the L1Processor.
