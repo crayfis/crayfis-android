@@ -271,14 +271,16 @@ public class ExposureBlock implements Parcelable {
 	// Translate between the internal and external enums
 	private static DataProtos.ExposureBlock.State translateState(CFApplication.State orig) {
 		switch (orig) {
-		case INIT:
-			return DataProtos.ExposureBlock.State.INIT;
-		case CALIBRATION:
-			return DataProtos.ExposureBlock.State.CALIBRATION;
-		case DATA:
-			return DataProtos.ExposureBlock.State.DATA;
-		default:
-			throw new RuntimeException("Unknown state! " + orig.toString());
+		    case INIT:
+			    return DataProtos.ExposureBlock.State.INIT;
+            case PRECALIBRATION:
+                return DataProtos.ExposureBlock.State.PRECALIBRATION;
+            case CALIBRATION:
+			    return DataProtos.ExposureBlock.State.CALIBRATION;
+		    case DATA:
+			    return DataProtos.ExposureBlock.State.DATA;
+		    default:
+			    throw new RuntimeException("Unknown state! " + orig.toString());
 		}
 	}
 	
