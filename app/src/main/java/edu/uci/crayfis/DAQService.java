@@ -163,6 +163,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         }
 
         mCFCamera.unregister();
+        mPreCal.destroy();
+        L1cal.destroy();
+        xbManager.destroy();
 
         xbManager.flushCommittedBlocks(true);
 

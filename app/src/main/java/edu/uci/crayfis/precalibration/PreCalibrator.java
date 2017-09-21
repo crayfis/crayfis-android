@@ -6,6 +6,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
+import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import org.opencv.core.CvType;
@@ -26,6 +27,7 @@ import edu.uci.crayfis.ScriptC_weight;
 import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.server.UploadExposureService;
+import edu.uci.crayfis.util.CFLog;
 
 
 /**
@@ -34,13 +36,13 @@ import edu.uci.crayfis.server.UploadExposureService;
 
 public class PreCalibrator {
 
-    private final Context CONTEXT;
+    private final CFApplication APPLICATION;
     private RenderScript RS;
     private final ScriptC_weight SCRIPT_C_WEIGHT;
 
     private PrecalComponent mActiveComponent;
-    private final CFConfig CONFIG = CFConfig.getInstance();
-    private final CFCamera CAMERA = CFCamera.getInstance();
+    private final CFConfig CONFIG;
+    private final CFCamera CAMERA;
 
     private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
 
@@ -50,7 +52,7 @@ public class PreCalibrator {
 
     private static PreCalibrator sInstance;
 
-    public static PreCalibrator getInstance(Context ctx) {
+    public static PreCalibrator getInstance(@NonNull final Context ctx) {
         if(sInstance == null) {
             sInstance = new PreCalibrator(ctx);
         }
@@ -58,10 +60,14 @@ public class PreCalibrator {
     }
 
     private PreCalibrator(Context ctx) {
-        CONTEXT = ctx;
+        CFLog.d("new precal");
+        APPLICATION = (CFApplication) ctx;
         RS = CFApplication.getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
+
+        CONFIG = CFConfig.getInstance();
+        CAMERA = CFCamera.getInstance();
     }
 
     /**
@@ -91,19 +97,18 @@ public class PreCalibrator {
      */
     private void submitPrecalibrationResult() {
 
-        CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
         int cameraId = CAMERA.getCameraId();
         CONFIG.setLastPrecalTime(cameraId, System.currentTimeMillis());
         CONFIG.setLastPrecalResX(cameraId, CAMERA.getResX());
 
-        PRECAL_BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
+        PRECAL_BUILDER.setRunId(APPLICATION.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(CFApplication.getBatteryTemp())
                 .setInterpolation(INTER);
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitPreCalibrationResult(CONTEXT, PRECAL_BUILDER.build());
+        UploadExposureService.submitPreCalibrationResult(APPLICATION, PRECAL_BUILDER.build());
 
     }
 
@@ -191,5 +196,12 @@ public class PreCalibrator {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Make sure we create a new instance in future runs
+     */
+    public void destroy() {
+        sInstance = null;
     }
 }

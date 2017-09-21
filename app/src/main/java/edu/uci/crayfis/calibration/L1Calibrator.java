@@ -66,4 +66,8 @@ public class L1Calibrator {
         maxPixels.resize(n);
     }
 
+    public void destroy() {
+        sInstance = null;
+    }
+
 }

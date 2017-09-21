@@ -228,4 +228,11 @@ public final class ExposureBlockManager {
     public int getCommittedXBs() {
         return mCommittedXBs;
     }
+
+    /**
+     * Make sure we create a new instance in future runs
+     */
+    public void destroy() {
+        sInstance = null;
+    }
 }
