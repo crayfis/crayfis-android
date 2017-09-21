@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
@@ -76,10 +77,12 @@ class CFCamera2 extends CFCamera {
 
         @Override
         public void onDisconnected(@NonNull CameraDevice cameraDevice) {
+            // If the user wants the camera for a different app, better
+            // to quit than to risk errors
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            changeCamera();
+            mApplication.finishAndQuit(R.string.quit_no_cameras);
         }
 
         @Override
@@ -88,7 +91,7 @@ class CFCamera2 extends CFCamera {
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            changeCamera();
+            mApplication.userErrorMessage(R.string.camera_error, true);
         }
     };
 
