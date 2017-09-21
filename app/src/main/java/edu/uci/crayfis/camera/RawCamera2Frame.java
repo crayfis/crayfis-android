@@ -75,7 +75,7 @@ class RawCamera2Frame extends RawCameraFrame {
     @Override
     public void retire() {
         super.retire();
-        if(mRawLock.availablePermits() == 0) {
+        if(!mBufferClaimed) {
             mRawLock.release();
         }
     }

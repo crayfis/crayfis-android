@@ -32,6 +32,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -75,8 +76,6 @@ public class DAQActivity extends AppCompatActivity {
     private static DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-
-    private final int WRITE_SETTINGS_REQUEST = 1;
 
     private ServiceConnection mServiceConnection;
 
@@ -157,6 +156,13 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.d("DAQActivity onResume");
 
+        // check whether we need to re-evaluate permissions
+        if(!MainActivity.hasPermissions(this)) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+            return;
+        }
+
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
 
@@ -188,7 +194,11 @@ public class DAQActivity extends AppCompatActivity {
         if(mBinder != null) {
             mBinder.saveStatsBeforeSleeping();
         }
-        unbindService(mServiceConnection);
+        try {
+            unbindService(mServiceConnection);
+        } catch (IllegalArgumentException e) {
+            // service was not registered yet
+        }
     }
 
     @Override
@@ -200,31 +210,6 @@ public class DAQActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(FATAL_ERROR_RECEIVER);
     }
 
-    @Override
-    @TargetApi(23)
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        if(requestCode != WRITE_SETTINGS_REQUEST) { return; }
-        if(grantResults[0] == PackageManager.PERMISSION_DENIED) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(getResources().getString(R.string.permission_error_title)).setCancelable(false)
-                    .setPositiveButton(getResources().getString(R.string.permission_yes), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, WRITE_SETTINGS_REQUEST);
-                        }
-                    })
-                    .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            PreferenceManager.getDefaultSharedPreferences(DAQActivity.this)
-                                    .edit()
-                                    .putBoolean(getString(R.string.prefEnableGallery), false)
-                                    .apply();
-                        }
-                    })
-                    .setMessage(R.string.gallery_dcim_error).show();
-        }
-
-    }
 
     /////////////////////////
     // Toolbar and Drawers //

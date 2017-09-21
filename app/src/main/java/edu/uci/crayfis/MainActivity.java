@@ -22,6 +22,7 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -53,6 +54,7 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
+    private static final int REQUEST_CODE_PERMISSIONS = 3;
 
     public static String[] permissions = {
         Manifest.permission.CAMERA,
@@ -82,6 +84,7 @@ public class MainActivity extends Activity  {
 
         //Pull the existing shared preferences and set editor
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
         boolean firstRun = sharedprefs.getBoolean("firstRun", true);
         if (firstRun) {
             final Intent intent = new Intent(this, UserNotificationActivity.class);
@@ -89,7 +92,6 @@ public class MainActivity extends Activity  {
             intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
             startActivityForResult(intent, REQUEST_CODE_WELCOME);
         } else {
-
             checkPermissions();
         }
 	}
@@ -98,7 +100,6 @@ public class MainActivity extends Activity  {
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
-        CFLog.d("onActivityResult " + requestCode);
 		if (resultCode != RESULT_OK) {
 			finish();
 		} else {
@@ -128,17 +129,10 @@ public class MainActivity extends Activity  {
      *  Request relevant permissions if not already enabled
      */
     private void checkPermissions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(UploadExposureService.IS_PUBLIC) {
-                permissions = new String[] {
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                };
-            }
-            requestPermissions(permissions, 0);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissions(this)) {
+            requestPermissions(permissions, REQUEST_CODE_PERMISSIONS);
         } else {
-            // no need to ask for permissions here
+            // ready to start DAQActivity
             Intent intent = new Intent(this, DAQActivity.class);
             startActivity(intent);
             finish();
@@ -155,34 +149,79 @@ public class MainActivity extends Activity  {
                 // notify the user that we need permissions and try again
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-                builder.setMessage(R.string.permission_error)
+                builder.setTitle(R.string.permission_error_title)
+                        .setCancelable(false)
                         .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                requestPermissions(MainActivity.permissions, 0);
-                            }
-                        })
-                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
+                                requestPermissions(MainActivity.permissions, REQUEST_CODE_PERMISSIONS);
                             }
                         });
 
-                builder.setTitle(R.string.permission_error_title)
-                        .setCancelable(false)
-                        .show();
+                // see if we absolutely need the permission
+                if(!permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || UploadExposureService.IS_PUBLIC) {
 
+                    builder.setMessage(R.string.permission_error)
+                            .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    });
+                } else {
+                    // if it's a problem, we can shut off the gallery
+                    builder.setMessage(R.string.gallery_dcim_error)
+                            .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+                                            .edit()
+                                            .putBoolean(getString(R.string.prefEnableGallery), false)
+                                            .apply();
+                                    startActivity(new Intent(MainActivity.this, DAQActivity.class));
+                                    finish();
+                                }
+                            });
+                }
+
+                builder.show();
                 return;
             }
         }
 
         // if all permissions are granted, we start data-taking
-        Intent intent = new Intent(this, DAQActivity.class);
-        startActivity(intent);
+        startActivity(new Intent(this, DAQActivity.class));
         finish();
 
+    }
 
+    /**
+     * Checks whether CRAYFIS can run given the currently allotted permissions
+     *
+     * @return true if all appropriate permissions have been granted
+     */
+    public static boolean hasPermissions(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        if(UploadExposureService.IS_PUBLIC
+                || prefs.getBoolean(context.getString(R.string.prefEnableGallery), false)) {
+            permissions = new String[] {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+        } else {
+            permissions = new String[] {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            };
+        }
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : permissions) {
+                if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 }
