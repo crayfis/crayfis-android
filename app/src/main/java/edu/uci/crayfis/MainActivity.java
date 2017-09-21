@@ -70,118 +70,9 @@ public class MainActivity extends Activity  {
 	}
 
 	@Override
-	public void onStart() {
-		super.onStart();
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(UploadExposureService.IS_PUBLIC) {
-                permissions = new String[] {
-                        Manifest.permission.CAMERA,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                };
-            }
-            requestPermissions(permissions, 0);
-        } else {
-            // no need to ask for permissions here
-            startDAQ();
-        }
-	}
-
-	@Override
-	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-		super.onActivityResult(requestCode, resultCode, data);
-
-		if (resultCode != RESULT_OK) {
-			finish();
-		} else {
-            Intent intent;
-            switch(requestCode) {
-                case REQUEST_CODE_WELCOME:
-                    intent = new Intent(this, UserNotificationActivity.class);
-                    intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
-                    intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
-                    startActivityForResult(intent, REQUEST_CODE_HOW_TO);
-                    break;
-                default:
-                    //This is so that if they have entered in an invalid user ID before, but
-                    //then just decide to run it locally, it will reset the userID to empty
-                    SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    final SharedPreferences.Editor editor = sharedprefs.edit();
-                    editor.putBoolean("firstRun", false);
-                    editor.commit();
-
-                    // now start running
-                    intent = new Intent(this, DAQActivity.class);
-                    startActivity(intent);
-                    finish();
-            }
-		}
-	}
-
-	@Override
-    @TargetApi(23)
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        CFLog.d("onRequestPermissionsResult()");
-
-        boolean permissionError = false;
-
-        for(String permission: permissions) {
-            if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                permissionError = true;
-            }
-        }
-
-        boolean writeError = !Settings.System.canWrite(this);
-
-        if(!(permissionError || writeError)) {
-            startDAQ();
-        } else {
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            if (permissionError) {
-                builder.setMessage(R.string.permission_error)
-                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                requestPermissions(MainActivity.permissions, 0);
-                            }
-                        })
-                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
-                            }
-                        });
-
-            } else {
-                builder.setMessage(R.string.write_settings_error)
-                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-                                intent.setData(Uri.parse("package:" +getPackageName()))
-                                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
-                            }
-                        });
-            }
-
-            builder.setTitle(R.string.permission_error_title)
-                    .setCancelable(false)
-                    .show();
-        }
-    }
-
-    private void startDAQ() {
         try {
             build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
         }
@@ -197,15 +88,101 @@ public class MainActivity extends Activity  {
             intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
             intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
             startActivityForResult(intent, REQUEST_CODE_WELCOME);
+        } else {
+
+            checkPermissions();
         }
-        else {
-            //See if we already have user ID saved
-            //Because then no need to login again
-            //if((ID != "") && !badID) {
-            Intent intent = new Intent(MainActivity.this, DAQActivity.class);
+	}
+
+	@Override
+	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+
+        CFLog.d("onActivityResult " + requestCode);
+		if (resultCode != RESULT_OK) {
+			finish();
+		} else {
+            Intent intent;
+            switch(requestCode) {
+                case REQUEST_CODE_WELCOME:
+                    intent = new Intent(this, UserNotificationActivity.class);
+                    intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
+                    intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+                    startActivityForResult(intent, REQUEST_CODE_HOW_TO);
+                    break;
+                case REQUEST_CODE_HOW_TO:
+                    //This is so that if they have entered in an invalid user ID before, but
+                    //then just decide to run it locally, it will reset the userID to empty
+                    SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                    final SharedPreferences.Editor editor = sharedprefs.edit();
+                    editor.putBoolean("firstRun", false)
+                            .commit();
+
+                    // now start running
+                    checkPermissions();
+            }
+		}
+	}
+
+    /**
+     *  Request relevant permissions if not already enabled
+     */
+    private void checkPermissions() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if(UploadExposureService.IS_PUBLIC) {
+                permissions = new String[] {
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                };
+            }
+            requestPermissions(permissions, 0);
+        } else {
+            // no need to ask for permissions here
+            Intent intent = new Intent(this, DAQActivity.class);
             startActivity(intent);
-            //and quit
-            MainActivity.this.finish();
+            finish();
         }
     }
+
+	@Override
+    @TargetApi(23)
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        // loop through requested permissions and see if any were denied
+        for(String permission: permissions) {
+            if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                // notify the user that we need permissions and try again
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+                builder.setMessage(R.string.permission_error)
+                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                requestPermissions(MainActivity.permissions, 0);
+                            }
+                        })
+                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                finish();
+                            }
+                        });
+
+                builder.setTitle(R.string.permission_error_title)
+                        .setCancelable(false)
+                        .show();
+
+                return;
+            }
+        }
+
+        // if all permissions are granted, we start data-taking
+        Intent intent = new Intent(this, DAQActivity.class);
+        startActivity(intent);
+        finish();
+
+
+    }
+
 }

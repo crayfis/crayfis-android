@@ -122,12 +122,6 @@ public class DAQActivity extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        try {
-            screen_brightness_mode = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE);
-        } catch (Exception e){ }
-        Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS_MODE,Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
-        //Settings.System.putInt(getContentResolver(),Settings.System.SCREEN_BRIGHTNESS, 100);
-
         setContentView(R.layout.activity_daq);
         configureNavigation();
 
@@ -203,8 +197,6 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.d("onStop()");
 
-        // give back brightness control
-        Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_BRIGHTNESS_MODE, screen_brightness_mode);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(FATAL_ERROR_RECEIVER);
     }
 
@@ -391,9 +383,6 @@ public class DAQActivity extends AppCompatActivity {
 
                 .setView(tx1).show();
     }
-
-
-    private int screen_brightness_mode=Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL;
 
 
     ////////////////
