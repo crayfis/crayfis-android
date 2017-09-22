@@ -5,6 +5,8 @@
 rs_allocation aMax;
 rs_allocation aSecond;
 
+// given the largest value, second largest value, and a new allocation,
+// updates the ordering
 void RS_KERNEL order(uchar in, uint32_t x, uint32_t y) {
 
     uchar one = rsGetElementAt_uchar(aMax, x, y);

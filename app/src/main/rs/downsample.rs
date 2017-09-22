@@ -15,19 +15,25 @@ uint gTotalFrames;
 
 static uint gFudgeFactor = 5;
 
+// calculate the unnormalized weights as log(1+1/val)
+// and divide by gMaxWeights to obtain a float weight in the
+// interval [0,1].
 uchar RS_KERNEL normalizeWeights(float in) {
     float inv_mean = 1/in;
     float weight = log1p(inv_mean)/gMaxWeight;
-    //rsDebug("weight =",weight);
+    // store as a byte for compression
     return (uchar)(255*weight);
 }
 
+// downsample gSum into an Allocation of average pix_val's
 float RS_KERNEL downsampleSums(uint32_t x, uint32_t y) {
     uint count = 0;
     uint sum = gFudgeFactor;
+    // iterate over blocks of size sampleStep x sampleStep
     for(uint ix=x*sampleStep; ix<(x+1)*sampleStep; ix++) {
         for(uint iy=y*sampleStep; iy<(y+1)*sampleStep; iy++) {
             int isum = rsGetElementAt_int(gSum, ix, iy);
+            // skip over hotcells marked as -1
             if(isum >= 0) {
                 sum += isum;
                 count++;
@@ -38,6 +44,7 @@ float RS_KERNEL downsampleSums(uint32_t x, uint32_t y) {
     return (float)sum/count/gTotalFrames;
 }
 
+// mark hotcells as -1
 void killHotcell(uint32_t x, uint32_t y) {
     rsSetElementAt_int(gSum, -1, x, y);
 }
