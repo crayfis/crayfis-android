@@ -11,7 +11,6 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
-import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
@@ -29,8 +28,8 @@ import android.view.Surface;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.util.CFLog;
 
@@ -44,6 +43,10 @@ class CFCamera2 extends CFCamera {
 
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+
+    private Handler mFrameHandler;
+    private HandlerThread mFrameThread;
+
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
     private CameraDevice mCameraDevice;
     private CameraCharacteristics mCameraCharacteristics;
@@ -55,8 +58,7 @@ class CFCamera2 extends CFCamera {
     private CameraCaptureSession mCaptureSession;
 
     private Allocation ain;
-    private Integer mBuffersQueued = 0;
-    private int mTryAcquires = 0;
+    private AtomicInteger mBuffersQueued = new AtomicInteger();
 
 
     CFCamera2() {
@@ -139,31 +141,42 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            synchronized (mBuffersQueued) {
-                mTimeStamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
-
-                while (mBuffersQueued > 0 && !mTimeStamps.isEmpty()) {
-                    RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                            .setTimestamp(mTimeStamps.poll())
-                            .build();
-                    mBuffersQueued--;
-                    mCallback.onRawCameraFrame(frame);
-                }
-            }
+            mTimeStamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
+            createFrames();
 
         }
     };
 
+    /**
+     * Callback for buffers added to queue
+     */
     private Allocation.OnBufferAvailableListener mOnBufferAvailableListener
             = new Allocation.OnBufferAvailableListener() {
         @Override
         public void onBufferAvailable(Allocation a) {
-            synchronized (mBuffersQueued) {
-                mBuffersQueued++;
-                //CFLog.d("buffers = " + mBuffersQueued);
-            }
+            mBuffersQueued.incrementAndGet();
+            createFrames();
         }
     };
+
+    /**
+     * If timestamp/buffer pairs are available, use to create RawCameraFrame and send to
+     * RawCameraFrame.Callback in a HandlerThread
+     */
+    private void createFrames() {
+        while (mBuffersQueued.intValue() > 0 && !mTimeStamps.isEmpty()) {
+            final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                    .setTimestamp(mTimeStamps.poll())
+                    .build();
+            mBuffersQueued.decrementAndGet();
+            mFrameHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mCallback.onRawCameraFrame(frame);
+                }
+            });
+        }
+    }
 
 
     /**
@@ -256,6 +269,21 @@ class CFCamera2 extends CFCamera {
         mBackgroundThread = new HandlerThread("CFCamera2");
         mBackgroundThread.start();
         mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+
+        if(mFrameThread != null) {
+            mFrameThread.quitSafely();
+            try {
+                mFrameThread.join();
+                mFrameThread = null;
+                mFrameHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        mFrameThread = new HandlerThread("RawCamera2Frame");
+        mFrameThread.start();
+        mFrameHandler = new Handler(mFrameThread.getLooper());
 
         try {
             mCameraOpenCloseLock.acquire();

@@ -49,13 +49,13 @@ class RawCamera2Frame extends RawCameraFrame {
                 scriptCWeight, in, out);
 
         aRaw = alloc;
-        mRawLock.acquireUninterruptibly();
-        aRaw.ioReceive();
     }
 
     @Override
     protected synchronized void weightAllocation() {
         super.weightAllocation();
+        mRawLock.acquireUninterruptibly();
+        aRaw.ioReceive();
         if(mScriptCWeight != null) {
             mScriptCWeight.set_gInYuv(aRaw);
             mScriptCWeight.forEach_weightYuv(aWeighted);
