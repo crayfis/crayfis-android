@@ -2,11 +2,14 @@ package edu.uci.crayfis.exposure;
 
 import java.util.ArrayList;
 import android.content.Context;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -46,6 +49,19 @@ public final class ExposureBlockManager {
 
     private long safe_time = 0;
 
+    // timer for creating new DATA blocks
+    private final CountDownTimer mXBExpirationTimer = new CountDownTimer(
+            CONFIG.getExposureBlockPeriod()*1000L, 1000L) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+        }
+
+        @Override
+        public void onFinish() {
+            newExposureBlock(CFApplication.State.DATA);
+        }
+    };
+
     private static ExposureBlockManager sInstance;
 
     /**
@@ -74,13 +90,6 @@ public final class ExposureBlockManager {
         if (current_xb == null) {
             // FIXME Had to add this call after creating the state broadcast, timing error?
             CFLog.e("Oops! In getCurrentExposureBlock(), current_xb = null");
-            newExposureBlock(app_state);
-        }
-
-        // if we are in (pre)calibration mode, keep the XB running until calibration is complete.
-        else if ((app_state == CFApplication.State.DATA) && (current_xb.daq_state == CFApplication.State.DATA)
-                && current_xb.nanoAge() > ((long) CONFIG.getExposureBlockPeriod() * 1000000000L)) {
-
             newExposureBlock(app_state);
         }
 
@@ -118,6 +127,12 @@ public final class ExposureBlockManager {
         camera.getFrameBuilder().setExposureBlock(current_xb);
 
         mTotalXBs++;
+
+        // set a timer for when this XB expires, if we are in DATA mode
+        mXBExpirationTimer.cancel();
+        if(current_xb.daq_state == CFApplication.State.DATA) {
+            mXBExpirationTimer.start();
+        }
 
         scheduleFlush();
     }

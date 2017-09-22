@@ -510,8 +510,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
                     && frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
                 updateCalibration();
-                // also see if we need a new XB
-                xbManager.getCurrentExposureBlock();
             }
 
             // If we made it here, we can submit the XB to the L1Processor.
