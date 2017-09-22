@@ -60,7 +60,6 @@ public class PreCalibrator {
     }
 
     private PreCalibrator(Context ctx) {
-        CFLog.d("new precal");
         APPLICATION = (CFApplication) ctx;
         RS = CFApplication.getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);

@@ -3,6 +3,8 @@ package edu.uci.crayfis.precalibration;
 import android.os.HandlerThread;
 import android.renderscript.RenderScript;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.camera.RawCameraFrame;
 
@@ -13,7 +15,7 @@ import edu.uci.crayfis.camera.RawCameraFrame;
 abstract class PrecalComponent {
 
     int sampleFrames;
-    private int count;
+    private AtomicInteger count;
 
     final RenderScript RS;
     final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
@@ -21,11 +23,11 @@ abstract class PrecalComponent {
     PrecalComponent(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
         RS = rs;
         PRECAL_BUILDER = b;
-        count = 0;
+        count = new AtomicInteger();
     }
 
     boolean addFrame(RawCameraFrame frame) {
-        if(++count == sampleFrames) {
+        if(count.incrementAndGet() == sampleFrames) {
             process();
             return true;
         }

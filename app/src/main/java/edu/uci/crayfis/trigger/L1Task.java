@@ -59,7 +59,7 @@ class L1Task implements Runnable {
     protected boolean processCalibration() {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-        long count = ++mExposureBlock.count;
+        long count = mExposureBlock.count.incrementAndGet();
         mL1Processor.mL1Cal.addFrame(mFrame);
 
         if (count == mL1Processor.CONFIG.getCalibrationSampleFrames()) {
@@ -71,7 +71,7 @@ class L1Task implements Runnable {
 
     protected boolean processStabilization() {
         // If we're in stabilization mode, just drop frames until we've skipped enough
-        long count = ++mExposureBlock.count;
+        long count = mExposureBlock.count.incrementAndGet();
         if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }

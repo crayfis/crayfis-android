@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
@@ -56,7 +57,7 @@ public class ExposureBlock implements Parcelable {
 	public final int xbn;
 
 	public final CFApplication.State daq_state;
-    public long count;
+    public AtomicInteger count = new AtomicInteger();
 
 	private boolean frozen = false;
 	public boolean aborted = false;
