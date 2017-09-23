@@ -1,5 +1,6 @@
 package edu.uci.crayfis;
 
+import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -17,7 +18,6 @@ import android.provider.Settings;
 import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
-import android.support.multidex.MultiDexApplication;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
@@ -38,7 +38,7 @@ import edu.uci.crayfis.util.CFLog;
 /**
  * Extension of {@link android.app.Application}.
  */
-public class CFApplication extends MultiDexApplication {
+public class CFApplication extends Application {
 
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
