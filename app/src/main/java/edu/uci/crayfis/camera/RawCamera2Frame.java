@@ -1,9 +1,16 @@
 package edu.uci.crayfis.camera;
 
 import android.annotation.TargetApi;
+import android.graphics.ImageFormat;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.location.Location;
 import android.renderscript.Allocation;
+import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
+import android.renderscript.Type;
 import android.support.annotation.NonNull;
 
 import java.util.concurrent.Semaphore;
@@ -24,7 +31,7 @@ class RawCamera2Frame extends RawCameraFrame {
     // lock for buffers entering aRaw
     private static Semaphore mRawLock = new Semaphore(1);
 
-    RawCamera2Frame(@NonNull final Allocation alloc,
+    private RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
                     final boolean facingBack,
                     final int frameWidth,
@@ -51,11 +58,13 @@ class RawCamera2Frame extends RawCameraFrame {
         aRaw = alloc;
     }
 
-    @Override
-    protected synchronized void weightAllocation() {
-        super.weightAllocation();
+    public void receiveBytes() {
         mRawLock.acquireUninterruptibly();
         aRaw.ioReceive();
+    }
+
+    @Override
+    protected synchronized void weightAllocation() {
         if(mScriptCWeight != null) {
             mScriptCWeight.set_gInYuv(aRaw);
             mScriptCWeight.forEach_weightYuv(aWeighted);
@@ -77,6 +86,56 @@ class RawCamera2Frame extends RawCameraFrame {
         super.retire();
         if(!mBufferClaimed) {
             mRawLock.release();
+        }
+    }
+
+    static class Builder extends RawCameraFrame.Builder {
+
+        private Allocation bRaw;
+
+        /**
+         * Method for configuring Builder to create RawCamera2Frames
+         *
+         * @param manager CameraManager
+         * @param cameraId int
+         * @param alloc Allocation camera buffer
+         * @param rs RenderScript context
+         * @return Builder
+         */
+        @TargetApi(21)
+        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
+
+            bRaw = alloc;
+
+            Type type = alloc.getType();
+
+            bFrameWidth = type.getX();
+            bFrameHeight = type.getY();
+            bLength = bFrameWidth * bFrameHeight;
+            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
+
+            bCameraId = cameraId;
+            try {
+                String[] idList = manager.getCameraIdList();
+                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
+                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+                if (lensFacing != null) {
+                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
+                }
+            } catch (CameraAccessException e) {
+                CFLog.e("CameraAccessException");
+            }
+
+            setRenderScript(rs, bFrameWidth, bFrameHeight);
+
+            return this;
+        }
+
+        public RawCamera2Frame build() {
+            return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
+                    bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
+                    bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
+                    bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
         }
     }
 

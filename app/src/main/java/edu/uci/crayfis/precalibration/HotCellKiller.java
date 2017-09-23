@@ -70,7 +70,6 @@ class HotCellKiller extends PrecalComponent {
      */
     @Override
     void process() {
-        super.process();
         int cameraId = CAMERA.getCameraId();
 
         // set up Allocations for histogram

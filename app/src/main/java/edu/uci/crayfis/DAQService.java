@@ -451,23 +451,19 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     @Override
     public void onRawCameraFrame(RawCameraFrame frame) {
-        try {
 
-            // if we fail to assign the block to the XB, just drop it.
-            if (!frame.getExposureBlock().assignFrame(frame)) {
-                CFLog.e("Cannot assign frame to current XB! Dropping frame.");
-                frame.retire();
-                return;
-            }
-
-            // If we made it here, we can submit the XB to the L1Processor.
-            // It will pop the assigned frame from the XB's internal list, and will also handle
-            // recycling the buffers.
-            mL1Processor.submitFrame(frame);
-
-        } catch (Exception e) {
-            // don't crash
+        // if we fail to assign the block to the XB, just drop it.
+        if (!frame.getExposureBlock().assignFrame(frame)) {
+            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
+            frame.retire();
+            return;
         }
+
+        // If we made it here, we can submit the XB to the L1Processor.
+        // It will pop the assigned frame from the XB's internal list, and will also handle
+        // recycling the buffers.
+        mL1Processor.submitFrame(frame);
+
     }
 
 

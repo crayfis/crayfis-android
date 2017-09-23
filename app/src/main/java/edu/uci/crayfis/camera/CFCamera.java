@@ -7,6 +7,7 @@ import android.os.Build;
 import android.renderscript.RenderScript;
 
 import java.util.ArrayDeque;
+import java.util.concurrent.Semaphore;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
@@ -26,8 +27,6 @@ import static edu.uci.crayfis.CFApplication.MODE_FRONT_LOCK;
  */
 
 public abstract class CFCamera {
-
-    final RawCameraFrame.Builder RCF_BUILDER = new RawCameraFrame.Builder();
 
     CFApplication mApplication;
     final CFConfig CONFIG;
@@ -54,7 +53,6 @@ public abstract class CFCamera {
 
         CONFIG = CFConfig.getInstance();
         RS = CFApplication.getRenderScript();
-
     }
 
     /**
@@ -83,8 +81,8 @@ public abstract class CFCamera {
     public void register(Context context) {
         if(mCallback == null) return;
         mApplication = (CFApplication) context;
-        mCFSensor = new CFSensor(context, RCF_BUILDER);
-        mCFLocation = new CFLocation(context, RCF_BUILDER);
+        mCFSensor = new CFSensor(context, getFrameBuilder());
+        mCFLocation = new CFLocation(context, getFrameBuilder());
         changeCamera();
     }
 
@@ -159,8 +157,10 @@ public abstract class CFCamera {
             mApplication.setApplicationState(CFApplication.State.STABILIZATION);
         }
 
-        mQueuedTimestamps.clear();
-        mTimestampHistory.clear();
+        synchronized (mTimestampHistory) {
+            mQueuedTimestamps.clear();
+            mTimestampHistory.clear();
+        }
 
     }
 
@@ -189,9 +189,7 @@ public abstract class CFCamera {
      *
      * @return String
      */
-    public String getParams() {
-        return "";
-    }
+    public abstract String getParams();
 
     /**
      * Obtain a String to be displayed in the Developer panel.
@@ -223,9 +221,7 @@ public abstract class CFCamera {
         mCallback = callback;
     }
 
-    public RawCameraFrame.Builder getFrameBuilder() {
-        return RCF_BUILDER;
-    }
+    public abstract RawCameraFrame.Builder getFrameBuilder();
 
     public int getResX() {
         return mResX;

@@ -15,6 +15,8 @@ import edu.uci.crayfis.util.CFLog;
 
 class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Camera.ErrorCallback {
 
+    private final RawCameraDeprecatedFrame.Builder RCF_BUILDER;
+
     private Camera mCamera;
     private Camera.Parameters mParams;
     private Camera.Size previewSize;
@@ -22,6 +24,8 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     CFCameraDeprecated() {
         super();
+        RCF_BUILDER = new RawCameraDeprecatedFrame.Builder();
+
         mTexture = new SurfaceTexture(10);
 
         mTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
@@ -140,10 +144,12 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
         AcquisitionTime time = new AcquisitionTime();
-        RawCameraFrame frame = RCF_BUILDER.setBytes(bytes)
+        RCF_BUILDER.setBytes(bytes)
                 .setAcquisitionTime(time)
-                .setTimestamp(mQueuedTimestamps.poll())
-                .build();
+                .setTimestamp(mQueuedTimestamps.poll());
+
+
+        RawCameraFrame frame = RCF_BUILDER.build();
         mTimestampHistory.addValue(frame.getAcquiredTimeNano());
         if(mCallback != null) {
             mCallback.onRawCameraFrame(frame);
@@ -160,9 +166,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public String getParams() {
-        String paramtxt = super.getStatus();
-        paramtxt += mParams.flatten();
-        return paramtxt;
+        return mParams.flatten();
     }
 
     @Override
@@ -175,6 +179,11 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
         return devtxt;
+    }
+
+    @Override
+    public RawCameraFrame.Builder getFrameBuilder() {
+        return RCF_BUILDER;
     }
 
 }

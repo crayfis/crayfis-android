@@ -41,9 +41,13 @@ import edu.uci.crayfis.util.CFLog;
 @TargetApi(21)
 class CFCamera2 extends CFCamera {
 
-    private Handler mBackgroundHandler;
-    private HandlerThread mBackgroundThread;
+    private final RawCamera2Frame.Builder RCF_BUILDER;
 
+    // thread for Camera callbacks
+    private Handler mCameraHandler;
+    private HandlerThread mCameraThread;
+
+    // thread for posting jobs handling frames
     private Handler mFrameHandler;
     private HandlerThread mFrameThread;
 
@@ -63,6 +67,7 @@ class CFCamera2 extends CFCamera {
 
     CFCamera2() {
         super();
+        RCF_BUILDER = new RawCamera2Frame.Builder();
     }
 
     /**
@@ -115,7 +120,7 @@ class CFCamera2 extends CFCamera {
 
                 mPreviewRequest = mPreviewRequestBuilder.build();
                 // Finally, we start displaying the camera preview.
-                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mBackgroundHandler);
+                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
             }
@@ -163,19 +168,27 @@ class CFCamera2 extends CFCamera {
      * If timestamp/buffer pairs are available, use to create RawCameraFrame and send to
      * RawCameraFrame.Callback in a HandlerThread
      */
-    private synchronized void createFrames() {
-        while (mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
-            final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                    .setTimestamp(mQueuedTimestamps.poll())
-                    .build();
-            mTimestampHistory.addValue(frame.getAcquiredTimeNano());
-            mBuffersQueued.decrementAndGet();
-            mFrameHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    mCallback.onRawCameraFrame(frame);
-                }
-            });
+    private void createFrames() {
+
+        // make sure the timestamp queues aren't cleared underneath us
+        synchronized (mTimestampHistory) {
+
+            while (mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
+                RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                        .setTimestamp(mQueuedTimestamps.poll());
+
+                final RawCamera2Frame frame = RCF_BUILDER.build();
+                mTimestampHistory.addValue(frame.getAcquiredTimeNano());
+                mFrameHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        frame.receiveBytes();
+                        mCallback.onRawCameraFrame(frame);
+                    }
+                });
+                mBuffersQueued.decrementAndGet();
+
+            }
         }
     }
 
@@ -253,38 +266,7 @@ class CFCamera2 extends CFCamera {
 
         super.changeCameraFrom(currentId);
 
-        // first, setup thread for camera
-
-        // quit the existing camera thread
-        if(mBackgroundThread != null) {
-            mBackgroundThread.quitSafely();
-            try {
-                mBackgroundThread.join();
-                mBackgroundThread = null;
-                mBackgroundHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        mBackgroundThread = new HandlerThread("CFCamera2");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
-
-        if(mFrameThread != null) {
-            mFrameThread.quitSafely();
-            try {
-                mFrameThread.join();
-                mFrameThread = null;
-                mFrameHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        mFrameThread = new HandlerThread("RawCamera2Frame");
-        mFrameThread.start();
-        mFrameHandler = new Handler(mFrameThread.getLooper());
+        // get rid of old camera setup
 
         try {
             mCameraOpenCloseLock.acquire();
@@ -306,6 +288,40 @@ class CFCamera2 extends CFCamera {
         } finally {
             mCameraOpenCloseLock.release();
         }
+
+        // quit the existing camera thread
+        if(mCameraThread != null) {
+            mCameraThread.quitSafely();
+            try {
+                mCameraThread.join();
+                mCameraThread = null;
+                mCameraHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if(mFrameHandler != null) {
+            mFrameThread.quitSafely();
+            try {
+                mFrameThread.join();
+                mFrameThread = null;
+                mFrameHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // start new threads
+
+        mCameraThread = new HandlerThread("CFCamera2");
+        mCameraThread.start();
+        mCameraHandler = new Handler(mCameraThread.getLooper());
+
+        mFrameThread = new HandlerThread("RawCamera2Frame");
+        mFrameThread.start();
+        mFrameHandler = new Handler(mFrameThread.getLooper());
+
 
         if(mCameraId == -1) {
             return;
@@ -346,7 +362,7 @@ class CFCamera2 extends CFCamera {
 
             RCF_BUILDER.setCamera2(manager, mCameraId, ain, mApplication.getRenderScript());
 
-            manager.openCamera(idString, mCameraDeviceCallback, mBackgroundHandler);
+            manager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
@@ -358,8 +374,7 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public String getParams() {
-        String paramtxt = super.getParams();
-        paramtxt += "Size: " + mPreviewSize.toString() + ", ";
+        String paramtxt = "Size: " + mPreviewSize.toString() + ", ";
 
         if(mPreviewRequest != null) {
             for (CaptureRequest.Key<?> k : mPreviewRequest.getKeys()) {
@@ -384,9 +399,8 @@ class CFCamera2 extends CFCamera {
     }
 
     @Override
-    public void unregister() {
-
-        super.unregister();
+    public RawCameraFrame.Builder getFrameBuilder() {
+        return RCF_BUILDER;
     }
 
 }

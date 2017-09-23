@@ -1,12 +1,5 @@
 package edu.uci.crayfis.camera;
 
-import android.annotation.TargetApi;
-import android.graphics.ImageFormat;
-import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CameraMetadata;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -76,114 +69,30 @@ public abstract class RawCameraFrame {
     /**
      * Class for creating immutable RawCameraFrames
      */
-    public static class Builder {
-        private byte[] bBytes;
-        private Camera bCamera;
+    public static abstract class Builder {
 
-        private Allocation bRaw;
+        int bCameraId;
+        boolean bFacingBack;
 
-        private int bCameraId;
-        private boolean bFacingBack;
+        int bFrameWidth;
+        int bFrameHeight;
+        int bLength;
+        int bBufferSize;
 
-        private int bFrameWidth;
-        private int bFrameHeight;
-        private int bLength;
-        private int bBufferSize;
+        AcquisitionTime bAcquisitionTime;
+        long bTimestamp;
+        Location bLocation;
+        float[] bOrientation;
+        float bRotationZZ;
+        float bPressure;
+        int bBatteryTemp;
+        ExposureBlock bExposureBlock;
 
-        private AcquisitionTime bAcquisitionTime;
-        private long bTimestamp;
-        private Location bLocation;
-        private float[] bOrientation;
-        private float bRotationZZ;
-        private float bPressure;
-        private int bBatteryTemp;
-        private ExposureBlock bExposureBlock;
+        ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        ScriptC_weight bScriptCWeight;
+        Allocation bWeighted;Allocation bOut;
 
-        private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
-        private ScriptC_weight bScriptCWeight;
-        private Allocation bWeighted;
-        private Allocation bOut;
-
-        private Boolean bDeprecated;
-
-        public Builder() {
-
-        }
-
-        public Builder setBytes(byte[] bytes) {
-            bBytes = bytes;
-            return this;
-        }
-
-        /**
-         * Method for configuring Builder to create RawCameraDeprecatedFrames
-         *
-         * @param camera Camera
-         * @param cameraId int
-         * @param rs RenderScript context
-         * @return Builder
-         */
-        public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
-
-            bDeprecated = true;
-
-            bCamera = camera;
-            Camera.Parameters params = camera.getParameters();
-            Camera.Size sz = params.getPreviewSize();
-            bFrameWidth = sz.width;
-            bFrameHeight = sz.height;
-            bLength = bFrameWidth * bFrameHeight;
-            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
-
-            bCameraId = cameraId;
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(cameraId, cameraInfo);
-            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
-
-            setRenderScript(rs, bFrameWidth, bFrameHeight);
-            return this;
-        }
-
-        /**
-         * Method for configuring Builder to create RawCamera2Frames
-         *
-         * @param manager CameraManager
-         * @param cameraId int
-         * @param alloc Allocation camera buffer
-         * @param rs RenderScript context
-         * @return Builder
-         */
-        @TargetApi(21)
-        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
-
-            bDeprecated = false;
-            bRaw = alloc;
-
-            Type type = alloc.getType();
-
-            bFrameWidth = type.getX();
-            bFrameHeight = type.getY();
-            bLength = bFrameWidth * bFrameHeight;
-            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
-
-            bCameraId = cameraId;
-            try {
-                String[] idList = manager.getCameraIdList();
-                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
-                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
-                if (lensFacing != null) {
-                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
-                }
-            } catch (CameraAccessException e) {
-                CFLog.e("CameraAccessException");
-            }
-
-            setRenderScript(rs, bFrameWidth, bFrameHeight);
-
-            return this;
-        }
-
-        private void setRenderScript(RenderScript rs, int width, int height) {
+        void setRenderScript(RenderScript rs, int width, int height) {
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(width)
                     .setY(height)
@@ -242,25 +151,6 @@ public abstract class RawCameraFrame {
             return this;
         }
 
-        public RawCameraFrame build() {
-
-            if(bDeprecated == null) {
-                CFLog.e("Camera has not been set");
-                return null;
-            }
-            if(bDeprecated) {
-                return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
-                        bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
-                        bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
-                        bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-            }
-            else {
-                return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                        bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
-                        bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
-                        bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-            }
-        }
     }
 
     RawCameraFrame(final int cameraId,
@@ -328,7 +218,7 @@ public abstract class RawCameraFrame {
     /**
      * Applies ScriptC_weight to bytes if applicable
      */
-    protected void weightAllocation() {  }
+    protected abstract void weightAllocation();
 
 
     /**

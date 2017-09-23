@@ -34,6 +34,6 @@ abstract class PrecalComponent {
         return false;
     }
 
-    void process() { }
+    abstract void process();
 
 }
