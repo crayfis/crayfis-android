@@ -141,7 +141,7 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            mTimeStamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
+            mQueuedTimestamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
             createFrames();
 
         }
@@ -163,11 +163,12 @@ class CFCamera2 extends CFCamera {
      * If timestamp/buffer pairs are available, use to create RawCameraFrame and send to
      * RawCameraFrame.Callback in a HandlerThread
      */
-    private void createFrames() {
-        while (mBuffersQueued.intValue() > 0 && !mTimeStamps.isEmpty()) {
+    private synchronized void createFrames() {
+        while (mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
             final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                    .setTimestamp(mTimeStamps.poll())
+                    .setTimestamp(mQueuedTimestamps.poll())
                     .build();
+            mTimestampHistory.addValue(frame.getAcquiredTimeNano());
             mBuffersQueued.decrementAndGet();
             mFrameHandler.post(new Runnable() {
                 @Override

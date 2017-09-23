@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.calibration.FrameHistory;
 import edu.uci.crayfis.exposure.ExposureBlockManager;
 import edu.uci.crayfis.precalibration.PreCalibrator;
 import edu.uci.crayfis.ui.DataCollectionFragment;
@@ -42,7 +43,9 @@ public abstract class CFCamera {
     int mResX;
     int mResY;
 
-    ArrayDeque<Long> mTimeStamps = new ArrayDeque<>();
+    final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
+    final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
+
 
 
     private static CFCamera sInstance;
@@ -156,8 +159,25 @@ public abstract class CFCamera {
             mApplication.setApplicationState(CFApplication.State.STABILIZATION);
         }
 
-        mTimeStamps.clear();
+        mQueuedTimestamps.clear();
+        mTimestampHistory.clear();
 
+    }
+
+    /**
+     * Calculates and returns the average FPS of the last 100 frames produced
+     * @return double
+     */
+    public double getFPS() {
+        long now = System.nanoTime() - CFApplication.getStartTimeNano();
+        synchronized(mTimestampHistory) {
+            int nframes = mTimestampHistory.size();
+            if (nframes>0) {
+                return ((double) nframes) / (now - mTimestampHistory.getOldest()) * 1000000000L;
+            }
+        }
+
+        return 0.0;
     }
 
     public int getCameraId() {

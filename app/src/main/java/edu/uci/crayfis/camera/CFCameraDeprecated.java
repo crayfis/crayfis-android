@@ -27,7 +27,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         mTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
             @Override
             public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                mTimeStamps.add(surfaceTexture.getTimestamp());
+                mQueuedTimestamps.add(surfaceTexture.getTimestamp());
             }
         });
     }
@@ -139,12 +139,14 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
-
+        AcquisitionTime time = new AcquisitionTime();
+        RawCameraFrame frame = RCF_BUILDER.setBytes(bytes)
+                .setAcquisitionTime(time)
+                .setTimestamp(mQueuedTimestamps.poll())
+                .build();
+        mTimestampHistory.addValue(frame.getAcquiredTimeNano());
         if(mCallback != null) {
-            mCallback.onRawCameraFrame(RCF_BUILDER.setBytes(bytes)
-                    .setAcquisitionTime(new AcquisitionTime())
-                    .setTimestamp(mTexture.getTimestamp())
-                    .build());
+            mCallback.onRawCameraFrame(frame);
         }
 
     }

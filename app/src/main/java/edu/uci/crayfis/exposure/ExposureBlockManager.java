@@ -8,11 +8,10 @@ import android.support.annotation.NonNull;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.calibration.L1Calibrator;
 import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
@@ -58,6 +57,10 @@ public final class ExposureBlockManager {
 
         @Override
         public void onFinish() {
+            if(!CONFIG.getTriggerLock()) {
+                // re-evaluate thresholds for new XB
+                L1Calibrator.getInstance().updateThresholds();
+            }
             newExposureBlock(CFApplication.State.DATA);
         }
     };

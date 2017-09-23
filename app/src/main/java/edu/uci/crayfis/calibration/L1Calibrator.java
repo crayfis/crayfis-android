@@ -1,6 +1,9 @@
 package edu.uci.crayfis.calibration;
 
+import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.RawCameraFrame;
+import edu.uci.crayfis.util.CFLog;
 
 public class L1Calibrator {
     private final FrameHistogram maxPixels;
@@ -39,14 +42,23 @@ public class L1Calibrator {
 
     /**
      *  Find an integer L1 threshold s.t. the average L1 rate is less than
-     *  or equal to the specified value.
-     *  @param target_eff The target (maximum) fraction of events passing L1
+     *  or equal to the specified value and write to CFConfig
      */
-    public int findL1Threshold(double target_eff) {
+    public void updateThresholds() {
+
+        // first, find the target L1 efficiency
+        final CFConfig CONFIG = CFConfig.getInstance();
+        double fps = CFCamera.getInstance().getFPS();
+
+        if (fps == 0) {
+            CFLog.w("Warning! Got 0 fps in threshold calculation.");
+        }
+        double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / fps;
+
         Histogram h = maxPixels.getHistogram();
         int[] histValues = h.getValues();
         int nTotal = h.getEntries();
-        int nTarget = (int) (nTotal * target_eff);
+        int nTarget = (int) (nTotal * targetL1Rate);
 
         int thresh;
 
@@ -58,7 +70,16 @@ public class L1Calibrator {
             }
         }
 
-        return thresh;
+        CFLog.i("Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + thresh + "}");
+
+        CONFIG.setL1Threshold(thresh);
+        if (thresh > 2) {
+            CONFIG.setL2Threshold(thresh - 1);
+        } else {
+            // Okay, if we're getting this low, we shouldn't try to
+            // set the L2thresh any lower, else event frames will be huge.
+            CONFIG.setL2Threshold(thresh);
+        }
     }
 
     public void resize(int n) {

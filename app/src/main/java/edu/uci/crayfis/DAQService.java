@@ -50,7 +50,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication mApplication;
-    private String upload_url;
 
     private NotificationCompat.Builder mNotificationBuilder;
     private final int FOREGROUND_ID = 1;
@@ -76,19 +75,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             }
         }
 
-
-        String server_address = context.getString(R.string.server_address);
-        String server_port = context.getString(R.string.server_port);
-        String upload_uri = context.getString(R.string.upload_uri);
-        boolean force_https = context.getResources().getBoolean(R.bool.force_https);
-        String upload_proto;
-        if (force_https) {
-            upload_proto = "https://";
-        } else {
-            upload_proto = "http://";
-        }
-        upload_url = upload_proto + server_address+":"+server_port+upload_uri;
-
         // State changes
 
         mBroadcastManager = LocalBroadcastManager.getInstance(context);
@@ -99,13 +85,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         mL1Processor = new L1Processor(mApplication);
         mPreCal = PreCalibrator.getInstance(context);
+        L1cal = L1Calibrator.getInstance();
 
-        if (L1cal == null) {
-            L1cal = L1Calibrator.getInstance();
-        }
-        if (frame_times == null) {
-            frame_times = new FrameHistory<>(100);
-        }
 
         xbManager = ExposureBlockManager.getInstance(this);
 
@@ -191,7 +172,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         public void onReceive(final Context context, final Intent intent) {
             final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
-            CFLog.d(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
+            CFLog.i(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
             switch(current) {
                 case STABILIZATION:
@@ -302,7 +283,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             case STABILIZATION:
             case PRECALIBRATION:
                 L1cal.clear();
-                frame_times.clear();
                 CFApplication.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
@@ -356,7 +336,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 break;
             */
             case CALIBRATION:
-                int new_thresh = calculateL1Threshold();
+                L1cal.updateThresholds();
+
                 // build the calibration result object
                 DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
 
@@ -365,23 +346,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 }
 
                 // and commit it to the output stream
-                CFLog.i("DAQActivity Committing new calibration result.");
+                CFLog.i("DAQService Committing new calibration result.");
                 UploadExposureService.submitCalibrationResult(this, cal.build());
-
-                // update the thresholds
-                CFLog.i("DAQActivity Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + new_thresh + "}");
-                CONFIG.setL1Threshold(new_thresh);
-
-                // FIXME: we should have a better calibration for L2 threshold.
-                // For now, we choose it to be just below L1thresh.
-                final int l1Threshold = CONFIG.getL1Threshold();
-                if (l1Threshold > 2) {
-                    CONFIG.setL2Threshold(l1Threshold - 1);
-                } else {
-                    // Okay, if we're getting this low, we shouldn't try to
-                    // set the L2thresh any lower, else event frames will be huge.
-                    CONFIG.setL2Threshold(l1Threshold);
-                }
 
                 // Finally, set the state and start a new xb
                 xbManager.newExposureBlock(CFApplication.State.DATA);
@@ -476,17 +442,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     private L1Calibrator L1cal;
     private PreCalibrator mPreCal;
 
-    private FrameHistory<Long> frame_times;
-    private double target_L1_eff;
 
     // L1 hit threshold
     long starttime;
-
-    // number of frames to wait between fps updates
-    public final int fps_update_interval = 20;
-
-    // store value of most recently calculated FPS
-    private double last_fps = 0;
 
     private Context context;
 
@@ -502,16 +460,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 return;
             }
 
-            // track the acquisition times for FPS calculation
-            synchronized(frame_times) {
-                frame_times.addValue(frame.getAcquiredTimeNano());
-            }
-            // update the FPS and Calibration calculation periodically
-            if (mL1Processor.mL1Count % fps_update_interval == 0 && !CONFIG.getTriggerLock()
-                    && frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
-                updateCalibration();
-            }
-
             // If we made it here, we can submit the XB to the L1Processor.
             // It will pop the assigned frame from the XB's internal list, and will also handle
             // recycling the buffers.
@@ -521,56 +469,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             // don't crash
         }
     }
-
-    private double updateFPS() {
-        long now = System.nanoTime() - CFApplication.getStartTimeNano();
-        if (frame_times != null) {
-            synchronized(frame_times) {
-                int nframes = frame_times.size();
-                if (nframes>0) {
-                    last_fps = ((double) nframes) / (now - frame_times.getOldest()) * 1000000000L;
-                }
-                return last_fps;
-            }
-        }
-        return 0.0;
-    }
-
-    private void updateCalibration() {
-        int new_l1 = calculateL1Threshold();
-        int new_l2 = new_l1 - 1;
-        if (new_l2 < 2) {
-            new_l2 = 2;
-        }
-
-        if (new_l1 != CONFIG.getL1Threshold()) {
-            // the L1 threshold is drifting! set the new threshold and trigger a new XB.
-            CFLog.i("Now resetting thresholds, L1=" + new_l1 + ", L2=" + new_l2);
-            CONFIG.setL1Threshold(new_l1);
-            CONFIG.setL2Threshold(new_l2);
-
-            CFLog.i("Triggering new XB.");
-            //xbManager.newExposureBlock();
-            xbManager.abortExposureBlock();
-        }
-    }
-
-    public double getFPS() {
-        return last_fps;
-    }
-
-    public int calculateL1Threshold() {
-        double fps = updateFPS();
-        if (fps == 0) {
-            CFLog.w("Warning! Got 0 fps in threshold calculation.");
-        }
-        target_L1_eff = ((double) CONFIG.getTargetEventsPerMinute()) / 60.0 / getFPS();
-        return L1cal.findL1Threshold(target_L1_eff);
-    }
-
-
-
-
 
 
 
@@ -617,11 +515,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             batteryPct = level / (float) scale;
             // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
-            // update new frames
-            mCFCamera.getFrameBuilder().setBatteryTemp(newTemp);
-            // update new exposure blocks
-            CFApplication.setBatteryTemp(newTemp);
-            CFLog.d("Temperature change: " + batteryTemp + "->" + newTemp);
+
             if (batteryOverheated) {
                 // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
                 batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
@@ -629,7 +523,14 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             } else if (batteryPct < battery_start_threshold) {
                 fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
             }
-            batteryTemp = newTemp;
+            if(batteryTemp != newTemp) {
+                CFLog.i("Temperature change: " + batteryTemp + "->" + newTemp);
+                batteryTemp = newTemp;
+                // update new frames
+                mCFCamera.getFrameBuilder().setBatteryTemp(newTemp);
+                // update new exposure blocks
+                CFApplication.setBatteryTemp(newTemp);
+            }
 
             // go into idle mode if necessary
             if (mApplication.getApplicationState() != edu.uci.crayfis.CFApplication.State.IDLE) {
@@ -695,9 +596,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         public String getDevText() {
 
-            if(mApplication.getApplicationState() != CFApplication.State.DATA) {
-                updateFPS();
-            }
+            double lastFPS = mCFCamera.getFPS();
+            double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / lastFPS;
 
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
@@ -705,7 +605,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                     + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
                     + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
-                    + "fps="+String.format("%1.2f",last_fps)+" target eff="+String.format("%1.2f",target_L1_eff)+"\n"
+                    + "fps="+String.format("%1.2f",lastFPS)+" target L1 rate="+String.format("%1.2f",targetL1Rate)+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", batteryTemp/10.) + "C from "
                     +((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
@@ -716,8 +616,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             if(xb != null) {
                 devtxt += "xb avg: " + String.format("%1.4f", xb.getPixAverage()) + " max: " + String.format("%1.2f", xb.getPixMax()) + "\n";
             }
-            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n"
-                    + "Upload server = " + upload_url + "\n";
+            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n";
             return devtxt;
 
         }
