@@ -1,7 +1,7 @@
 package edu.uci.crayfis.trigger;
 
 import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
 import edu.uci.crayfis.util.CFLog;
@@ -40,10 +40,17 @@ class L1Task implements Runnable {
     protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
-            mApplication.changeCamera();
+            CFCamera.getInstance().changeCameraFrom(mFrame.getCameraId());
             return true;
-        } else if (mApplication.getApplicationState() != CFApplication.State.STABILIZATION) {
-            mL1Processor.mL1Cal.addFrame(mFrame);
+        }
+        return false;
+    }
+
+    protected boolean processPreCalibration() {
+
+        if(mL1Processor.mPreCal.addFrame(mFrame)) {
+            mApplication.setNewestPrecalUUID();
+            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
 
         return false;
@@ -52,7 +59,8 @@ class L1Task implements Runnable {
     protected boolean processCalibration() {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-        long count = ++mExposureBlock.calibration_count;
+        long count = mExposureBlock.count.incrementAndGet();
+        mL1Processor.mL1Cal.addFrame(mFrame);
 
         if (count == mL1Processor.CONFIG.getCalibrationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.DATA);
@@ -63,7 +71,7 @@ class L1Task implements Runnable {
 
     protected boolean processStabilization() {
         // If we're in stabilization mode, just drop frames until we've skipped enough
-        long count = ++mExposureBlock.stabilization_count;
+        long count = mExposureBlock.count.incrementAndGet();
         if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
@@ -78,6 +86,7 @@ class L1Task implements Runnable {
 
     protected boolean processData() {
 
+        mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
 
         // check if we pass the L1 threshold
@@ -120,10 +129,14 @@ class L1Task implements Runnable {
     }
 
     private void processFrame() {
+
         if (processInitial()) { return; }
 
         boolean stopProcessing;
         switch (mExposureBlock.daq_state) {
+            case PRECALIBRATION:
+                stopProcessing = processPreCalibration();
+                break;
             case CALIBRATION:
                 stopProcessing = processCalibration();
                 break;
@@ -151,6 +164,7 @@ class L1Task implements Runnable {
 
     @Override
     public void run() {
+
         ++mL1Processor.mL1Count;
 
         processFrame();

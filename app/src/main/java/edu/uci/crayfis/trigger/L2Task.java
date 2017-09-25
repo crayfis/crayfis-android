@@ -12,14 +12,11 @@ import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 
 import edu.uci.crayfis.CFApplication;
-import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
 import edu.uci.crayfis.R;
 import edu.uci.crayfis.camera.RawCameraFrame;
@@ -34,7 +31,6 @@ import edu.uci.crayfis.util.CFLog;
  */
 public class L2Task implements Runnable {
 
-    private static final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication mApplication;
 
     public static class Config extends L2Config {
@@ -95,6 +91,7 @@ public class L2Task implements Runnable {
         public long time;
         public long time_nano;
         public long time_ntp;
+        public long time_target;
         public int batteryTemp;
         public Location location;
         public float[] orientation;
@@ -118,6 +115,7 @@ public class L2Task implements Runnable {
             time = parcel.readLong();
             time_nano = parcel.readLong();
             time_ntp = parcel.readLong();
+            time_target = parcel.readLong();
             batteryTemp = parcel.readInt();
             location = parcel.readParcelable(Location.class.getClassLoader());
             orientation = parcel.createFloatArray();
@@ -136,6 +134,7 @@ public class L2Task implements Runnable {
             buf.setTimestamp(time);
             buf.setTimestampNano(time_nano);
             buf.setTimestampNtp(time_ntp);
+            buf.setTimestampTarget(time_target);
             buf.setPressure(pressure);
             buf.setBatteryTemp(batteryTemp);
             buf.setGpsLat(location.getLatitude());
@@ -178,6 +177,7 @@ public class L2Task implements Runnable {
             dest.writeLong(time);
             dest.writeLong(time_nano);
             dest.writeLong(time_ntp);
+            dest.writeLong(time_target);
             dest.writeInt(batteryTemp);
             dest.writeParcelable(location, flags);
             dest.writeFloatArray(orientation);
@@ -205,7 +205,7 @@ public class L2Task implements Runnable {
 
     public static class RecoPixel implements Parcelable {
         public int x, y;
-        public int val;
+        public int val, adjusted_val;
         public float avg_3, avg_5;
         public int near_max;
 
@@ -214,6 +214,7 @@ public class L2Task implements Runnable {
             buf.setX(x);
             buf.setY(y);
             buf.setVal(val);
+            buf.setAdjustedVal(adjusted_val);
             buf.setAvg3(avg_3);
             buf.setAvg5(avg_5);
             buf.setNearMax(near_max);
@@ -229,6 +230,7 @@ public class L2Task implements Runnable {
             x = parcel.readInt();
             y = parcel.readInt();
             val  = parcel.readInt();
+            adjusted_val = parcel.readInt();
             avg_3 = parcel.readFloat();
             avg_5 = parcel.readFloat();
             near_max = parcel.readInt();
@@ -244,6 +246,7 @@ public class L2Task implements Runnable {
             dest.writeInt(x);
             dest.writeInt(y);
             dest.writeInt(val);
+            dest.writeInt(adjusted_val);
             dest.writeFloat(avg_3);
             dest.writeFloat(avg_5);
             dest.writeInt(near_max);
@@ -271,6 +274,7 @@ public class L2Task implements Runnable {
         event.time = mFrame.getAcquiredTime();
         event.time_nano = mFrame.getAcquiredTimeNano();
         event.time_ntp = mFrame.getAcquiredTimeNTP();
+        event.time_target = mFrame.getTimestamp();
         event.location = mFrame.getLocation();
         event.orientation = mFrame.getOrientation();
         event.pressure = mFrame.getPressure();
@@ -307,17 +311,21 @@ public class L2Task implements Runnable {
         Imgproc.threshold(grayMat, threshMat, xb.L2_threshold, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
+
         long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
 
         for(int i=0; i<pixN; i++) {
+
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = (int) grayMat.get(iy, ix)[0];
+            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
+            int adjustedVal = (int) grayMat.get(iy, ix)[0];
+            CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
             RecoPixel p;
 
-            L2Processor.histL2Pixels.fill(val);
+            L2Processor.histL2Pixels.fill(adjustedVal);
             try {
                 p = new RecoPixel();
             } catch (OutOfMemoryError e) {
@@ -326,10 +334,10 @@ public class L2Task implements Runnable {
                 continue;
             }
 
-            // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+RawCameraFrame.BORDER;
-            p.y = iy+RawCameraFrame.BORDER;
+            p.x = ix;
+            p.y = iy;
             p.val = val;
+            p.adjusted_val = adjustedVal;
 
             Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
                     Math.max(ix-1,0), Math.min(ix+2,width));

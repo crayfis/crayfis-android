@@ -2,7 +2,7 @@ package edu.uci.crayfis.exposure;
 
 import java.util.ArrayList;
 import android.content.Context;
-import android.location.Location;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
@@ -11,6 +11,8 @@ import java.util.LinkedList;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
+import edu.uci.crayfis.calibration.L1Calibrator;
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.util.CFLog;
 
@@ -46,6 +48,23 @@ public final class ExposureBlockManager {
 
     private long safe_time = 0;
 
+    // timer for creating new DATA blocks
+    private final CountDownTimer mXBExpirationTimer = new CountDownTimer(
+            CONFIG.getExposureBlockPeriod()*1000L, 1000L) {
+        @Override
+        public void onTick(long millisUntilFinished) {
+        }
+
+        @Override
+        public void onFinish() {
+            if(!CONFIG.getTriggerLock()) {
+                // re-evaluate thresholds for new XB
+                L1Calibrator.getInstance().updateThresholds();
+            }
+            newExposureBlock(CFApplication.State.DATA);
+        }
+    };
+
     private static ExposureBlockManager sInstance;
 
     /**
@@ -77,21 +96,14 @@ public final class ExposureBlockManager {
             newExposureBlock(app_state);
         }
 
-        if ((app_state == CFApplication.State.CALIBRATION) && (current_xb.daq_state == CFApplication.State.CALIBRATION)) {
-            // if we are in calibration mode, keep the XB running until calibration is complete.
-            return current_xb;
-        } else {
-            // otherwise, check and see whether this XB is too old
-            if (current_xb.nanoAge() > ((long) CONFIG.getExposureBlockPeriod() * 1000000000L)) {
-                newExposureBlock(app_state);
-            }
-
-            return current_xb;
-        }
+        return current_xb;
     }
 
     public synchronized void newExposureBlock(CFApplication.State state) {
-        if(CFApplication.getCameraSize() == null) {
+
+        CFCamera camera = CFCamera.getInstance();
+
+        if(camera.getResX() == 0) {
             // camera error -- don't crash
             return;
         }
@@ -101,17 +113,29 @@ public final class ExposureBlockManager {
             retireExposureBlock(current_xb);
         }
 
+        int cameraId = camera.getCameraId();
+
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
+                cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
-                new Location(CFApplication.getLastKnownLocation()),
+                camera.getLastKnownLocation(),
                 CFApplication.getBatteryTemp(),
-                state, APPLICATION.getCameraSize());
+                state, camera.getResX(), camera.getResY());
+
+        // start assigning frames to new xb
+        camera.getFrameBuilder().setExposureBlock(current_xb);
 
         mTotalXBs++;
+
+        // set a timer for when this XB expires, if we are in DATA mode
+        mXBExpirationTimer.cancel();
+        if(current_xb.daq_state == CFApplication.State.DATA) {
+            mXBExpirationTimer.start();
+        }
 
         scheduleFlush();
     }
@@ -221,5 +245,12 @@ public final class ExposureBlockManager {
 
     public int getCommittedXBs() {
         return mCommittedXBs;
+    }
+
+    /**
+     * Make sure we create a new instance in future runs
+     */
+    public void destroy() {
+        sInstance = null;
     }
 }

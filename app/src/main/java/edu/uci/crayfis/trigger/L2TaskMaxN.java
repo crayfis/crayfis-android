@@ -7,7 +7,6 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 
 import edu.uci.crayfis.camera.RawCameraFrame;
 import edu.uci.crayfis.exposure.ExposureBlock;
@@ -97,11 +96,12 @@ public class L2TaskMaxN extends L2Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = (int) grayMat.get(iy, ix)[0];
+            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
+            int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
             RecoPixel p;
 
-            L2Processor.histL2Pixels.fill(val);
+            L2Processor.histL2Pixels.fill(adjustedVal);
             try {
                 p = new RecoPixel();
             } catch (OutOfMemoryError e) {
@@ -110,10 +110,11 @@ public class L2TaskMaxN extends L2Task {
                 continue;
             }
 
-            // record the coordinates of the frame, not of the sliced Mat we used
-            p.x = ix+RawCameraFrame.BORDER;
-            p.y = iy+RawCameraFrame.BORDER;
+            p.x = ix;
+            p.y = iy;
             p.val = val;
+            p.adjusted_val = adjustedVal;
+
 
             //
             Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),

@@ -22,6 +22,7 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -38,6 +39,7 @@ import android.widget.TextView;
 
 import org.opencv.android.OpenCVLoader;
 
+import edu.uci.crayfis.server.UploadExposureService;
 import edu.uci.crayfis.usernotif.UserNotificationActivity;
 import edu.uci.crayfis.util.CFLog;
 
@@ -52,8 +54,9 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
+    private static final int REQUEST_CODE_PERMISSIONS = 3;
 
-    public static final String[] permissions = {
+    public static String[] permissions = {
         Manifest.permission.CAMERA,
         Manifest.permission.ACCESS_FINE_LOCATION
     };
@@ -69,14 +72,27 @@ public class MainActivity extends Activity  {
 	}
 
 	@Override
-	public void onStart() {
-		super.onStart();
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(permissions, 0);
+        try {
+            build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
+        }
+        catch (NameNotFoundException ex) {
+            CFLog.w("MainActivity: Could not find build version!");
+        }
+
+        //Pull the existing shared preferences and set editor
+        SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        boolean firstRun = sharedprefs.getBoolean("firstRun", true);
+        if (firstRun) {
+            final Intent intent = new Intent(this, UserNotificationActivity.class);
+            intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
+            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
+            startActivityForResult(intent, REQUEST_CODE_WELCOME);
         } else {
-            // no need to ask for permissions here
-            startDAQ();
+            checkPermissions();
         }
 	}
 
@@ -95,104 +111,117 @@ public class MainActivity extends Activity  {
                     intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
                     startActivityForResult(intent, REQUEST_CODE_HOW_TO);
                     break;
-                default:
+                case REQUEST_CODE_HOW_TO:
                     //This is so that if they have entered in an invalid user ID before, but
                     //then just decide to run it locally, it will reset the userID to empty
                     SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     final SharedPreferences.Editor editor = sharedprefs.edit();
-                    editor.putBoolean("firstRun", false);
-                    editor.commit();
+                    editor.putBoolean("firstRun", false)
+                            .commit();
 
                     // now start running
-                    intent = new Intent(this, DAQActivity.class);
-                    startActivity(intent);
-                    finish();
+                    checkPermissions();
             }
 		}
 	}
+
+    /**
+     *  Request relevant permissions if not already enabled
+     */
+    private void checkPermissions() {
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissions(this)) {
+            requestPermissions(permissions, REQUEST_CODE_PERMISSIONS);
+        } else {
+            // ready to start DAQActivity
+            Intent intent = new Intent(this, DAQActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
 
 	@Override
     @TargetApi(23)
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        CFLog.d("onRequestPermissionsResult()");
+        // loop through requested permissions and see if any were denied
+        for(String permission: permissions) {
+            if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
+                // notify the user that we need permissions and try again
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
-        boolean permissionError = checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                || checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED;
-
-        boolean writeError = !Settings.System.canWrite(this);
-
-        if(!(permissionError || writeError)) {
-            startDAQ();
-        } else {
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-
-            if (permissionError) {
-                builder.setMessage(R.string.permission_error)
+                builder.setTitle(R.string.permission_error_title)
+                        .setCancelable(false)
                         .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                requestPermissions(MainActivity.permissions, 0);
-                            }
-                        })
-                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
+                                requestPermissions(MainActivity.permissions, REQUEST_CODE_PERMISSIONS);
                             }
                         });
 
-            } else {
-                builder.setMessage(R.string.write_settings_error)
-                        .setPositiveButton(R.string.permission_yes, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-                                intent.setData(Uri.parse("package:" +getPackageName()))
-                                        .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                startActivity(intent);
-                            }
-                        })
-                        .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                finish();
-                            }
-                        });
+                // see if we absolutely need the permission
+                if(!permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || UploadExposureService.IS_PUBLIC) {
+
+                    builder.setMessage(R.string.permission_error)
+                            .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            finish();
+                        }
+                    });
+                } else {
+                    // if it's a problem, we can shut off the gallery
+                    builder.setMessage(R.string.gallery_dcim_error)
+                            .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+                                            .edit()
+                                            .putBoolean(getString(R.string.prefEnableGallery), false)
+                                            .apply();
+                                    startActivity(new Intent(MainActivity.this, DAQActivity.class));
+                                    finish();
+                                }
+                            });
+                }
+
+                builder.show();
+                return;
             }
-
-            builder.setTitle(R.string.permission_error_title)
-                    .setCancelable(false)
-                    .show();
         }
+
+        // if all permissions are granted, we start data-taking
+        startActivity(new Intent(this, DAQActivity.class));
+        finish();
+
     }
 
-    private void startDAQ() {
-        try {
-            build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
+    /**
+     * Checks whether CRAYFIS can run given the currently allotted permissions
+     *
+     * @return true if all appropriate permissions have been granted
+     */
+    public static boolean hasPermissions(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        if(UploadExposureService.IS_PUBLIC
+                || prefs.getBoolean(context.getString(R.string.prefEnableGallery), false)) {
+            permissions = new String[] {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
+        } else {
+            permissions = new String[] {
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+            };
         }
-        catch (NameNotFoundException ex) {
-            CFLog.w("MainActivity: Could not find build version!");
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            for (String p : permissions) {
+                if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
         }
-
-        //Pull the existing shared preferences and set editor
-        SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean firstRun = sharedprefs.getBoolean("firstRun", true);
-        if (firstRun) {
-            final Intent intent = new Intent(this, UserNotificationActivity.class);
-            intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
-            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
-            startActivityForResult(intent, REQUEST_CODE_WELCOME);
-        }
-        else {
-            //See if we already have user ID saved
-            //Because then no need to login again
-            //if((ID != "") && !badID) {
-            Intent intent = new Intent(MainActivity.this, DAQActivity.class);
-            startActivity(intent);
-            //and quit
-            MainActivity.this.finish();
-        }
+        return true;
     }
+
 }

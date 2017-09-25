@@ -13,7 +13,7 @@ import java.util.TimerTask;
 /**
  * Base fragment that handles UI updates.
  */
-public class CFFragment extends Fragment {
+public abstract class CFFragment extends Fragment {
 
     private static final long UI_UPDATE_TICK_MS = 1000L;
 

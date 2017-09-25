@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -12,6 +13,7 @@ import com.google.protobuf.AbstractMessage;
 import java.io.File;
 import java.io.FileOutputStream;
 
+import edu.uci.crayfis.BuildConfig;
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.DataProtos;
@@ -43,6 +45,11 @@ public class UploadExposureService extends IntentService {
     public static final String RUN_CONFIG = "run_config";
 
     /**
+     * Key for storing a serializable {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     */
+    public static final String PRECALIBRATION_RESULT = "precalibration_result";
+
+    /**
      * Key for storing a serializable {@link edu.uci.crayfis.DataProtos.CalibrationResult}.
      */
     public static final String CALIBRATION_RESULT = "calibration_result";
@@ -67,7 +74,7 @@ public class UploadExposureService extends IntentService {
     private static boolean sValidId = true;
     private static boolean sStartUploading;
 
-    private static final boolean IS_PUBLIC = false;
+    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
 
     /**
      * Helper for submitting an {@link edu.uci.crayfis.exposure.ExposureBlock}.
@@ -115,6 +122,22 @@ public class UploadExposureService extends IntentService {
         context.startService(intent);
     }
 
+    /**
+     * Helper for submitting a {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     *
+     * This will create a new Intent and call startService with that intent.
+     *
+     * @param context The context for the intent.
+     * @param preCalibrationResult The {@link edu.uci.crayfis.DataProtos.PreCalibrationResult}.
+     */
+    public static void submitPreCalibrationResult(@NonNull final Context context,
+                                               @NonNull final DataProtos.PreCalibrationResult preCalibrationResult) {
+
+        final Intent intent = new Intent(context, UploadExposureService.class);
+        intent.putExtra(PRECALIBRATION_RESULT, preCalibrationResult);
+        context.startService(intent);
+    }
+
     public UploadExposureService() {
         super("Exposure Uploader");
     }
@@ -133,10 +156,14 @@ public class UploadExposureService extends IntentService {
                 }
                 final AbstractMessage uploadMessage = builder.build();
                 final File file = saveMessageToCache(uploadMessage);
-                if (file != null) {
+                if (file != null && !IS_PUBLIC) {
                     CFLog.d("Queueing upload task");
                     new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
                             execute();
+                } else {
+                    // make sure we save things like precalibration result
+                    CFApplication application = (CFApplication) this.getApplication();
+                    application.savePreferences();
                 }
             }
         }
@@ -172,6 +199,8 @@ public class UploadExposureService extends IntentService {
         } else if (message instanceof DataProtos.CalibrationResult) {
             rtn.addCalibrationResults((DataProtos.CalibrationResult) message);
             // FIXME: This doesn't trigger the run config upload.
+        } else if (message instanceof DataProtos.PreCalibrationResult) {
+            rtn.addPrecalibrationResults((DataProtos.PreCalibrationResult) message);
         }
 
         return rtn;
@@ -179,9 +208,9 @@ public class UploadExposureService extends IntentService {
 
     private void lazyInit() {
         final CFApplication context = (CFApplication) getApplicationContext();
-        if (sAppBuild == null) {
-            sAppBuild = context.getBuildInformation();
-        }
+        // need to see whether this has changed
+        sAppBuild = context.getBuildInformation();
+
         if (sServerInfo == null) {
             sServerInfo = new ServerInfo(context);
         }
@@ -189,22 +218,27 @@ public class UploadExposureService extends IntentService {
 
     @Nullable
     private AbstractMessage getAbstractMessage(@NonNull final Intent intent) {
-        if (intent != null) {
-            final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
-            if (exposureBlock != null) {
-                return exposureBlock.buildProto();
-            }
 
-            final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
-            if (runConfig != null) {
-                return runConfig;
-            }
+        final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
+        if (exposureBlock != null) {
+            return exposureBlock.buildProto();
+        }
 
-            final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
-                    getSerializableExtra(CALIBRATION_RESULT);
-            if (calibrationResult != null) {
-                return calibrationResult;
-            }
+        final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
+        if (runConfig != null) {
+            return runConfig;
+        }
+
+        final AbstractMessage calibrationResult = (DataProtos.CalibrationResult) intent.
+                getSerializableExtra(CALIBRATION_RESULT);
+        if (calibrationResult != null) {
+            return calibrationResult;
+        }
+
+        final AbstractMessage preCalibrationResult = (DataProtos.PreCalibrationResult) intent.
+                getSerializableExtra(PRECALIBRATION_RESULT);
+        if (preCalibrationResult != null) {
+            return preCalibrationResult;
         }
         return null;
     }
@@ -214,15 +248,17 @@ public class UploadExposureService extends IntentService {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
         final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
+        File protofile;
         FileOutputStream outputStream;
 
         try {
             if(IS_PUBLIC) {
                 File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"CRAYFIS");
-                path.mkdirs();
-                File protofile = new File(path, filename);
-                outputStream = new FileOutputStream(protofile);
+                path.mkdir();
+                    protofile = new File(path, filename);
+                    outputStream = new FileOutputStream(protofile);
             } else {
+                protofile = new File(getApplicationContext().getFilesDir(), filename);
                 outputStream = getApplicationContext().openFileOutput(filename, Context.MODE_PRIVATE);
             }
             abstractMessage.writeTo(outputStream);
@@ -234,7 +270,7 @@ public class UploadExposureService extends IntentService {
             return null;
         }
 
-        return new File(getApplicationContext().getFilesDir().toString() + "/" + filename);
+        return protofile;
     }
 
     private String getDataChunkType(final AbstractMessage abstractMessage) {
@@ -247,6 +283,8 @@ public class UploadExposureService extends IntentService {
                 rtn = "Calibration";
             } else if (chunk.getRunConfigsCount() > 0) {
                 rtn = "RunConfig";
+            } else if (chunk.getPrecalibrationResultsCount() > 0) {
+                rtn = "PreCalibration";
             } else if (chunk.getExposureBlocksCount() > 0) {
                 rtn = "Exposure";
             } else {

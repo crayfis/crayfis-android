@@ -4,6 +4,12 @@ import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+
 /**
  * Wrapper class for parsing a server command response.  This uses objects rather than primitives
  * because I'm not sure what the valid value ranges are, 0 may be valid, same with negative numbers.
@@ -13,12 +19,20 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ServerCommand {
 
+    @SerializedName("set_precal") private String[] mPrecalWeights;
+    @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
+    @SerializedName("set_last_precal_time") private long[] mLastPrecalTime;
+    @SerializedName("set_last_precal_res_x") private int[] mLastPrecalResX;
+    @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
     @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
+    @SerializedName("weighting_sample_frames") private Integer mWeightingSampleFrames;
+    @SerializedName("hotcell_sample_frames") private Integer mHotcellSampleFrames;
+    @SerializedName("hotcell_thresh") private Float mHotcellThresh;
     @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
@@ -68,6 +82,21 @@ public class ServerCommand {
         return mAccountName;
     }
 
+    @Nullable
+    public String[] getPrecalWeights() { return mPrecalWeights; }
+
+    @Nullable
+    public List<Set<String>> getHotcells() { return mHotcells; }
+
+    @Nullable
+    public UUID[] getPrecalId() { return mPrecalUUID; }
+
+    @Nullable
+    public long[] getLastPrecalTime() { return mLastPrecalTime; }
+
+    @Nullable
+    public int[] getLastPrecalResX() { return mLastPrecalResX; }
+
     /**
      * Get the L1 threshold.
      *
@@ -106,6 +135,15 @@ public class ServerCommand {
     public Float getEventsPerMinute() {
         return mEventsPerMinute;
     }
+
+    @Nullable
+    public Integer getWeightingSampleFrames() { return mWeightingSampleFrames; }
+
+    @Nullable
+    public Integer getHotcellSampleFrames() { return mHotcellSampleFrames; }
+
+    @Nullable
+    public Float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * Get the calibration sample frames.

@@ -5,13 +5,13 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.2'
+        classpath 'com.android.tools.build:gradle:2.3.3'
     }
 }
 
 android {
     compileSdkVersion 25
-    buildToolsVersion '25.0.2'
+    buildToolsVersion '26.0.1'
 
     defaultConfig {
         minSdkVersion 13

@@ -1,6 +1,5 @@
 package edu.uci.crayfis.exposure;
 
-import android.hardware.Camera;
 import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -9,6 +8,7 @@ import android.support.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.uci.crayfis.CFApplication;
 import edu.uci.crayfis.DataProtos;
@@ -23,6 +23,7 @@ public class ExposureBlock implements Parcelable {
 	public static final String TAG = "ExposureBlock";
 
 	public final UUID run_id;
+    public final UUID precal_id;
 
 	public final AcquisitionTime start_time;
 	public AcquisitionTime end_time;
@@ -56,8 +57,7 @@ public class ExposureBlock implements Parcelable {
 	public final int xbn;
 
 	public final CFApplication.State daq_state;
-    public long calibration_count = 0;
-    public long stabilization_count = 0;
+    public AtomicInteger count = new AtomicInteger();
 
 	private boolean frozen = false;
 	public boolean aborted = false;
@@ -76,16 +76,19 @@ public class ExposureBlock implements Parcelable {
     private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 
     public ExposureBlock(int xbn, UUID run_id,
+                         UUID precal_id,
                          String L1_config,
                          String L2_config,
                          int L1_threshold, int L2_threshold,
                          Location start_loc,
                          int batteryTemp,
-                         CFApplication.State daq_state, Camera.Size sz) {
+                         CFApplication.State daq_state,
+                         int resx, int resy) {
         start_time = new AcquisitionTime();
 
         this.xbn = xbn;
         this.run_id = run_id;
+        this.precal_id = precal_id;
         this.L1_trigger_config = L1Config.makeConfig(L1_config);
         this.L2_trigger_config = L2Config.makeConfig(L2_config);
         this.L1_threshold = L1_threshold;
@@ -93,8 +96,8 @@ public class ExposureBlock implements Parcelable {
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
-        this.res_x = sz.width;
-        this.res_y = sz.height;
+        this.res_x = resx;
+        this.res_y = resy;
 
         frames_dropped = 0;
         L1_processed = L1_pass = L1_skip = 0;
@@ -104,6 +107,7 @@ public class ExposureBlock implements Parcelable {
 
     private ExposureBlock(@NonNull final Parcel parcel) {
         run_id = (UUID) parcel.readSerializable();
+        precal_id = (UUID) parcel.readSerializable();
         start_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         end_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
         start_loc = parcel.readParcelable(Location.class.getClassLoader());
@@ -138,6 +142,7 @@ public class ExposureBlock implements Parcelable {
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeSerializable(run_id);
+        dest.writeSerializable(precal_id);
         dest.writeParcelable(start_time, flags);
         dest.writeParcelable(end_time, flags);
         dest.writeParcelable(start_loc, flags);
@@ -267,37 +272,51 @@ public class ExposureBlock implements Parcelable {
 	// Translate between the internal and external enums
 	private static DataProtos.ExposureBlock.State translateState(CFApplication.State orig) {
 		switch (orig) {
-		case INIT:
-			return DataProtos.ExposureBlock.State.INIT;
-		case CALIBRATION:
-			return DataProtos.ExposureBlock.State.CALIBRATION;
-		case DATA:
-			return DataProtos.ExposureBlock.State.DATA;
-		default:
-			throw new RuntimeException("Unknown state! " + orig.toString());
+		    case INIT:
+			    return DataProtos.ExposureBlock.State.INIT;
+            case PRECALIBRATION:
+                return DataProtos.ExposureBlock.State.PRECALIBRATION;
+            case CALIBRATION:
+			    return DataProtos.ExposureBlock.State.CALIBRATION;
+		    case DATA:
+			    return DataProtos.ExposureBlock.State.DATA;
+		    default:
+			    throw new RuntimeException("Unknown state! " + orig.toString());
 		}
 	}
 	
 	public DataProtos.ExposureBlock buildProto() {
-		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder();
+		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
+                .setDaqState(translateState(daq_state))
+                .setL1Pass((int) L1_pass)
+                .setL1Processed((int) L1_processed)
+                .setL1Skip((int) L1_skip)
+                .setL1Thresh(L1_threshold)
+                .setL1Conf(L1_trigger_config.toString())
 		
-		buf.setDaqState(translateState(daq_state));
-		
-		buf.setL1Pass((int) L1_pass);
-		buf.setL1Processed((int) L1_processed);
-		buf.setL1Skip((int) L1_skip);
-		buf.setL1Thresh(L1_threshold);
-        buf.setL1Conf(L1_trigger_config.toString());
-		
-		buf.setL2Pass((int) L2_pass);
-		buf.setL2Processed((int) L2_processed);
-		buf.setL2Skip((int) L2_skip);
-		buf.setL2Thresh(L2_threshold);
-        buf.setL2Conf(L2_trigger_config.toString());
-		
-		buf.setGpsLat(start_loc.getLatitude());
-		buf.setGpsLon(start_loc.getLongitude());
-        buf.setGpsFixtime(start_loc.getTime());
+		        .setL2Pass((int) L2_pass)
+		        .setL2Processed((int) L2_processed)
+		        .setL2Skip((int) L2_skip)
+		        .setL2Thresh(L2_threshold)
+                .setL2Conf(L2_trigger_config.toString())
+
+				.setGpsLat(start_loc.getLatitude())
+		        .setGpsLon(start_loc.getLongitude())
+                .setGpsFixtime(start_loc.getTime())
+
+                .setStartTime(start_time.Sys)
+                .setEndTime(end_time.Sys)
+                .setStartTimeNano(start_time.Nano)
+                .setEndTimeNano(end_time.Nano)
+                .setStartTimeNtp(start_time.NTP)
+                .setEndTimeNtp(end_time.NTP)
+
+                .setRunId(run_id.getLeastSignificantBits())
+
+                .setBatteryTemp(batteryTemp)
+                .setXbn(xbn)
+                .setAborted(aborted);
+
         if (start_loc.hasAccuracy()) {
             buf.setGpsAccuracy(start_loc.getAccuracy());
         } else {
@@ -306,35 +325,24 @@ public class ExposureBlock implements Parcelable {
         if (start_loc.hasAltitude()) {
             buf.setGpsAltitude(start_loc.getAltitude());
         }
-        buf.setBatteryTemp(batteryTemp);
+
 
 		if (res_x > 0 || res_y > 0) {
-			buf.setResX(res_x);
-			buf.setResY(res_y);
+			buf.setResX(res_x).setResY(res_y);
 		}
-
-		buf.setStartTime(start_time.Sys);
-		buf.setEndTime(end_time.Sys);
-
-        buf.setStartTimeNano(start_time.Nano);
-        buf.setEndTimeNano(end_time.Nano);
-
-        buf.setStartTimeNtp(start_time.NTP);
-        buf.setEndTimeNtp(end_time.NTP);
-		
-		buf.setRunId(run_id.getLeastSignificantBits());
 
         if (L1_processed > 0) {
             buf.setBgAvg(total_background / L1_processed);
         }
 
-		buf.setXbn(xbn);
-		
-		buf.setAborted(aborted);
+        // should be null for PRECALIBRATION
+        if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
+            buf.setPrecalId(precal_id.getLeastSignificantBits());
+        }
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.
-		if (daq_state != CFApplication.State.CALIBRATION) {
+		if (daq_state == CFApplication.State.DATA) {
 			for (RecoEvent evt : events) {
                 try {
                     buf.addEvents(evt.buildProto());

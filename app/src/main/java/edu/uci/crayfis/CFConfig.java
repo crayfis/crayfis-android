@@ -1,16 +1,19 @@
 package edu.uci.crayfis;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
+import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import edu.uci.crayfis.camera.ResolutionSpec;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.util.CFLog;
-
-import static edu.uci.crayfis.CFApplication.MODE_FACE_DOWN;
 
 /**
  * Global configuration class.
@@ -21,9 +24,18 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
+    private static final String KEY_WEIGHTS = "precal_weights_";
+    private static final String KEY_HOTCELLS = "hotcells_";
+    private static final String KEY_PRECAL_MOST = "precal_uuid_most_";
+    private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
+    private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
+    private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
     private static final String KEY_L1_THRESHOLD = "L1_thresh";
     private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
+    private static final String KEY_WEIGHTING_FRAMES = "weighting_sample_frames";
+    private static final String KEY_HOTCELL_FRAMES = "hotcell_sample_frames";
+    private static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
     private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_QUAL_BG_AVG = "qual_bg_avg";
@@ -45,16 +57,21 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
+    private final int N_CAMERAS;
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
     private static final int DEFAULT_L2_THRESHOLD = 5;
+    private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
+    private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
+    private static final int DEFAULT_HOTCELL_FRAMES = 10000;
+    private static final float DEFAULT_HOTCELL_THRESH = .0001f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final float DEFAULT_BG_AVG_CUT = 3f;
-    private static final float DEFAULT_BG_VAR_CUT = 5;
+    private static final float DEFAULT_BG_AVG_CUT = 5f;
+    private static final float DEFAULT_BG_VAR_CUT = 30f;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
@@ -67,12 +84,20 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
-    private static final int DEFAULT_CAMERA_SELECT_MODE = MODE_FACE_DOWN;
+    private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
 
     private String mL1Trigger;
     private String mL2Trigger;
+    private List<Set<String>> mHotcells;
+    private String[] mPrecalWeights;
+    private UUID[] mPrecalUUID;
+    private long[] mLastPrecalTime;
+    private int[] mLastPrecalResX;
     private int mL1Threshold;
     private int mL2Threshold;
+    private int mWeightingSampleFrames;
+    private int mHotcellSampleFrames;
+    private float mHotcellThresh;
     private int mCalibrationSampleFrames;
     private float mTargetEventsPerMinute;
     private int mStabilizationSampleFrames;
@@ -95,10 +120,15 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
+        N_CAMERAS = Camera.getNumberOfCameras();
+
         mL1Trigger = DEFAULT_L1_TRIGGER;
         mL2Trigger = DEFAULT_L2_TRIGGER;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
         mL2Threshold = DEFAULT_L2_THRESHOLD;
+        mWeightingSampleFrames = DEFAULT_WEIGHTING_FRAMES;
+        mHotcellSampleFrames = DEFAULT_HOTCELL_FRAMES;
+        mHotcellThresh = DEFAULT_HOTCELL_THRESH;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
         mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
@@ -118,6 +148,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
+
+        mHotcells = new ArrayList<>(N_CAMERAS);
+        for(int i=0; i<N_CAMERAS; i++) {
+            mHotcells.add(new HashSet<String>());
+        }
     }
 
     public String getL1Trigger() {
@@ -126,6 +161,53 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public String getL2Trigger() {
         return mL2Trigger;
+    }
+
+    public String getPrecalWeights(int cameraId) {
+        return mPrecalWeights[cameraId];
+    }
+
+    public void setPrecalWeights(int cameraId, String s) {
+        mPrecalWeights[cameraId] = s;
+    }
+
+    public Set<Integer> getHotcells(int cameraId) {
+        Set<Integer> intSet = new HashSet<>(mHotcells.get(cameraId).size());
+        for(String pos: mHotcells.get(cameraId)) {
+            intSet.add(Integer.parseInt(pos,16));
+        }
+        return intSet;
+    }
+
+    public void setHotcells(int cameraId, Set<Integer> hotcells) {
+        mHotcells.get(cameraId).clear();
+        for(Integer pos: hotcells) {
+            mHotcells.get(cameraId).add(Integer.toHexString(pos));
+        }
+    }
+
+    public UUID getPrecalId(int cameraId) {
+        return mPrecalUUID[cameraId];
+    }
+
+    public void setPrecalId(int cameraId, UUID precalId) {
+        mPrecalUUID[cameraId] = precalId;
+    }
+
+    public long getLastPrecalTime(int cameraId) {
+        return mLastPrecalTime[cameraId];
+    }
+
+    public void setLastPrecalTime(int cameraId, long t) {
+        mLastPrecalTime[cameraId] = t;
+    }
+
+    public int getLastPrecalResX(int cameraId) {
+        return mLastPrecalResX[cameraId];
+    }
+
+    public void setLastPrecalResX(int cameraId, int resX) {
+        mLastPrecalResX[cameraId] = resX;
     }
 
     /**
@@ -163,6 +245,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public void setL2Threshold(int l2Threshold) {
         mL2Threshold = l2Threshold;
     }
+
+    public int getWeightingSampleFrames() {
+        return mWeightingSampleFrames;
+    }
+
+    public int getHotcellSampleFrames() { return mHotcellSampleFrames; }
+
+    public float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * How many frames to sample during calibration.  More frames is longer but gives better
@@ -327,6 +417,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mL2Trigger = sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER);
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
         mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
+        mWeightingSampleFrames = sharedPreferences.getInt(KEY_WEIGHTING_FRAMES, DEFAULT_WEIGHTING_FRAMES);
+        mHotcellSampleFrames = sharedPreferences.getInt(KEY_HOTCELL_FRAMES, DEFAULT_HOTCELL_FRAMES);
+        mHotcellThresh = sharedPreferences.getFloat(KEY_HOTCELL_THRESH, DEFAULT_HOTCELL_THRESH);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
         mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
@@ -348,6 +441,20 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
 
+        mPrecalWeights = new String[N_CAMERAS];
+        mPrecalUUID = new UUID[N_CAMERAS];
+        mLastPrecalTime = new long[N_CAMERAS];
+        mLastPrecalResX = new int[N_CAMERAS];
+        for(int i=0; i<N_CAMERAS; i++) {
+            mPrecalWeights[i] = sharedPreferences.getString(KEY_WEIGHTS + i, null);
+            mHotcells.add(i, sharedPreferences.getStringSet(KEY_HOTCELLS + i, DEFAULT_HOTCELLS));
+            long mostSignificant = sharedPreferences.getLong(KEY_PRECAL_MOST + i, 0L);
+            long leastSignificant = sharedPreferences.getLong(KEY_PRECAL_LEAST + i, 0L);
+            mPrecalUUID[i] = new UUID(mostSignificant, leastSignificant);
+            mLastPrecalTime[i] = sharedPreferences.getLong(KEY_LAST_PRECAL_TIME + i, 0);
+            mLastPrecalResX[i] = sharedPreferences.getInt(KEY_LAST_PRECAL_RES_X + i, -1);
+        }
+
     }
 
     /**
@@ -358,6 +465,21 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
+        if (serverCommand.getPrecalWeights() != null) {
+            mPrecalWeights = serverCommand.getPrecalWeights();
+        }
+        if (serverCommand.getHotcells() != null) {
+            mHotcells = serverCommand.getHotcells();
+        }
+        if (serverCommand.getLastPrecalTime() != null) {
+            mLastPrecalTime = serverCommand.getLastPrecalTime();
+        }
+        if (serverCommand.getLastPrecalResX() != null) {
+            mLastPrecalResX = serverCommand.getLastPrecalResX();
+        }
+        if (serverCommand.getPrecalId() != null) {
+            mPrecalUUID = serverCommand.getPrecalId();
+        }
         if (serverCommand.getL1Threshold() != null) {
             mL1Threshold = serverCommand.getL1Threshold();
         }
@@ -366,6 +488,15 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getEventsPerMinute() != null) {
             mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
+        }
+        if (serverCommand.getWeightingSampleFrames() != null) {
+            mWeightingSampleFrames = serverCommand.getWeightingSampleFrames();
+        }
+        if (serverCommand.getHotcellSampleFrames() != null) {
+            mHotcellSampleFrames = serverCommand.getHotcellSampleFrames();
+        }
+        if (serverCommand.getHotcellThresh() != null) {
+            mHotcellThresh = serverCommand.getHotcellThresh();
         }
         if (serverCommand.getCalibrationSampleFrames() != null) {
             mCalibrationSampleFrames = serverCommand.getCalibrationSampleFrames();
@@ -399,7 +530,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getAccountName() != null) {
             mAccountName = serverCommand.getAccountName();
-
         }
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
@@ -425,11 +555,24 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
-        sharedPreferences.edit()
-                .putString(KEY_L1_TRIGGER, mL1Trigger)
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        for(int i=0; i<N_CAMERAS; i++) {
+            editor.putString(KEY_WEIGHTS + i, mPrecalWeights[i])
+                    .putStringSet(KEY_HOTCELLS + i, mHotcells.get(i))
+                    .putLong(KEY_PRECAL_MOST + i, mPrecalUUID[i].getMostSignificantBits())
+                    .putLong(KEY_PRECAL_LEAST + i, mPrecalUUID[i].getLeastSignificantBits())
+                    .putLong(KEY_LAST_PRECAL_TIME + i, mLastPrecalTime[i])
+                    .putInt(KEY_LAST_PRECAL_RES_X + i, mLastPrecalResX[i]);
+        }
+
+        editor.putString(KEY_L1_TRIGGER, mL1Trigger)
                 .putString(KEY_L2_TRIGGER, mL2Trigger)
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)
+                .putInt(KEY_WEIGHTING_FRAMES, mWeightingSampleFrames)
+                .putInt(KEY_HOTCELL_FRAMES, mHotcellSampleFrames)
+                .putFloat(KEY_HOTCELL_THRESH, mHotcellThresh)
                 .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
                 .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)

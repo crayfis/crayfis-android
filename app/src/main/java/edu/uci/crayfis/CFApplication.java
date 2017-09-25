@@ -1,30 +1,25 @@
 package edu.uci.crayfis;
 
-import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.hardware.Camera;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.BatteryManager;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
+import android.renderscript.RenderScript;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
@@ -32,17 +27,13 @@ import com.crashlytics.android.Crashlytics;
 import java.util.Calendar;
 import java.util.UUID;
 
-import edu.uci.crayfis.camera.CFSensor;
+import edu.uci.crayfis.camera.CFCamera;
 import edu.uci.crayfis.server.ServerCommand;
 import edu.uci.crayfis.server.UploadExposureService;
-import edu.uci.crayfis.ui.DataCollectionFragment;
+import edu.uci.crayfis.trigger.L1Processor;
+import edu.uci.crayfis.trigger.L2Processor;
 import edu.uci.crayfis.util.CFLog;
 
-import static edu.uci.crayfis.CFApplication.State.CALIBRATION;
-import static edu.uci.crayfis.CFApplication.State.DATA;
-import static edu.uci.crayfis.CFApplication.State.IDLE;
-import static edu.uci.crayfis.CFApplication.State.RECONFIGURE;
-import static edu.uci.crayfis.CFApplication.State.STABILIZATION;
 
 /**
  * Extension of {@link android.app.Application}.
@@ -52,9 +43,6 @@ public class CFApplication extends Application {
     public static final String ACTION_STATE_CHANGE = "state_change";
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
-
-    public static final String ACTION_CAMERA_CHANGE = "camera_change";
-    public static final String EXTRA_NEW_CAMERA = "new_camera";
 
     public static final String ACTION_FATAL_ERROR = "fatal_error";
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
@@ -82,9 +70,8 @@ public class CFApplication extends Application {
 
             if(consecutiveIdles >= 3) {
                 handleUnresponsive();
-            }
-
-            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN || CFSensor.isFlat()) {
+            } else if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
+                    || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
@@ -96,18 +83,16 @@ public class CFApplication extends Application {
     };
 
     //private static final String SHARED_PREFS_NAME = "global";
-    private static Location mLastKnownLocation;
     private static long mStartTimeNano;
-    private static Camera.Parameters mParams;
-    private static Camera.Size mCameraSize;
     private static int mBatteryTemp;
 
     public static int badFlatEvents = 0;
 
     private State mApplicationState;
-    private int mCameraId = -1;
 
     private AppBuild mAppBuild;
+
+    private static RenderScript mRS;
 
     @Override
     public void onCreate() {
@@ -129,6 +114,7 @@ public class CFApplication extends Application {
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
         startService(intent);
+        mRS = RenderScript.create(this);
     }
 
     /**
@@ -174,61 +160,11 @@ public class CFApplication extends Application {
         final State currentState = mApplicationState;
         mApplicationState = applicationState;
 
-        final Intent intent = new Intent(ACTION_STATE_CHANGE);
-        intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
-        intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
-        if(applicationState == IDLE || applicationState == STABILIZATION) {
-            changeCamera();
-        }
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-    }
-
-    public int getCameraId() { return mCameraId; }
-
-    public void changeCamera() {
-        int nextId = -1;
-        switch(mApplicationState) {
-            case RECONFIGURE:
-                nextId = mCameraId;
-            case STABILIZATION:
-                // switch cameras and try again
-                switch(CFConfig.getInstance().getCameraSelectMode()) {
-                    case MODE_FACE_DOWN:
-                    case MODE_AUTO_DETECT:
-                        nextId = mCameraId + 1;
-                        if(nextId >= Camera.getNumberOfCameras()) {
-                            nextId = -1;
-                        }
-                        break;
-                    case MODE_BACK_LOCK:
-                        nextId = 0;
-                        break;
-                    case MODE_FRONT_LOCK:
-                        nextId = 1;
-                }
-                break;
-            case CALIBRATION:
-            case DATA:
-            case IDLE:
-                // take a break for a while
-                nextId = -1;
-        }
-
-        if(nextId != mCameraId || mApplicationState == RECONFIGURE || mCameraId == -1) {
-            CFLog.d("cameraId:" + mCameraId + " -> "+ nextId);
-            mCameraId = nextId;
-            if(nextId == -1 && mApplicationState != IDLE ) {
-
-                setApplicationState(IDLE);
-                DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
-                mWaitingForStabilization = true;
-                mStabilizationTimer.start();
-            }
-
-            final Intent intent = new Intent(ACTION_CAMERA_CHANGE);
-            intent.putExtra(EXTRA_NEW_CAMERA, mCameraId);
+        if(applicationState != State.INIT) {
+            final Intent intent = new Intent(ACTION_STATE_CHANGE);
+            intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
+            intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-
         }
     }
 
@@ -243,7 +179,7 @@ public class CFApplication extends Application {
 
         if(!isCharging || !inAutostartWindow()) {
             stopService(new Intent(this, DAQService.class));
-            userErrorMessage(getString(R.string.notification_quit), true);
+            finishAndQuit(R.string.quit_no_cameras);
         }
     }
 
@@ -263,29 +199,53 @@ public class CFApplication extends Application {
         return b1 + b2 + b3 >= 2;
     }
 
-    public void userErrorMessage(String mess, boolean fatal) {
+    public void userErrorMessage(@StringRes int id, boolean quit) {
+        userErrorMessage(id, quit, false);
+    }
 
-        if(fatal) {
-            CFLog.e("Error: " + mess);
-            Notification notification = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_just_a)
-                    .setContentTitle(getString(R.string.notification_title))
-                    .setContentText(mess)
-                    .setContentIntent(null)
-                    .build();
+    public void finishAndQuit(@StringRes int id) {
+        userErrorMessage(id, true, true);
+    }
 
-            NotificationManager notificationManager
-                    = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(errorId, notification);
-            errorId++;
+    private void userErrorMessage(@StringRes int id, boolean quit, boolean safeExit) {
+
+        String dialogMessage = getString(id);
+        if(quit) {
+            CFLog.e("Error: " + dialogMessage);
+            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+
+            if(sharedPrefs.getBoolean(getString(R.string.pref_enable_notif), true)) {
+
+                String title;
+                String text;
+                if(safeExit) {
+                    title = getString(R.string.notification_quit);
+                    text = String.format(getString(R.string.notification_stats),
+                            L1Processor.mL1CountData, L2Processor.mL2Count);
+                } else {
+                    title = getString(R.string.notification_error);
+                    text = dialogMessage;
+                }
+                Notification notification = new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_just_a)
+                        .setContentTitle(title)
+                        .setContentText(text)
+                        .setContentIntent(null)
+                        .build();
+
+                NotificationManager notificationManager
+                        = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                notificationManager.notify(errorId, notification);
+                errorId++;
+            }
 
             // make sure to kill activity if open
             Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, mess);
+            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
             LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
             stopService(new Intent(this, DAQService.class));
         } else {
-            Toast.makeText(this, mess, Toast.LENGTH_LONG).show();
+            Toast.makeText(this, dialogMessage, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -294,37 +254,22 @@ public class CFApplication extends Application {
      *
      * @return {@link edu.uci.crayfis.CFApplication.AppBuild}
      */
-    public synchronized AppBuild getBuildInformation() {
+    public AppBuild getBuildInformation() {
         if (mAppBuild == null) {
-            try {
-                mAppBuild = new AppBuild(this);
-            } catch (PackageManager.NameNotFoundException e) {
-                // Seriously, this should never happen but does warrant a RuntimeException if it does.
-                Crashlytics.logException(e);
-                throw new RuntimeException(e);
-            }
+            generateAppBuild();
         }
 
         return mAppBuild;
     }
 
-    public static Location getLastKnownLocation() {
-        return mLastKnownLocation;
-    }
-
-    public static void setLastKnownLocation(Location lastKnownLocation) {
-        mLastKnownLocation = lastKnownLocation;
-    }
-
-    public static Camera.Parameters getCameraParams() { return mParams; }
-
-    public static Camera.Size getCameraSize() {
-        return mCameraSize;
-    }
-
-    public static void setCameraParams(Camera.Parameters params) {
-        mParams = params;
-        mCameraSize = params.getPreviewSize();
+    public synchronized void generateAppBuild() {
+        try {
+            mAppBuild = new AppBuild(this);
+        } catch (PackageManager.NameNotFoundException e) {
+            // Seriously, this should never happen but does warrant a RuntimeException if it does.
+            Crashlytics.logException(e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static int getBatteryTemp() {
@@ -337,6 +282,10 @@ public class CFApplication extends Application {
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
+
+    public static RenderScript getRenderScript() {
+        return mRS;
+    }
 
     private boolean useWifiOnly() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -432,6 +381,18 @@ public class CFApplication extends Application {
         }
     }
 
+    public void setNewestPrecalUUID() {
+        final CFConfig CONFIG = CFConfig.getInstance();
+        final CFCamera CAMERA = CFCamera.getInstance();
+        CONFIG.setPrecalId(CAMERA.getCameraId(), mAppBuild.getRunId());
+    }
+
+    public void startStabilizationTimer() {
+        setApplicationState(State.IDLE);
+        mStabilizationTimer.start();
+        mWaitingForStabilization = true;
+    }
+
     public void killTimer() {
         mStabilizationTimer.cancel();
     }
@@ -445,6 +406,7 @@ public class CFApplication extends Application {
      */
     public enum State {
         INIT,
+        PRECALIBRATION,
         CALIBRATION,
         DATA,
         STABILIZATION,

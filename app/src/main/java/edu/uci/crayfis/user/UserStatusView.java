@@ -10,7 +10,7 @@ import android.widget.TextView;
 
 import edu.uci.crayfis.CFConfig;
 import edu.uci.crayfis.R;
-import edu.uci.crayfis.ViewUtil;
+import edu.uci.crayfis.util.ViewUtil;
 
 /**
  * Created by jodi on 2015-06-02.
