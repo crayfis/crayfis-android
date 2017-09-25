@@ -173,7 +173,7 @@ class CFCamera2 extends CFCamera {
         // make sure the timestamp queues aren't cleared underneath us
         synchronized (mTimestampHistory) {
 
-            while (mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
+            if(mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
                 RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
                         .setTimestamp(mQueuedTimestamps.poll());
 
