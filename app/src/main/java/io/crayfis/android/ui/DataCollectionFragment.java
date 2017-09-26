@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -41,10 +42,6 @@ public class DataCollectionFragment extends CFFragment {
     private StateChangeReceiver mStateChangeReceiver;
 
     private final @StringRes int ABOUT_ID = R.string.toast_status;
-
-    public static DataCollectionFragment getInstance() {
-        return new DataCollectionFragment();
-    }
 
     @Override
     public void onDestroyView() {
@@ -150,7 +147,7 @@ public class DataCollectionFragment extends CFFragment {
         }
     }
 
-    public void updateIdleStatus(String status) {
+    public static void updateIdleStatus(String status) {
         mIdleStatus = status;
     }
 
@@ -224,15 +221,17 @@ public class DataCollectionFragment extends CFFragment {
             setErrorMessage(0);
         }
 
-        if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-            DAQService.DAQBinder binder = DAQActivity.getBinder();
-            if(binder != null) {
+        try {
+            DAQService.DAQBinder binder = ((DAQActivity)getActivity()).getBinder();
+            if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
                 final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
-                if (status != null) {
-                    mDataCollectionStats.setStatus(status);
-                }
+                mDataCollectionStats.setStatus(status);
             }
-
+            if (mStatusMessage.getVisibility() == View.VISIBLE) {
+                setStatusMessage(mIdleStatus);
+            }
+        } catch (Exception e) {
+            // don't crash
         }
     }
 }

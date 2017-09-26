@@ -82,9 +82,10 @@ public class LayoutDeveloper extends CFFragment {
 
     @Override
     public void update() {
-        final CFApplication application = (CFApplication) (getActivity().getApplication());
+        final DAQActivity activity = (DAQActivity)getActivity();
+        final CFApplication application = (CFApplication) (activity.getApplication());
         mAppBuildView.setAppBuild(application.getBuildInformation());
-        final DAQService.DAQBinder binder = DAQActivity.getBinder();
+        final DAQService.DAQBinder binder = activity.getBinder();
         if(binder != null) {
             mTextView.setText(binder.getDevText());
         }

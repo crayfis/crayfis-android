@@ -32,6 +32,7 @@ import io.crayfis.android.server.ServerCommand;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
+import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
 
 
@@ -58,8 +59,9 @@ public class CFApplication extends Application {
     private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
-            // TODO: ideally, we want this to display on tick in the Status pane
-            CFLog.d("Time left: " + millisUntilFinished / 1000L);
+            CFLog.d(Long.toString(millisUntilFinished));
+            int secondsLeft = (int) Math.round(millisUntilFinished/1000.);
+            DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_camera), secondsLeft));
         }
 
         @Override
@@ -76,6 +78,7 @@ public class CFApplication extends Application {
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
                 // continue waiting
+                //userErrorMessage(, false);
                 this.start();
             }
         }

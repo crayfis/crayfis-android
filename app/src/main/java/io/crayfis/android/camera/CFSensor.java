@@ -8,6 +8,7 @@ import android.hardware.SensorManager;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.CFConfig;
+import io.crayfis.android.R;
 import io.crayfis.android.ui.DataCollectionFragment;
 
 /**
@@ -86,7 +87,7 @@ class CFSensor implements SensorEventListener {
             case Sensor.TYPE_ROTATION_VECTOR:
                 if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_HIGH
                         && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
-                    DataCollectionFragment.getInstance().updateIdleStatus("Sensors recalibrating.  Waiting to retry");
+                    DataCollectionFragment.updateIdleStatus(APPLICATION.getResources().getString(R.string.idle_sensors));
                     APPLICATION.setApplicationState(CFApplication.State.IDLE);
                 }
         }

@@ -142,8 +142,6 @@ public abstract class CFCamera {
         mCameraId = nextId;
 
         if(nextId == -1 && state != CFApplication.State.IDLE ) {
-
-            DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
             mApplication.startStabilizationTimer();
         }
 

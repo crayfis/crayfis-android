@@ -67,7 +67,7 @@ import io.crayfis.android.util.CFLog;
  */
 public class DAQActivity extends AppCompatActivity {
 
-    private static DAQService.DAQBinder mBinder;
+    private DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
@@ -99,7 +99,7 @@ public class DAQActivity extends AppCompatActivity {
                         .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                DataCollectionFragment.getInstance().updateIdleStatus("Data-taking is finished:\nplease restart app.");
+                                DataCollectionFragment.updateIdleStatus("Data-taking is finished:\nplease restart app.");
                                 DAQIntent = null;
                             }
                         })
@@ -291,7 +291,7 @@ public class DAQActivity extends AppCompatActivity {
                 navItemsAdapter.notifyDataSetChanged();
             }
         });
-        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+        NavHelper.setFragment(this, new DataCollectionFragment(), NavDrawerAdapter.Type.STATUS.getTitle());
     }
 
     public void clickedSettings() {
@@ -381,7 +381,7 @@ public class DAQActivity extends AppCompatActivity {
     // UI Updates //
     ////////////////
 
-    public static DAQService.DAQBinder getBinder() {
+    public DAQService.DAQBinder getBinder() {
         return mBinder;
     }
 

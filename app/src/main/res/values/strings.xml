@@ -107,15 +107,22 @@
     <string name="permission_no" translatable="false">No thanks</string>
     <string name="pager_dev">Developer</string>
     <string name="feedback" translatable="false">Feedback</string>
+
     <string name="notification_title" translatable="false">CRAYFIS</string>
     <string name="notification_idle" translatable="false">Paused</string>
     <string name="notification_running" translatable="false">Taking data</string>
     <string name="notification_quit" translatable="false">CRAYFIS has safely ended data-taking.</string>
     <string name="notification_stats" translatable="false">Total frames: %d\t Pixels saved: %d</string>
     <string name="notification_error" translatable="false">CRAYFIS has encountered an error and quit.</string>
-    <string name="quit_title" translatable="false">CRAYFIS is quitting for the following reason:</string>
+
     <string name="quit_no_cameras" translatable="false">No covered cameras available</string>
     <string name="quit_permission" translatable="false">CRAYFIS no longer has permission to use the camera. \nPlease restart the app.</string>
+
+    <string name="idle_cooling" translatable="false">Cooling battery: %1.1fC</string>
+    <string name="idle_low" translatable="false">Low battery: %d%%/%d%%</string>
+    <string name="idle_camera" translatable="false">No available cameras: retry in %d</string>
+    <string name="idle_sensors" translatable="false">Sensors recalibrating.  Waiting to retry.</string>
+    <string name="idle_finished" translatable="false">Data-taking is finished:please restart app.</string>
 
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>

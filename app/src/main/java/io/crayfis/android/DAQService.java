@@ -136,7 +136,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
-        DataCollectionFragment.getInstance().updateIdleStatus("");
+        DataCollectionFragment.updateIdleStatus("");
 
         if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
             mApplication.setApplicationState(CFApplication.State.IDLE);
@@ -235,6 +235,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         switch(previousState) {
+            case INIT:
+                // starting with low battery, but finish initialization first
+                break;
             case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
@@ -474,15 +477,18 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float battery_stop_threshold = 0.20f;
-    public final float battery_start_threshold = 0.80f;
+    public final float batteryStopPct = .99f;
+    public final float batteryStartPct = 1.00f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
 
     private final long battery_check_wait = 10000; // ms
     private float batteryPct;
     private int batteryTemp;
+
     private boolean batteryOverheated = false;
+    private boolean batteryLow = false;
+
     private long last_battery_check_time;
 
 
@@ -495,29 +501,34 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         @Override
         public void run() {
-            final DataCollectionFragment fragment = DataCollectionFragment.getInstance();
             last_battery_check_time = System.currentTimeMillis();
 
             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = context.registerReceiver(null, ifilter);
 
-            //
-            // see if anything is wrong with the battery
-            //
-
+            // get battery updates
             int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             batteryPct = level / (float) scale;
-            // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 
+            // check for low battery
+            if (batteryLow) {
+                batteryLow = batteryPct < batteryStartPct;
+            } else {
+                batteryLow = batteryPct < batteryStopPct;
+            }
+
+            // check temperature for overheat
             if (batteryOverheated) {
                 // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
                 batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
-                fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", newTemp / 10.) + "C");
-            } else if (batteryPct < battery_start_threshold) {
-                fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                        newTemp / 10.));
+            } else {
+                batteryOverheated = newTemp > batteryOverheatTemp;
             }
+
             if(batteryTemp != newTemp) {
                 CFLog.i("Temperature change: " + batteryTemp + "->" + newTemp);
                 batteryTemp = newTemp;
@@ -527,25 +538,25 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 CFApplication.setBatteryTemp(newTemp);
             }
 
-            // go into idle mode if necessary
-            if (mApplication.getApplicationState() != io.crayfis.android.CFApplication.State.IDLE) {
-                if (batteryPct < battery_stop_threshold) {
-                    CFLog.d(" Battery too low, going to IDLE mode.");
-                    fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
-                    mApplication.setApplicationState(CFApplication.State.IDLE);
-                } else if (batteryTemp > batteryOverheatTemp) {
-                    CFLog.d(" Battery too hot, going to IDLE mode.");
-                    fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", batteryTemp / 10.) + "C");
-                    mApplication.setApplicationState(CFApplication.State.IDLE);
-                    batteryOverheated = true;
-                }
-
+            if(batteryLow) {
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_low),
+                        (int) (batteryPct * 100), (int) (batteryStartPct * 100)));
+            } else if(batteryOverheated) {
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                        newTemp / 10.));
             }
-            // if we are in idle mode, restart if everything is okay
-            else if (batteryPct >= battery_start_threshold && !batteryOverheated
-                    && !mApplication.isWaitingForStabilization()) {
 
-                CFLog.d("Returning to stabilization");
+
+            // go into idle mode if necessary
+            if (mApplication.getApplicationState() != io.crayfis.android.CFApplication.State.IDLE
+                    && (batteryLow || batteryOverheated)) {
+                mApplication.setApplicationState(CFApplication.State.IDLE);
+            }
+
+            // if we are in idle mode, restart if everything is okay
+            else if (mApplication.getApplicationState() == edu.uci.crayfis.CFApplication.State.IDLE
+                    && !batteryLow && !batteryOverheated && !mApplication.isWaitingForStabilization()) {
+
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);
             }
 
