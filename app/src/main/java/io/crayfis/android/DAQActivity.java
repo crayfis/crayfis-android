@@ -87,7 +87,7 @@ public class DAQActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
             try {
                 builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
-                        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
+                        .setPositiveButton(getResources().getString(R.string.quit), new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 // notifications would be redundant
                                 NotificationManager notificationManager
@@ -96,7 +96,13 @@ public class DAQActivity extends AppCompatActivity {
                                 System.exit(0);
                             }
                         })
-
+                        .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                DataCollectionFragment.getInstance().updateIdleStatus("Data-taking is finished:\nplease restart app.");
+                                DAQIntent = null;
+                            }
+                        })
                         .setView(tx1).show();
             } catch(WindowManager.BadTokenException e) {
                 // DAQActivity is down
@@ -119,6 +125,7 @@ public class DAQActivity extends AppCompatActivity {
         configureNavigation();
 
         context = getApplicationContext();
+        DAQIntent = new Intent(this, DAQService.class);
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -136,6 +143,11 @@ public class DAQActivity extends AppCompatActivity {
                 mBinder = null;
             }
         };
+
+        final View userStatus = findViewById(R.id.user_status);
+        if (userStatus != null) {
+            userStatus.postInvalidate();
+        }
     }
 
     @Override
@@ -147,6 +159,9 @@ public class DAQActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        // check if data-taking has ended but user is still browsing
+        if(DAQIntent == null) return;
 
         CFLog.d("DAQActivity onResume");
 
@@ -161,7 +176,6 @@ public class DAQActivity extends AppCompatActivity {
                 .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
 
         // in case this isn't already running
-        DAQIntent = new Intent(this, DAQService.class);
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
 
@@ -170,11 +184,6 @@ public class DAQActivity extends AppCompatActivity {
         if (!CONFIG.getUpdateURL().equals("") && !CONFIG.getUpdateURL().equals(last_update_URL)) {
             showUpdateURL(CONFIG.getUpdateURL());
 
-        }
-
-        final View userStatus = findViewById(R.id.user_status);
-        if (userStatus != null) {
-            userStatus.postInvalidate();
         }
     }
 
@@ -287,7 +296,9 @@ public class DAQActivity extends AppCompatActivity {
 
     public void clickedSettings() {
 
-        stopService(DAQIntent);
+        if(DAQIntent != null) {
+            stopService(DAQIntent);
+        }
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
@@ -336,7 +347,9 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStop() {
-        stopService(DAQIntent);
+        if(DAQIntent != null) {
+            stopService(DAQIntent);
+        }
         finish();
     }
 
