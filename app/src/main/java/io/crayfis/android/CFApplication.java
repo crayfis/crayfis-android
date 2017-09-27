@@ -45,8 +45,9 @@ public class CFApplication extends Application {
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
 
-    public static final String ACTION_FATAL_ERROR = "fatal_error";
+    public static final String ACTION_ERROR = "daqservice_error";
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
+    public static final String EXTRA_IS_FATAL = "fatal_error";
 
     private int errorId = 2;
 
@@ -78,7 +79,7 @@ public class CFApplication extends Application {
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
                 // continue waiting
-                //userErrorMessage(, false);
+                userErrorMessage(R.string.warning_facedown, false);
                 this.start();
             }
         }
@@ -179,9 +180,7 @@ public class CFApplication extends Application {
         boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
                 (status == BatteryManager.BATTERY_STATUS_FULL));
 
-
         if(!isCharging || !inAutostartWindow()) {
-            stopService(new Intent(this, DAQService.class));
             finishAndQuit(R.string.quit_no_cameras);
         }
     }
@@ -213,6 +212,8 @@ public class CFApplication extends Application {
     private void userErrorMessage(@StringRes int id, boolean quit, boolean safeExit) {
 
         String dialogMessage = getString(id);
+        Intent errorIntent = new Intent(ACTION_ERROR);
+        errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
         if(quit) {
             CFLog.e("Error: " + dialogMessage);
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -243,13 +244,13 @@ public class CFApplication extends Application {
             }
 
             // make sure to kill activity if open
-            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
+            errorIntent.putExtra(EXTRA_IS_FATAL, true);
             stopService(new Intent(this, DAQService.class));
         } else {
-            Toast.makeText(this, dialogMessage, Toast.LENGTH_LONG).show();
+            errorIntent.putExtra(EXTRA_IS_FATAL, false);
         }
+
+        LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
     }
 
     /**

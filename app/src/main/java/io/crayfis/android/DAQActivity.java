@@ -75,39 +75,47 @@ public class DAQActivity extends AppCompatActivity {
 
 
 	Context context;
+
     private Intent DAQIntent;
+    private boolean mRestart = true;
+
     private ActionBarDrawerToggle mActionBarDrawerToggle;
-    private final BroadcastReceiver FATAL_ERROR_RECEIVER = new BroadcastReceiver() {
+    private final BroadcastReceiver ERROR_RECEIVER = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
-            final TextView tx1 = new TextView(context);
-            tx1.setText(intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE));
-            tx1.setTextColor(Color.WHITE);
-            tx1.setBackgroundColor(Color.BLACK);
-            AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
-            try {
-                builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
-                        .setPositiveButton(getResources().getString(R.string.quit), new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // notifications would be redundant
-                                NotificationManager notificationManager
-                                        = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                notificationManager.cancelAll();
-                                System.exit(0);
-                            }
-                        })
-                        .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                DataCollectionFragment.updateIdleStatus("Data-taking is finished:\nplease restart app.");
-                                DAQIntent = null;
-                            }
-                        })
-                        .setView(tx1).show();
-            } catch(WindowManager.BadTokenException e) {
-                // DAQActivity is down
-                e.printStackTrace();
-                finish();
+            String message = intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE);
+            if(intent.getBooleanExtra(CFApplication.EXTRA_IS_FATAL, false)) {
+                final TextView tx1 = new TextView(context);
+                tx1.setText(message);
+                tx1.setTextColor(Color.WHITE);
+                tx1.setBackgroundColor(Color.BLACK);
+                AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
+                try {
+                    builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
+                            .setPositiveButton(getResources().getString(R.string.quit), new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    // notifications would be redundant
+                                    NotificationManager notificationManager
+                                            = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                    notificationManager.cancelAll();
+                                    System.exit(0);
+                                }
+                            })
+                            .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    mRestart = false;
+                                    DataCollectionFragment.updateIdleStatus(getString(R.string.idle_finished));
+                                }
+                            })
+                            .setView(tx1).show();
+                } catch(WindowManager.BadTokenException e) {
+                    // DAQActivity is down
+                    e.printStackTrace();
+                    finish();
+                }
+            } else {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -126,6 +134,7 @@ public class DAQActivity extends AppCompatActivity {
 
         context = getApplicationContext();
         DAQIntent = new Intent(this, DAQService.class);
+        mRestart = true;
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -161,7 +170,7 @@ public class DAQActivity extends AppCompatActivity {
         super.onResume();
 
         // check if data-taking has ended but user is still browsing
-        if(DAQIntent == null) return;
+        if(!mRestart) return;
 
         CFLog.d("DAQActivity onResume");
 
@@ -173,7 +182,7 @@ public class DAQActivity extends AppCompatActivity {
         }
 
         LocalBroadcastManager.getInstance(this)
-                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
+                .registerReceiver(ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_ERROR));
 
         // in case this isn't already running
         startService(DAQIntent);
@@ -210,7 +219,7 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.d("onStop()");
 
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(FATAL_ERROR_RECEIVER);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(ERROR_RECEIVER);
     }
 
 
@@ -296,9 +305,8 @@ public class DAQActivity extends AppCompatActivity {
 
     public void clickedSettings() {
 
-        if(DAQIntent != null) {
-            stopService(DAQIntent);
-        }
+        DataCollectionFragment.updateIdleStatus("");
+        stopService(DAQIntent);
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
@@ -347,9 +355,7 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStop() {
-        if(DAQIntent != null) {
-            stopService(DAQIntent);
-        }
+        stopService(DAQIntent);
         finish();
     }
 

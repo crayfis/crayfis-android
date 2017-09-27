@@ -10,6 +10,7 @@ import java.util.ArrayDeque;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.CFConfig;
+import io.crayfis.android.R;
 import io.crayfis.android.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.precalibration.PreCalibrator;
@@ -143,6 +144,11 @@ public abstract class CFCamera {
 
         if(nextId == -1 && state != CFApplication.State.IDLE ) {
             mApplication.startStabilizationTimer();
+            if(!isFlat()) {
+                mApplication.userErrorMessage(R.string.warning_facedown, false);
+            } else {
+                mApplication.userErrorMessage(R.string.warning_bright, false);
+            }
         }
 
         ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);

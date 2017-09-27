@@ -136,8 +136,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
-        DataCollectionFragment.updateIdleStatus("");
-
         if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
             mApplication.setApplicationState(CFApplication.State.IDLE);
         }
@@ -477,8 +475,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float batteryStopPct = .99f;
-    public final float batteryStartPct = 1.00f;
+    public final float batteryStopPct = 0.20f;
+    public final float batteryStartPct = 0.80f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
 

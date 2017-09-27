@@ -122,7 +122,10 @@
     <string name="idle_low" translatable="false">Low battery: %d%%/%d%%</string>
     <string name="idle_camera" translatable="false">No available cameras: retry in %d</string>
     <string name="idle_sensors" translatable="false">Sensors recalibrating.  Waiting to retry.</string>
-    <string name="idle_finished" translatable="false">Data-taking is finished:please restart app.</string>
+    <string name="idle_finished" translatable="false">Data-taking is finished:\nplease restart app.</string>
+
+    <string name="warning_facedown" translatable="false">Please lay the phone flat.</string>
+    <string name="warning_bright" translatable="false">Please make sure the face-down camera is fully covered.</string>
 
     <plurals name="total_frames">
         <item quantity="one">%d frame</item>
