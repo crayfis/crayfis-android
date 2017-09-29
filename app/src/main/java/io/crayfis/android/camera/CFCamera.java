@@ -142,7 +142,7 @@ public abstract class CFCamera {
 
         mCameraId = nextId;
 
-        if(nextId == -1 && state != CFApplication.State.IDLE ) {
+        if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startStabilizationTimer();
             if(!isFlat()) {
                 mApplication.userErrorMessage(R.string.warning_facedown, false);

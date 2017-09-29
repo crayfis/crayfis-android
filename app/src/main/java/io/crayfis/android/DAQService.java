@@ -119,11 +119,13 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         stackBuilder.addNextIntent(restartIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        mNotificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_just_a)
-                .setContentTitle(getString(R.string.notification_title))
-                .setContentText(getString(R.string.notification_idle))
-                .setContentIntent(resultPendingIntent);
+        if(mNotificationBuilder == null) {
+            mNotificationBuilder = new NotificationCompat.Builder(this)
+                    .setSmallIcon(R.drawable.ic_just_a)
+                    .setContentTitle(getString(R.string.notification_title))
+                    .setContentText(getString(R.string.notification_idle))
+                    .setContentIntent(resultPendingIntent);
+        }
 
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
@@ -136,21 +138,11 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
-        if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
-            mApplication.setApplicationState(CFApplication.State.IDLE);
+        if(mApplication.getApplicationState() != CFApplication.State.FINISHED) {
+            mApplication.setApplicationState(CFApplication.State.FINISHED);
         }
 
-        mCFCamera.unregister();
-        mPreCal.destroy();
-        L1cal.destroy();
-        xbManager.destroy();
-
-        xbManager.flushCommittedBlocks(true);
-
         mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
-
-        mHardwareCheckTimer.cancel();
-        mApplication.killTimer();
 
         CFLog.d("DAQService: stopped");
     }
@@ -189,6 +181,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                     break;
                 case RECONFIGURE:
                     doStateTransitionReconfigure(previous);
+                    break;
+                case FINISHED:
+                    doStateTransitionFinished(previous);
                     break;
                 default:
                     throw new IllegalFsmStateException(previous + " -> " + current);
@@ -244,7 +239,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
-                // for data, stop taking data to let battery charge
                 xbManager.newExposureBlock(CFApplication.State.IDLE);
                 break;
             default:
@@ -359,7 +353,35 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     }
 
+    private void doStateTransitionFinished(CFApplication.State previous) {
+        switch (previous) {
+            case INIT:
+            case STABILIZATION:
+            case CALIBRATION:
+            case PRECALIBRATION:
+            case DATA:
+            case RECONFIGURE:
+                xbManager.newExposureBlock(CFApplication.State.FINISHED);
+                mCFCamera.changeCamera();
+            case IDLE:
+                DataCollectionFragment.updateIdleStatus(getString(R.string.idle_finished));
+                mCFCamera.unregister();
+                mPreCal.destroy();
+                L1cal.destroy();
+                xbManager.destroy();
 
+                xbManager.flushCommittedBlocks(true);
+
+                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
+
+                mHardwareCheckTimer.cancel();
+                mApplication.killTimer();
+                stopSelf();
+                break;
+            default:
+                throw new IllegalFsmStateException(previous + " -> " + mApplication.getApplicationState());
+        }
+    }
 
 
 

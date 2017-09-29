@@ -306,7 +306,8 @@ public class DAQActivity extends AppCompatActivity {
     public void clickedSettings() {
 
         DataCollectionFragment.updateIdleStatus("");
-        stopService(DAQIntent);
+        CFApplication application = (CFApplication) getApplication();
+        application.setApplicationState(CFApplication.State.FINISHED);
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
@@ -355,8 +356,8 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStop() {
-        stopService(DAQIntent);
-        finish();
+        CFApplication application = (CFApplication)getApplication();
+        application.setApplicationState(CFApplication.State.FINISHED);
     }
 
     private String last_update_URL = "";

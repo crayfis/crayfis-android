@@ -103,6 +103,7 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
+            case FINISHED:
                 mStatus.setText(getString(R.string.idle));
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);

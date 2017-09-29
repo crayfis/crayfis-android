@@ -245,7 +245,7 @@ public class CFApplication extends Application {
 
             // make sure to kill activity if open
             errorIntent.putExtra(EXTRA_IS_FATAL, true);
-            stopService(new Intent(this, DAQService.class));
+            setApplicationState(State.FINISHED);
         } else {
             errorIntent.putExtra(EXTRA_IS_FATAL, false);
         }
@@ -416,6 +416,7 @@ public class CFApplication extends Application {
         STABILIZATION,
         IDLE,
         RECONFIGURE,
+        FINISHED
     }
 
     public static final int MODE_FACE_DOWN = 0;
