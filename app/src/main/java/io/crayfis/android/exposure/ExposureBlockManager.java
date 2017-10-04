@@ -14,7 +14,7 @@ import io.crayfis.android.CFConfig;
 import io.crayfis.android.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.trigger.L2Processor
+import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -174,8 +174,12 @@ public final class ExposureBlockManager {
         // anything that's being committed must have already been frozen.
         assert xb.isFrozen();
 
-        if (xb.daq_state != CFApplication.State.INIT && xb.daq_state != CFApplication.State.CALIBRATION && xb.daq_state != CFApplication.State.DATA) {
-            CFLog.e("Received ExposureBlock with a state of " + xb.daq_state + ", ignoring.");
+        CFApplication.State state = xb.getDAQState();
+
+        if (state != CFApplication.State.PRECALIBRATION
+                && state != CFApplication.State.CALIBRATION
+                && state != CFApplication.State.DATA) {
+            CFLog.e("Received ExposureBlock with a state of " + state + ", ignoring.");
             return;
         }
 
@@ -207,7 +211,7 @@ public final class ExposureBlockManager {
                     // to dispatch, and then do that outside the synch block.
                     toRemove.add(xb);
                     it.remove();
-                } else if ( (current_time - xb.end_time.Nano) > XB_STALE_TIME * 1000000L) {
+                } else if ( (current_time - xb.getEndTimeNano()) > XB_STALE_TIME * 1000000L) {
                     // this XB has gone stale! we should upload it anyways.
                     CFLog.w("Stale XB detected! Uploading even though not finalized.");
                     toRemove.add(xb);
@@ -218,7 +222,7 @@ public final class ExposureBlockManager {
 
         for (ExposureBlock xb : toRemove) {
             // submit the retired XB's to be uploaded.
-            UploadExposureService.submitExposureBlock(APPLICATION, xb);
+            UploadExposureService.submitExposureBlock(APPLICATION, xb.buildProto());
         }
     }
 
@@ -228,23 +232,6 @@ public final class ExposureBlockManager {
             updateSafeTime(System.nanoTime()-APPLICATION.getStartTimeNano());
         }
         flushCommittedBlocks();
-    }
-
-    private void commitExposureBlock(ExposureBlock xb) {
-        if (xb.daq_state == CFApplication.State.STABILIZATION
-                || xb.daq_state == CFApplication.State.IDLE || xb.daq_state == CFApplication.State.RECONFIGURE) {
-            // don't commit stabilization/idle blocks! they're just deadtime.
-            return;
-        }
-        if (xb.daq_state == CFApplication.State.CALIBRATION
-                && xb.aborted) {
-            // also, don't commit *aborted* calibration blocks
-            return;
-        }
-
-        CFLog.i("DAQActivity Commiting old exposure block!");
-        UploadExposureService.submitExposureBlock(APPLICATION, xb);
-        mCommittedXBs++;
     }
 
     public int getTotalXBs() {

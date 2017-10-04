@@ -97,7 +97,7 @@ class L1Task implements Runnable {
         mExposureBlock.total_background += mFrame.getPixAvg();
         mExposureBlock.total_max += mFrame.getPixMax();
 
-        if (max > mExposureBlock.L1_threshold) {
+        if (max > mExposureBlock.getL1Thresh()) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
             pass = true;
@@ -133,7 +133,7 @@ class L1Task implements Runnable {
         if (processInitial()) { return; }
 
         boolean stopProcessing;
-        switch (mExposureBlock.daq_state) {
+        switch (mExposureBlock.getDAQState()) {
             case PRECALIBRATION:
                 stopProcessing = processPreCalibration();
                 break;

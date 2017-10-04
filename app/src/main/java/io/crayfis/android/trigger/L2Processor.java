@@ -23,7 +23,7 @@ public class L2Processor {
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
-        return frame.getExposureBlock().L2_trigger_config.makeTask(this, frame);
+        return frame.getExposureBlock().getL2Config().makeTask(this, frame);
     }
 
     void submitFrame(RawCameraFrame frame) {

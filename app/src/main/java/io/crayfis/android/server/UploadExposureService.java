@@ -24,7 +24,7 @@ import io.crayfis.android.util.CFLog;
  * An implementation of IntentService that handles uploading blocks to the server.
  *
  * You can use the helper methods {@link #submitCalibrationResult(android.content.Context, io.crayfis.android.DataProtos.CalibrationResult)},
- * {@link #submitExposureBlock(android.content.Context, io.crayfis.android.exposure.ExposureBlock)} or
+ * {@link #submitExposureBlock(android.content.Context, io.crayfis.android.DataProtos.ExposureBlock)} or
  * {@link #submitRunConfig(android.content.Context, io.crayfis.android.DataProtos.RunConfig)} to make this
  * easier to use.
  *
@@ -84,7 +84,7 @@ public class UploadExposureService extends IntentService {
      * @param exposureBlock The {@link io.crayfis.android.exposure.ExposureBlock}.
      */
     public static void submitExposureBlock(@NonNull final Context context,
-                                           @NonNull final ExposureBlock exposureBlock) {
+                                           @NonNull final DataProtos.ExposureBlock exposureBlock) {
         final Intent intent = new Intent(context, UploadExposureService.class);
         intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
         context.startService(intent);
@@ -218,9 +218,9 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private AbstractMessage getAbstractMessage(@NonNull final Intent intent) {
 
-        final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
+        final AbstractMessage exposureBlock = (AbstractMessage) intent.getSerializableExtra(EXPOSURE_BLOCK);
         if (exposureBlock != null) {
-            return exposureBlock.buildProto();
+            return exposureBlock;
         }
 
         final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);

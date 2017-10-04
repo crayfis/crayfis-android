@@ -68,43 +68,48 @@ public class SavedImage {
 
         for (int i = 0; i < pixels.size(); i++) {
             L2Task.RecoPixel pix = pixels.get(i);
-            CFLog.d(" pixel at x,y=" + (pix.x) + "," + (pix.y) + " = " + pix.val);
-            if (pix.x < minx) minx = pix.x;
-            if (pix.x > maxx) maxx = pix.x;
 
-            if (pix.y < miny) miny = pix.y;
-            if (pix.y > maxy) maxy = pix.y;
+            int x = pix.getX();
+            int y = pix.getY();
+
+            CFLog.d(" pixel at x,y=" + x + "," + y);
+            if (x < minx) minx = x;
+            if (x > maxx) maxx = x;
+
+            if (y < miny) miny = y;
+            if (y > maxy) maxy = y;
         }
 
 
-            CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
-            // add a buffer so we don't get super tiny images
-            int delta = 25;
-            maxx = java.lang.Math.min(maxx + delta, width);
-            maxy = java.lang.Math.min(maxy + delta, height);
-            minx = java.lang.Math.max(minx - delta, 0);
-            miny = java.lang.Math.max(miny - delta, 0);
-            CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
-            try {
+        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
+        // add a buffer so we don't get super tiny images
+        int delta = 25;
+        maxx = java.lang.Math.min(maxx + delta, width);
+        maxy = java.lang.Math.min(maxy + delta, height);
+        minx = java.lang.Math.max(minx - delta, 0);
+        miny = java.lang.Math.max(miny - delta, 0);
+        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
+        try {
 
-                bitmap = Bitmap.createBitmap(maxx - minx, maxy - miny, Bitmap.Config.RGB_565);
+            bitmap = Bitmap.createBitmap(maxx - minx, maxy - miny, Bitmap.Config.RGB_565);
 
-                if (bitmap != null) {
-                    // put all pixels in the bitmap
-                    for (int i = 0; i < pixels.size(); i++) {
-                        L2Task.RecoPixel pix = pixels.get(i);
+            if (bitmap != null) {
+                // put all pixels in the bitmap
+                for (int i = 0; i < pixels.size(); i++) {
+                    L2Task.RecoPixel pix = pixels.get(i);
+                    int x = pix.getX() - minx;
+                    int y = pix.getY() - miny;
+                    int val = (int) (255 * (pix.getVal() / (1.0 * max)));
+                    int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
+                    CFLog.d(" pixel at x,y=" + x + "," + y + " = " + val + " argb=" + argb);
 
-                        int val = (int) (255 * (pix.val / (1.0 * max)));
-                        int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
-                        CFLog.d(" pixel at x,y=" + (pix.x - minx) + "," + (pix.y - miny) + " = " + val + " argb=" + argb);
+                    bitmap.setPixel(x, y, Color.argb(255, val, val, val));
 
-                        bitmap.setPixel(pix.x - minx, pix.y - miny, Color.argb(255, val, val, val));
-
-                    }
                 }
-            }  catch (Exception e) {
-         Crashlytics.logException(e);
-         e.printStackTrace();
+            }
+        }  catch (Exception e) {
+            Crashlytics.logException(e);
+            e.printStackTrace();
         }
         CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
     }

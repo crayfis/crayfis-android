@@ -574,7 +574,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             }
 
             // if we are in idle mode, restart if everything is okay
-            else if (mApplication.getApplicationState() == edu.uci.crayfis.CFApplication.State.IDLE
+            else if (mApplication.getApplicationState() == CFApplication.State.IDLE
                     && !batteryLow && !batteryOverheated && !mApplication.isWaitingForStabilization()) {
 
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);
