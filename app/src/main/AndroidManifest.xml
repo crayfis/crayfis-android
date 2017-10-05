@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="edu.uci.crayfis"
+    package="io.crayfis.android"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -21,10 +21,10 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:allowBackup="false"
-        android:name=".CFApplication"
+        android:name="io.crayfis.android.CFApplication"
         android:theme="@style/CrayfisApp">
         <activity
-            android:name="edu.uci.crayfis.MainActivity"
+            android:name="io.crayfis.android.MainActivity"
             android:launchMode="singleTask"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/app_name">
@@ -37,24 +37,24 @@
 
 
 
-        <receiver android:name="edu.uci.crayfis.AutostartReceiver">
+        <receiver android:name="io.crayfis.android.AutostartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
                 <action android:name="android.intent.action.BATTERY_OKAY"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="edu.uci.crayfis.MyDisconnectReceiver">
+        <receiver android:name="io.crayfis.android.MyDisconnectReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
             </intent-filter>
         </receiver>
 
-        <service android:name=".server.UploadExposureService"
+        <service android:name="io.crayfis.android.server.UploadExposureService"
                  android:exported="false"/>
 
         <activity
-            android:name="edu.uci.crayfis.DAQActivity"
+            android:name="io.crayfis.android.DAQActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
@@ -62,14 +62,14 @@
             android:theme="@style/CrayfisApp"/>
 
         <service
-            android:name=".DAQService"
+            android:name="io.crayfis.android.DAQService"
             android:exported="false"/>
 
-        <activity android:name=".usernotif.UserNotificationActivity"
+        <activity android:name="io.crayfis.android.usernotif.UserNotificationActivity"
                   android:screenOrientation="portrait"/>
 
         <activity
-            android:name="edu.uci.crayfis.UserSettingActivity"
+            android:name="io.crayfis.android.UserSettingActivity"
             android:screenOrientation="portrait"/>
 
         <meta-data android:name="com.google.android.gms.version"

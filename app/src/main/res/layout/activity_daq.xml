@@ -40,7 +40,7 @@
             android:background="?attr/colorPrimaryDark"
             android:src="@drawable/crayfish_white" />
 
-        <edu.uci.crayfis.user.UserStatusView
+        <io.crayfis.android.user.UserStatusView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/standard_margin"

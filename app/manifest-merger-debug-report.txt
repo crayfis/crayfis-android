@@ -78,7 +78,7 @@ MERGED from com.android.support:support-v4:21.0.0:16:5
 		ADDED from AndroidManifest.xml:23:9
 	android:name
 		ADDED from AndroidManifest.xml:26:9
-activity#edu.uci.crayfis.MainActivity
+activity#io.crayfis.android.MainActivity
 ADDED from AndroidManifest.xml:27:9
 	android:label
 		ADDED from AndroidManifest.xml:31:13
@@ -98,7 +98,7 @@ category#android.intent.category.LAUNCHER
 ADDED from AndroidManifest.xml:34:17
 	android:name
 		ADDED from AndroidManifest.xml:34:27
-receiver#edu.uci.crayfis.MyBroadcastReceiver
+receiver#io.crayfis.android.MyBroadcastReceiver
 ADDED from AndroidManifest.xml:41:9
 	android:name
 		ADDED from AndroidManifest.xml:41:19
@@ -112,7 +112,7 @@ action#android.intent.action.BATTERY_OKAY
 ADDED from AndroidManifest.xml:44:17
 	android:name
 		ADDED from AndroidManifest.xml:44:25
-receiver#edu.uci.crayfis.MyDisconnectReceiver
+receiver#io.crayfis.android.MyDisconnectReceiver
 ADDED from AndroidManifest.xml:48:9
 	android:name
 		ADDED from AndroidManifest.xml:48:19
@@ -122,13 +122,13 @@ action#android.intent.action.ACTION_POWER_DISCONNECTED
 ADDED from AndroidManifest.xml:50:17
 	android:name
 		ADDED from AndroidManifest.xml:50:25
-service#edu.uci.crayfis.server.UploadExposureService
+service#io.crayfis.android.server.UploadExposureService
 ADDED from AndroidManifest.xml:54:9
 	android:exported
 		ADDED from AndroidManifest.xml:55:18
 	android:name
 		ADDED from AndroidManifest.xml:54:18
-activity#edu.uci.crayfis.DAQActivity
+activity#io.crayfis.android.DAQActivity
 ADDED from AndroidManifest.xml:57:9
 	android:screenOrientation
 		ADDED from AndroidManifest.xml:59:13
@@ -138,7 +138,7 @@ ADDED from AndroidManifest.xml:57:9
 		ADDED from AndroidManifest.xml:58:13
 	android:launchMode
 		ADDED from AndroidManifest.xml:60:13
-activity#edu.uci.crayfis.UserSettingActivity
+activity#io.crayfis.android.UserSettingActivity
 ADDED from AndroidManifest.xml:62:9
 	android:screenOrientation
 		ADDED from AndroidManifest.xml:64:13

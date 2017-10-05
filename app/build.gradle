@@ -58,7 +58,7 @@ android {
     buildToolsVersion '26.0.1'
 
     defaultConfig {
-        applicationId "edu.uci.crayfis"
+        applicationId "io.crayfis.android"
         minSdkVersion 19
         targetSdkVersion 25
         renderscriptTargetApi 19

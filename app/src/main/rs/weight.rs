@@ -1,5 +1,5 @@
 #pragma version(1)
-#pragma rs java_package_name(edu.uci.crayfis)
+#pragma rs java_package_name(io.crayfis.android)
 #pragma rs_fp_relaxed
 
 rs_allocation gWeights;
