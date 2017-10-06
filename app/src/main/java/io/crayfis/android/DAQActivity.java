@@ -187,13 +187,6 @@ public class DAQActivity extends AppCompatActivity {
         // in case this isn't already running
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        // check for any updates
-
-        if (!CONFIG.getUpdateURL().equals("") && !CONFIG.getUpdateURL().equals(last_update_URL)) {
-            showUpdateURL(CONFIG.getUpdateURL());
-
-        }
     }
 
 
@@ -358,29 +351,6 @@ public class DAQActivity extends AppCompatActivity {
     private void clickedStop() {
         CFApplication application = (CFApplication)getApplication();
         application.setApplicationState(CFApplication.State.FINISHED);
-    }
-
-    private String last_update_URL = "";
-    public void showUpdateURL(String url)
-    {
-        last_update_URL=url;
-        final SpannableString s = new SpannableString(url);
-        final TextView tx1 = new TextView(this);
-
-        tx1.setText(getResources().getString(R.string.update_notice)+s);
-        tx1.setAutoLinkMask(RESULT_OK);
-        tx1.setMovementMethod(LinkMovementMethod.getInstance());
-        tx1.setTextColor(Color.WHITE);
-        tx1.setBackgroundColor(Color.BLACK);
-        Linkify.addLinks(s, Linkify.WEB_URLS);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle( getResources().getString(R.string.update_title)).setCancelable(false)
-                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                    }
-                })
-
-                .setView(tx1).show();
     }
 
 
