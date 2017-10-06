@@ -55,6 +55,10 @@ public final class ExposureBlockManager {
             CONFIG.getExposureBlockPeriod()*1000L, PASS_RATE_CHECK_TIME) {
         @Override
         public void onTick(long millisUntilFinished) {
+            // do nothing the first time
+            if(CONFIG.getExposureBlockPeriod() - millisUntilFinished < PASS_RATE_CHECK_TIME) {
+                return;
+            }
             // check whether the threshold has drifted
             double passRate = L2Processor.getPassRateFPM();
             if(passRate > 1.5 * CONFIG.getTargetEventsPerMinute()) {
@@ -176,9 +180,7 @@ public final class ExposureBlockManager {
 
         CFApplication.State state = xb.getDAQState();
 
-        if (state != CFApplication.State.PRECALIBRATION
-                && state != CFApplication.State.CALIBRATION
-                && state != CFApplication.State.DATA) {
+        if (state != CFApplication.State.DATA) {
             CFLog.e("Received ExposureBlock with a state of " + state + ", ignoring.");
             return;
         }

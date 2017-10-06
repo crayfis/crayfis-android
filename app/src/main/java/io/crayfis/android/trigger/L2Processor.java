@@ -13,7 +13,8 @@ public class L2Processor {
 
     public static int mL2Count = 0;
 
-    private static FrameHistory<Long> mPassTimes = new FrameHistory<>(25);
+    private static final int PASS_TIME_CAPACITY = 25;
+    private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
     public static Histogram histL2Pixels = new Histogram(256);
 
@@ -31,7 +32,9 @@ public class L2Processor {
         assert !frame.isOutstanding();
 
         // record the frame time to calculate pass rate
-        mPassTimes.addValue(frame.getAcquiredTimeNano());
+        synchronized (sPassTimes) {
+            sPassTimes.addValue(frame.getAcquiredTimeNano());
+        }
 
         // send it off to be processed by L2 logic
         AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
@@ -42,11 +45,13 @@ public class L2Processor {
      * @return Pass rate, in frames per minute
      */
     public static double getPassRateFPM() {
-        if(mPassTimes.size() == 0) {
-            return 0.0;
+        synchronized (sPassTimes) {
+            if (sPassTimes.size() < PASS_TIME_CAPACITY) {
+                return 0.0;
+            }
+            long dt = System.nanoTime() - CFApplication.getStartTimeNano() - sPassTimes.getOldest();
+            double dtMin = dt / 1000000000. / 60.;
+            return sPassTimes.size() / dtMin;
         }
-        long dt = System.nanoTime() - CFApplication.getStartTimeNano() - mPassTimes.getOldest();
-        double dtMin = dt / 1000000000. / 60.;
-        return mPassTimes.size() / dtMin;
     }
 }
