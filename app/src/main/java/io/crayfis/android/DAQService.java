@@ -619,7 +619,10 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                     + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
                     + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
-                    + "fps="+String.format("%1.2f",lastFPS)+" target L1 rate="+String.format("%1.2f",targetL1Rate)+"\n"
+                    + "fps="+String.format("%1.2f",lastFPS)
+                    + ", target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
+                    + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())
+                    + ", target=" + String.format("%1.2f",CONFIG.getTargetEventsPerMinute())+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", batteryTemp/10.) + "C from "
                     +((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"
