@@ -3,13 +3,13 @@ package io.crayfis.android.widget;
 import android.content.Context;
 import android.graphics.Color;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
-import android.widget.TextView;
 
 /**
  * Display a generic message to the user.
  */
-public final class MessageView extends TextView {
+public final class MessageView extends AppCompatTextView {
     public MessageView(final Context context) {
         super(context);
     }

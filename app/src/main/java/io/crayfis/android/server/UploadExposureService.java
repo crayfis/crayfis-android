@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -75,7 +76,7 @@ public class UploadExposureService extends IntentService {
     private static boolean sValidId = true;
     private static boolean sStartUploading;
 
-    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
+    public static final boolean IS_PUBLIC = false; //BuildConfig.DEBUG;
 
     /**
      * Helper for submitting an {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -154,9 +155,10 @@ public class UploadExposureService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
         lazyInit();
 
-        File file = (File) intent.getSerializableExtra(FILE);
-
-        if(file == null) {
+        // if a File was submitted, use it as it is
+        File uploadFile = (File) intent.getSerializableExtra(FILE);
+        // otherwise, make one from protobuf data
+        if(uploadFile == null) {
             final AbstractMessage message = getAbstractMessage(intent);
             if (message != null) {
                 CFLog.d("Got message " + message);
@@ -166,15 +168,26 @@ public class UploadExposureService extends IntentService {
                         submitRunConfig(getApplicationContext(), sPendingRunConfig);
                     }
                     final AbstractMessage uploadMessage = builder.build();
-                    file = saveMessageToCache(uploadMessage);
+                    uploadFile = saveMessageToCache(uploadMessage);
                 }
             }
         }
 
-        if (file != null && !IS_PUBLIC) {
+        if (uploadFile != null && !IS_PUBLIC) {
             CFLog.d("Queueing upload task");
-            new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
-                    execute();
+            final CFApplication application = (CFApplication) getApplication();
+            final File file = uploadFile;
+
+            // need to call execute() on UI thread
+            Handler handler = new Handler(getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    new UploadExposureTask(application, sServerInfo, file).
+                            execute();
+                }
+            });
+
         } else {
             // make sure we save things like precalibration result
             CFApplication application = (CFApplication) this.getApplication();

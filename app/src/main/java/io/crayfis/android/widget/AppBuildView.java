@@ -2,15 +2,15 @@ package io.crayfis.android.widget;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.AppCompatTextView;
 import android.util.AttributeSet;
-import android.widget.TextView;
 
 import io.crayfis.android.CFApplication;
 
 /**
  * Show the user information related to this build and run.
  */
-public final class AppBuildView extends TextView {
+public final class AppBuildView extends AppCompatTextView {
     public AppBuildView(final Context context) {
         super(context);
     }

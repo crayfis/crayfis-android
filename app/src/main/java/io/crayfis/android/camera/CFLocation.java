@@ -4,6 +4,7 @@ import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -11,6 +12,8 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import io.crayfis.android.CFApplication;
+import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -106,26 +109,43 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
             mLocationManager = null;
         }
 
-        // get last known location
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        CFLog.d("onConnected: asking for location = "+mLastLocation);
+        try {
+            // get last known location
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+            CFLog.d("onConnected: asking for location = " + mLastLocation);
 
-        // set the location; if this is false updateLocation() will disregard it
-        updateLocation(mLastLocation, false);
+            // set the location; if this is false updateLocation() will disregard it
+            updateLocation(mLastLocation, false);
 
-        // request updates as well
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
+            // request updates as well
+            LocationRequest locationRequest = new LocationRequest();
+            locationRequest.setInterval(10000);
+            locationRequest.setFastestInterval(5000);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
+        } catch (SecurityException e) {
+            CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+            application.userErrorMessage(R.string.quit_permission, true);
+        }
 
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult result)
+    public void onConnectionFailed(@NonNull ConnectionResult result)
     {
+        CFLog.e("Failed to connect to Google Location Services");
+        useDeprecated();
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause)
+    {
+        CFLog.e("Google Location Services suspended");
+        useDeprecated();
+    }
+
+    private void useDeprecated() {
         if (mLocationManager == null) {
             // backup location if Google play isn't working or installed
             mLocationManager = (LocationManager) CONTEXT.getSystemService(Context.LOCATION_SERVICE);
@@ -150,12 +170,6 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         }
 
         updateLocation(mLastLocationDeprecated, true);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause)
-    {
-        onConnectionFailed(null);
     }
 
     private boolean location_valid(Location location)
