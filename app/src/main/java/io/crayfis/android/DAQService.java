@@ -28,7 +28,6 @@ import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.server.UploadExposureTask;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.ui.DataCollectionFragment;
@@ -62,17 +61,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         mApplication = (CFApplication)getApplication();
         context = getApplicationContext();
         mApplication.setApplicationState(CFApplication.State.INIT);
-
-        final File files[] = getFilesDir().listFiles();
-        int foundFiles = 0;
-        for (int i = 0; i < files.length && foundFiles < 5; i++) {
-            if (files[i].getName().endsWith(".bin")) {
-                new UploadExposureTask(mApplication,
-                        new UploadExposureService.ServerInfo(this), files[i])
-                        .execute();
-                foundFiles++;
-            }
-        }
 
         // State changes
 

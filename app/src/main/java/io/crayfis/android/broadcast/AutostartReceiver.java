@@ -1,4 +1,4 @@
-package io.crayfis.android;
+package io.crayfis.android.broadcast;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -10,6 +10,8 @@ import android.preference.PreferenceManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
 
+import io.crayfis.android.CFApplication;
+import io.crayfis.android.DAQService;
 import io.crayfis.android.util.CFLog;
 
 public class AutostartReceiver extends BroadcastReceiver {

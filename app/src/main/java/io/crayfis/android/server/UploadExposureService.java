@@ -53,6 +53,8 @@ public class UploadExposureService extends IntentService {
      */
     public static final String CALIBRATION_RESULT = "calibration_result";
 
+    public static final String FILE = "file";
+
     /**
      * A RunConfig is only to be uploaded if an ExposureBlock or CalibrationResult has been received.
      *
@@ -137,6 +139,13 @@ public class UploadExposureService extends IntentService {
         context.startService(intent);
     }
 
+    public static void submitFile(@NonNull final Context context, @NonNull final File file) {
+
+        final Intent intent = new Intent(context, UploadExposureService.class);
+        intent.putExtra(FILE, file);
+        context.startService(intent);
+    }
+
     public UploadExposureService() {
         super("Exposure Uploader");
     }
@@ -145,26 +154,31 @@ public class UploadExposureService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
         lazyInit();
 
-        final AbstractMessage message = getAbstractMessage(intent);
-        if (message != null) {
-            CFLog.d("Got message " + message);
-            final DataProtos.DataChunk.Builder builder = createDataChunk(message);
-            if (builder != null) {
-                if (sPendingRunConfig != null) {
-                    submitRunConfig(getApplicationContext(), sPendingRunConfig);
-                }
-                final AbstractMessage uploadMessage = builder.build();
-                final File file = saveMessageToCache(uploadMessage);
-                if (file != null && !IS_PUBLIC) {
-                    CFLog.d("Queueing upload task");
-                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
-                            execute();
-                } else {
-                    // make sure we save things like precalibration result
-                    CFApplication application = (CFApplication) this.getApplication();
-                    application.savePreferences();
+        File file = (File) intent.getSerializableExtra(FILE);
+
+        if(file == null) {
+            final AbstractMessage message = getAbstractMessage(intent);
+            if (message != null) {
+                CFLog.d("Got message " + message);
+                final DataProtos.DataChunk.Builder builder = createDataChunk(message);
+                if (builder != null) {
+                    if (sPendingRunConfig != null) {
+                        submitRunConfig(getApplicationContext(), sPendingRunConfig);
+                    }
+                    final AbstractMessage uploadMessage = builder.build();
+                    file = saveMessageToCache(uploadMessage);
                 }
             }
+        }
+
+        if (file != null && !IS_PUBLIC) {
+            CFLog.d("Queueing upload task");
+            new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
+                    execute();
+        } else {
+            // make sure we save things like precalibration result
+            CFApplication application = (CFApplication) this.getApplication();
+            application.savePreferences();
         }
     }
 
