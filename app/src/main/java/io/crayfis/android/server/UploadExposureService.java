@@ -76,7 +76,7 @@ public class UploadExposureService extends IntentService {
     private static boolean sValidId = true;
     private static boolean sStartUploading;
 
-    public static final boolean IS_PUBLIC = false; //BuildConfig.DEBUG;
+    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
 
     /**
      * Helper for submitting an {@link io.crayfis.android.exposure.ExposureBlock}.
