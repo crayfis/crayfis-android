@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TimePicker
+        android:id="@+id/time_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        style="@style/UserNotifcation.Message"
+        android:id="@+id/time_picker_text"
+        android:layout_below="@+id/time_picker"
+        android:layout_alignParentStart="true" />
+
+    <RelativeLayout
+        android:id="@+id/continue_container"
+        style="@style/UserNotification.FooterContainer"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/time_picker_continue"
+            style="@style/UserNotification.Continue"
+            android:text="@string/continue_btn" />
+        <Button
+            android:id="@+id/time_picker_exit"
+            style="@style/UserNotification.Cancel"
+            android:text="@string/cancel_btn" />
+    </RelativeLayout>
+
+
+</RelativeLayout>

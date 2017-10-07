@@ -15,8 +15,15 @@
 
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="userIDlogin1">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nWhat you need to do:\n Plug your phone in and\n put it camera down (face up) on a surface.\n\n When it starts it will take 30-60s to calibrate\n and then will start taking data!</string>
+
+    <string name="first_run_welcome_title" translatable="false">CRAYFIS beta</string>
+	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
+    <string name="first_run_how_to_title" translatable="false">How to use this app</string>
+    <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.</string>
+    <string name="first_run_autostart" translatable="false">"Autostart" schedules overnight data-taking when your phone is charging and not in use. Please select when this feature %s.\n\nThis can be modified at any time in the Settings pane.</string>
+
+    <string name="continue_btn" translatable="false">CONTINUE</string>
+    <string name="cancel_btn" translatable="false">NO THANKS</string>
 
     <string name="settings_wifi_title">Wifi only</string>
     <string name="settings_wifi_summary">Only use Wifi to upload data</string>

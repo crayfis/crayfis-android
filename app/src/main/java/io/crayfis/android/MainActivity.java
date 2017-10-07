@@ -48,9 +48,12 @@ import io.crayfis.android.util.CFLog;
  */
 public class MainActivity extends Activity  {
 
+    private static final int REQUEST_CODE_PERMISSIONS = 0;
+
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
-    private static final int REQUEST_CODE_PERMISSIONS = 3;
+    private static final int REQUEST_CODE_AUTOSTART_AFTER = 3;
+    private static final int REQUEST_CODE_AUTOSTART_BEFORE = 4;
 
     public static String[] permissions = {
         Manifest.permission.CAMERA,
@@ -84,8 +87,8 @@ public class MainActivity extends Activity  {
         boolean firstRun = sharedprefs.getBoolean("firstRun", true);
         if (firstRun) {
             final Intent intent = new Intent(this, UserNotificationActivity.class);
-            intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
-            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
+            intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_welcome_title);
+            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_welcome);
             startActivityForResult(intent, REQUEST_CODE_WELCOME);
         } else {
             checkPermissions();
@@ -97,23 +100,48 @@ public class MainActivity extends Activity  {
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (resultCode != RESULT_OK) {
-			finish();
+            if(requestCode == REQUEST_CODE_WELCOME || requestCode == REQUEST_CODE_HOW_TO) {
+                finish();
+            } else {
+                // user cancelled autostart
+                SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                final SharedPreferences.Editor editor = sharedprefs.edit();
+                editor.putBoolean("firstRun", false)
+                        .apply();
+
+                // now start running
+                checkPermissions();
+
+            }
 		} else {
             Intent intent;
             switch(requestCode) {
                 case REQUEST_CODE_WELCOME:
                     intent = new Intent(this, UserNotificationActivity.class);
-                    intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
-                    intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+                    intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_how_to_title);
+                    intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_how_to);
                     startActivityForResult(intent, REQUEST_CODE_HOW_TO);
                     break;
                 case REQUEST_CODE_HOW_TO:
+                    intent = new Intent(this, ConfigureAutostartActivity.class);
+                    intent.putExtra(ConfigureAutostartActivity.PREFERENCE, "prefStartAfter");
+                    intent.putExtra(ConfigureAutostartActivity.MESSAGE, String.format(getString(R.string.first_run_autostart), "STARTS"));
+                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART_AFTER);
+                    break;
+                case REQUEST_CODE_AUTOSTART_AFTER:
+                    intent = new Intent(this, ConfigureAutostartActivity.class);
+                    intent.putExtra(ConfigureAutostartActivity.PREFERENCE, "prefStartBefore");
+                    intent.putExtra(ConfigureAutostartActivity.MESSAGE, String.format(getString(R.string.first_run_autostart), "ENDS"));
+                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART_BEFORE);
+                    break;
+                case REQUEST_CODE_AUTOSTART_BEFORE:
                     //This is so that if they have entered in an invalid user ID before, but
                     //then just decide to run it locally, it will reset the userID to empty
                     SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     final SharedPreferences.Editor editor = sharedprefs.edit();
                     editor.putBoolean("firstRun", false)
-                            .commit();
+                            .putBoolean("prefEnableAutoStart", true)
+                            .apply();
 
                     // now start running
                     checkPermissions();
