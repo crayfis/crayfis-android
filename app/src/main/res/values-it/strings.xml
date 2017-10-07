@@ -12,8 +12,6 @@
     <string name="settings_startafter_summary">L\'applicazione non si avviera prima di questo tempo</string>
     <string name="settings_startwait_summary">Secondi di attesa prima dell\'avvio, dopo aver connesso il telefono</string>
     <string name="pref_startbefore">Avvia solamente prima di questo tempo</string>
-    <string name="userIDlogin1">Benvenutp al CRAYFIS beta testing! \nGrazie per il tuo supporto!\n\n\n CRAYFIS é un\'applicazione \nche usa il tuo smartphone\n come parte di una rete globale \nper cercare le particelle dei raggi cosmici.\n\n Per ulteriori informazioni: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nCosa devi fare:\n collega il tuo telefono e appoggialo piatto\n con la camera contro sulla superficie d\'appoggio.\n\n All\'inizio richiede 30-60s di calibrazione\n e subito dopo inizierá a prendere dati!</string>
 
     <string name="settings_wifi_title">Solo wi-fi</string>
     <string name="settings_wifi_summary">Usa solo la wi-fi per caricare i dati</string>

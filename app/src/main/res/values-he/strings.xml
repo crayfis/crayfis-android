@@ -16,8 +16,6 @@
     <string name="settings_startafter_summary">The app will not autostart before this time</string>
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
     <string name="pref_startbefore">Only runs before this time</string>
-    <string name="userIDlogin1">ברוכים הבאים לCRAYFIS גרסת הבתא! \nתודה על  עזרתכם!\n\n\n CRAYFIS היא אפלקציה \nשתשתמש בטלפון החכם שלך\n כחלק מרשת עולמית\nלחיפוש אחר חלקיקיי קרינת הרקע הקוסמית.\n\n למידע נוסף: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nהדרכה:\n חברו את הטלפון שלכם להטענה\n כאשר המצלמה פונה למטה (מסך למעלה).\n\n לאחר ההפעלה האפליקציה תכייל במשך כחצי דקה עד דקה\n לאחר מכן יתחיל תהליך דגימת הנתונים!</string>
 
     <string name="settings_wifi_title">Wifi בלבד</string>
     <string name="settings_wifi_summary">העלה מידע רק באמצעות Wifi</string>

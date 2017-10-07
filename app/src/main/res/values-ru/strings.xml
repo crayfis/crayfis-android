@@ -12,9 +12,6 @@
     <string name="settings_startwait_summary">Задержка старта после подключения зарядного устройства, в секундах </string>
     <string name="pref_startbefore">Время окончания работы</string>
 
-    <string name="userIDlogin1">Добро пожаловать в CRAYFIS бета тестирование! \nСпасибо за помощь!\n\n\n Приложение CRAYFIS \n сделает ваш телефон\n частью всемирной сети\n поиска космических частиц.\n\n Дополнительная информация: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\n Что вам надо сделать:\n Подключите зарядное устройство и\n положите телефон камерой вниз (экраном вверх).\n\n Калибрация после старта займет 30-60s \n после чего приложение начнет собирать данные!</string>
-
     <string name="settings_wifi_title">Только на Wifi Wifi only</string>
     <string name="settings_wifi_summary">Производить загрузку только по Wifi</string>
     <string name="settings_code_summary">Создано сайтом CRAYFIS</string>

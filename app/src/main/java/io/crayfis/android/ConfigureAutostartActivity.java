@@ -34,7 +34,9 @@ public class ConfigureAutostartActivity extends Activity {
         configureExtras();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mTimePicker.setCurrentHour(sharedPreferences.getInt(mPreference, 0));
+        int timeInMinutes = sharedPreferences.getInt(mPreference, 0);
+        mTimePicker.setCurrentHour(timeInMinutes/60);
+        mTimePicker.setCurrentMinute(timeInMinutes % 60);
 
         TextView messageView = (TextView)findViewById(R.id.time_picker_text);
         messageView.setText(mMessage);
@@ -50,7 +52,7 @@ public class ConfigureAutostartActivity extends Activity {
                 SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ConfigureAutostartActivity.this);
 
                 sharedPrefs.edit()
-                        .putInt(mPreference, hour)
+                        .putInt(mPreference, 60*hour + minute)
                         .apply();
 
                 setResult(RESULT_OK);

@@ -193,10 +193,12 @@ public class CFApplication extends Application {
         int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore", "0"));
         Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int timeInMinutes = 60 * hour + minute;
 
         int b1 = (startAfter >= startBefore) ? 1 : 0;
-        int b2 = (hour >= startAfter) ? 1 : 0;
-        int b3 = (hour < startBefore) ? 1 : 0;
+        int b2 = (timeInMinutes >= startAfter) ? 1 : 0;
+        int b3 = (timeInMinutes < startBefore) ? 1 : 0;
 
         return b1 + b2 + b3 >= 2;
     }

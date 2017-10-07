@@ -11,8 +11,6 @@
     <string name="settings_startafter_summary">Appen startar inte automatiskt före denna tid</string>
     <string name="settings_startwait_summary">Fördröjning av start efter inkoppling, i sekunder</string>
     <string name="pref_startbefore">Körs bara före denna tid</string>
-    <string name="userIDlogin1">Välkommen till CRAYFIS beta! \nTack för din hjälp!\n\n\n CRAYFIS är en app \nsom använder din smartphone\n som del i ett världsomspännande nätverk\nför att leta efter kosmisk strålning.\n\n För mer info: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nVad du behöver göra:\n Koppla in din telefon\n och lägg den med kameran nedåt (skärmen upp) på en yta.\n\n När appen startar tar det 30-60 s att kalibrera\n sen är datatagningen igång!</string>
 
     <string name="settings_wifi_title">Wifi endast</string>
     <string name="settings_wifi_summary">Ladda bara upp data när wifi är tillgängligt</string>

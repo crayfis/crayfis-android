@@ -12,8 +12,6 @@
     <string name="settings_startafter_summary">The app will not autostart before this time</string>
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 	<string name="pref_startbefore">Only runs before this time</string>
-	<string name="userIDlogin1">Welcome to CRAYFIS beta testing! \nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nWhat you need to do:\n Plug your phone in and\n put it camera down (face up) on a surface.\n\n When it starts it will take 30-60s to calibrate\n and then will start taking data!</string>
 
     <string name="settings_wifi_title">Wifi only</string>
     <string name="settings_wifi_summary">Only use Wifi to upload data</string>

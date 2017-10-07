@@ -11,8 +11,6 @@
     <string name="settings_startafter_summary">البرنامج لن يعمل تلقائياً قبل هذا الوقت</string>
     <string name="settings_startwait_summary">الثواني المنتظرة بعد توصيل جهازك</string>
     <string name="pref_startbefore">اجري قبل هذا الوقت فقط</string>
-    <string name="userIDlogin1">مرحباً بكم في كرايفس بيتا التجريبي! \n شكراً لكم على المساهمة!\n\n\n  يقوم برنامج كرايفس كجزء من شبكة عالمية بالبحث عن جسيمات من الأشعة الكونية باستخدام جهازك.\n\n لمزيد من المعلومات: http://crayfis.io</string>
-    <string name="userIDlogin2">\n\n ما عليك فعله: \n أوصل جهازك بالشاحن و   \n ضعه على أي سطح  بيحث تواجه الكاميرا للأسفل.\n\n عندما يبدأ البرنامج سوف يستغرق ٣٠-٦٠ ثانية للمعايرة\n و سيبدأ بعدها بجمع المعلومات.</string>
 
     <string name="settings_wifi_title">واي-فاي فقط</string>
     <string name="settings_wifi_summary">استخدم الواي-فاي فقط لتحميل البيانات</string>

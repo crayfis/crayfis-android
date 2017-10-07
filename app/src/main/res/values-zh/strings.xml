@@ -11,8 +11,6 @@
     <string name="settings_startafter_summary">应用在本次前不会自动启动</string>
     <string name="settings_startwait_summary">接入手机等待运行时间</string>
     <string name="pref_startbefore">仅本次前运行</string>
-    <string name="userIDlogin1">欢迎测试CRAYFIS! \n感谢您的协助!\n\n\n CRAYFIS应用\n使用您的智能手机\n组成全球网络\n寻找宇宙线粒子.\n\n详情在http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\n您仅需:\n接上手机电源\n并使镜头向下放置(手机朝上).\n\n开始后30至60秒进行标度后\n开始取数!</string>
 
     <string name="settings_wifi_title">无线网络</string>
     <string name="settings_wifi_summary">仅使用无线网络上传数据</string>
