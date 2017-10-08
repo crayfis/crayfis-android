@@ -52,8 +52,7 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
-    private static final int REQUEST_CODE_AUTOSTART_AFTER = 3;
-    private static final int REQUEST_CODE_AUTOSTART_BEFORE = 4;
+    private static final int REQUEST_CODE_AUTOSTART = 3;
 
     public static String[] permissions = {
         Manifest.permission.CAMERA,
@@ -100,19 +99,7 @@ public class MainActivity extends Activity  {
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (resultCode != RESULT_OK) {
-            if(requestCode == REQUEST_CODE_WELCOME || requestCode == REQUEST_CODE_HOW_TO) {
-                finish();
-            } else {
-                // user cancelled autostart
-                SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                final SharedPreferences.Editor editor = sharedprefs.edit();
-                editor.putBoolean("firstRun", false)
-                        .apply();
-
-                // now start running
-                checkPermissions();
-
-            }
+            finish();
 		} else {
             Intent intent;
             switch(requestCode) {
@@ -124,23 +111,14 @@ public class MainActivity extends Activity  {
                     break;
                 case REQUEST_CODE_HOW_TO:
                     intent = new Intent(this, ConfigureAutostartActivity.class);
-                    intent.putExtra(ConfigureAutostartActivity.PREFERENCE, "prefStartAfter");
-                    intent.putExtra(ConfigureAutostartActivity.MESSAGE, String.format(getString(R.string.first_run_autostart), "STARTS"));
-                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART_AFTER);
+                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART);
                     break;
-                case REQUEST_CODE_AUTOSTART_AFTER:
-                    intent = new Intent(this, ConfigureAutostartActivity.class);
-                    intent.putExtra(ConfigureAutostartActivity.PREFERENCE, "prefStartBefore");
-                    intent.putExtra(ConfigureAutostartActivity.MESSAGE, String.format(getString(R.string.first_run_autostart), "ENDS"));
-                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART_BEFORE);
-                    break;
-                case REQUEST_CODE_AUTOSTART_BEFORE:
+                case REQUEST_CODE_AUTOSTART:
                     //This is so that if they have entered in an invalid user ID before, but
                     //then just decide to run it locally, it will reset the userID to empty
                     SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     final SharedPreferences.Editor editor = sharedprefs.edit();
                     editor.putBoolean("firstRun", false)
-                            .putBoolean("prefEnableAutoStart", true)
                             .apply();
 
                     // now start running

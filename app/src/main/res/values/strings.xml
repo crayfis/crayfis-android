@@ -8,30 +8,26 @@
 	<string name="pref_do_reco">"Do Reco"</string>
 	<string name="pref_threshold">Threshold</string>
 	<string name="pref_startwait">Waits to start after plugin</string>
-	<string name="pref_startafter">Only runs after this time</string>
     <string name="pref_enable_notif" translatable="false">pref_enable_notif</string>
-    <string name="settings_startafter_summary">The app will not autostart after this time</string>
-    <string name="settings_startbefore_summary" translatable="false">The app will not autostart before this time</string>
 
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
-	<string name="pref_startbefore">Only runs before this time</string>
 
     <string name="first_run_welcome_title" translatable="false">CRAYFIS beta</string>
 	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
     <string name="first_run_how_to_title" translatable="false">How to use this app</string>
     <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.</string>
-    <string name="first_run_autostart" translatable="false">"Autostart" schedules overnight data-taking when your phone is charging and not in use. Please select when this feature %s.\n\nThis can be modified at any time in the Settings pane.</string>
+    <string name="about_autostart" translatable="false">\"Autostart\" allows you to schedule nightly data-taking whenever your phone is charging and not in use. Please select when this feature %s.</string>
+    <string name="first_run_autostart" translatable="false">\n\nThis can be modified at any time in the Settings pane.</string>
 
     <string name="continue_btn" translatable="false">CONTINUE</string>
-    <string name="cancel_btn" translatable="false">NO THANKS</string>
+    <string name="next_btn" translatable="false">NEXT</string>
+    <string name="finish_btn" translatable="false">FINISH</string>
+    <string name="cancel_btn" translatable="false">DO NOT AUTOSTART</string>
 
     <string name="settings_wifi_title">Wifi only</string>
     <string name="settings_wifi_summary">Only use Wifi to upload data</string>
     <string name="settings_thresh_title" translatable="false">Fix thresholds</string>
     <string name="settings_thresh_summary" translatable="false">Expert use only!</string>
-
-    <string name="settings_disable_screensaver" translatable="false">Disable screensaver</string>
-    <string name="settings_disable_screensaver_summary" translatable="false">Disable the animated screensaver (may increase battery usage)</string>
 
     <string name="settings_code_summary">Generated from the CRAYFIS website</string>
     <string name="settings_code_title">CRAYFIS User code"</string>
@@ -40,7 +36,7 @@
     <string name="settings_notif_title" translatable="false">Enable notifications</string>
     <string name="settings_notif_summary" translatable="false">Allow CRAYFIS to post notifications to your phone when app finishes</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="settings_pref_resolution_summary" translatable="false">Decrease resolution if camera is working too hard</string>
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_camera_select_mode_summary" translatable="false">Expert use only!</string>

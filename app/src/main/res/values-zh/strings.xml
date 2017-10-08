@@ -7,10 +7,7 @@
     <string name="pref_do_reco">"进行重建"</string>
     <string name="pref_threshold">阈值</string>
     <string name="pref_startwait">接入,等待开始</string>
-    <string name="pref_startafter">仅本次后运行</string>
-    <string name="settings_startafter_summary">应用在本次前不会自动启动</string>
     <string name="settings_startwait_summary">接入手机等待运行时间</string>
-    <string name="pref_startbefore">仅本次前运行</string>
 
     <string name="settings_wifi_title">无线网络</string>
     <string name="settings_wifi_summary">仅使用无线网络上传数据</string>
@@ -19,7 +16,7 @@
     <string name="settings_gallery_title">启用图库</string>
     <string name="settings_gallery_summary">保存并显示所关注的影像</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">关于</string>
     <string name="menu_settings">设置</string>
     <string name="menu_view_mode">显示模式</string>

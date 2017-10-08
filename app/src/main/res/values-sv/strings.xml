@@ -7,10 +7,7 @@
     <string name="pref_do_reco">"Rekonstruera"</string>
     <string name="pref_threshold">Tröskel</string>
     <string name="pref_startwait">Väntar på plugin</string>
-    <string name="pref_startafter">Körs bara efter denna tid</string>
-    <string name="settings_startafter_summary">Appen startar inte automatiskt före denna tid</string>
     <string name="settings_startwait_summary">Fördröjning av start efter inkoppling, i sekunder</string>
-    <string name="pref_startbefore">Körs bara före denna tid</string>
 
     <string name="settings_wifi_title">Wifi endast</string>
     <string name="settings_wifi_summary">Ladda bara upp data när wifi är tillgängligt</string>
@@ -19,7 +16,7 @@
     <string name="settings_gallery_title">Aktivera galleri</string>
     <string name="settings_gallery_summary">Sparar och visar intressanta bilder</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">Om</string>
     <string name="menu_settings">Inställningar</string>
     <string name="menu_view_mode">Visningsläge</string>

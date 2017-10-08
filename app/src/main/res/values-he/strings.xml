@@ -12,10 +12,7 @@
     <string name="pref_do_reco">"בצע שחזור"</string>
     <string name="pref_threshold">סף רגישות</string>
     <string name="pref_startwait">Waits to start after plugin</string>
-    <string name="pref_startafter">Only runs after this time</string>
-    <string name="settings_startafter_summary">The app will not autostart before this time</string>
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
-    <string name="pref_startbefore">Only runs before this time</string>
 
     <string name="settings_wifi_title">Wifi בלבד</string>
     <string name="settings_wifi_summary">העלה מידע רק באמצעות Wifi</string>
@@ -24,7 +21,7 @@
     <string name="settings_gallery_title">אפשר גלריה</string>
     <string name="settings_gallery_summary">שמור והצג תמונות מעניינות</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">אודות</string>
     <string name="menu_settings">הגדרות</string>
     <string name="menu_view_mode">מצב תצוגה</string>
