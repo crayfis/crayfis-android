@@ -1,31 +1,26 @@
 package io.crayfis.android;
 
 import android.app.Activity;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.TimePicker;
 
-import java.util.Calendar;
-
-import io.crayfis.android.broadcast.AutostartReceiver;
 import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 10/6/2017.
  */
 
+/**
+ * An activity to set start/end times for the autostart window
+ */
 public class ConfigureAutostartActivity extends Activity {
 
-    private String mPreference;
+    private String mPreference; // sharedPreference to be changed
     private String mMessage;
 
     private TimePicker mTimePicker;
@@ -46,7 +41,7 @@ public class ConfigureAutostartActivity extends Activity {
         @Override
         public void onClick(View v) {
             savePreference();
-            setAlarm();
+            AutostartUtil.setAlarm(ConfigureAutostartActivity.this);
             setResult(RESULT_OK);
             finish();
         }
@@ -58,6 +53,7 @@ public class ConfigureAutostartActivity extends Activity {
 
         mTimePicker = (TimePicker)findViewById(R.id.time_picker);
 
+        // start with beginning of window
         mPreference = getString(R.string.prefStartAfter);
         mMessage = String.format(getString(R.string.about_autostart), "STARTS");
 
@@ -78,7 +74,7 @@ public class ConfigureAutostartActivity extends Activity {
                         .putBoolean(getString(R.string.prefEnableAutoStart), false)
                         .apply();
 
-                cancelAlarm();
+                AutostartUtil.cancelAlarm(ConfigureAutostartActivity.this);
                 setResult(RESULT_OK);
                 finish();
             }
@@ -87,6 +83,9 @@ public class ConfigureAutostartActivity extends Activity {
 
     }
 
+    /**
+     * Create view given mMessage & mPreference
+     */
     private void configure() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         int timeInMinutes = sharedPreferences.getInt(mPreference, 0);
@@ -112,35 +111,5 @@ public class ConfigureAutostartActivity extends Activity {
             editor.putBoolean(getString(R.string.prefEnableAutoStart), true);
         }
         editor.apply();
-    }
-
-    private void setAlarm() {
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-
-        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        int timeInMin = sharedPrefs.getInt(getString(R.string.prefStartAfter), 0);
-        int hour = timeInMin / 60;
-        int min = timeInMin % 60;
-
-        Calendar c = Calendar.getInstance();
-        c.setTimeInMillis(System.currentTimeMillis());
-        c.set(Calendar.HOUR_OF_DAY, hour);
-        c.set(Calendar.MINUTE, min);
-
-        alarmManager.setInexactRepeating(AlarmManager.RTC_WAKEUP,
-                c.getTimeInMillis(), AlarmManager.INTERVAL_DAY, getAlarmIntent());
-    }
-
-    private void cancelAlarm() {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.cancel(getAlarmIntent());
-    }
-
-    private PendingIntent getAlarmIntent() {
-        Intent autostartIntent = new Intent();
-        autostartIntent.setAction(AutostartReceiver.ACTION_AUTOSTART_ALARM);
-        return PendingIntent.getBroadcast(this, 0,
-                autostartIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 }
