@@ -42,24 +42,6 @@
         android:title="@string/settings_gallery_title">
     </CheckBoxPreference>
 
-    <!-- Expert use only -->
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="prefTriggerLock"
-        android:summary="@string/settings_thresh_summary"
-        android:title="@string/settings_thresh_title">
-    </CheckBoxPreference>
-
-    <ListPreference
-        android:key="prefCameraSelectMode"
-        android:defaultValue="0"
-        android:summary="@string/settings_camera_select_mode_summary"
-        android:title="@string/settings_camera_select_mode_title"
-        android:entries="@array/camera_select_mode_entries"
-        android:entryValues="@array/camera_select_mode_values" />
-
-    <!-- expert only -->
-
     <ListPreference
         android:key="prefResolution"
         android:defaultValue="@string/resolution_1080p"

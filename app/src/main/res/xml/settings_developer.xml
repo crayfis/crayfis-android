@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:defaultValue="false"
+        android:key="prefTriggerLock"
+        android:summary="@string/settings_thresh_summary"
+        android:title="@string/settings_thresh_title" />
+
+    <ListPreference
+        android:key="prefCameraSelectMode"
+        android:defaultValue="0"
+        android:summary="@string/settings_camera_select_mode_summary"
+        android:title="@string/settings_camera_select_mode_title"
+        android:entries="@array/camera_select_mode_entries"
+        android:entryValues="@array/camera_select_mode_values" />
+
+    <CheckBoxPreference
+        android:key="@string/prefStorePublic"
+        android:defaultValue="false"
+        android:title="@string/settings_public_title"
+        android:summary="@string/settings_public_summary" />
+
+</PreferenceScreen>

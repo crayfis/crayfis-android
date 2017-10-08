@@ -83,7 +83,7 @@ public class MainActivity extends Activity  {
         //Pull the existing shared preferences and set editor
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        boolean firstRun = sharedprefs.getBoolean("firstRun", true);
+        boolean firstRun = sharedprefs.getBoolean(getString(R.string.firstRun), true);
         if (firstRun) {
             final Intent intent = new Intent(this, UserNotificationActivity.class);
             intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_welcome_title);
@@ -161,7 +161,8 @@ public class MainActivity extends Activity  {
                         });
 
                 // see if we absolutely need the permission
-                if(!permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || UploadExposureService.IS_PUBLIC) {
+                if(permission.equals(Manifest.permission.CAMERA)
+                        || permission.equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                     builder.setMessage(R.string.permission_error)
                             .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
@@ -171,13 +172,14 @@ public class MainActivity extends Activity  {
                         }
                     });
                 } else {
-                    // if it's a problem, we can shut off the gallery
+                    // if it's a problem, we can shut off the gallery or public storage
                     builder.setMessage(R.string.gallery_dcim_error)
                             .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
                                     PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
                                             .edit()
                                             .putBoolean(getString(R.string.prefEnableGallery), false)
+                                            .putBoolean(getString(R.string.prefStorePublic), false)
                                             .apply();
                                     startActivity(new Intent(MainActivity.this, DAQActivity.class));
                                     finish();
@@ -203,7 +205,7 @@ public class MainActivity extends Activity  {
      */
     public static boolean hasPermissions(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        if(UploadExposureService.IS_PUBLIC
+        if(prefs.getBoolean(context.getString(R.string.prefStorePublic), false)
                 || prefs.getBoolean(context.getString(R.string.prefEnableGallery), false)) {
             permissions = new String[] {
                     Manifest.permission.CAMERA,

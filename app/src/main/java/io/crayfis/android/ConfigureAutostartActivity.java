@@ -25,7 +25,7 @@ public class ConfigureAutostartActivity extends Activity {
         @Override
         public void onClick(View v) {
             savePreference();
-            mPreference = "prefStartBefore";
+            mPreference = getString(R.string.prefStartBefore);
             mMessage = String.format(getString(R.string.about_autostart), "ENDS");
             configure();
             mContinueButton.setOnClickListener(mStopOnClickListener);
@@ -48,7 +48,7 @@ public class ConfigureAutostartActivity extends Activity {
 
         mTimePicker = (TimePicker)findViewById(R.id.time_picker);
 
-        mPreference = "prefStartAfter";
+        mPreference = getString(R.string.prefStartAfter);
         mMessage = String.format(getString(R.string.about_autostart), "STARTS");
 
         configure();
@@ -65,7 +65,7 @@ public class ConfigureAutostartActivity extends Activity {
                 SharedPreferences sharedPrefs
                         = PreferenceManager.getDefaultSharedPreferences(ConfigureAutostartActivity.this);
                 sharedPrefs.edit()
-                        .putBoolean("prefEnableAutoStart", false)
+                        .putBoolean(getString(R.string.prefEnableAutoStart), false)
                         .apply();
                 setResult(RESULT_OK);
                 finish();
@@ -82,7 +82,7 @@ public class ConfigureAutostartActivity extends Activity {
         mTimePicker.setCurrentMinute(timeInMinutes % 60);
 
         TextView messageView = (TextView)findViewById(R.id.time_picker_text);
-        if(sharedPreferences.getBoolean("firstRun", true)) {
+        if(sharedPreferences.getBoolean(getString(R.string.firstRun), true)) {
             mMessage += getString(R.string.first_run_autostart);
         }
         messageView.setText(mMessage);
@@ -96,8 +96,8 @@ public class ConfigureAutostartActivity extends Activity {
 
         SharedPreferences.Editor editor = sharedPrefs.edit();
         editor.putInt(mPreference, 60*hour + minute);
-        if(mPreference.equals("prefStartBefore")) {
-            editor.putBoolean("prefEnableAutoStart", true);
+        if(mPreference.equals(getString(R.string.prefStartBefore))) {
+            editor.putBoolean(getString(R.string.prefEnableAutoStart), true);
         }
         editor.apply();
     }

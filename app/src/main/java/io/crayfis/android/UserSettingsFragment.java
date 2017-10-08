@@ -15,6 +15,11 @@ public class UserSettingsFragment extends PreferenceFragment {
 
         addPreferencesFromResource(R.xml.settings);
 
+        // extra options for developers
+        if(BuildConfig.DEBUG) {
+            addPreferencesFromResource(R.xml.settings_developer);
+        }
+
     }
 
 

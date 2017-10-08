@@ -3,8 +3,10 @@ package io.crayfis.android.server;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -75,8 +77,6 @@ public class UploadExposureService extends IntentService {
     private static boolean sPermitUpload = true;
     private static boolean sValidId = true;
     private static boolean sStartUploading;
-
-    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
 
     /**
      * Helper for submitting an {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -155,6 +155,9 @@ public class UploadExposureService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
         lazyInit();
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final boolean isPublic = prefs.getBoolean(getString(R.string.prefStorePublic), false);
+
         // if a File was submitted, use it as it is
         File uploadFile = (File) intent.getSerializableExtra(FILE);
         // otherwise, make one from protobuf data
@@ -168,12 +171,12 @@ public class UploadExposureService extends IntentService {
                         submitRunConfig(getApplicationContext(), sPendingRunConfig);
                     }
                     final AbstractMessage uploadMessage = builder.build();
-                    uploadFile = saveMessageToCache(uploadMessage);
+                    uploadFile = saveMessageToCache(uploadMessage, isPublic);
                 }
             }
         }
 
-        if (uploadFile != null && !IS_PUBLIC) {
+        if (uploadFile != null && !isPublic) {
             CFLog.d("Queueing upload task");
             final CFApplication application = (CFApplication) getApplication();
             final File file = uploadFile;
@@ -270,7 +273,7 @@ public class UploadExposureService extends IntentService {
     }
 
     @Nullable
-    private File saveMessageToCache(final AbstractMessage abstractMessage) {
+    private File saveMessageToCache(final AbstractMessage abstractMessage, boolean isPublic) {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
         final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
@@ -278,7 +281,7 @@ public class UploadExposureService extends IntentService {
         FileOutputStream outputStream;
 
         try {
-            if(IS_PUBLIC) {
+            if(isPublic) {
                 File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"CRAYFIS");
                 path.mkdir();
                     protofile = new File(path, filename);

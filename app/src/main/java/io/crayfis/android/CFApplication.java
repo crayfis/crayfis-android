@@ -187,10 +187,10 @@ public class CFApplication extends Application {
 
     public boolean inAutostartWindow() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!sharedPrefs.getBoolean("prefEnableAutoStart", false)) return false;
+        if(!sharedPrefs.getBoolean(getString(R.string.prefEnableAutoStart), false)) return false;
 
-        int startAfter = sharedPrefs.getInt("prefStartAfter", 0);
-        int startBefore = sharedPrefs.getInt("prefStartBefore", 0);
+        int startAfter = sharedPrefs.getInt(getString(R.string.prefStartAfter), 0);
+        int startBefore = sharedPrefs.getInt(getString(R.string.prefStartBefore), 0);
         Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR_OF_DAY);
         int minute = c.get(Calendar.MINUTE);

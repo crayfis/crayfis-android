@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="firstRun" translatable="false">firstRun</string>
+    <string name="prefStartAfter" translatable="false">prefStartAfter</string>
+    <string name="prefStartBefore" translatable="false">prefStartBefore</string>
+    <string name="prefEnableAutoStart" translatable="false">prefEnableAutoStart</string>
+    <string name="prefStartWait" translatable="false">prefStartWait</string>
+    <string name="prefStorePublic" translatable="false">prefStorePublic</string>
     <string name="prefEnableGallery" translatable="false">prefEnableGallery</string>
 </resources>
