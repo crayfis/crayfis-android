@@ -247,11 +247,15 @@ public abstract class CFCamera {
     }
 
     public boolean isFlat() {
-        return mCFSensor.isFlat();
+        return !(mCFSensor == null) && mCFSensor.isFlat();
     }
 
     public Location getLastKnownLocation() {
         if(mCFLocation == null) return null;
         return mCFLocation.currentLocation;
+    }
+
+    public boolean isUpdatingLocation() {
+        return !(mCFLocation == null) && mCFLocation.isReceivingUpdates();
     }
 }

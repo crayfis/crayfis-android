@@ -155,18 +155,6 @@ public class DataCollectionFragment extends CFFragment {
     }
 
     /**
-     * Check if the location is valid.
-     *
-     * @param location {@link Location}
-     * @return Whether the location is valid or not.
-     */
-    private boolean isLocationValid(@Nullable final Location location) {
-        return (location != null
-                && java.lang.Math.abs(location.getLongitude())>0.1
-                && java.lang.Math.abs(location.getLatitude())>0.1);
-    }
-
-    /**
      * Set the error message.
      *
      * @param message The message or {@code null} to hide the error view.
@@ -209,7 +197,8 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication application = (CFApplication) activity.getApplication();
-        if (!isLocationValid(CFCamera.getInstance().getLastKnownLocation())) {
+        if (application.getApplicationState() != CFApplication.State.FINISHED &&
+                !CFCamera.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);

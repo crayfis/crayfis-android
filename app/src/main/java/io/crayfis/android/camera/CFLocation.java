@@ -1,9 +1,13 @@
 package io.crayfis.android.camera;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -165,16 +169,16 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 }
                 mLastLocationDeprecated = location;
             } catch(SecurityException e) {
-                // TODO: tell the user to turn on location settings
+                CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+                application.userErrorMessage(R.string.quit_permission, true);
             }
         }
 
         updateLocation(mLastLocationDeprecated, true);
     }
 
-    private boolean location_valid(Location location)
+    private boolean isLocationValid(Location location)
     {
-
         return (location != null
                 && java.lang.Math.abs(location.getLongitude())>0.1
                 && java.lang.Math.abs(location.getLatitude())>0.1);
@@ -188,16 +192,17 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         {
             //  Google location API
             // as long as it's valid, update the data
-            if (location != null)
+            if (location != null) {
                 currentLocation = location;
+            }
         } else {
             // deprecated interface as backup
 
             // is it valid?
-            if (location_valid(location))
+            if (isLocationValid(location))
             {
                 // do we not have a valid current location?
-                if (!location_valid(mLastLocation))
+                if (!isLocationValid(mLastLocation))
                 {
                     // use the deprecated info if it's the best we have
                     currentLocation = location;
@@ -209,6 +214,24 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         RCF_BUILDER.setLocation(currentLocation);
     }
 
+    boolean isReceivingUpdates() {
+
+        // first see if location services are on
+        try {
+            int locationMode = Settings.Secure.getInt(CONTEXT.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            if(locationMode == Settings.Secure.LOCATION_MODE_OFF) return false;
+
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // then make sure we have the right permissions
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                CONTEXT.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+
+    }
 
     String getStatus() {
         return (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude()
