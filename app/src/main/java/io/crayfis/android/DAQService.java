@@ -265,7 +265,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             case STABILIZATION:
             case PRECALIBRATION:
                 L1cal.clear();
-                CFApplication.badFlatEvents = 0;
+                mCFCamera.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
                 break;

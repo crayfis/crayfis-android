@@ -106,7 +106,7 @@
     <string name="quit" translatable="false">Quit</string>
     <string name="keep_browsing" translatable="false">Keep browsing</string>
     <string name="camera_error">CRAYFIS could not open the camera.</string>
-    <string name="sensor_error" translatable="false">Unusual sensor output:\nTry switching Camera Select Mode to \"Auto-detect\" in the Settings tab.</string>
+    <string name="sensor_error" translatable="false">Unusual gravity sensor behavior:\nswitching to backup</string>
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>
     <string name="write_settings_error" translatable="false">CRAYFIS has not been given permission to write to system settings.</string>

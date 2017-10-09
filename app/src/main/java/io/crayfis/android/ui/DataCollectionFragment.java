@@ -213,14 +213,6 @@ public class DataCollectionFragment extends CFFragment {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
-        } else if(CFApplication.badFlatEvents >= 5
-                && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
-            // gravity sensor is clearly impaired, so just determine orientation with light levels
-            setErrorMessage(R.string.sensor_error);
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
-            prefs.edit()
-                    .putString("prefCameraSelectMode", "1")
-                    .apply();
         } else if (!UploadExposureTask.sValidId.get()) {
             setErrorMessage(R.string.bad_user_code);
         } else if (!UploadExposureTask.sPermitUpload.get()) {

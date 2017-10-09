@@ -90,8 +90,6 @@ public class CFApplication extends Application {
     private static long mStartTimeNano;
     private static int mBatteryTemp;
 
-    public static int badFlatEvents = 0;
-
     private State mApplicationState;
 
     private AppBuild mAppBuild;

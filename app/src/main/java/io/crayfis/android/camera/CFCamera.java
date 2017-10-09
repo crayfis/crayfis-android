@@ -1,9 +1,11 @@
 package io.crayfis.android.camera;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.renderscript.RenderScript;
 
 import java.util.ArrayDeque;
@@ -45,7 +47,7 @@ public abstract class CFCamera {
     final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
     final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
-
+    public int badFlatEvents;
 
     private static CFCamera sInstance;
 
@@ -145,9 +147,19 @@ public abstract class CFCamera {
         if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startStabilizationTimer();
             if(!isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
+                mApplication.userErrorMessage(R.string.sensor_error, false);
             } else {
-                mApplication.userErrorMessage(R.string.warning_bright, false);
+                badFlatEvents++;
+                if(badFlatEvents < 5) {
+                    mApplication.userErrorMessage(R.string.warning_bright, false);
+                } else {
+                    // gravity sensor is clearly impaired, so just determine orientation with light levels
+                    mApplication.userErrorMessage(R.string.sensor_error, false);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+                    prefs.edit()
+                            .putString("prefCameraSelectMode", "1")
+                            .apply();
+                }
             }
         }
 
