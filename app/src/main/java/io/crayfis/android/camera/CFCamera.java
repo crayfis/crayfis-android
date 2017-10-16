@@ -44,7 +44,6 @@ public abstract class CFCamera {
     int mResX;
     int mResY;
 
-    final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
     final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
     public int badFlatEvents;
@@ -112,7 +111,7 @@ public abstract class CFCamera {
      *
      * @param currentId The cameraId of the bad frame
      */
-    public synchronized void changeCameraFrom(int currentId) {
+    public void changeCameraFrom(int currentId) {
         if(currentId != mCameraId) {
             return;
         }
@@ -173,7 +172,6 @@ public abstract class CFCamera {
         }
 
         synchronized (mTimestampHistory) {
-            mQueuedTimestamps.clear();
             mTimestampHistory.clear();
         }
 

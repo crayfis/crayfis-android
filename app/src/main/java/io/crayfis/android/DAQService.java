@@ -150,6 +150,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.i(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
+            if(previous == CFApplication.State.FINISHED) return;
 
             switch(current) {
                 case STABILIZATION:
