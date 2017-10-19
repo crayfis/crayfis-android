@@ -15,12 +15,9 @@ import com.google.protobuf.AbstractMessage;
 import java.io.File;
 import java.io.FileOutputStream;
 
-import io.crayfis.android.BuildConfig;
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -35,6 +32,8 @@ import io.crayfis.android.util.CFLog;
  * received, write to the cache and execute a {@link io.crayfis.android.server.UploadExposureTask}.
  */
 public class UploadExposureService extends IntentService {
+
+    public static final String EXTRA_UPLOAD_CACHE = "upload_cache";
 
     /**
      * Key for storing a parcelable {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -56,7 +55,6 @@ public class UploadExposureService extends IntentService {
      */
     public static final String CALIBRATION_RESULT = "calibration_result";
 
-    public static final String FILE = "file";
 
     /**
      * A RunConfig is only to be uploaded if an ExposureBlock or CalibrationResult has been received.
@@ -68,15 +66,11 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private static DataProtos.RunConfig sPendingRunConfig;
 
-    private static boolean sReceivedExposureBlock;
-
-    private static final CFConfig sConfig = CFConfig.getInstance();
     private static CFApplication.AppBuild sAppBuild;
     private static ServerInfo sServerInfo;
 
-    private static boolean sPermitUpload = true;
-    private static boolean sValidId = true;
-    private static boolean sStartUploading;
+    private static long sLastCacheUpload;
+    private static final long UPLOAD_CACHE_GAP = 5000L;
 
     /**
      * Helper for submitting an {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -140,11 +134,16 @@ public class UploadExposureService extends IntentService {
         context.startService(intent);
     }
 
-    public static void submitFile(@NonNull final Context context, @NonNull final File file) {
+    public synchronized static void uploadFileCache(@NonNull final Context context) {
+
+        // make sure this isn't called again before the files can upload
+        if(System.currentTimeMillis() - sLastCacheUpload < UPLOAD_CACHE_GAP) return;
+        sLastCacheUpload = System.currentTimeMillis();
 
         final Intent intent = new Intent(context, UploadExposureService.class);
-        intent.putExtra(FILE, file);
+        intent.putExtra(EXTRA_UPLOAD_CACHE, true);
         context.startService(intent);
+
     }
 
     public UploadExposureService() {
@@ -158,10 +157,17 @@ public class UploadExposureService extends IntentService {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         final boolean isPublic = prefs.getBoolean(getString(R.string.prefStorePublic), false);
 
-        // if a File was submitted, use it as it is
-        File uploadFile = (File) intent.getSerializableExtra(FILE);
-        // otherwise, make one from protobuf data
-        if(uploadFile == null) {
+        if(intent.getBooleanExtra(EXTRA_UPLOAD_CACHE, false)) {
+            // upload everything in the file directory
+            Context context = getApplicationContext();
+            File[] cache = context.getFilesDir().listFiles();
+            for(File f: cache) {
+                if(f.getName().endsWith(".bin")) {
+                    uploadFile(f);
+                }
+            }
+        } else {
+            // otherwise, make a file from protobuf data
             final AbstractMessage message = getAbstractMessage(intent);
             if (message != null) {
                 CFLog.d("Got message " + message);
@@ -171,31 +177,42 @@ public class UploadExposureService extends IntentService {
                         submitRunConfig(getApplicationContext(), sPendingRunConfig);
                     }
                     final AbstractMessage uploadMessage = builder.build();
-                    uploadFile = saveMessageToCache(uploadMessage, isPublic);
+                    File file = saveMessageToCache(uploadMessage, isPublic);
+                    if(file != null) {
+                        if(isPublic) {
+                            // make sure we save things like precalibration result
+                            CFApplication application = (CFApplication) this.getApplication();
+                            application.savePreferences();
+                        } else {
+                            uploadFile(file);
+                        }
+                    }
                 }
             }
         }
 
-        if (uploadFile != null && !isPublic) {
-            CFLog.d("Queueing upload task");
-            final CFApplication application = (CFApplication) getApplication();
-            final File file = uploadFile;
+    }
 
-            // need to call execute() on UI thread
-            Handler handler = new Handler(getMainLooper());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    new UploadExposureTask(application, sServerInfo, file).
-                            execute();
-                }
-            });
+    /**
+     * Uploads file to server
+     *
+     * @param uploadFile .bin file to be processed
+     */
+    private void uploadFile(@NonNull File uploadFile) {
 
-        } else {
-            // make sure we save things like precalibration result
-            CFApplication application = (CFApplication) this.getApplication();
-            application.savePreferences();
-        }
+        CFLog.d("Queueing upload task");
+        final CFApplication application = (CFApplication) getApplication();
+        final File file = uploadFile;
+
+        // need to call execute() on UI thread
+        Handler handler = new Handler(getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {new UploadExposureTask(application, sServerInfo, file).
+                    execute();
+            }
+        });
+
     }
 
     /**
