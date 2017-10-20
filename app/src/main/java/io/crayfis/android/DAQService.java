@@ -378,6 +378,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
                 mHardwareCheckTimer.cancel();
                 mApplication.killTimer();
+
+                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
                 stopSelf();
                 break;
             default:

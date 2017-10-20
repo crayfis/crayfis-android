@@ -125,6 +125,8 @@ class CFCamera2 extends CFCamera {
                 mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
+            } catch (IllegalStateException e) {
+                // camera was already closed
             }
         }
 
@@ -380,6 +382,8 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public String getParams() {
+
+        if(mPreviewSize == null) return "";
         String paramtxt = "Size: " + mPreviewSize.toString() + ", ";
 
         if(mPreviewRequest != null) {

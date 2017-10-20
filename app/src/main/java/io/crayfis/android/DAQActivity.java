@@ -29,7 +29,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -73,6 +72,8 @@ public class DAQActivity extends AppCompatActivity {
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private ServiceConnection mServiceConnection;
+
+    private boolean mRestartAfterSettings = false;
 
 
 	Context context;
@@ -133,6 +134,9 @@ public class DAQActivity extends AppCompatActivity {
         context = getApplicationContext();
         DAQIntent = new Intent(this, DAQService.class);
 
+        // make sure we begin the service when the activity is created
+        mRestartAfterSettings = true;
+
         mServiceConnection = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
@@ -166,12 +170,6 @@ public class DAQActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        // check if data-taking has ended but user is still browsing
-        //CFApplication application = (CFApplication) getApplication();
-        //if(application.getApplicationState() == CFApplication.State.FINISHED) return;
-
-        CFLog.d("DAQActivity onResume");
-
         // check whether we need to re-evaluate permissions
         if(!MainActivity.hasPermissions(this)) {
             startActivity(new Intent(this, MainActivity.class));
@@ -182,7 +180,12 @@ public class DAQActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_ERROR));
 
-        // in case this isn't already running
+        // see if we are intentionally finished
+        CFApplication application = (CFApplication) getApplication();
+        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestartAfterSettings) return;
+        mRestartAfterSettings = false;
+
+        // if not, start the service
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
@@ -223,6 +226,8 @@ public class DAQActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.daq_activity, menu);
+        // FIXME: this is a dumb way to do this, but it works
+        invalidateOptionsMenu();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -318,7 +323,12 @@ public class DAQActivity extends AppCompatActivity {
     public void clickedSettings() {
 
         CFApplication application = (CFApplication) getApplication();
-        application.setApplicationState(CFApplication.State.FINISHED);
+        CFApplication.State state = application.getApplicationState();
+
+        if(state != CFApplication.State.FINISHED) {
+            application.setApplicationState(CFApplication.State.FINISHED);
+            mRestartAfterSettings = true;
+        }
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
@@ -374,8 +384,6 @@ public class DAQActivity extends AppCompatActivity {
 
     private void clickedStart() {
         CFLog.d("clickedStart()");
-        CFApplication application = (CFApplication)getApplication();
-        application.setApplicationState(CFApplication.State.INIT);
         invalidateOptionsMenu();
 
         startService(DAQIntent);

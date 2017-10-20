@@ -73,7 +73,8 @@ public class CFApplication extends Application {
 
             if(consecutiveIdles >= 3) {
                 handleUnresponsive();
-            } else if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
+            }
+            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
                     || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
