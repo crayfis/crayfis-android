@@ -58,64 +58,21 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onCreate() {
         super.onCreate();
 
+        CFLog.d("DAQService onCreate()");
         mApplication = (CFApplication)getApplication();
         context = getApplicationContext();
-        mApplication.setApplicationState(CFApplication.State.INIT);
-
-        // State changes
-
         mBroadcastManager = LocalBroadcastManager.getInstance(context);
-        mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-
-        // Frame Processing
-
-        mL1Processor = new L1Processor(mApplication);
-        mPreCal = PreCalibrator.getInstance(context);
-        L1cal = L1Calibrator.getInstance();
-
-
-        xbManager = ExposureBlockManager.getInstance(this);
-
-        // System check
-
-        starttime = System.currentTimeMillis();
-        last_battery_check_time = starttime;
-        batteryPct = -1; // indicate no data yet
-        batteryTemp = -1;
-
-        if(mHardwareCheckTimer != null) {
-            mHardwareCheckTimer.cancel();
-        }
-        mHardwareCheckTimer = new Timer();
-        mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
-
-        // start camera
-
-        mCFCamera = CFCamera.getInstance();
-        mCFCamera.setCallback(this);
-        mCFCamera.register(context);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        // notify user that CRAYFIS is running in background
-        Intent restartIntent = new Intent(this, MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(restartIntent);
-        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        // restart if DAQService is dead
+        if(mApplication.getApplicationState() == CFApplication.State.FINISHED) {
 
-        if(mNotificationBuilder == null) {
-            mNotificationBuilder = new NotificationCompat.Builder(this)
-                    .setSmallIcon(R.drawable.ic_just_a)
-                    .setContentTitle(getString(R.string.notification_title))
-                    .setContentText(getString(R.string.notification_idle))
-                    .setContentIntent(resultPendingIntent);
+            mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+            mApplication.setApplicationState(CFApplication.State.INIT);
         }
-
-        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         // tell service to restart if it gets killed
         return START_STICKY;
@@ -129,8 +86,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         if(mApplication.getApplicationState() != CFApplication.State.FINISHED) {
             mApplication.setApplicationState(CFApplication.State.FINISHED);
         }
-
-        mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
 
         CFLog.d("DAQService: stopped");
     }
@@ -150,9 +105,11 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
             CFLog.i(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
-            if(previous == CFApplication.State.FINISHED) return;
 
             switch(current) {
+                case INIT:
+                    doStateTransitionInitialization(previous);
+                    break;
                 case STABILIZATION:
                     doStateTransitionStabilization(previous);
                     break;
@@ -180,6 +137,65 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         }
     };
 
+    /**
+     * In INIT mode, we set up the cameras, trigger, etc.
+     */
+    private void doStateTransitionInitialization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+
+        switch (previousState) {
+            case FINISHED:
+
+                // Notifications
+
+                Intent restartIntent = new Intent(this, MainActivity.class);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(MainActivity.class);
+                stackBuilder.addNextIntent(restartIntent);
+                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                if(mNotificationBuilder == null) {
+                    mNotificationBuilder = new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_just_a)
+                            .setContentTitle(getString(R.string.notification_title))
+                            .setContentText(getString(R.string.notification_idle))
+                            .setContentIntent(resultPendingIntent);
+                }
+
+                startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+
+                // Frame Processing
+
+                mL1Processor = new L1Processor(mApplication);
+                mPreCal = PreCalibrator.getInstance(context);
+                L1cal = L1Calibrator.getInstance();
+
+
+                xbManager = ExposureBlockManager.getInstance(this);
+
+                // System check
+
+                starttime = System.currentTimeMillis();
+                last_battery_check_time = starttime;
+                batteryPct = -1; // indicate no data yet
+                batteryTemp = -1;
+
+                if(mHardwareCheckTimer != null) {
+                    mHardwareCheckTimer.cancel();
+                }
+                mHardwareCheckTimer = new Timer();
+                mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
+
+                // start camera
+
+                mCFCamera = CFCamera.getInstance();
+                mCFCamera.setCallback(this);
+                mCFCamera.register(context);
+
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+        }
+    }
 
     /**
      * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
@@ -360,8 +376,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 xbManager.destroy();
 
                 xbManager.flushCommittedBlocks(true);
-
-                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
 
                 mHardwareCheckTimer.cancel();
                 mApplication.killTimer();

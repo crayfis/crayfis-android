@@ -111,7 +111,7 @@ public class CFApplication extends Application {
         //config.onSharedPreferenceChanged(localPrefs, null);
         config.onSharedPreferenceChanged(defaultPrefs, null);
 
-        setApplicationState(State.INIT);
+        setApplicationState(State.FINISHED);
 
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
@@ -162,12 +162,11 @@ public class CFApplication extends Application {
         final State currentState = mApplicationState;
         mApplicationState = applicationState;
 
-        if(applicationState != State.INIT) {
-            final Intent intent = new Intent(ACTION_STATE_CHANGE);
-            intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
-            intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        }
+        final Intent intent = new Intent(ACTION_STATE_CHANGE);
+        intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
+        intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
     }
 
     private void handleUnresponsive() {

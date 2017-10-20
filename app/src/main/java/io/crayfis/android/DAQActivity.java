@@ -29,6 +29,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -77,7 +78,6 @@ public class DAQActivity extends AppCompatActivity {
 	Context context;
 
     private Intent DAQIntent;
-    private boolean mRestart = true;
 
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private final BroadcastReceiver ERROR_RECEIVER = new BroadcastReceiver() {
@@ -104,7 +104,6 @@ public class DAQActivity extends AppCompatActivity {
                             .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    mRestart = false;
                                     DataCollectionFragment.updateIdleStatus(getString(R.string.idle_finished));
                                 }
                             })
@@ -134,7 +133,6 @@ public class DAQActivity extends AppCompatActivity {
 
         context = getApplicationContext();
         DAQIntent = new Intent(this, DAQService.class);
-        mRestart = true;
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -170,7 +168,8 @@ public class DAQActivity extends AppCompatActivity {
         super.onResume();
 
         // check if data-taking has ended but user is still browsing
-        if(!mRestart) return;
+        //CFApplication application = (CFApplication) getApplication();
+        //if(application.getApplicationState() == CFApplication.State.FINISHED) return;
 
         CFLog.d("DAQActivity onResume");
 
@@ -229,6 +228,20 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(final Menu menu) {
+        MenuItem startStopButton = menu.findItem(R.id.menu_start_stop);
+        CFApplication application = (CFApplication) getApplication();
+        if(application.getApplicationState() == CFApplication.State.FINISHED) {
+            startStopButton.setIcon(R.drawable.ic_action_resume);
+            startStopButton.setTitle(R.string.menu_resume);
+        } else {
+            startStopButton.setIcon(R.drawable.ic_action_pause);
+            startStopButton.setTitle(R.string.menu_stop);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
         // Check if the drawer toggle has already handled the click.  The hamburger icon is an option item.
         if (mActionBarDrawerToggle.onOptionsItemSelected(item)) {
@@ -242,8 +255,13 @@ public class DAQActivity extends AppCompatActivity {
             case R.id.menu_about:
                 clickedAbout();
                 return true;
-            case R.id.menu_stop:
-                clickedStop();
+            case R.id.menu_start_stop:
+                CFApplication application = (CFApplication) getApplicationContext();
+                if(application.getApplicationState() == CFApplication.State.FINISHED) {
+                    clickedStart();
+                } else {
+                    clickedStop();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -257,8 +275,10 @@ public class DAQActivity extends AppCompatActivity {
     private void configureNavigation() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
+        if(actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
 
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -351,6 +371,17 @@ public class DAQActivity extends AppCompatActivity {
     private void clickedStop() {
         CFApplication application = (CFApplication)getApplication();
         application.setApplicationState(CFApplication.State.FINISHED);
+        invalidateOptionsMenu();
+    }
+
+    private void clickedStart() {
+        CFLog.d("clickedStart()");
+        CFApplication application = (CFApplication)getApplication();
+        application.setApplicationState(CFApplication.State.INIT);
+        invalidateOptionsMenu();
+
+        startService(DAQIntent);
+        bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
 
