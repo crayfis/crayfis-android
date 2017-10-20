@@ -369,7 +369,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 mCFCamera.changeCamera();
             case IDLE:
-                DataCollectionFragment.updateIdleStatus(getString(R.string.idle_finished));
                 mCFCamera.unregister();
                 mPreCal.destroy();
                 L1cal.destroy();

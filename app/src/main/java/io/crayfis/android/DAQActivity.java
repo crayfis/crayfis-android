@@ -104,7 +104,6 @@ public class DAQActivity extends AppCompatActivity {
                             .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    DataCollectionFragment.updateIdleStatus(getString(R.string.idle_finished));
                                 }
                             })
                             .setView(tx1).show();
@@ -318,7 +317,6 @@ public class DAQActivity extends AppCompatActivity {
 
     public void clickedSettings() {
 
-        DataCollectionFragment.updateIdleStatus("");
         CFApplication application = (CFApplication) getApplication();
         application.setApplicationState(CFApplication.State.FINISHED);
 		Intent i = new Intent(this, UserSettingActivity.class);

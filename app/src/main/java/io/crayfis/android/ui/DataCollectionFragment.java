@@ -87,7 +87,7 @@ public class DataCollectionFragment extends CFFragment {
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
             case PRECALIBRATION:
-                mStatus.setText(getString(R.string.precalibration));
+                mStatus.setText(R.string.precalibration);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
@@ -105,14 +105,19 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
-            case FINISHED:
-                mStatus.setText(getString(R.string.idle));
+                mStatus.setText(R.string.idle);
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
-                setStatusMessage(mIdleStatus);
+                setStatusMessage("");
+                break;
+            case FINISHED:
+                mStatus.setText(R.string.idle);
+                mProgressBar.setVisibility(View.INVISIBLE);
+                mDataCollectionStats.setVisibility(View.GONE);
+                setStatusMessage(getString(R.string.idle_finished));
                 break;
             case INIT:
-                mStatus.setText(getString(R.string.init));
+                mStatus.setText(R.string.init);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
@@ -132,6 +137,10 @@ public class DataCollectionFragment extends CFFragment {
         mStatusMessage.setText(message);
     }
 
+    public static void updateIdleStatus(String status) {
+        mIdleStatus = status;
+    }
+
     /**
      * Set the error message.
      *
@@ -148,10 +157,6 @@ public class DataCollectionFragment extends CFFragment {
             }
             mErrorMessage.setText(resId);
         }
-    }
-
-    public static void updateIdleStatus(String status) {
-        mIdleStatus = status;
     }
 
     /**
@@ -197,8 +202,9 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication application = (CFApplication) activity.getApplication();
-        if (application.getApplicationState() != CFApplication.State.FINISHED &&
-                !CFCamera.getInstance().isUpdatingLocation()) {
+        if(application.getApplicationState() == CFApplication.State.FINISHED) return;
+
+        if (!CFCamera.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
