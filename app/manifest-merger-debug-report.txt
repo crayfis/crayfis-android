@@ -112,7 +112,7 @@ action#android.intent.action.BATTERY_OKAY
 ADDED from AndroidManifest.xml:44:17
 	android:name
 		ADDED from AndroidManifest.xml:44:25
-receiver#io.crayfis.android.MyDisconnectReceiver
+receiver#io.crayfis.android.receiver.MyDisconnectReceiver
 ADDED from AndroidManifest.xml:48:9
 	android:name
 		ADDED from AndroidManifest.xml:48:19

@@ -49,7 +49,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_ACCOUNT_SCORE = "account_score";
-    private static final String KEY_UPDATE_URL = "update_url";
     private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
     private static final String KEY_CAMERA_SELECT_MODE = "prefCameraSelectMode";
@@ -65,7 +64,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
     private static final int DEFAULT_HOTCELL_FRAMES = 10000;
-    private static final float DEFAULT_HOTCELL_THRESH = .0001f;
+    private static final float DEFAULT_HOTCELL_THRESH = .002f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
@@ -81,7 +80,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
-    private static final String DEFAULT_UPDATE_URL = "";
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
@@ -113,7 +111,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
-    private String mUpdateURL;
     private boolean mTriggerLock;
     private String mTargetResolutionStr;
     private int mCameraSelectMode;
@@ -144,7 +141,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
-        mUpdateURL = DEFAULT_UPDATE_URL;
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
@@ -393,7 +389,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public float getAccountScore() { return mAccountScore; }
-    public String getUpdateURL() { return mUpdateURL; }
 
     /***
      * Ask whether the trigger lock is engaged.
@@ -434,7 +429,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
-        mUpdateURL = sharedPreferences.getString(KEY_UPDATE_URL, DEFAULT_UPDATE_URL);
         mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
         String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE,
@@ -534,9 +528,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
         }
-        if (serverCommand.getUpdateURL() != null) {
-            mUpdateURL = serverCommand.getUpdateURL();
-        }
         if (serverCommand.getL1Trigger() != null) {
             mL1Trigger = serverCommand.getL1Trigger();
         }
@@ -586,7 +577,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
-                .putString(KEY_UPDATE_URL,mUpdateURL)
                 .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
                 .putString(KEY_CAMERA_SELECT_MODE,Integer.toString(mCameraSelectMode))

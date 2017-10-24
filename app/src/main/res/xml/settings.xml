@@ -12,11 +12,13 @@
          	android:title="@string/settings_wifi_title" />
 
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="prefEnableAutoStart"
-        android:summary="@string/settings_autostart_summary"
-        android:title="@string/settings_autostart_title" />
+    <Preference
+        android:title="@string/settings_autostart_title"
+        android:summary="@string/settings_autostart_summary">
+        <intent android:action="io.crayfis.android.ConfigureAutostartActivity"
+            android:targetPackage="io.crafis.android"/>
+    </Preference>
+
     <ListPreference
             android:key="prefStartWait"
             android:defaultValue="0"
@@ -24,20 +26,7 @@
             android:summary="@string/settings_startwait_summary"
             android:entryValues="@array/pref_startwait"
             android:title="@string/pref_startwait" />
-    <ListPreference
-            android:key="prefStartAfter"
-            android:defaultValue="20"
-            android:entries="@array/pref_starttimes"
-            android:summary="@string/settings_startafter_summary"
-            android:entryValues="@array/pref_starttimes"
-            android:title="@string/pref_startafter" />
-    <ListPreference
-            android:key="prefStartBefore"
-            android:defaultValue="8"
-            android:entries="@array/pref_starttimes"
-            android:summary="@string/settings_startbefore_summary"
-            android:entryValues="@array/pref_starttimes"
-            android:title="@string/pref_startbefore" />
+
 
     <CheckBoxPreference
         android:defaultValue="true"
@@ -52,24 +41,6 @@
         android:summary="@string/settings_gallery_summary"
         android:title="@string/settings_gallery_title">
     </CheckBoxPreference>
-
-    <!-- Expert use only -->
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="prefTriggerLock"
-        android:summary="@string/settings_thresh_summary"
-        android:title="@string/settings_thresh_title">
-    </CheckBoxPreference>
-
-    <ListPreference
-        android:key="prefCameraSelectMode"
-        android:defaultValue="0"
-        android:summary="@string/settings_camera_select_mode_summary"
-        android:title="@string/settings_camera_select_mode_title"
-        android:entries="@array/camera_select_mode_entries"
-        android:entryValues="@array/camera_select_mode_values" />
-
-    <!-- expert only -->
 
     <ListPreference
         android:key="prefResolution"

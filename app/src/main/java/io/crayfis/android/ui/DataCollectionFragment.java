@@ -5,8 +5,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
@@ -41,10 +44,6 @@ public class DataCollectionFragment extends CFFragment {
     private StateChangeReceiver mStateChangeReceiver;
 
     private final @StringRes int ABOUT_ID = R.string.toast_status;
-
-    public static DataCollectionFragment getInstance() {
-        return new DataCollectionFragment();
-    }
 
     @Override
     public void onDestroyView() {
@@ -88,7 +87,7 @@ public class DataCollectionFragment extends CFFragment {
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
             case PRECALIBRATION:
-                mStatus.setText(getString(R.string.precalibration));
+                mStatus.setText(R.string.precalibration);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
@@ -106,13 +105,19 @@ public class DataCollectionFragment extends CFFragment {
                 mStatusMessage.setVisibility(View.GONE);
                 break;
             case IDLE:
-                mStatus.setText(getString(R.string.idle));
+                mStatus.setText(R.string.idle);
                 mProgressBar.setVisibility(View.INVISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
-                setStatusMessage(mIdleStatus);
+                setStatusMessage("");
+                break;
+            case FINISHED:
+                mStatus.setText(R.string.idle);
+                mProgressBar.setVisibility(View.INVISIBLE);
+                mDataCollectionStats.setVisibility(View.GONE);
+                setStatusMessage(getString(R.string.idle_finished));
                 break;
             case INIT:
-                mStatus.setText(getString(R.string.init));
+                mStatus.setText(R.string.init);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
@@ -132,6 +137,10 @@ public class DataCollectionFragment extends CFFragment {
         mStatusMessage.setText(message);
     }
 
+    public static void updateIdleStatus(String status) {
+        mIdleStatus = status;
+    }
+
     /**
      * Set the error message.
      *
@@ -148,22 +157,6 @@ public class DataCollectionFragment extends CFFragment {
             }
             mErrorMessage.setText(resId);
         }
-    }
-
-    public void updateIdleStatus(String status) {
-        mIdleStatus = status;
-    }
-
-    /**
-     * Check if the location is valid.
-     *
-     * @param location {@link Location}
-     * @return Whether the location is valid or not.
-     */
-    private boolean isLocationValid(@Nullable final Location location) {
-        return (location != null
-                && java.lang.Math.abs(location.getLongitude())>0.1
-                && java.lang.Math.abs(location.getLatitude())>0.1);
     }
 
     /**
@@ -209,13 +202,12 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication application = (CFApplication) activity.getApplication();
-        if (!isLocationValid(CFCamera.getInstance().getLastKnownLocation())) {
+        if(application.getApplicationState() == CFApplication.State.FINISHED) return;
+
+        if (!CFCamera.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
-        } else if(CFApplication.badFlatEvents >= 5
-                && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
-            setErrorMessage(R.string.sensor_error);
         } else if (!UploadExposureTask.sValidId.get()) {
             setErrorMessage(R.string.bad_user_code);
         } else if (!UploadExposureTask.sPermitUpload.get()) {
@@ -224,15 +216,17 @@ public class DataCollectionFragment extends CFFragment {
             setErrorMessage(0);
         }
 
-        if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-            DAQService.DAQBinder binder = DAQActivity.getBinder();
-            if(binder != null) {
+        try {
+            DAQService.DAQBinder binder = ((DAQActivity)getActivity()).getBinder();
+            if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
                 final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
-                if (status != null) {
-                    mDataCollectionStats.setStatus(status);
-                }
+                mDataCollectionStats.setStatus(status);
             }
-
+            if (mStatusMessage.getVisibility() == View.VISIBLE) {
+                setStatusMessage(mIdleStatus);
+            }
+        } catch (Exception e) {
+            // don't crash
         }
     }
 }

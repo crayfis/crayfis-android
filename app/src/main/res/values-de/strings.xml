@@ -7,12 +7,7 @@
     <string name="pref_do_reco">"Do Reco"</string>
     <string name="pref_threshold">Schwellenwert</string>
     <string name="pref_startwait">Waits to start after plugin</string>
-    <string name="pref_startafter"> Nur nach dieser Uhrzeit starten</string>
-    <string name="settings_startafter_summary">Die App wird nicht vor dieser Zeit starten</string>
     <string name="settings_startwait_summary">Wartezeit in Sekunden nach dem Einstecken des Telefons vor der App Startzeit</string>
-    <string name="pref_startbefore">Only runs before this time</string>
-    <string name="userIDlogin1">Wilkommen bei dem CRAYFIS beta testing! \nVielen Dank fuer ihre Hilfe!\n\n\n CRAYFIS ist ein App \ndas euer  Smartphone\n als Teil eines Weltweit verbreiteten Netzwerk\nzur Suche nach kosmischen strahlen benutzen wird.\n\n Weitere Informationen unter: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nAnleitung:\n Smartphone einstecken mit\n Kamera nach open auf einer ebenen Flaeche.\n\n Sobald das App startet werden nach einer Startphase von 30-60 Sekunden zur kalibrierung Daten gesammelt!</string>
 
     <string name="settings_wifi_title">Nur auf Wifi</string>
     <string name="settings_wifi_summary">Nur Wifi zur Datenuebertragung nutzen</string>
@@ -20,7 +15,7 @@
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title"> Gallerie aktivieren</string>
     <string name="settings_gallery_summary">Interessante Bilder sichern und zeigen</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">About</string>
     <string name="menu_settings">Einstellungen</string>
     <string name="menu_view_mode">Ansicht</string>

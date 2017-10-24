@@ -1,15 +1,18 @@
 package io.crayfis.android.camera;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
+import android.preference.PreferenceManager;
 import android.renderscript.RenderScript;
 
 import java.util.ArrayDeque;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.CFConfig;
+import io.crayfis.android.R;
 import io.crayfis.android.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.precalibration.PreCalibrator;
@@ -41,10 +44,9 @@ public abstract class CFCamera {
     int mResX;
     int mResY;
 
-    final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
     final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
-
+    public int badFlatEvents;
 
     private static CFCamera sInstance;
 
@@ -109,7 +111,7 @@ public abstract class CFCamera {
      *
      * @param currentId The cameraId of the bad frame
      */
-    public synchronized void changeCameraFrom(int currentId) {
+    public void changeCameraFrom(int currentId) {
         if(currentId != mCameraId) {
             return;
         }
@@ -141,10 +143,23 @@ public abstract class CFCamera {
 
         mCameraId = nextId;
 
-        if(nextId == -1 && state != CFApplication.State.IDLE ) {
-
-            DataCollectionFragment.getInstance().updateIdleStatus("No available cameras: waiting to retry");
+        if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startStabilizationTimer();
+            if(!isFlat()) {
+                mApplication.userErrorMessage(R.string.warning_facedown, false);
+            } else {
+                badFlatEvents++;
+                if(badFlatEvents < 5) {
+                    mApplication.userErrorMessage(R.string.warning_bright, false);
+                } else {
+                    // gravity sensor is clearly impaired, so just determine orientation with light levels
+                    mApplication.userErrorMessage(R.string.sensor_error, false);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+                    prefs.edit()
+                            .putString("prefCameraSelectMode", "1")
+                            .apply();
+                }
+            }
         }
 
         ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
@@ -157,7 +172,6 @@ public abstract class CFCamera {
         }
 
         synchronized (mTimestampHistory) {
-            mQueuedTimestamps.clear();
             mTimestampHistory.clear();
         }
 
@@ -231,11 +245,15 @@ public abstract class CFCamera {
     }
 
     public boolean isFlat() {
-        return mCFSensor.isFlat();
+        return !(mCFSensor == null) && mCFSensor.isFlat();
     }
 
     public Location getLastKnownLocation() {
         if(mCFLocation == null) return null;
         return mCFLocation.currentLocation;
+    }
+
+    public boolean isUpdatingLocation() {
+        return !(mCFLocation == null) && mCFLocation.isReceivingUpdates();
     }
 }

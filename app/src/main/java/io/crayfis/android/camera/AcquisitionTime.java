@@ -9,7 +9,7 @@ import io.crayfis.android.CFApplication;
 /**
  * Created by cshimmin on 5/13/16.
  */
-public class AcquisitionTime implements Parcelable {
+public class AcquisitionTime {
     public final long Nano;
     public final long NTP;
     public final long Sys;
@@ -25,28 +25,4 @@ public class AcquisitionTime implements Parcelable {
         NTP = parcel.readLong();
         Sys = parcel.readLong();
     }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeLong(Nano);
-        parcel.writeLong(NTP);
-        parcel.writeLong(Sys);
-    }
-
-    public static final Creator<AcquisitionTime> CREATOR = new Creator<AcquisitionTime>() {
-        @Override
-        public AcquisitionTime createFromParcel(final Parcel source) {
-            return new AcquisitionTime(source);
-        }
-
-        @Override
-        public AcquisitionTime[] newArray(final int size) {
-            return new AcquisitionTime[size];
-        }
-    };
 }

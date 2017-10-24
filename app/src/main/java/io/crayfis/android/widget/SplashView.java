@@ -106,8 +106,7 @@ public class SplashView extends AppCompatImageView
                 // get the event and pixels
 
                 L2Task.RecoEvent event = iterator.next();
-                ArrayList<L2Task.RecoPixel> pixels = event.pixels;
-                long event_time = event.time;
+                long event_time = event.getTime();
                 //CFLog.d(" SplashView draw event with "+pixels.size()+ " from time "+mLayoutBlack.events.get(ie).time);
 
                 // calculate the event age
@@ -119,12 +118,13 @@ public class SplashView extends AppCompatImageView
                     //CFLog.d("Splashview removing event of age " + age + " from time " + event_time);
                     iterator.remove();
                 } else {
-                    for (int ip = 0; ip < pixels.size(); ip++) {
-                        L2Task.RecoPixel p = pixels.get(ip);
-                        int x = (int)(scale_y*p.y);
-                        int y = (int)(scale_x*p.x);
+                    Iterator<L2Task.RecoPixel> pixelIterator = event.getPixelIterator();
+                    while(pixelIterator.hasNext()) {
+                        L2Task.RecoPixel p = pixelIterator.next();
+                        int x = (int)(scale_y*p.getY());
+                        int y = (int)(scale_x*p.getX());
 
-                        int size = 8 + (int) Math.sqrt(p.val);
+                        int size = 8 + (int) Math.sqrt(p.getVal());
                         int trans = (int) (255 * (1.0 - (age / ms_to_show)));
                         if (trans < 0) trans = 0;
                         circleRect.set(x - size, y - size, x + size, y + size);

@@ -8,12 +8,7 @@
 	<string name="pref_do_reco">"Do Reco"</string>
 	<string name="pref_threshold">Threshold</string>
 	<string name="pref_startwait">Prize soktuktan sonra baslamasi icin bekle</string>
-	<string name="pref_startafter">Sadece bundan sonra calisir</string>
-    <string name="settings_startafter_summary">App otomotik baslamaz</string>
     <string name="settings_startwait_summary">Baslamasina birkac saniye kaldi</string>
-	<string name="pref_startbefore">Sadece birkex calisir</string>
-	<string name="userIDlogin1">CRAYFIS beta testine hosgeldiniz! \nYardiminiz icin tesekkurler!\n\n\n CRAYFIS bir app\'tir ve kozmik isin parcaciklarini bulmak icin akilli telefonunuzu kullanir.\n\n For more info: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\tek yapmaniz gereken:\n telefonunuzu fise takin ve\n kamerasin yukari bakacak sekilde yerlestirin.\n\n Baslayinca kalibre olmasi icin 30-60saniye gerekiyor\n ondan sonra data hemen yuklemeye baslar!</string>
 
     <string name="settings_wifi_title">Sadece Wifi</string>
     <string name="settings_wifi_summary">Data yuklemek icin sadece Wifi kullan</string>
@@ -22,7 +17,7 @@
     <string name="settings_gallery_title">Galeriyi etkinlestir</string>
     <string name="settings_gallery_summary">Ilginc goruntuleri gosterir ve kayitlar</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">Hakkinda</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_view_mode">Goruntu modu</string>

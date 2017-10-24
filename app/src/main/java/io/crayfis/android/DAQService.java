@@ -28,7 +28,6 @@ import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.server.UploadExposureTask;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.ui.DataCollectionFragment;
@@ -59,73 +58,21 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onCreate() {
         super.onCreate();
 
+        CFLog.d("DAQService onCreate()");
         mApplication = (CFApplication)getApplication();
         context = getApplicationContext();
-        mApplication.setApplicationState(CFApplication.State.INIT);
-
-        final File files[] = getFilesDir().listFiles();
-        int foundFiles = 0;
-        for (int i = 0; i < files.length && foundFiles < 5; i++) {
-            if (files[i].getName().endsWith(".bin")) {
-                new UploadExposureTask(mApplication,
-                        new UploadExposureService.ServerInfo(this), files[i])
-                        .execute();
-                foundFiles++;
-            }
-        }
-
-        // State changes
-
         mBroadcastManager = LocalBroadcastManager.getInstance(context);
-        mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-
-
-        // Frame Processing
-
-        mL1Processor = new L1Processor(mApplication);
-        mPreCal = PreCalibrator.getInstance(context);
-        L1cal = L1Calibrator.getInstance();
-
-
-        xbManager = ExposureBlockManager.getInstance(this);
-
-        // System check
-
-        starttime = System.currentTimeMillis();
-        last_battery_check_time = starttime;
-        batteryPct = -1; // indicate no data yet
-        batteryTemp = -1;
-
-        if(mHardwareCheckTimer != null) {
-            mHardwareCheckTimer.cancel();
-        }
-        mHardwareCheckTimer = new Timer();
-        mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
-
-        // start camera
-
-        mCFCamera = CFCamera.getInstance();
-        mCFCamera.setCallback(this);
-        mCFCamera.register(context);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        // notify user that CRAYFIS is running in background
-        Intent restartIntent = new Intent(this, MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(restartIntent);
-        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        // restart if DAQService is dead
+        if(mApplication.getApplicationState() == CFApplication.State.FINISHED) {
 
-        mNotificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_just_a)
-                .setContentTitle(getString(R.string.notification_title))
-                .setContentText(getString(R.string.notification_idle))
-                .setContentIntent(resultPendingIntent);
-
-        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+            mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
+            mApplication.setApplicationState(CFApplication.State.INIT);
+        }
 
         // tell service to restart if it gets killed
         return START_STICKY;
@@ -136,23 +83,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
 
-        DataCollectionFragment.getInstance().updateIdleStatus("");
-
-        if(mApplication.getApplicationState() != CFApplication.State.IDLE) {
-            mApplication.setApplicationState(CFApplication.State.IDLE);
+        if(mApplication.getApplicationState() != CFApplication.State.FINISHED) {
+            mApplication.setApplicationState(CFApplication.State.FINISHED);
         }
-
-        mCFCamera.unregister();
-        mPreCal.destroy();
-        L1cal.destroy();
-        xbManager.destroy();
-
-        xbManager.flushCommittedBlocks(true);
-
-        mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
-
-        mHardwareCheckTimer.cancel();
-        mApplication.killTimer();
 
         CFLog.d("DAQService: stopped");
     }
@@ -174,6 +107,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             CFLog.i(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
             switch(current) {
+                case INIT:
+                    doStateTransitionInitialization(previous);
+                    break;
                 case STABILIZATION:
                     doStateTransitionStabilization(previous);
                     break;
@@ -192,12 +128,74 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 case RECONFIGURE:
                     doStateTransitionReconfigure(previous);
                     break;
+                case FINISHED:
+                    doStateTransitionFinished(previous);
+                    break;
                 default:
                     throw new IllegalFsmStateException(previous + " -> " + current);
             }
         }
     };
 
+    /**
+     * In INIT mode, we set up the cameras, trigger, etc.
+     */
+    private void doStateTransitionInitialization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+
+        switch (previousState) {
+            case FINISHED:
+
+                // Notifications
+
+                Intent restartIntent = new Intent(this, MainActivity.class);
+                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+                stackBuilder.addParentStack(MainActivity.class);
+                stackBuilder.addNextIntent(restartIntent);
+                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                if(mNotificationBuilder == null) {
+                    mNotificationBuilder = new NotificationCompat.Builder(this)
+                            .setSmallIcon(R.drawable.ic_just_a)
+                            .setContentTitle(getString(R.string.notification_title))
+                            .setContentText(getString(R.string.notification_idle))
+                            .setContentIntent(resultPendingIntent);
+                }
+
+                startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+
+                // Frame Processing
+
+                mL1Processor = new L1Processor(mApplication);
+                mPreCal = PreCalibrator.getInstance(context);
+                L1cal = L1Calibrator.getInstance();
+
+
+                xbManager = ExposureBlockManager.getInstance(this);
+
+                // System check
+
+                starttime = System.currentTimeMillis();
+                last_battery_check_time = starttime;
+                batteryPct = -1; // indicate no data yet
+                batteryTemp = -1;
+
+                if(mHardwareCheckTimer != null) {
+                    mHardwareCheckTimer.cancel();
+                }
+                mHardwareCheckTimer = new Timer();
+                mHardwareCheckTimer.schedule(new BatteryUpdateTimerTask(), 0L, battery_check_wait);
+
+                // start camera
+
+                mCFCamera = CFCamera.getInstance();
+                mCFCamera.setCallback(this);
+                mCFCamera.register(context);
+
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+        }
+    }
 
     /**
      * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
@@ -235,6 +233,9 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         switch(previousState) {
+            case INIT:
+                // starting with low battery, but finish initialization first
+                break;
             case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
@@ -243,7 +244,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 xbManager.abortExposureBlock();
                 break;
             case STABILIZATION:
-                // for data, stop taking data to let battery charge
                 xbManager.newExposureBlock(CFApplication.State.IDLE);
                 break;
             default:
@@ -282,7 +282,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             case STABILIZATION:
             case PRECALIBRATION:
                 L1cal.clear();
-                CFApplication.badFlatEvents = 0;
+                mCFCamera.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
                 break;
@@ -358,7 +358,34 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     }
 
+    private void doStateTransitionFinished(CFApplication.State previous) {
+        switch (previous) {
+            case INIT:
+            case STABILIZATION:
+            case CALIBRATION:
+            case PRECALIBRATION:
+            case DATA:
+            case RECONFIGURE:
+                xbManager.newExposureBlock(CFApplication.State.FINISHED);
+                mCFCamera.changeCamera();
+            case IDLE:
+                mCFCamera.unregister();
+                mPreCal.destroy();
+                L1cal.destroy();
+                xbManager.destroy();
 
+                xbManager.flushCommittedBlocks(true);
+
+                mHardwareCheckTimer.cancel();
+                mApplication.killTimer();
+
+                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
+                stopSelf();
+                break;
+            default:
+                throw new IllegalFsmStateException(previous + " -> " + mApplication.getApplicationState());
+        }
+    }
 
 
 
@@ -474,15 +501,18 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float battery_stop_threshold = 0.20f;
-    public final float battery_start_threshold = 0.80f;
+    public final float batteryStopPct = 0.20f;
+    public final float batteryStartPct = 0.80f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
 
     private final long battery_check_wait = 10000; // ms
     private float batteryPct;
     private int batteryTemp;
+
     private boolean batteryOverheated = false;
+    private boolean batteryLow = false;
+
     private long last_battery_check_time;
 
 
@@ -495,29 +525,34 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         @Override
         public void run() {
-            final DataCollectionFragment fragment = DataCollectionFragment.getInstance();
             last_battery_check_time = System.currentTimeMillis();
 
             IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
             Intent batteryStatus = context.registerReceiver(null, ifilter);
 
-            //
-            // see if anything is wrong with the battery
-            //
-
+            // get battery updates
             int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
             batteryPct = level / (float) scale;
-            // if overheated, see if battery temp is still falling
             int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
 
+            // check for low battery
+            if (batteryLow) {
+                batteryLow = batteryPct < batteryStartPct;
+            } else {
+                batteryLow = batteryPct < batteryStopPct;
+            }
+
+            // check temperature for overheat
             if (batteryOverheated) {
                 // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
                 batteryOverheated = (newTemp <= batteryTemp && newTemp > batteryStartTemp) || newTemp > batteryOverheatTemp;
-                fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", newTemp / 10.) + "C");
-            } else if (batteryPct < battery_start_threshold) {
-                fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                        newTemp / 10.));
+            } else {
+                batteryOverheated = newTemp > batteryOverheatTemp;
             }
+
             if(batteryTemp != newTemp) {
                 CFLog.i("Temperature change: " + batteryTemp + "->" + newTemp);
                 batteryTemp = newTemp;
@@ -527,25 +562,25 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 CFApplication.setBatteryTemp(newTemp);
             }
 
-            // go into idle mode if necessary
-            if (mApplication.getApplicationState() != io.crayfis.android.CFApplication.State.IDLE) {
-                if (batteryPct < battery_stop_threshold) {
-                    CFLog.d(" Battery too low, going to IDLE mode.");
-                    fragment.updateIdleStatus("Low battery: " + (int) (batteryPct * 100) + "%/" + (int) (battery_start_threshold * 100) + "%");
-                    mApplication.setApplicationState(CFApplication.State.IDLE);
-                } else if (batteryTemp > batteryOverheatTemp) {
-                    CFLog.d(" Battery too hot, going to IDLE mode.");
-                    fragment.updateIdleStatus("Cooling battery: " + String.format("%1.1f", batteryTemp / 10.) + "C");
-                    mApplication.setApplicationState(CFApplication.State.IDLE);
-                    batteryOverheated = true;
-                }
-
+            if(batteryLow) {
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_low),
+                        (int) (batteryPct * 100), (int) (batteryStartPct * 100)));
+            } else if(batteryOverheated) {
+                DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                        newTemp / 10.));
             }
-            // if we are in idle mode, restart if everything is okay
-            else if (batteryPct >= battery_start_threshold && !batteryOverheated
-                    && !mApplication.isWaitingForStabilization()) {
 
-                CFLog.d("Returning to stabilization");
+
+            // go into idle mode if necessary
+            if (mApplication.getApplicationState() != io.crayfis.android.CFApplication.State.IDLE
+                    && (batteryLow || batteryOverheated)) {
+                mApplication.setApplicationState(CFApplication.State.IDLE);
+            }
+
+            // if we are in idle mode, restart if everything is okay
+            else if (mApplication.getApplicationState() == CFApplication.State.IDLE
+                    && !batteryLow && !batteryOverheated && !mApplication.isWaitingForStabilization()) {
+
                 mApplication.setApplicationState(CFApplication.State.STABILIZATION);
             }
 
@@ -600,7 +635,10 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                     + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
                     + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
-                    + "fps="+String.format("%1.2f",lastFPS)+" target L1 rate="+String.format("%1.2f",targetL1Rate)+"\n"
+                    + "fps="+String.format("%1.2f",lastFPS)
+                    + ", target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
+                    + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())
+                    + ", target=" + String.format("%1.2f",CONFIG.getTargetEventsPerMinute())+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", batteryTemp/10.) + "C from "
                     +((System.currentTimeMillis()-last_battery_check_time)/1000)+"s ago.\n"

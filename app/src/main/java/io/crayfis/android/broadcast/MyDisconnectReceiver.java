@@ -1,4 +1,4 @@
-package io.crayfis.android;
+package io.crayfis.android.broadcast;
 
 
 import android.content.BroadcastReceiver;

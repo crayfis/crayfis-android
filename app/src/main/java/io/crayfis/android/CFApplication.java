@@ -32,6 +32,7 @@ import io.crayfis.android.server.ServerCommand;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
+import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
 
 
@@ -44,8 +45,9 @@ public class CFApplication extends Application {
     public static final String STATE_CHANGE_PREVIOUS = "previous_state";
     public static final String STATE_CHANGE_NEW = "new_state";
 
-    public static final String ACTION_FATAL_ERROR = "fatal_error";
+    public static final String ACTION_ERROR = "daqservice_error";
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
+    public static final String EXTRA_IS_FATAL = "fatal_error";
 
     private int errorId = 2;
 
@@ -58,8 +60,9 @@ public class CFApplication extends Application {
     private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
-            // TODO: ideally, we want this to display on tick in the Status pane
-            CFLog.d("Time left: " + millisUntilFinished / 1000L);
+            CFLog.d(Long.toString(millisUntilFinished));
+            int secondsLeft = (int) Math.round(millisUntilFinished/1000.);
+            DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_camera), secondsLeft));
         }
 
         @Override
@@ -70,12 +73,14 @@ public class CFApplication extends Application {
 
             if(consecutiveIdles >= 3) {
                 handleUnresponsive();
-            } else if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
+            }
+            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
                     || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
             } else {
                 // continue waiting
+                userErrorMessage(R.string.warning_facedown, false);
                 this.start();
             }
         }
@@ -85,8 +90,6 @@ public class CFApplication extends Application {
     //private static final String SHARED_PREFS_NAME = "global";
     private static long mStartTimeNano;
     private static int mBatteryTemp;
-
-    public static int badFlatEvents = 0;
 
     private State mApplicationState;
 
@@ -109,7 +112,7 @@ public class CFApplication extends Application {
         //config.onSharedPreferenceChanged(localPrefs, null);
         config.onSharedPreferenceChanged(defaultPrefs, null);
 
-        setApplicationState(State.INIT);
+        setApplicationState(State.FINISHED);
 
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
@@ -160,12 +163,11 @@ public class CFApplication extends Application {
         final State currentState = mApplicationState;
         mApplicationState = applicationState;
 
-        if(applicationState != State.INIT) {
-            final Intent intent = new Intent(ACTION_STATE_CHANGE);
-            intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
-            intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
-        }
+        final Intent intent = new Intent(ACTION_STATE_CHANGE);
+        intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
+        intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
     }
 
     private void handleUnresponsive() {
@@ -176,25 +178,25 @@ public class CFApplication extends Application {
         boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
                 (status == BatteryManager.BATTERY_STATUS_FULL));
 
-
         if(!isCharging || !inAutostartWindow()) {
-            stopService(new Intent(this, DAQService.class));
             finishAndQuit(R.string.quit_no_cameras);
         }
     }
 
     public boolean inAutostartWindow() {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if(!sharedPrefs.getBoolean("prefEnableAutoStart", false)) return false;
+        if(!sharedPrefs.getBoolean(getString(R.string.prefEnableAutoStart), false)) return false;
 
-        int startAfter = Integer.parseInt(sharedPrefs.getString("prefStartAfter", "0"));
-        int startBefore = Integer.parseInt(sharedPrefs.getString("prefStartBefore", "0"));
+        int startAfter = sharedPrefs.getInt(getString(R.string.prefStartAfter), 0);
+        int startBefore = sharedPrefs.getInt(getString(R.string.prefStartBefore), 0);
         Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minute = c.get(Calendar.MINUTE);
+        int timeInMinutes = 60 * hour + minute;
 
         int b1 = (startAfter >= startBefore) ? 1 : 0;
-        int b2 = (hour >= startAfter) ? 1 : 0;
-        int b3 = (hour < startBefore) ? 1 : 0;
+        int b2 = (timeInMinutes >= startAfter) ? 1 : 0;
+        int b3 = (timeInMinutes < startBefore) ? 1 : 0;
 
         return b1 + b2 + b3 >= 2;
     }
@@ -210,6 +212,8 @@ public class CFApplication extends Application {
     private void userErrorMessage(@StringRes int id, boolean quit, boolean safeExit) {
 
         String dialogMessage = getString(id);
+        Intent errorIntent = new Intent(ACTION_ERROR);
+        errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
         if(quit) {
             CFLog.e("Error: " + dialogMessage);
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -240,13 +244,13 @@ public class CFApplication extends Application {
             }
 
             // make sure to kill activity if open
-            Intent errorIntent = new Intent(ACTION_FATAL_ERROR);
-            errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
-            LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
-            stopService(new Intent(this, DAQService.class));
+            errorIntent.putExtra(EXTRA_IS_FATAL, true);
+            setApplicationState(State.FINISHED);
         } else {
-            Toast.makeText(this, dialogMessage, Toast.LENGTH_LONG).show();
+            errorIntent.putExtra(EXTRA_IS_FATAL, false);
         }
+
+        LocalBroadcastManager.getInstance(this).sendBroadcast(errorIntent);
     }
 
     /**
@@ -412,6 +416,7 @@ public class CFApplication extends Application {
         STABILIZATION,
         IDLE,
         RECONFIGURE,
+        FINISHED
     }
 
     public static final int MODE_FACE_DOWN = 0;

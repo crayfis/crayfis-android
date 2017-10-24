@@ -25,6 +25,7 @@ import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +64,7 @@ class CFCamera2 extends CFCamera {
 
     private Allocation ain;
     private AtomicInteger mBuffersQueued = new AtomicInteger();
+    private final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
 
 
     CFCamera2() {
@@ -123,6 +125,8 @@ class CFCamera2 extends CFCamera {
                 mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
             } catch (CameraAccessException e) {
                 e.printStackTrace();
+            } catch (IllegalStateException e) {
+                // camera was already closed
             }
         }
 
@@ -266,6 +270,10 @@ class CFCamera2 extends CFCamera {
 
         super.changeCameraFrom(currentId);
 
+        synchronized (mQueuedTimestamps) {
+            mQueuedTimestamps.clear();
+        }
+
         // get rid of old camera setup
 
         try {
@@ -374,6 +382,8 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public String getParams() {
+
+        if(mPreviewSize == null) return "";
         String paramtxt = "Size: " + mPreviewSize.toString() + ", ";
 
         if(mPreviewRequest != null) {

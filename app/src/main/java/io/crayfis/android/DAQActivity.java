@@ -67,41 +67,54 @@ import io.crayfis.android.util.CFLog;
  */
 public class DAQActivity extends AppCompatActivity {
 
-    private static DAQService.DAQBinder mBinder;
+    private DAQService.DAQBinder mBinder;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private ServiceConnection mServiceConnection;
 
+    private boolean mRestartAfterSettings = false;
+
 
 	Context context;
+
     private Intent DAQIntent;
+
     private ActionBarDrawerToggle mActionBarDrawerToggle;
-    private final BroadcastReceiver FATAL_ERROR_RECEIVER = new BroadcastReceiver() {
+    private final BroadcastReceiver ERROR_RECEIVER = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
-            final TextView tx1 = new TextView(context);
-            tx1.setText(intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE));
-            tx1.setTextColor(Color.WHITE);
-            tx1.setBackgroundColor(Color.BLACK);
-            AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
-            try {
-                builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
-                        .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                // notifications would be redundant
-                                NotificationManager notificationManager
-                                        = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                                notificationManager.cancelAll();
-                                System.exit(0);
-                            }
-                        })
-
-                        .setView(tx1).show();
-            } catch(WindowManager.BadTokenException e) {
-                // DAQActivity is down
-                e.printStackTrace();
-                finish();
+            String message = intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE);
+            if(intent.getBooleanExtra(CFApplication.EXTRA_IS_FATAL, false)) {
+                final TextView tx1 = new TextView(context);
+                tx1.setText(message);
+                tx1.setTextColor(Color.WHITE);
+                tx1.setBackgroundColor(Color.BLACK);
+                AlertDialog.Builder builder = new AlertDialog.Builder(DAQActivity.this);
+                try {
+                    builder.setTitle(getResources().getString(R.string.fatal_error_title)).setCancelable(false)
+                            .setPositiveButton(getResources().getString(R.string.quit), new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int id) {
+                                    // notifications would be redundant
+                                    NotificationManager notificationManager
+                                            = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                                    notificationManager.cancelAll();
+                                    System.exit(0);
+                                }
+                            })
+                            .setNegativeButton(getResources().getString(R.string.keep_browsing), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                }
+                            })
+                            .setView(tx1).show();
+                } catch(WindowManager.BadTokenException e) {
+                    // DAQActivity is down
+                    e.printStackTrace();
+                    finish();
+                }
+            } else {
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
             }
         }
     };
@@ -119,6 +132,10 @@ public class DAQActivity extends AppCompatActivity {
         configureNavigation();
 
         context = getApplicationContext();
+        DAQIntent = new Intent(this, DAQService.class);
+
+        // make sure we begin the service when the activity is created
+        mRestartAfterSettings = true;
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -136,6 +153,11 @@ public class DAQActivity extends AppCompatActivity {
                 mBinder = null;
             }
         };
+
+        final View userStatus = findViewById(R.id.user_status);
+        if (userStatus != null) {
+            userStatus.postInvalidate();
+        }
     }
 
     @Override
@@ -148,8 +170,6 @@ public class DAQActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        CFLog.d("DAQActivity onResume");
-
         // check whether we need to re-evaluate permissions
         if(!MainActivity.hasPermissions(this)) {
             startActivity(new Intent(this, MainActivity.class));
@@ -158,24 +178,16 @@ public class DAQActivity extends AppCompatActivity {
         }
 
         LocalBroadcastManager.getInstance(this)
-                .registerReceiver(FATAL_ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_FATAL_ERROR));
+                .registerReceiver(ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_ERROR));
 
-        // in case this isn't already running
-        DAQIntent = new Intent(this, DAQService.class);
+        // see if we are intentionally finished
+        CFApplication application = (CFApplication) getApplication();
+        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestartAfterSettings) return;
+        mRestartAfterSettings = false;
+
+        // if not, start the service
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
-
-        // check for any updates
-
-        if (!CONFIG.getUpdateURL().equals("") && !CONFIG.getUpdateURL().equals(last_update_URL)) {
-            showUpdateURL(CONFIG.getUpdateURL());
-
-        }
-
-        final View userStatus = findViewById(R.id.user_status);
-        if (userStatus != null) {
-            userStatus.postInvalidate();
-        }
     }
 
 
@@ -201,7 +213,7 @@ public class DAQActivity extends AppCompatActivity {
 
         CFLog.d("onStop()");
 
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(FATAL_ERROR_RECEIVER);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(ERROR_RECEIVER);
     }
 
 
@@ -214,7 +226,23 @@ public class DAQActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.daq_activity, menu);
+        // FIXME: this is a dumb way to do this, but it works
+        invalidateOptionsMenu();
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(final Menu menu) {
+        MenuItem startStopButton = menu.findItem(R.id.menu_start_stop);
+        CFApplication application = (CFApplication) getApplication();
+        if(application.getApplicationState() == CFApplication.State.FINISHED) {
+            startStopButton.setIcon(R.drawable.ic_action_resume);
+            startStopButton.setTitle(R.string.menu_resume);
+        } else {
+            startStopButton.setIcon(R.drawable.ic_action_pause);
+            startStopButton.setTitle(R.string.menu_stop);
+        }
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -231,8 +259,13 @@ public class DAQActivity extends AppCompatActivity {
             case R.id.menu_about:
                 clickedAbout();
                 return true;
-            case R.id.menu_stop:
-                clickedStop();
+            case R.id.menu_start_stop:
+                CFApplication application = (CFApplication) getApplicationContext();
+                if(application.getApplicationState() == CFApplication.State.FINISHED) {
+                    clickedStart();
+                } else {
+                    clickedStop();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -246,8 +279,10 @@ public class DAQActivity extends AppCompatActivity {
     private void configureNavigation() {
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         final ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
+        if(actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+        }
 
         mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -282,12 +317,18 @@ public class DAQActivity extends AppCompatActivity {
                 navItemsAdapter.notifyDataSetChanged();
             }
         });
-        NavHelper.setFragment(this, DataCollectionFragment.getInstance(), NavDrawerAdapter.Type.STATUS.getTitle());
+        NavHelper.setFragment(this, new DataCollectionFragment(), NavDrawerAdapter.Type.STATUS.getTitle());
     }
 
     public void clickedSettings() {
 
-        stopService(DAQIntent);
+        CFApplication application = (CFApplication) getApplication();
+        CFApplication.State state = application.getApplicationState();
+
+        if(state != CFApplication.State.FINISHED) {
+            application.setApplicationState(CFApplication.State.FINISHED);
+            mRestartAfterSettings = true;
+        }
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}
@@ -336,31 +377,17 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStop() {
-        stopService(DAQIntent);
-        finish();
+        CFApplication application = (CFApplication)getApplication();
+        application.setApplicationState(CFApplication.State.FINISHED);
+        invalidateOptionsMenu();
     }
 
-    private String last_update_URL = "";
-    public void showUpdateURL(String url)
-    {
-        last_update_URL=url;
-        final SpannableString s = new SpannableString(url);
-        final TextView tx1 = new TextView(this);
+    private void clickedStart() {
+        CFLog.d("clickedStart()");
+        invalidateOptionsMenu();
 
-        tx1.setText(getResources().getString(R.string.update_notice)+s);
-        tx1.setAutoLinkMask(RESULT_OK);
-        tx1.setMovementMethod(LinkMovementMethod.getInstance());
-        tx1.setTextColor(Color.WHITE);
-        tx1.setBackgroundColor(Color.BLACK);
-        Linkify.addLinks(s, Linkify.WEB_URLS);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle( getResources().getString(R.string.update_title)).setCancelable(false)
-                .setPositiveButton(getResources().getString(R.string.ok), new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                    }
-                })
-
-                .setView(tx1).show();
+        startService(DAQIntent);
+        bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
 
 
@@ -368,7 +395,7 @@ public class DAQActivity extends AppCompatActivity {
     // UI Updates //
     ////////////////
 
-    public static DAQService.DAQBinder getBinder() {
+    public DAQService.DAQBinder getBinder() {
         return mBinder;
     }
 

@@ -51,7 +51,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
      * @param serverInfo The {@link io.crayfis.android.server.UploadExposureService.ServerInfo} to use for uploading.
      * @param file The File to upload.
      */
-    public UploadExposureTask(@NonNull final CFApplication application,
+    UploadExposureTask(@NonNull final CFApplication application,
                               @NonNull final UploadExposureService.ServerInfo serverInfo,
                               @NonNull final File file) {
         mApplication = application;

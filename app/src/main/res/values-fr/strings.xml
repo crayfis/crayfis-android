@@ -7,12 +7,7 @@
     <string name="pref_do_reco">"Reconnecter"</string>
     <string name="pref_threshold">Seuil</string>
     <string name="pref_startwait">Waits to start after plugin</string>
-    <string name="pref_startafter">Fonctionne seulement après cette heure</string>
-    <string name="settings_startafter_summary">Cette app ne démarrera pas automatiquement avant cette heure</string>
     <string name="settings_startwait_summary">Temps (sec) d\'attente avant lancement, après le branchement de l\'appareil</string>
-    <string name="pref_startbefore">Only runs before this time</string>
-    <string name="userIDlogin1">Bienvenu(e) dans CRAYFIS beta test! \nMerci pour votre aide!\n\n\n CRAYFIS est une app \nqui utilisera votre smartphone\n comme un élément d\'un réseau international\n permettant la détection de rayons cosmiques.\n\n Pour plus d\'infos: http://crayfis.io/.</string>
-    <string name="userIDlogin2">\n\nCe que vous avez besoin de faire:\n Branchez votre téléphone \net posez le avec l\'appareil photo face contre le sol (écran vers le haut).\n\n Au lancement, il faudra  30-60s pour la calibration\n avant l\'acquisition des données commencent!</string>
 
     <string name="settings_wifi_title">Wifi uniquement</string>
     <string name="settings_wifi_summary">Utilise seuelement le Wifi pour envoyer les données</string>
@@ -21,7 +16,7 @@
     <string name="settings_gallery_title">Activer la galerie</string>
     <string name="settings_gallery_summary">Sauve and affiche des images intéressantes</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">A propos</string>
     <string name="menu_settings">Configuration</string>
     <string name="menu_view_mode">Affichage</string>

@@ -1,8 +1,6 @@
 package io.crayfis.android.exposure;
 
 import android.location.Location;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -19,31 +17,31 @@ import io.crayfis.android.trigger.L2Config;
 import io.crayfis.android.trigger.L2Task.RecoEvent;
 import io.crayfis.android.util.CFLog;
 
-public class ExposureBlock implements Parcelable {
+public class ExposureBlock {
 	public static final String TAG = "ExposureBlock";
 
-	public final UUID run_id;
-    public final UUID precal_id;
+	private final UUID run_id;
+    private final UUID precal_id;
 
-	public final AcquisitionTime start_time;
-	public AcquisitionTime end_time;
+	private final AcquisitionTime start_time;
+	private AcquisitionTime end_time;
 
-	public final Location start_loc;
+	private final Location start_loc;
 
-    public final int batteryTemp;
+    private final int batteryTemp;
 
-	public final int res_x;
-	public final int res_y;
+	private final int res_x;
+	private final int res_y;
 	
-	public long frames_dropped;
+	long frames_dropped;
 
-    public final L1Config L1_trigger_config;
-    public final L2Config L2_trigger_config;
+    private final L1Config L1_trigger_config;
+    private final L2Config L2_trigger_config;
 
-    public final int L1_threshold;
-	public final int L2_threshold;
+    private final int L1_threshold;
+	private final int L2_threshold;
 
-    private long L1_processed;
+    public long L1_processed;
 	public long L1_pass;
 	public long L1_skip;
 	
@@ -51,16 +49,16 @@ public class ExposureBlock implements Parcelable {
 	public long L2_pass;
 	public long L2_skip;
 	
-	public int total_pixels;
+	private int total_pixels;
 	
 	// the exposure block number within the given run
-	public final int xbn;
+	private final int xbn;
 
-	public final CFApplication.State daq_state;
+	private final CFApplication.State daq_state;
     public AtomicInteger count = new AtomicInteger();
 
 	private boolean frozen = false;
-	public boolean aborted = false;
+	boolean aborted = false;
 
     // keep track of the (average) frame statistics as well
     public double total_background = 0.0;
@@ -103,72 +101,6 @@ public class ExposureBlock implements Parcelable {
         L1_processed = L1_pass = L1_skip = 0;
         L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
-    }
-
-    private ExposureBlock(@NonNull final Parcel parcel) {
-        run_id = (UUID) parcel.readSerializable();
-        precal_id = (UUID) parcel.readSerializable();
-        start_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
-        end_time = parcel.readParcelable(AcquisitionTime.class.getClassLoader());
-        start_loc = parcel.readParcelable(Location.class.getClassLoader());
-        batteryTemp = parcel.readInt();
-        res_x = parcel.readInt();
-        res_y = parcel.readInt();
-        frames_dropped = parcel.readLong();
-        L1_trigger_config = L1Config.makeConfig(parcel.readString());
-        L2_trigger_config = L2Config.makeConfig(parcel.readString());
-        L1_threshold = parcel.readInt();
-        L2_threshold = parcel.readInt();
-        L1_processed = parcel.readLong();
-        L1_pass = parcel.readLong();
-        L1_skip = parcel.readLong();
-        L2_processed = parcel.readLong();
-        L2_pass = parcel.readLong();
-        L2_skip = parcel.readLong();
-        total_pixels = parcel.readInt();
-        total_background = parcel.readDouble();
-        xbn = parcel.readInt();
-        daq_state = (CFApplication.State) parcel.readSerializable();
-        frozen = parcel.readInt() == 1;
-        aborted = parcel.readInt() == 1;
-        events = parcel.createTypedArrayList(RecoEvent.CREATOR);
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(final Parcel dest, final int flags) {
-        dest.writeSerializable(run_id);
-        dest.writeSerializable(precal_id);
-        dest.writeParcelable(start_time, flags);
-        dest.writeParcelable(end_time, flags);
-        dest.writeParcelable(start_loc, flags);
-        dest.writeInt(batteryTemp);
-        dest.writeInt(res_x);
-        dest.writeInt(res_y);
-        dest.writeLong(frames_dropped);
-        dest.writeString(L1_trigger_config.toString());
-        dest.writeString(L2_trigger_config.toString());
-        dest.writeInt(L1_threshold);
-        dest.writeInt(L2_threshold);
-        dest.writeLong(L1_processed);
-        dest.writeLong(L1_pass);
-        dest.writeLong(L1_skip);
-        dest.writeLong(L2_processed);
-        dest.writeLong(L2_pass);
-        dest.writeLong(L2_skip);
-        dest.writeInt(total_pixels);
-        dest.writeDouble(total_background);
-        dest.writeInt(xbn);
-        dest.writeSerializable(daq_state);
-        dest.writeInt(frozen ? 1 : 0);
-        dest.writeInt(aborted ? 1 : 0);
-        synchronized (events) {
-            dest.writeTypedList(events);
-        }
     }
 	
 	public long nanoAge() {
@@ -256,15 +188,12 @@ public class ExposureBlock implements Parcelable {
 		if (daq_state == CFApplication.State.CALIBRATION) {
 			return;
 		}
-		event.xbn = xbn;
         synchronized (events) {
             events.add(event);
         }
 		
-		int npix = 0;
-		if (event.pixels != null) {
-			npix = event.pixels.size();
-		}
+		int npix = event.getNPix();
+
 		total_pixels += npix;
 		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
 	}
@@ -377,15 +306,35 @@ public class ExposureBlock implements Parcelable {
         }
     }
 
-    public static final Creator<ExposureBlock> CREATOR = new Creator<ExposureBlock>() {
-        @Override
-        public ExposureBlock createFromParcel(final Parcel source) {
-            return new ExposureBlock(source);
-        }
+    public L1Config getL1Config() {
+        return L1_trigger_config;
+    }
 
-        @Override
-        public ExposureBlock[] newArray(final int size) {
-            return new ExposureBlock[size];
-        }
-    };
+    public int getL1Thresh() {
+        return L1_threshold;
+    }
+
+    public L2Config getL2Config() {
+        return L2_trigger_config;
+    }
+
+    public int getL2Thresh() {
+        return L2_threshold;
+    }
+
+    public long getStartTimeNano() {
+        return start_time.Nano;
+    }
+
+    public long getEndTimeNano() {
+        return end_time.Nano;
+    }
+
+    public CFApplication.State getDAQState() {
+        return daq_state;
+    }
+
+    public int getXBN() {
+        return xbn;
+    }
 }

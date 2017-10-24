@@ -74,20 +74,21 @@ public class L2TaskMaxN extends L2Task {
     }
 
     @Override
-    ArrayList<RecoPixel> buildPixels() {
+    ArrayList<RecoPixel> buildPixels(RawCameraFrame frame) {
+
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
 
-        Mat grayMat = mFrame.getGrayMat();
+        Mat grayMat = frame.getGrayMat();
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 
         int width = grayMat.width();
         int height = grayMat.height();
 
-        ExposureBlock xb = mFrame.getExposureBlock();
+        ExposureBlock xb = frame.getExposureBlock();
 
-        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold-1, 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, xb.getL2Thresh(), 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
@@ -96,43 +97,37 @@ public class L2TaskMaxN extends L2Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
+            int val = frame.getRawByteAt(ix, iy) & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
-
-            RecoPixel p;
 
             L2Processor.histL2Pixels.fill(adjustedVal);
             try {
-                p = new RecoPixel();
+                RecoPixel.Builder builder = new RecoPixel.Builder();
+                builder.setX(ix)
+                        .setY(iy)
+                        .setVal(val)
+                        .setAdjustedVal(adjustedVal);
+
+                Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                        Math.max(ix-1,0), Math.min(ix+2,width));
+                Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                        Math.max(ix-2,0), Math.min(ix+3,width));
+
+                builder.setAvg3((float)Core.mean(grayAvg3).val[0])
+                        .setAvg5((float)Core.mean(grayAvg5).val[0])
+                        .setAvg5((int)Core.minMaxLoc(grayAvg3).maxVal);
+
+                grayAvg3.release();
+                grayAvg5.release();
+
+                pixels.add(builder.build());
+                Collections.sort(pixels, PIXEL_COMPARATOR);
+                prunePixels(pixels, mNpix);
+
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
                 mEvent.npix_dropped++;
-                continue;
             }
-
-            p.x = ix;
-            p.y = iy;
-            p.val = val;
-            p.adjusted_val = adjustedVal;
-
-
-            //
-            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
-                    Math.max(ix-1,0), Math.min(ix+2,width));
-            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
-                    Math.max(ix-2,0), Math.min(ix+3,width));
-
-            p.avg_3 = (float)Core.mean(grayAvg3).val[0];
-            p.avg_5 = (float)Core.mean(grayAvg5).val[0];
-            p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
-
-            grayAvg3.release();
-            grayAvg5.release();
-
-            pixels.add(p);
-            Collections.sort(pixels, PIXEL_COMPARATOR);
-
-            prunePixels(pixels, mNpix);
 
         }
 

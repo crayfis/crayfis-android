@@ -19,7 +19,7 @@
 
         <Button
             android:id="@+id/continue_btn"
-            android:text="CONTINUE"
+            android:text="@string/continue_btn"
             style="@style/UserNotification.Continue"/>
     </RelativeLayout>
 

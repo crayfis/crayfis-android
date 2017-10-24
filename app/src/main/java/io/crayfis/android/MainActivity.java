@@ -48,9 +48,11 @@ import io.crayfis.android.util.CFLog;
  */
 public class MainActivity extends Activity  {
 
+    private static final int REQUEST_CODE_PERMISSIONS = 0;
+
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
-    private static final int REQUEST_CODE_PERMISSIONS = 3;
+    private static final int REQUEST_CODE_AUTOSTART = 3;
 
     public static String[] permissions = {
         Manifest.permission.CAMERA,
@@ -81,11 +83,11 @@ public class MainActivity extends Activity  {
         //Pull the existing shared preferences and set editor
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 
-        boolean firstRun = sharedprefs.getBoolean("firstRun", true);
+        boolean firstRun = sharedprefs.getBoolean(getString(R.string.firstRun), true);
         if (firstRun) {
             final Intent intent = new Intent(this, UserNotificationActivity.class);
-            intent.putExtra(UserNotificationActivity.TITLE, R.string.app_name);
-            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.userIDlogin1);
+            intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_welcome_title);
+            intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_welcome);
             startActivityForResult(intent, REQUEST_CODE_WELCOME);
         } else {
             checkPermissions();
@@ -97,23 +99,27 @@ public class MainActivity extends Activity  {
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (resultCode != RESULT_OK) {
-			finish();
+            finish();
 		} else {
             Intent intent;
             switch(requestCode) {
                 case REQUEST_CODE_WELCOME:
                     intent = new Intent(this, UserNotificationActivity.class);
-                    intent.putExtra(UserNotificationActivity.TITLE, "How To Use This App");
-                    intent.putExtra(UserNotificationActivity.MESSAGE, "Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.");
+                    intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_how_to_title);
+                    intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_how_to);
                     startActivityForResult(intent, REQUEST_CODE_HOW_TO);
                     break;
                 case REQUEST_CODE_HOW_TO:
+                    intent = new Intent(this, ConfigureAutostartActivity.class);
+                    startActivityForResult(intent, REQUEST_CODE_AUTOSTART);
+                    break;
+                case REQUEST_CODE_AUTOSTART:
                     //This is so that if they have entered in an invalid user ID before, but
                     //then just decide to run it locally, it will reset the userID to empty
                     SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                     final SharedPreferences.Editor editor = sharedprefs.edit();
                     editor.putBoolean("firstRun", false)
-                            .commit();
+                            .apply();
 
                     // now start running
                     checkPermissions();
@@ -155,7 +161,8 @@ public class MainActivity extends Activity  {
                         });
 
                 // see if we absolutely need the permission
-                if(!permission.equals(Manifest.permission.WRITE_EXTERNAL_STORAGE) || UploadExposureService.IS_PUBLIC) {
+                if(permission.equals(Manifest.permission.CAMERA)
+                        || permission.equals(Manifest.permission.ACCESS_FINE_LOCATION)) {
 
                     builder.setMessage(R.string.permission_error)
                             .setNegativeButton(R.string.permission_no, new DialogInterface.OnClickListener() {
@@ -165,13 +172,14 @@ public class MainActivity extends Activity  {
                         }
                     });
                 } else {
-                    // if it's a problem, we can shut off the gallery
+                    // if it's a problem, we can shut off the gallery or public storage
                     builder.setMessage(R.string.gallery_dcim_error)
                             .setNegativeButton(getResources().getString(R.string.permission_no), new DialogInterface.OnClickListener() {
                                 public void onClick(DialogInterface dialog, int id) {
                                     PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
                                             .edit()
                                             .putBoolean(getString(R.string.prefEnableGallery), false)
+                                            .putBoolean(getString(R.string.prefStorePublic), false)
                                             .apply();
                                     startActivity(new Intent(MainActivity.this, DAQActivity.class));
                                     finish();
@@ -197,7 +205,7 @@ public class MainActivity extends Activity  {
      */
     public static boolean hasPermissions(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        if(UploadExposureService.IS_PUBLIC
+        if(prefs.getBoolean(context.getString(R.string.prefStorePublic), false)
                 || prefs.getBoolean(context.getString(R.string.prefEnableGallery), false)) {
             permissions = new String[] {
                     Manifest.permission.CAMERA,

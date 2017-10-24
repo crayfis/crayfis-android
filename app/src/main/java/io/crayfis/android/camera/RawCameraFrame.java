@@ -1,6 +1,8 @@
 package io.crayfis.android.camera;
 
+import android.content.SharedPreferences;
 import android.location.Location;
+import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -14,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.CFConfig;
+import io.crayfis.android.R;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
@@ -423,7 +426,8 @@ public abstract class RawCameraFrame {
      */
     public boolean isQuality() {
         final CFConfig CONFIG = CFConfig.getInstance();
-        switch(CONFIG.getCameraSelectMode()) {
+        final int cameraSelectMode = CONFIG.getCameraSelectMode();
+        switch(cameraSelectMode) {
             case MODE_FACE_DOWN:
                 if (mOrientation == null) {
                     CFLog.e("Orientation not found");
@@ -443,9 +447,6 @@ public abstract class RawCameraFrame {
                 if (getPixAvg() > CONFIG.getQualityBgAverage()
                         || getPixStd() > CONFIG.getQualityBgVariance()) {
                     CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
-                    if(CFConfig.getInstance().getCameraSelectMode() == MODE_FACE_DOWN) {
-                        CFApplication.badFlatEvents++;
-                    }
                     return false;
                 } else {
                     return true;

@@ -7,12 +7,7 @@
     <string name="pref_do_reco">"قم بإعادة التركيب"</string>
     <string name="pref_threshold">العتبة</string>
     <string name="pref_startwait">مدة الانتظار بعد توصيل الجهاز</string>
-    <string name="pref_startafter">اجري بعد هذا الوقت فقط</string>
-    <string name="settings_startafter_summary">البرنامج لن يعمل تلقائياً قبل هذا الوقت</string>
     <string name="settings_startwait_summary">الثواني المنتظرة بعد توصيل جهازك</string>
-    <string name="pref_startbefore">اجري قبل هذا الوقت فقط</string>
-    <string name="userIDlogin1">مرحباً بكم في كرايفس بيتا التجريبي! \n شكراً لكم على المساهمة!\n\n\n  يقوم برنامج كرايفس كجزء من شبكة عالمية بالبحث عن جسيمات من الأشعة الكونية باستخدام جهازك.\n\n لمزيد من المعلومات: http://crayfis.io</string>
-    <string name="userIDlogin2">\n\n ما عليك فعله: \n أوصل جهازك بالشاحن و   \n ضعه على أي سطح  بيحث تواجه الكاميرا للأسفل.\n\n عندما يبدأ البرنامج سوف يستغرق ٣٠-٦٠ ثانية للمعايرة\n و سيبدأ بعدها بجمع المعلومات.</string>
 
     <string name="settings_wifi_title">واي-فاي فقط</string>
     <string name="settings_wifi_summary">استخدم الواي-فاي فقط لتحميل البيانات</string>
@@ -20,7 +15,7 @@
     <string name="settings_code_title">رمز مستخدم كرايفس</string>
     <string name="settings_gallery_title">أمكن الألبوم</string>
     <string name="settings_gallery_summary">يقوم بتخزين و عرض الصور المثيرة للاهتمام</string>
-    <string name="settings_autostart_title">Click to allow autostart</string>
+    <string name="settings_autostart_title">Click to configure autostart</string>
     <string name="menu_about">عن</string>
     <string name="menu_settings">الإعدادات</string>
     <string name="menu_view_mode">نظام المشاهدة</string>

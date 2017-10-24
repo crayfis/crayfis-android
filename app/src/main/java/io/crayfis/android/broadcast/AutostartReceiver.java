@@ -1,4 +1,4 @@
-package io.crayfis.android;
+package io.crayfis.android.broadcast;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -10,30 +10,27 @@ import android.preference.PreferenceManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
 
+import io.crayfis.android.CFApplication;
+import io.crayfis.android.DAQService;
 import io.crayfis.android.util.CFLog;
 
 public class AutostartReceiver extends BroadcastReceiver {
 
+	public static final String ACTION_AUTOSTART_ALARM = "io.crayfis.android.AUTOSTART";
+
 	@Override
 	public void onReceive(final Context context, Intent intent) {
-		// TODO Auto-generated method stub
+
 		CFLog.d("receiver: got action=" + intent.getAction());
 
 		CFApplication application = (CFApplication) context.getApplicationContext();
 
-        boolean isCharging = (intent.getAction().equals(android.content.Intent.ACTION_POWER_CONNECTED));
-
-
-
-        if (!isCharging) {
-            CFLog.d("receiver: is battery charging? ");
-            // Confirm that we are charging (could have been called by "BATTERY_OKAY")
-            IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = context.registerReceiver(null, ifilter);
-            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-            isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-                          (status == BatteryManager.BATTERY_STATUS_FULL));
-        }
+		// Confirm that we are charging
+		IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+		Intent batteryStatus = context.registerReceiver(null, ifilter);
+		int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+		boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+				(status == BatteryManager.BATTERY_STATUS_FULL));
 
         CFLog.d("receiver: is battery charging? "+isCharging);
 

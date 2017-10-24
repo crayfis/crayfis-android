@@ -35,7 +35,7 @@ public class L1Processor {
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
-        return frame.getExposureBlock().L1_trigger_config.makeTask(this, frame);
+        return frame.getExposureBlock().getL1Config().makeTask(this, frame);
     }
 
     public void submitFrame(RawCameraFrame frame) {

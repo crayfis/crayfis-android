@@ -76,7 +76,7 @@ public final class NavHelper {
                     newFragment = LayoutBlack.getInstance();
                     break;
                 case STATUS:
-                    newFragment = DataCollectionFragment.getInstance();
+                    newFragment = new DataCollectionFragment();
                     break;
                 case DATA:
                     newFragment = LayoutHist.getInstance();

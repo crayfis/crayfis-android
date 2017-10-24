@@ -5,16 +5,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.DataProtos;
@@ -67,14 +65,14 @@ public class L2Task implements Runnable {
         }
     }
 
-    RawCameraFrame mFrame = null;
+    private RawCameraFrame mFrame = null;
     L2Processor mL2Processor = null;
 
     RecoEvent mEvent = null;
 
-    final Config mConfig;
+    private final Config mConfig;
 
-    final Utils mUtils;
+    private final Utils mUtils;
 
     L2Task(L2Processor l2processor, RawCameraFrame frame, Config config) {
         mFrame = frame;
@@ -87,45 +85,42 @@ public class L2Task implements Runnable {
         mUtils = new Utils(mApplication);
     }
 
-    public static class RecoEvent implements Parcelable {
-        public long time;
-        public long time_nano;
-        public long time_ntp;
-        public long time_target;
-        public int batteryTemp;
-        public Location location;
-        public float[] orientation;
-        public float pressure;
+    public static class RecoEvent {
+        private final long time;
+        private final long time_nano;
+        private final long time_ntp;
+        private final long time_target;
+        private final int batteryTemp;
+        private final Location location;
+        private final float[] orientation;
+        private final float pressure;
 
-        public boolean quality;
-        public double background;
-        public double std;
+        private final double background;
+        private final double std;
 
-        public int npix_dropped;
+        int npix_dropped;
 
-        public int xbn;
+        private final int xbn;
 
-        public ArrayList<RecoPixel> pixels = new ArrayList<RecoPixel>();
+        private final ArrayList<RecoPixel> pixels;
 
-        public RecoEvent() {
+        RecoEvent(RawCameraFrame frame, L2Task l2Task) {
 
-        }
+            time = frame.getAcquiredTime();
+            time_nano = frame.getAcquiredTimeNano();
+            time_ntp = frame.getAcquiredTimeNTP();
+            time_target = frame.getTimestamp();
+            location = frame.getLocation();
+            orientation = frame.getOrientation();
+            pressure = frame.getPressure();
+            batteryTemp = frame.getBatteryTemp();
 
-        private RecoEvent(@NonNull final Parcel parcel) {
-            time = parcel.readLong();
-            time_nano = parcel.readLong();
-            time_ntp = parcel.readLong();
-            time_target = parcel.readLong();
-            batteryTemp = parcel.readInt();
-            location = parcel.readParcelable(Location.class.getClassLoader());
-            orientation = parcel.createFloatArray();
-            pressure = parcel.readFloat();
-            quality = parcel.readInt() == 1;
-            background = parcel.readDouble();
-            std = parcel.readDouble();
-            npix_dropped = parcel.readInt();
-            xbn = parcel.readInt();
-            pixels = parcel.createTypedArrayList(RecoPixel.CREATOR);
+            background = frame.getPixAvg();
+            std = frame.getPixStd();
+
+            xbn = frame.getExposureBlock().getXBN();
+
+            pixels = l2Task.buildPixels(frame);
         }
 
         public DataProtos.Event buildProto() {
@@ -167,47 +162,27 @@ public class L2Task implements Runnable {
             return buf.build();
         }
 
-        @Override
-        public int describeContents() {
-            return 0;
+        public Iterator<RecoPixel> getPixelIterator() {
+            return pixels.iterator();
         }
 
-        @Override
-        public void writeToParcel(final Parcel dest, final int flags) {
-            dest.writeLong(time);
-            dest.writeLong(time_nano);
-            dest.writeLong(time_ntp);
-            dest.writeLong(time_target);
-            dest.writeInt(batteryTemp);
-            dest.writeParcelable(location, flags);
-            dest.writeFloatArray(orientation);
-            dest.writeFloat(pressure);
-            dest.writeInt(quality ? 1 : 0);
-            dest.writeDouble(background);
-            dest.writeDouble(std);
-            dest.writeInt(npix_dropped);
-            dest.writeInt(xbn);
-            dest.writeTypedList(pixels);
+        public long getTime() {
+            return time;
         }
 
-        public static final Creator<RecoEvent> CREATOR = new Creator<RecoEvent>() {
-            @Override
-            public RecoEvent createFromParcel(final Parcel source) {
-                return new RecoEvent(source);
+        public int getNPix() {
+            if(pixels == null) {
+                return 0;
             }
-
-            @Override
-            public RecoEvent[] newArray(final int size) {
-                return new RecoEvent[size];
-            }
-        };
+            return pixels.size();
+        }
     }
 
-    public static class RecoPixel implements Parcelable {
-        public int x, y;
-        public int val, adjusted_val;
-        public float avg_3, avg_5;
-        public int near_max;
+    public static class RecoPixel {
+        int x, y;
+        int val, adjusted_val;
+        float avg_3, avg_5;
+        int near_max;
 
         public DataProtos.Pixel buildProto() {
             DataProtos.Pixel.Builder buf = DataProtos.Pixel.newBuilder();
@@ -222,82 +197,79 @@ public class L2Task implements Runnable {
             return buf.build();
         }
 
-        public RecoPixel() {
-
+        private RecoPixel(int x, int y, int val, int adj, float avg3, float avg5, int nearMax) {
+            this.x = x;
+            this.y = y;
+            this.val = val;
+            this.adjusted_val = adj;
+            this.avg_3 = avg3;
+            this.avg_5 = avg5;
+            this.near_max = nearMax;
         }
 
-        private RecoPixel(@NonNull final Parcel parcel) {
-            x = parcel.readInt();
-            y = parcel.readInt();
-            val  = parcel.readInt();
-            adjusted_val = parcel.readInt();
-            avg_3 = parcel.readFloat();
-            avg_5 = parcel.readFloat();
-            near_max = parcel.readInt();
+        public int getX() {
+            return x;
         }
 
-        @Override
-        public int describeContents() {
-            return 0;
+        public int getY() {
+            return y;
         }
 
-        @Override
-        public void writeToParcel(final Parcel dest, final int flags) {
-            dest.writeInt(x);
-            dest.writeInt(y);
-            dest.writeInt(val);
-            dest.writeInt(adjusted_val);
-            dest.writeFloat(avg_3);
-            dest.writeFloat(avg_5);
-            dest.writeInt(near_max);
+        public int getVal() {
+            return val;
         }
 
-        /**
-         * Parcelable.
-         */
-        public static final Creator<RecoPixel> CREATOR = new Creator<RecoPixel>() {
-            @Override
-            public RecoPixel createFromParcel(final Parcel source) {
-                return new RecoPixel(source);
+        public static class Builder {
+            private int x, y;
+            private int val, adjusted_val;
+            private float avg_3, avg_5;
+            private int near_max;
+
+            public Builder setX(int x) {
+                this.x = x;
+                return this;
             }
 
-            @Override
-            public RecoPixel[] newArray(final int size) {
-                return new RecoPixel[size];
+            public Builder setY(int y) {
+                this.y = y;
+                return this;
             }
-        };
-    }
 
-    protected RecoEvent buildEvent() {
-        RecoEvent event = new RecoEvent();
+            public Builder setVal(int val) {
+                this.val = val;
+                return this;
+            }
 
-        event.time = mFrame.getAcquiredTime();
-        event.time_nano = mFrame.getAcquiredTimeNano();
-        event.time_ntp = mFrame.getAcquiredTimeNTP();
-        event.time_target = mFrame.getTimestamp();
-        event.location = mFrame.getLocation();
-        event.orientation = mFrame.getOrientation();
-        event.pressure = mFrame.getPressure();
-        event.batteryTemp = mFrame.getBatteryTemp();
+            public Builder setAdjustedVal(int adj) {
+                this.adjusted_val = adj;
+                return this;
+            }
 
-        double avg = mFrame.getPixAvg();
-        double std = mFrame.getPixStd();
+            public Builder setAvg3(float avg3) {
+                this.avg_3 = avg3;
+                return this;
+            }
 
-        event.background = avg;
-        event.std = std;
+            public Builder setAvg5(float avg5) {
+                this.avg_5 = avg5;
+                return this;
+            }
 
-        LayoutBlack lb = LayoutBlack.getInstance();
-        if(lb.events != null) {
-            lb.addEvent(event);
+            public Builder setNearMax(int nearMax) {
+                this.near_max = nearMax;
+                return this;
+            }
+
+            public RecoPixel build() {
+                return new RecoPixel(x, y, val, adjusted_val, avg_3, avg_5, near_max);
+            }
         }
-
-        return event;
     }
 
-    ArrayList<RecoPixel> buildPixels() {
+    ArrayList<RecoPixel> buildPixels(RawCameraFrame frame) {
         ArrayList<RecoPixel> pixels = new ArrayList<>();
 
-        Mat grayMat = mFrame.getGrayMat();
+        Mat grayMat = frame.getGrayMat();
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 
@@ -305,10 +277,10 @@ public class L2Task implements Runnable {
         int height = grayMat.height();
 
 
-        ExposureBlock xb = mFrame.getExposureBlock();
+        ExposureBlock xb = frame.getExposureBlock();
 
         // set everything below threshold to zero
-        Imgproc.threshold(grayMat, threshMat, xb.L2_threshold, 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, xb.getL2Thresh(), 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
@@ -319,39 +291,37 @@ public class L2Task implements Runnable {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = mFrame.getRawByteAt(ix, iy) & 0xFF;
+            int val = frame.getRawByteAt(ix, iy) & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
-            RecoPixel p;
-
             L2Processor.histL2Pixels.fill(adjustedVal);
             try {
-                p = new RecoPixel();
+                RecoPixel.Builder builder = new RecoPixel.Builder();
+                builder.setX(ix)
+                        .setY(iy)
+                        .setVal(val)
+                        .setAdjustedVal(adjustedVal);
+
+                Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                        Math.max(ix-1,0), Math.min(ix+2,width));
+                Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                        Math.max(ix-2,0), Math.min(ix+3,width));
+
+                builder.setAvg3((float)Core.mean(grayAvg3).val[0])
+                        .setAvg5((float)Core.mean(grayAvg5).val[0])
+                        .setAvg5((int)Core.minMaxLoc(grayAvg3).maxVal);
+
+                grayAvg3.release();
+                grayAvg5.release();
+
+                pixels.add(builder.build());
+
+
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
                 mEvent.npix_dropped++;
-                continue;
             }
-
-            p.x = ix;
-            p.y = iy;
-            p.val = val;
-            p.adjusted_val = adjustedVal;
-
-            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
-                    Math.max(ix-1,0), Math.min(ix+2,width));
-            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
-                    Math.max(ix-2,0), Math.min(ix+3,width));
-
-            p.avg_3 = (float)Core.mean(grayAvg3).val[0];
-            p.avg_5 = (float)Core.mean(grayAvg5).val[0];
-            p.near_max = (int)Core.minMaxLoc(grayAvg3).maxVal;
-
-            grayAvg3.release();
-            grayAvg5.release();
-
-            pixels.add(p);
 
         }
         l2PixelCoords.release();
@@ -367,24 +337,30 @@ public class L2Task implements Runnable {
         xb.L2_processed++;
 
         // First, build the event from the raw frame.
-        mEvent = buildEvent();
+        mEvent = new RecoEvent(mFrame, this);
+        LayoutBlack lb = LayoutBlack.getInstance();
+        if(lb.events != null) {
+            lb.addEvent(mEvent);
+        }
 
         // If this event was not taken in DATA mode, we're done here.
-        if (xb.daq_state != CFApplication.State.DATA) {
+        if (xb.getDAQState() != CFApplication.State.DATA) {
             return;
         }
 
-        // now it's time to do the pixel-level analysis
-        ArrayList<RecoPixel> pixels = buildPixels();
-
-        mEvent.pixels = pixels;
-
-        if(pixels.size() >= 7) {
+        if(mEvent.getNPix() >= 7) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
             if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)
                     && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                     || mApplication.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED)) {
+
+                // make a copy of the pixels
+                ArrayList<L2Task.RecoPixel> pixels = new ArrayList<>();
+                Iterator<L2Task.RecoPixel> pixIter = mEvent.getPixelIterator();
+                while(pixIter.hasNext()) {
+                    pixels.add(pixIter.next());
+                }
 
                 mUtils.saveImage(new SavedImage(pixels, mFrame.getPixMax(), mFrame.getWidth(),
                         mFrame.getHeight(), mFrame.getAcquiredTimeNano()));

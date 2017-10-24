@@ -3,7 +3,10 @@ package io.crayfis.android.server;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Environment;
+import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -12,19 +15,16 @@ import com.google.protobuf.AbstractMessage;
 import java.io.File;
 import java.io.FileOutputStream;
 
-import io.crayfis.android.BuildConfig;
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
 
 /**
  * An implementation of IntentService that handles uploading blocks to the server.
  *
  * You can use the helper methods {@link #submitCalibrationResult(android.content.Context, io.crayfis.android.DataProtos.CalibrationResult)},
- * {@link #submitExposureBlock(android.content.Context, io.crayfis.android.exposure.ExposureBlock)} or
+ * {@link #submitExposureBlock(android.content.Context, io.crayfis.android.DataProtos.ExposureBlock)} or
  * {@link #submitRunConfig(android.content.Context, io.crayfis.android.DataProtos.RunConfig)} to make this
  * easier to use.
  *
@@ -32,6 +32,8 @@ import io.crayfis.android.util.CFLog;
  * received, write to the cache and execute a {@link io.crayfis.android.server.UploadExposureTask}.
  */
 public class UploadExposureService extends IntentService {
+
+    public static final String EXTRA_UPLOAD_CACHE = "upload_cache";
 
     /**
      * Key for storing a parcelable {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -53,6 +55,7 @@ public class UploadExposureService extends IntentService {
      */
     public static final String CALIBRATION_RESULT = "calibration_result";
 
+
     /**
      * A RunConfig is only to be uploaded if an ExposureBlock or CalibrationResult has been received.
      *
@@ -63,17 +66,11 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private static DataProtos.RunConfig sPendingRunConfig;
 
-    private static boolean sReceivedExposureBlock;
-
-    private static final CFConfig sConfig = CFConfig.getInstance();
     private static CFApplication.AppBuild sAppBuild;
     private static ServerInfo sServerInfo;
 
-    private static boolean sPermitUpload = true;
-    private static boolean sValidId = true;
-    private static boolean sStartUploading;
-
-    public static final boolean IS_PUBLIC = BuildConfig.DEBUG;
+    private static long sLastCacheUpload;
+    private static final long UPLOAD_CACHE_GAP = 5000L;
 
     /**
      * Helper for submitting an {@link io.crayfis.android.exposure.ExposureBlock}.
@@ -84,7 +81,7 @@ public class UploadExposureService extends IntentService {
      * @param exposureBlock The {@link io.crayfis.android.exposure.ExposureBlock}.
      */
     public static void submitExposureBlock(@NonNull final Context context,
-                                           @NonNull final ExposureBlock exposureBlock) {
+                                           @NonNull final DataProtos.ExposureBlock exposureBlock) {
         final Intent intent = new Intent(context, UploadExposureService.class);
         intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
         context.startService(intent);
@@ -137,6 +134,18 @@ public class UploadExposureService extends IntentService {
         context.startService(intent);
     }
 
+    public synchronized static void uploadFileCache(@NonNull final Context context) {
+
+        // make sure this isn't called again before the files can upload
+        if(System.currentTimeMillis() - sLastCacheUpload < UPLOAD_CACHE_GAP) return;
+        sLastCacheUpload = System.currentTimeMillis();
+
+        final Intent intent = new Intent(context, UploadExposureService.class);
+        intent.putExtra(EXTRA_UPLOAD_CACHE, true);
+        context.startService(intent);
+
+    }
+
     public UploadExposureService() {
         super("Exposure Uploader");
     }
@@ -145,27 +154,65 @@ public class UploadExposureService extends IntentService {
     protected void onHandleIntent(final Intent intent) {
         lazyInit();
 
-        final AbstractMessage message = getAbstractMessage(intent);
-        if (message != null) {
-            CFLog.d("Got message " + message);
-            final DataProtos.DataChunk.Builder builder = createDataChunk(message);
-            if (builder != null) {
-                if (sPendingRunConfig != null) {
-                    submitRunConfig(getApplicationContext(), sPendingRunConfig);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final boolean isPublic = prefs.getBoolean(getString(R.string.prefStorePublic), false);
+
+        if(intent.getBooleanExtra(EXTRA_UPLOAD_CACHE, false)) {
+            // upload everything in the file directory
+            Context context = getApplicationContext();
+            File[] cache = context.getFilesDir().listFiles();
+            for(File f: cache) {
+                if(f.getName().endsWith(".bin")) {
+                    uploadFile(f);
                 }
-                final AbstractMessage uploadMessage = builder.build();
-                final File file = saveMessageToCache(uploadMessage);
-                if (file != null && !IS_PUBLIC) {
-                    CFLog.d("Queueing upload task");
-                    new UploadExposureTask((CFApplication) getApplicationContext(), sServerInfo, file).
-                            execute();
-                } else {
-                    // make sure we save things like precalibration result
-                    CFApplication application = (CFApplication) this.getApplication();
-                    application.savePreferences();
+            }
+        } else {
+            // otherwise, make a file from protobuf data
+            final AbstractMessage message = getAbstractMessage(intent);
+            if (message != null) {
+                CFLog.d("Got message " + message);
+                final DataProtos.DataChunk.Builder builder = createDataChunk(message);
+                if (builder != null) {
+                    if (sPendingRunConfig != null) {
+                        submitRunConfig(getApplicationContext(), sPendingRunConfig);
+                    }
+                    final AbstractMessage uploadMessage = builder.build();
+                    File file = saveMessageToCache(uploadMessage, isPublic);
+                    if(file != null) {
+                        if(isPublic) {
+                            // make sure we save things like precalibration result
+                            CFApplication application = (CFApplication) this.getApplication();
+                            application.savePreferences();
+                        } else {
+                            uploadFile(file);
+                        }
+                    }
                 }
             }
         }
+
+    }
+
+    /**
+     * Uploads file to server
+     *
+     * @param uploadFile .bin file to be processed
+     */
+    private void uploadFile(@NonNull File uploadFile) {
+
+        CFLog.d("Queueing upload task");
+        final CFApplication application = (CFApplication) getApplication();
+        final File file = uploadFile;
+
+        // need to call execute() on UI thread
+        Handler handler = new Handler(getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {new UploadExposureTask(application, sServerInfo, file).
+                    execute();
+            }
+        });
+
     }
 
     /**
@@ -218,9 +265,9 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private AbstractMessage getAbstractMessage(@NonNull final Intent intent) {
 
-        final ExposureBlock exposureBlock = intent.getParcelableExtra(EXPOSURE_BLOCK);
+        final AbstractMessage exposureBlock = (AbstractMessage) intent.getSerializableExtra(EXPOSURE_BLOCK);
         if (exposureBlock != null) {
-            return exposureBlock.buildProto();
+            return exposureBlock;
         }
 
         final AbstractMessage runConfig = (AbstractMessage) intent.getSerializableExtra(RUN_CONFIG);
@@ -243,7 +290,7 @@ public class UploadExposureService extends IntentService {
     }
 
     @Nullable
-    private File saveMessageToCache(final AbstractMessage abstractMessage) {
+    private File saveMessageToCache(final AbstractMessage abstractMessage, boolean isPublic) {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
         final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
@@ -251,7 +298,7 @@ public class UploadExposureService extends IntentService {
         FileOutputStream outputStream;
 
         try {
-            if(IS_PUBLIC) {
+            if(isPublic) {
                 File path = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM),"CRAYFIS");
                 path.mkdir();
                     protofile = new File(path, filename);

@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.BATTERY_STATS"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WRITE_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <uses-feature android:name="android.hardware.camera"
         android:required="true"/>
@@ -37,16 +38,30 @@
 
 
 
-        <receiver android:name="io.crayfis.android.AutostartReceiver">
+        <receiver android:name="io.crayfis.android.broadcast.AutostartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
-                <action android:name="android.intent.action.BATTERY_OKAY"/>
+                <action android:name="android.intent.action.BATTERY_CHANGED"/>
+                <action android:name="io.crayfis.android.AUTOSTART" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="io.crayfis.android.MyDisconnectReceiver">
+        <receiver android:name="io.crayfis.android.broadcast.WifiReceiver">
+            <intent-filter>
+                <action android:name="android.net.wifi.STATE_CHANGE"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="io.crayfis.android.broadcast.MyDisconnectReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="io.crayfis.android.broadcast.AlarmBootReceiver"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
@@ -71,6 +86,14 @@
         <activity
             android:name="io.crayfis.android.UserSettingActivity"
             android:screenOrientation="portrait"/>
+
+        <activity android:name="io.crayfis.android.ConfigureAutostartActivity"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="io.crayfis.android.ConfigureAutostartActivity"/>
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
 
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />

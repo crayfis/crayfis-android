@@ -1,9 +1,14 @@
 package io.crayfis.android.camera;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -11,6 +16,8 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import io.crayfis.android.CFApplication;
+import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -106,26 +113,43 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
             mLocationManager = null;
         }
 
-        // get last known location
-        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
-                mGoogleApiClient);
-        CFLog.d("onConnected: asking for location = "+mLastLocation);
+        try {
+            // get last known location
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+            CFLog.d("onConnected: asking for location = " + mLastLocation);
 
-        // set the location; if this is false updateLocation() will disregard it
-        updateLocation(mLastLocation, false);
+            // set the location; if this is false updateLocation() will disregard it
+            updateLocation(mLastLocation, false);
 
-        // request updates as well
-        LocationRequest locationRequest = new LocationRequest();
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(5000);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
+            // request updates as well
+            LocationRequest locationRequest = new LocationRequest();
+            locationRequest.setInterval(10000);
+            locationRequest.setFastestInterval(5000);
+            locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
+        } catch (SecurityException e) {
+            CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+            application.userErrorMessage(R.string.quit_permission, true);
+        }
 
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult result)
+    public void onConnectionFailed(@NonNull ConnectionResult result)
     {
+        CFLog.e("Failed to connect to Google Location Services");
+        useDeprecated();
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause)
+    {
+        CFLog.e("Google Location Services suspended");
+        useDeprecated();
+    }
+
+    private void useDeprecated() {
         if (mLocationManager == null) {
             // backup location if Google play isn't working or installed
             mLocationManager = (LocationManager) CONTEXT.getSystemService(Context.LOCATION_SERVICE);
@@ -145,22 +169,16 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 }
                 mLastLocationDeprecated = location;
             } catch(SecurityException e) {
-                // TODO: tell the user to turn on location settings
+                CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+                application.userErrorMessage(R.string.quit_permission, true);
             }
         }
 
         updateLocation(mLastLocationDeprecated, true);
     }
 
-    @Override
-    public void onConnectionSuspended(int cause)
+    private boolean isLocationValid(Location location)
     {
-        onConnectionFailed(null);
-    }
-
-    private boolean location_valid(Location location)
-    {
-
         return (location != null
                 && java.lang.Math.abs(location.getLongitude())>0.1
                 && java.lang.Math.abs(location.getLatitude())>0.1);
@@ -174,16 +192,17 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         {
             //  Google location API
             // as long as it's valid, update the data
-            if (location != null)
+            if (location != null) {
                 currentLocation = location;
+            }
         } else {
             // deprecated interface as backup
 
             // is it valid?
-            if (location_valid(location))
+            if (isLocationValid(location))
             {
                 // do we not have a valid current location?
-                if (!location_valid(mLastLocation))
+                if (!isLocationValid(mLastLocation))
                 {
                     // use the deprecated info if it's the best we have
                     currentLocation = location;
@@ -195,6 +214,24 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         RCF_BUILDER.setLocation(currentLocation);
     }
 
+    boolean isReceivingUpdates() {
+
+        // first see if location services are on
+        try {
+            int locationMode = Settings.Secure.getInt(CONTEXT.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            if(locationMode == Settings.Secure.LOCATION_MODE_OFF) return false;
+
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // then make sure we have the right permissions
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+                CONTEXT.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED;
+
+    }
 
     String getStatus() {
         return (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude()

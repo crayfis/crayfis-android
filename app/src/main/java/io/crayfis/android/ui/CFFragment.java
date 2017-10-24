@@ -66,7 +66,7 @@ public abstract class CFFragment extends Fragment {
      *
      * @return ID from R.string
      */
-    public @StringRes int about() { return 0; }
+    public abstract @StringRes int about();
 
     /**
      * Method to be called during UI Update Timer tick
