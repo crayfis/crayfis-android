@@ -6,10 +6,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
@@ -501,7 +503,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private Timer mHardwareCheckTimer;
 
-    public final float batteryStopPct = 0.20f;
     public final float batteryStartPct = 0.80f;
     public final int batteryOverheatTemp = 420;
     public final int batteryStartTemp = 350;
@@ -540,6 +541,10 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             if (batteryLow) {
                 batteryLow = batteryPct < batteryStartPct;
             } else {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(DAQService.this);
+                String batteryPref = prefs.getString(getString(R.string.prefBatteryStop), "20%");
+                batteryPref = batteryPref.substring(0, batteryPref.length()-1);
+                double batteryStopPct = Integer.parseInt(batteryPref)/100.;
                 batteryLow = batteryPct < batteryStopPct;
             }
 

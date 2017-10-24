@@ -38,13 +38,33 @@
         <item>@string/resolution_720p</item>
         <item>@string/resolution_1080p</item>
     </string-array>
+    <string-array name="pref_fps_vals" translatable="false">
+        <item>@string/long_exposure</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+        <item>24</item>
+        <item>30</item>
+    </string-array>
     <string-array name="pref_startwait">
         <item>0 </item>
         <item>10 </item>
         <item>30 </item>
         <item>60 </item>
         <item>120 </item>
-    </string-array>  
+    </string-array>
+
+    <string-array name="pref_battery_stop_vals">
+        <item>0%</item>
+        <item>10%</item>
+        <item>20%</item>
+        <item>30%</item>
+        <item>40%</item>
+        <item>50%</item>
+        <item>60%</item>
+        <item>70%</item>
+        <item>80%</item>
+    </string-array>
 
     <string-array name="camera_select_mode_entries" translatable="false">
         <item>@string/camera_select_face_down</item>

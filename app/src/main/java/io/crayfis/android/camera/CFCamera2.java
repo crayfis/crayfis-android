@@ -59,7 +59,6 @@ class CFCamera2 extends CFCamera {
     private CaptureRequest.Builder mPreviewRequestBuilder;
     private CaptureRequest mPreviewRequest;
     private Size mPreviewSize;
-    private Range<Integer> mTargetFpsRange = new Range<>(0,0);
     private CameraCaptureSession mCaptureSession;
 
     private Allocation ain;
@@ -150,6 +149,8 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
+            //CFLog.d("ExposureTime = " + result.get(CaptureResult.SENSOR_EXPOSURE_TIME));
+
             mQueuedTimestamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
             createFrames();
 
@@ -204,7 +205,7 @@ class CFCamera2 extends CFCamera {
         try {
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder
-                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_MANUAL);
 
             // make preview as close to RAW as possible
 
@@ -223,36 +224,55 @@ class CFCamera2 extends CFCamera {
             mPreviewRequestBuilder.set(CaptureRequest.EDGE_MODE, CameraMetadata.EDGE_MODE_OFF);
             mPreviewRequestBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CameraMetadata.NOISE_REDUCTION_MODE_OFF);
 
+            // go through ranges known to be supported
+            Long requestedDuration = 33000000L;
             Range<Integer>[] availableFpsRanges
                     = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
-            String rangeString = "Available ranges: ";
+
+            // fps should be as close to target as possible, but keep at max for long exposure
             if(availableFpsRanges != null) {
-                for (Range<Integer> r: availableFpsRanges) {
-                    rangeString += r.toString() + " ";
-                    if((r.getUpper() > mTargetFpsRange.getUpper() || r.getLower() > mTargetFpsRange.getLower())
-                            && mTargetFpsRange.getUpper() <= 30) {
-                        mTargetFpsRange = r;
+
+                // find closest number in given ranges to target
+                long targetDuration = CONFIG.getTargetFPS() == 0 ? 5000000000L : 1000000000L / CONFIG.getTargetFPS();
+                for (Range<Integer> r : availableFpsRanges) {
+                    long maxDuration = 1000000000L / r.getLower();
+                    long minDuration = 1000000000L / r.getUpper();
+                    if (targetDuration >= minDuration && targetDuration <= maxDuration) {
+                        requestedDuration = targetDuration;
+                        break;
+                    }
+
+                    if (minDuration > targetDuration
+                            && Math.abs(targetDuration - requestedDuration) > Math.abs(targetDuration - minDuration)) {
+                        requestedDuration = minDuration;
+                    } else if (Math.abs(targetDuration - requestedDuration) > Math.abs(targetDuration - maxDuration)) {
+                        requestedDuration = maxDuration;
                     }
                 }
-                CFLog.d(rangeString);
-                CFLog.d("Target range = " + mTargetFpsRange.toString());
             }
+
+            // seems to work better when rounded to ms
+            requestedDuration = 1000000L * Math.round(requestedDuration/1000000.);
+
+            CFLog.d("Target FPS = " + (int)(1000000000./requestedDuration));
 
             mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,
                     mCameraCharacteristics.get(CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY));
-
             mPreviewRequestBuilder.set(CaptureRequest.SHADING_MODE, CameraMetadata.SHADING_MODE_OFF);
 
-            Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
-            Long frameDuration = mPreviewRequestBuilder.get(CaptureRequest.SENSOR_FRAME_DURATION);
-            if(frameDuration == null) {
-                frameDuration = 33000000L;
-            }
+            // set the frame length and exposure time
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, requestedDuration);
 
+            Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
             if(exposureTimes != null) {
                 mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
-                        Math.min(exposureTimes.getUpper(), frameDuration));
+                        Math.min(exposureTimes.getUpper(), requestedDuration));
             }
+
+            // get rid of larger results we don't need
+            mPreviewRequestBuilder.set(CaptureRequest.STATISTICS_LENS_SHADING_MAP_MODE, CameraMetadata.STATISTICS_LENS_SHADING_MAP_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.STATISTICS_FACE_DETECT_MODE, CameraMetadata.STATISTICS_FACE_DETECT_MODE_OFF);
+            mPreviewRequestBuilder.set(CaptureRequest.STATISTICS_HOT_PIXEL_MAP_MODE, false);
 
 
             // Here, we create a CameraCaptureSession for camera preview.

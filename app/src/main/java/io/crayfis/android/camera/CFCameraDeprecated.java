@@ -78,17 +78,20 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             // param.setFocusMode("FIXED");
             param.setExposureCompensation(0);
 
-            // Try to pick the highest FPS range possible
+            // Try to pick the highest FPS range up to target FPS
             int minfps = 0, maxfps = 0;
             List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-            if (validRanges != null)
+            String rngtxt = "Supported FPS ranges:";
+            if (validRanges != null) {
                 for (int[] rng : validRanges) {
-                    CFLog.i("Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-                    if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-                        maxfps = rng[1];
+                    rngtxt += " [" + minfps + ", " + maxfps + "]";
+                    if(Math.abs(rng[1] - CONFIG.getTargetFPS()) < Math.abs(maxfps - CONFIG.getTargetFPS())) {
                         minfps = rng[0];
+                        maxfps = rng[1];
                     }
                 }
+            }
+            CFLog.i(rngtxt);
             CFLog.i("Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
             try{
                 // Try to set minimum=maximum FPS range.

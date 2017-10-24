@@ -37,8 +37,12 @@
     <string name="settings_notif_summary" translatable="false">Allow CRAYFIS to post notifications to your phone when app finishes</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
     <string name="settings_autostart_title">Click to configure autostart</string>
-    <string name="settings_pref_resolution_summary" translatable="false">Decrease resolution if camera is working too hard</string>
+    <string name="settings_battery_stop_summary">Stop when battery goes below this charge</string>
+    <string name="settings_battery_stop_title">Quit at low power</string>
+    <string name="settings_pref_resolution_summary" translatable="false">Decrease resolution if temperature is too high</string>
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
+    <string name="settings_pref_fps_summary" translatable="false">Decrease frame rate if temperature is too high</string>
+    <string name="settings_pref_fps_title" translatable="false">Camera frame rate</string>
     <string name="settings_camera_select_mode_summary" translatable="false">Choose method of determining frame quality</string>
     <string name="settings_camera_select_mode_title" translatable="false">Camera select mode</string>
     <string name="settings_public_summary" translatable="false">Save files in DCIM instead of uploading</string>
@@ -48,6 +52,8 @@
     <string name="resolution_medium" translatable="false">Medium</string>
     <string name="resolution_720p" translatable="false">720p</string>
     <string name="resolution_1080p" translatable="false">1080p</string>
+    <string name="long_exposure" translatable="false">Long exposure</string>
+    <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
 
     <string name="camera_select_face_down" translatable="false">Face-down</string>
     <string name="camera_select_auto_detect" translatable="false">Auto-detect</string>

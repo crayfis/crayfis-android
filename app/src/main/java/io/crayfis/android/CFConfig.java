@@ -51,6 +51,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_ACCOUNT_SCORE = "account_score";
     private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
+    private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_CAMERA_SELECT_MODE = "prefCameraSelectMode";
 
 
@@ -69,7 +70,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 60;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final float DEFAULT_BG_AVG_CUT = 5f;
+    private static final float DEFAULT_BG_AVG_CUT = 10f;
     private static final float DEFAULT_BG_VAR_CUT = 30f;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
@@ -82,6 +83,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
+    private static final String DEFAULT_TARGET_FPS = "15";
     private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
 
     private String mL1Trigger;
@@ -113,6 +115,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private float mAccountScore;
     private boolean mTriggerLock;
     private String mTargetResolutionStr;
+    private String mTargetFPS;
     private int mCameraSelectMode;
 
     private CFConfig() {
@@ -144,6 +147,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
+        mTargetFPS = DEFAULT_TARGET_FPS;
 
         mHotcells = new ArrayList<>(N_CAMERAS);
         for(int i=0; i<N_CAMERAS; i++) {
@@ -399,6 +403,15 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
+    public int getTargetFPS() {
+        try {
+            return Integer.parseInt(mTargetFPS);
+        } catch(NumberFormatException e) {
+            // FIXME: should be a better way to check for long exposure
+            return 0;
+        }
+    }
+
     /**
      * Get the camera selection mode
      *
@@ -431,6 +444,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
         mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
+        mTargetFPS = sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS);
         String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE,
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
@@ -540,6 +554,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getResolution() != null) {
             mTargetResolutionStr = serverCommand.getResolution();
         }
+        if(serverCommand.getTargetFPS() != null) {
+            mTargetFPS = serverCommand.getTargetFPS();
+        }
         if (serverCommand.getCameraSelectMode() != null) {
             mCameraSelectMode = serverCommand.getCameraSelectMode();
         }
@@ -579,6 +596,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
+                .putString(KEY_TARGET_FPS, mTargetFPS)
                 .putString(KEY_CAMERA_SELECT_MODE,Integer.toString(mCameraSelectMode))
                 .apply();
     }

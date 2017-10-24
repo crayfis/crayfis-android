@@ -47,6 +47,7 @@ public class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("update_url") private String mUpdateURL;
     @SerializedName("set_target_resolution") private String mResolution;
+    @SerializedName("set_target_fps") private String mTargetFPS;
     @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
 
 
@@ -264,6 +265,11 @@ public class ServerCommand {
     @Nullable
     public String getResolution() {
         return mResolution;
+    }
+
+    @Nullable
+    public String getTargetFPS() {
+        return mTargetFPS;
     }
 
     @Nullable
