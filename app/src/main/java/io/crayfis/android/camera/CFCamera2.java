@@ -205,7 +205,7 @@ class CFCamera2 extends CFCamera {
         try {
             // We set up a CaptureRequest.Builder with the output Surface.
             mPreviewRequestBuilder
-                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_MANUAL);
+                    = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
             // make preview as close to RAW as possible
 
