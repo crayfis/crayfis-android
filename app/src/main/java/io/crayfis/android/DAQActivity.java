@@ -226,8 +226,6 @@ public class DAQActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.daq_activity, menu);
-        // FIXME: this is a dumb way to do this, but it works
-        invalidateOptionsMenu();
         return super.onCreateOptionsMenu(menu);
     }
 
