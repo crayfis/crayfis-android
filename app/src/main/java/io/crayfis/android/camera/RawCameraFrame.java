@@ -44,7 +44,6 @@ public abstract class RawCameraFrame {
     private final float[] mOrientation;
     private final float mRotationZZ;
     private final float mPressure;
-    private final int mBatteryTemp;
     private final ExposureBlock mExposureBlock;
 
     private int mPixMax = -1;
@@ -84,7 +83,6 @@ public abstract class RawCameraFrame {
         float[] bOrientation;
         float bRotationZZ;
         float bPressure;
-        int bBatteryTemp;
         ExposureBlock bExposureBlock;
 
         ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
@@ -135,11 +133,6 @@ public abstract class RawCameraFrame {
             return this;
         }
 
-        public Builder setBatteryTemp(int batteryTemp) {
-            bBatteryTemp = batteryTemp;
-            return this;
-        }
-
         public Builder setExposureBlock(ExposureBlock exposureBlock) {
             bExposureBlock = exposureBlock;
             return this;
@@ -164,7 +157,6 @@ public abstract class RawCameraFrame {
                    final float[] orientation,
                    final float rotationZZ,
                    final float pressure,
-                   final int batteryTemp,
                    final ExposureBlock exposureBlock,
                    final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                    final ScriptC_weight scriptCWeight,
@@ -183,7 +175,6 @@ public abstract class RawCameraFrame {
         mOrientation = orientation;
         mRotationZZ = rotationZZ;
         mPressure = pressure;
-        mBatteryTemp = batteryTemp;
         mExposureBlock = exposureBlock;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
         mScriptCWeight = scriptCWeight;
@@ -349,8 +340,6 @@ public abstract class RawCameraFrame {
     }
 
     public float getPressure() { return mPressure; }
-
-    public int getBatteryTemp() { return mBatteryTemp; }
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
 
