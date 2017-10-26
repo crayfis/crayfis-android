@@ -7,7 +7,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.ui.DataCollectionFragment;
 

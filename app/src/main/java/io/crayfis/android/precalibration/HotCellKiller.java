@@ -14,7 +14,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_findSecond;
 import io.crayfis.android.camera.CFCamera;

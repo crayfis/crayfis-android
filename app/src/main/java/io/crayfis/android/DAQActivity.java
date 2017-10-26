@@ -54,6 +54,7 @@ import java.util.List;
 
 import io.crayfis.android.navdrawer.NavDrawerAdapter;
 import io.crayfis.android.navdrawer.NavHelper;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ui.CFFragment;
 import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.ui.LayoutFeedback;
@@ -381,7 +382,6 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStart() {
-        CFLog.d("clickedStart()");
         invalidateOptionsMenu();
 
         startService(DAQIntent);

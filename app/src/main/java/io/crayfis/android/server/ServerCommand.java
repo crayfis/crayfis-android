@@ -15,7 +15,7 @@ import java.util.UUID;
  *
  * TODO This is based on the assumption that the JSON response only has fields that should change.  Is this really true?
  */
-public class ServerCommand {
+class ServerCommand {
 
     @SerializedName("set_precal") private String[] mPrecalWeights;
     @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
@@ -49,17 +49,8 @@ public class ServerCommand {
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private String mTargetFPS;
     @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
+    @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
 
-
-    /**
-     * Get the Account Name
-     *
-     * @return String or {@code null}.
-     */
-    @Nullable
-    public String getUpdateURL() {
-        return mUpdateURL;
-    }
 
     /**
      * Get the Account Score
@@ -67,7 +58,7 @@ public class ServerCommand {
      * @return Long or {@code null}.
      */
     @Nullable
-    public Float getAccountScore() {
+    Float getAccountScore() {
         return mAccountScore;
     }
 
@@ -77,24 +68,24 @@ public class ServerCommand {
      * @return String or {@code null}.
      */
     @Nullable
-    public String getAccountName() {
+    String getAccountName() {
         return mAccountName;
     }
 
     @Nullable
-    public String[] getPrecalWeights() { return mPrecalWeights; }
+    String[] getPrecalWeights() { return mPrecalWeights; }
 
     @Nullable
-    public List<Set<String>> getHotcells() { return mHotcells; }
+    List<Set<String>> getHotcells() { return mHotcells; }
 
     @Nullable
-    public UUID[] getPrecalId() { return mPrecalUUID; }
+    UUID[] getPrecalId() { return mPrecalUUID; }
 
     @Nullable
-    public long[] getLastPrecalTime() { return mLastPrecalTime; }
+    long[] getLastPrecalTime() { return mLastPrecalTime; }
 
     @Nullable
-    public int[] getLastPrecalResX() { return mLastPrecalResX; }
+    int[] getLastPrecalResX() { return mLastPrecalResX; }
 
     /**
      * Get the L1 threshold.
@@ -102,7 +93,7 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getL1Threshold() {
+    Integer getL1Threshold() {
         return mL1Threshold;
     }
 
@@ -112,18 +103,18 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getL2Threshold() {
+    Integer getL2Threshold() {
         return mL2Threshold;
     }
 
     @Nullable
-    public String getL1Trigger() { return mL1Trigger; };
+    String getL1Trigger() { return mL1Trigger; };
 
     @Nullable
-    public String getL2Trigger() { return mL2Trigger; };
+    String getL2Trigger() { return mL2Trigger; };
 
     @Nullable
-    public Boolean getTriggerLock() { return mTriggerLock; };
+    Boolean getTriggerLock() { return mTriggerLock; };
 
     /**
      * Get the events per minute.
@@ -131,18 +122,18 @@ public class ServerCommand {
      * @return Float or {@code null}.
      */
     @Nullable
-    public Float getEventsPerMinute() {
+    Float getEventsPerMinute() {
         return mEventsPerMinute;
     }
 
     @Nullable
-    public Integer getWeightingSampleFrames() { return mWeightingSampleFrames; }
+    Integer getWeightingSampleFrames() { return mWeightingSampleFrames; }
 
     @Nullable
-    public Integer getHotcellSampleFrames() { return mHotcellSampleFrames; }
+    Integer getHotcellSampleFrames() { return mHotcellSampleFrames; }
 
     @Nullable
-    public Float getHotcellThresh() { return mHotcellThresh; }
+    Float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * Get the calibration sample frames.
@@ -150,7 +141,7 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getCalibrationSampleFrames() {
+    Integer getCalibrationSampleFrames() {
         return mCalibrationSampleFrames;
     }
 
@@ -160,7 +151,7 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getTargetExposureBlockPeriod() {
+    Integer getTargetExposureBlockPeriod() {
         return mTargetExposureBlockPeriod;
     }
 
@@ -170,7 +161,7 @@ public class ServerCommand {
      * @return
      */
     @Nullable
-    public Integer getMaxUploadInterval() {
+    Integer getMaxUploadInterval() {
         return mMaxUploadInterval;
     }
 
@@ -180,7 +171,7 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getMaxChunkSize() {
+    Integer getMaxChunkSize() {
         return mMaxChunkSize;
     }
 
@@ -190,7 +181,7 @@ public class ServerCommand {
      * @return Integer or {@code null}.
      */
     @Nullable
-    public Integer getMinCacheUploadInterval() {
+    Integer getMinCacheUploadInterval() {
         return mMinCacheUploadInterval;
     }
 
@@ -200,7 +191,7 @@ public class ServerCommand {
      * @return Float or {@code null}.
      */
     @Nullable
-    public Float getQualityPixFrac() {
+    Float getQualityPixFrac() {
         return mQualityPixFrac;
     }
 
@@ -210,7 +201,7 @@ public class ServerCommand {
      * @return Float or {@code null} if not set.
      */
     @Nullable
-    public Float getQualityBgAverage() {
+    Float getQualityBgAverage() {
         return mQualityBgAverage;
     }
 
@@ -220,7 +211,7 @@ public class ServerCommand {
      * @return Float or {@code null} if not set.
      */
     @Nullable
-    public Float getQualityBgVariance() {
+    Float getQualityBgVariance() {
         return mQualityBgVariance;
     }
 
@@ -231,16 +222,7 @@ public class ServerCommand {
      * @return Float or {@code null} if not set
      */
     @Nullable
-    public Float getQualityOrientation() { return mQualityOrient; }
-
-    /**
-     * Check if the app should recalibrate or not.
-     *
-     * @return {@code true} if it should, {@code false} if not.
-     */
-    public boolean shouldRecalibrate() {
-        return (mShouldRecalibrate == null) ? false : mShouldRecalibrate;
-    }
+    Float getQualityOrientation() { return mQualityOrient; }
 
     /**
      * Get the current experiment.
@@ -248,7 +230,7 @@ public class ServerCommand {
      * @return String or {@code null}
      */
     @Nullable
-    public String getCurrentExperiment() {
+    String getCurrentExperiment() {
         return (mCurrentExperiment == null || mCurrentExperiment.isEmpty()) ? null : mCurrentExperiment;
     }
 
@@ -258,26 +240,31 @@ public class ServerCommand {
      * @return String or {@code null}
      */
     @Nullable
-    public String getDeviceNickname() {
+    String getDeviceNickname() {
         return (mDeviceNickname == null || mDeviceNickname.isEmpty()) ? null : mDeviceNickname;
     }
 
     @Nullable
-    public String getResolution() {
+    String getResolution() {
         return mResolution;
     }
 
     @Nullable
-    public String getTargetFPS() {
+    String getTargetFPS() {
         return mTargetFPS;
     }
 
     @Nullable
-    public Integer getCameraSelectMode() {
+    Integer getCameraSelectMode() {
         try {
             return Integer.parseInt(mCameraSelectModeString);
         } catch(NumberFormatException e) {
             return null;
         }
+    }
+
+    @Nullable
+    Integer getBatteryOverheatTemp() {
+        return mBatteryOverheatTemp;
     }
 }

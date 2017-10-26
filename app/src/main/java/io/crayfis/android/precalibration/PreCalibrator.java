@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.CFCamera;

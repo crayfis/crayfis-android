@@ -1,8 +1,6 @@
 package io.crayfis.android.camera;
 
-import android.content.SharedPreferences;
 import android.location.Location;
-import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -14,9 +12,7 @@ import org.opencv.core.MatOfByte;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
-import io.crayfis.android.R;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;

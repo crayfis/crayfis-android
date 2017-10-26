@@ -1,6 +1,6 @@
 package io.crayfis.android.calibration;
 
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.util.CFLog;

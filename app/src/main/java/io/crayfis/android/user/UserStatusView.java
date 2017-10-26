@@ -8,7 +8,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.util.ViewUtil;
 

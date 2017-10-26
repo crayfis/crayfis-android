@@ -8,15 +8,12 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.renderscript.RenderScript;
 
-import java.util.ArrayDeque;
-
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.precalibration.PreCalibrator;
-import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
 
 import static io.crayfis.android.CFApplication.MODE_AUTO_DETECT;
@@ -119,9 +116,6 @@ public abstract class CFCamera {
         int nextId = -1;
         CFApplication.State state = mApplication.getApplicationState();
         switch(state) {
-            case RECONFIGURE:
-                nextId = currentId;
-                break;
             case INIT:
                 nextId = 0;
                 break;

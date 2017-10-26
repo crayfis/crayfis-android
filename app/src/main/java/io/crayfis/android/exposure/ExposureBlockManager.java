@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;

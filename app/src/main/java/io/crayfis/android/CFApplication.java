@@ -20,7 +20,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -28,7 +27,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.server.ServerCommand;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
@@ -127,17 +126,6 @@ public class CFApplication extends Application {
         //final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         final SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CFConfig.getInstance().save(localPrefs);
-    }
-
-    public void onServerCommandRecieved(ServerCommand sc) {
-        if (sc.shouldRecalibrate()) {
-            // recieved a command from the server to enter calibration loop!
-            setApplicationState(State.STABILIZATION);
-        }
-        if (sc.getResolution() != null) {
-            // go to the recalibrate state, so that the camera can be setup with the new resolution.
-            setApplicationState(State.RECONFIGURE);
-        }
     }
 
     /**
@@ -415,7 +403,6 @@ public class CFApplication extends Application {
         DATA,
         STABILIZATION,
         IDLE,
-        RECONFIGURE,
         FINISHED
     }
 
