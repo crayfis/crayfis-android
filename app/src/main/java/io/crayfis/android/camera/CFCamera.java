@@ -29,7 +29,7 @@ public abstract class CFCamera {
 
     CFApplication mApplication;
     final CFConfig CONFIG;
-    final RenderScript RS;
+    RenderScript mRS;
 
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
@@ -50,7 +50,6 @@ public abstract class CFCamera {
     CFCamera() {
 
         CONFIG = CFConfig.getInstance();
-        RS = CFApplication.getRenderScript();
     }
 
     /**
@@ -79,6 +78,8 @@ public abstract class CFCamera {
     public void register(Context context) {
         if(mCallback == null) return;
         mApplication = (CFApplication) context;
+        mRS = mApplication.getRenderScript();
+
         mCFSensor = new CFSensor(context, getFrameBuilder());
         mCFLocation = new CFLocation(context, getFrameBuilder());
         changeCamera();

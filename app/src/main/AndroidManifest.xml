@@ -38,38 +38,31 @@
 
 
 
-        <receiver android:name="io.crayfis.android.broadcast.AutostartReceiver">
+        <receiver android:name=".broadcast.AutostartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
-                <action android:name="android.intent.action.BATTERY_CHANGED"/>
                 <action android:name="io.crayfis.android.AUTOSTART" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name="io.crayfis.android.broadcast.WifiReceiver">
+        <receiver android:name=".broadcast.WifiReceiver">
             <intent-filter>
                 <action android:name="android.net.wifi.STATE_CHANGE"/>
             </intent-filter>
         </receiver>
 
-        <receiver android:name="io.crayfis.android.broadcast.MyDisconnectReceiver">
-            <intent-filter>
-                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver android:name="io.crayfis.android.broadcast.AlarmBootReceiver"
+        <receiver android:name=".broadcast.AlarmBootReceiver"
             android:enabled="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 
-        <service android:name="io.crayfis.android.server.UploadExposureService"
+        <service android:name=".server.UploadExposureService"
                  android:exported="false"/>
 
         <activity
-            android:name="io.crayfis.android.DAQActivity"
+            android:name=".DAQActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
@@ -77,17 +70,17 @@
             android:theme="@style/CrayfisApp"/>
 
         <service
-            android:name="io.crayfis.android.DAQService"
+            android:name=".DAQService"
             android:exported="false"/>
 
-        <activity android:name="io.crayfis.android.usernotif.UserNotificationActivity"
+        <activity android:name=".usernotif.UserNotificationActivity"
                   android:screenOrientation="portrait"/>
 
         <activity
-            android:name="io.crayfis.android.UserSettingActivity"
+            android:name=".UserSettingActivity"
             android:screenOrientation="portrait"/>
 
-        <activity android:name="io.crayfis.android.ConfigureAutostartActivity"
+        <activity android:name=".ConfigureAutostartActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="io.crayfis.android.ConfigureAutostartActivity"/>

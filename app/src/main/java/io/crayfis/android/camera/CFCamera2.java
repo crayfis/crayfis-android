@@ -380,7 +380,7 @@ class CFCamera2 extends CFCamera {
             mResX = mPreviewSize.getWidth();
             mResY = mPreviewSize.getHeight();
 
-            ain = Allocation.createTyped(RS, new Type.Builder(RS, Element.YUV(RS))
+            ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.YUV(mRS))
                     .setX(mPreviewSize.getWidth())
                     .setY(mPreviewSize.getHeight())
                     .setYuvFormat(ImageFormat.YUV_420_888)

@@ -131,7 +131,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             mCamera.setPreviewTexture(mTexture);
 
-            RCF_BUILDER.setCamera(mCamera, mCameraId, RS);
+            RCF_BUILDER.setCamera(mCamera, mCameraId, mRS);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);

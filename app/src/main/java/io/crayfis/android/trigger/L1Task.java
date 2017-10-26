@@ -4,6 +4,7 @@ import io.crayfis.android.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -28,6 +29,8 @@ class L1Task implements Runnable {
     private CFApplication mApplication = null;
     private boolean mKeepFrame = false;
 
+    private final CFConfig CONFIG = CFConfig.getInstance();
+
     public L1Task(L1Processor l1processor, RawCameraFrame frame) {
         mL1Processor = l1processor;
         mFrame = frame;
@@ -51,6 +54,9 @@ class L1Task implements Runnable {
         if(mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+        } else if(mL1Processor.mPreCal.count.incrementAndGet()
+                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
+            mApplication.updateBatteryStats();
         }
 
         return false;
@@ -89,9 +95,6 @@ class L1Task implements Runnable {
         mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
 
-        // check if we pass the L1 threshold
-        boolean pass = false;
-
         int max = mFrame.getPixMax();
 
         mExposureBlock.total_background += mFrame.getPixAvg();
@@ -100,10 +103,7 @@ class L1Task implements Runnable {
         if (max > mExposureBlock.getL1Thresh()) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
-            pass = true;
-        }
 
-        if (pass) {
             mExposureBlock.L1_pass++;
 
             mKeepFrame = true;
@@ -125,7 +125,6 @@ class L1Task implements Runnable {
     }
 
     protected void processFinal() {
-        return;
     }
 
     private void processFrame() {

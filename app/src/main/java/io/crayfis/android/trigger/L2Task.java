@@ -91,7 +91,7 @@ public class L2Task implements Runnable {
         private final long time_nano;
         private final long time_ntp;
         private final long time_target;
-        private final int batteryTemp;
+        //private final int batteryTemp;
         private final Location location;
         private final float[] orientation;
         private final float pressure;
@@ -114,7 +114,7 @@ public class L2Task implements Runnable {
             location = frame.getLocation();
             orientation = frame.getOrientation();
             pressure = frame.getPressure();
-            batteryTemp = frame.getBatteryTemp();
+            //batteryTemp = frame.getBatteryTemp();
 
             background = frame.getPixAvg();
             std = frame.getPixStd();
@@ -132,7 +132,7 @@ public class L2Task implements Runnable {
             buf.setTimestampNtp(time_ntp);
             buf.setTimestampTarget(time_target);
             buf.setPressure(pressure);
-            buf.setBatteryTemp(batteryTemp);
+            //buf.setBatteryTemp(batteryTemp);
             buf.setGpsLat(location.getLatitude());
             buf.setGpsLon(location.getLongitude());
             buf.setGpsFixtime(location.getTime());

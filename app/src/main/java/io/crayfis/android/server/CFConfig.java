@@ -54,7 +54,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
     private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_CAMERA_SELECT_MODE = "prefCameraSelectMode";
-    private static final String KEY_BATTERY_OVERHEAT_TEMP = "prefBatteryOverheatTemp";
+    private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
+    private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
+
+
 
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
@@ -88,6 +91,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_TARGET_FPS = "15";
     private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
+    private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
 
     private String mL1Trigger;
     private String mL2Trigger;
@@ -121,6 +125,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mTargetFPS;
     private int mCameraSelectMode;
     private int mBatteryOverheatTemp;
+    private Long mPrecalResetTime; // ms
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -153,6 +158,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
         mTargetFPS = DEFAULT_TARGET_FPS;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
+        mPrecalResetTime = DEFAULT_PRECAL_RESET_TIME;
 
         mHotcells = new ArrayList<>(N_CAMERAS);
         for(int i=0; i<N_CAMERAS; i++) {
@@ -430,6 +436,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mBatteryOverheatTemp;
     }
 
+    public Long getPrecalResetTime() {
+        return mPrecalResetTime;
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL1Trigger = sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER);
@@ -459,6 +469,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE,
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
+        mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
 
         mPrecalWeights = new String[N_CAMERAS];
         mPrecalUUID = new UUID[N_CAMERAS];
@@ -481,7 +492,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @param serverCommand {@link io.crayfis.android.server.ServerCommand}
      */
-    public void updateFromServer(@NonNull final ServerCommand serverCommand) {
+    void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
         if (serverCommand.getPrecalWeights() != null) {
@@ -578,6 +589,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getBatteryOverheatTemp() != null) {
             mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
+        }
+        if (serverCommand.getPrecalResetTime() != null) {
+            // in case we choose to only update through the server
+            if(serverCommand.getPrecalResetTime() > 0) {
+                mPrecalResetTime = serverCommand.getPrecalResetTime();
+            } else {
+                mPrecalResetTime = null;
+            }
         }
     }
 

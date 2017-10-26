@@ -50,6 +50,7 @@ class ServerCommand {
     @SerializedName("set_target_fps") private String mTargetFPS;
     @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
+    @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
 
 
     /**
@@ -266,5 +267,10 @@ class ServerCommand {
     @Nullable
     Integer getBatteryOverheatTemp() {
         return mBatteryOverheatTemp;
+    }
+
+    @Nullable
+    Long getPrecalResetTime() {
+        return mPrecalResetTime;
     }
 }
