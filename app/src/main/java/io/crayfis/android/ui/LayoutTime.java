@@ -6,7 +6,6 @@ import io.crayfis.android.widget.SpeedometerView;
 
 import io.crayfis.android.calibration.L1Calibrator;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
@@ -23,13 +22,11 @@ import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.LineGraphView;
 
-import com.jjoe64.graphview.GraphViewSeries;
-import com.jjoe64.graphview.GraphViewSeries.GraphViewSeriesStyle;
-
-import com.jjoe64.graphview.GraphViewDataInterface;
-import com.jjoe64.graphview.ValueDependentColor;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.Viewport;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
 
 
 public class LayoutTime extends CFFragment {
@@ -38,40 +35,27 @@ public class LayoutTime extends CFFragment {
 
     private final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
 
-
-    private class ValueDependentColorY implements ValueDependentColor
-    {
-        @Override
-        public int get (GraphViewDataInterface data){
-            if (data.getY() == 0) return Color.BLACK;
-            if (data.getY() < CONFIG.getL2Threshold())
-                return Color.BLUE;
-            return Color.RED;
-        }
-    }
-
-    public static GraphView.GraphViewData[] make_graph_data(Integer values[])
+    public static DataPoint[] make_graph_data(Integer values[])
     {
         //CFLog.i(" Making graph data for nbins ="+values.length);
         int max_bin = values.length;
 
         boolean do_log=false;
-        GraphView.GraphViewData gd[] = new GraphView.GraphViewData[max_bin];
+        DataPoint gd[] = new DataPoint[max_bin];
         for (int i=0;i<max_bin;i++)
         {
             //CFLog.i(" make graph data: "+i);
             if (do_log) {
                 if (values[i] > 0)
-                    gd[i] = new GraphView.GraphViewData(i, java.lang.Math.log(values[i]));
+                    gd[i] = new DataPoint(i, java.lang.Math.log(values[i]));
                 else
-                    gd[i] = new GraphView.GraphViewData(i, 0);
+                    gd[i] = new DataPoint(i, 0);
             } else
-                gd[i] = new GraphView.GraphViewData(i, values[i]);
+                gd[i] = new DataPoint(i, values[i]);
         }
         return gd;
     }
 
-    private L1Calibrator mL1Calibrator;
     private static LayoutTime mInstance =null;
 
     private SpeedometerView mSpeedometerView;
@@ -79,8 +63,7 @@ public class LayoutTime extends CFFragment {
     private boolean shown_message=false;
 
     private GraphView mGraphTime;
-    private GraphViewSeries mGraphSeriesTime;
-    private GraphViewSeries.GraphViewSeriesStyle mGraphSeriesStyleTime;
+    private LineGraphSeries<DataPoint> mGraphSeriesTime;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -96,15 +79,11 @@ public class LayoutTime extends CFFragment {
 
 
         }
-        else {  }
         super.setUserVisibleHint(isVisibleToUser);
     }
 
 
-    public LayoutTime()
-    {
-        mL1Calibrator = L1Calibrator.getInstance();
-    }
+    public LayoutTime() { }
 
     public static LayoutTime getInstance() {
         if (mInstance==null)
@@ -116,25 +95,32 @@ public class LayoutTime extends CFFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.time, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.time, container, false);
 
+        //Integer novals[] = new Integer[256];
+        //for (int i=0;i<256;i++) novals[i]=1;
 
+        mGraphTime = (GraphView) root.findViewById(R.id.time_graph_view);
+        Viewport viewport = mGraphTime.getViewport();
+        viewport.setYAxisBoundsManual(true);
+        viewport.setMaxY(30);
+        viewport.setMinY(0);
+        viewport.setXAxisBoundsManual(true);
+        viewport.setMaxX(1000);
+        viewport.setMinX(0);
+        viewport.setScalable(false);
+        viewport.setScrollable(false);
 
-        Integer novals[] = new Integer[256];
-        for (int i=0;i<256;i++) novals[i]=1;
+        GridLabelRenderer gridLabelRenderer = mGraphTime.getGridLabelRenderer();
+        gridLabelRenderer.setNumVerticalLabels(4);
+        gridLabelRenderer.setHorizontalLabelsColor(Color.WHITE);
+        gridLabelRenderer.setVerticalLabelsColor(Color.WHITE);
+        gridLabelRenderer.setHorizontalAxisTitle(getString(R.string.dosimeter_xlabel));
+        gridLabelRenderer.setHorizontalLabelsVisible(false);
 
-        Context context = getActivity();
-        mGraphTime = new LineGraphView (context, "");
-        mGraphTime.setManualYAxisBounds(30., 0.);
-        mGraphTime.getGraphViewStyle().setNumVerticalLabels(4);
-        mGraphTime.setHorizontalLabels(getResources().getStringArray(R.array.time_bins));
-        mGraphTime.getGraphViewStyle().setHorizontalLabelsColor(Color.WHITE);
-        mGraphTime.getGraphViewStyle().setVerticalLabelsColor(Color.WHITE);
+        mGraphSeriesTime = new LineGraphSeries<>();
+        mGraphSeriesTime.setColor(Color.BLUE);
 
-        GraphViewSeriesStyle mGraphSeriesStyleTime = new GraphViewSeriesStyle();
-        mGraphSeriesStyleTime.setValueDependentColor(new ValueDependentColorY());
-        mGraphSeriesTime = new GraphViewSeries("aaa",mGraphSeriesStyleTime,make_graph_data(novals));
-        mGraphTime.setScalable(true);
         mGraphTime.addSeries(mGraphSeriesTime);
 
         mSpeedometerView = (SpeedometerView) root.findViewById(R.id.needle_view);
@@ -158,8 +144,6 @@ public class LayoutTime extends CFFragment {
         mSpeedometerView.addColoredRange(5, 20, Color.YELLOW);
         mSpeedometerView.addColoredRange(20, 30, Color.RED);
 
-        root.addView(mGraphTime);
-
         return root;
     }
 
@@ -171,14 +155,15 @@ public class LayoutTime extends CFFragment {
     @Override
     public void update() {
 
-        if (mL1Calibrator !=null && mGraphSeriesTime !=null) {
-            Integer[] values = new Integer[mL1Calibrator.getMaxPixels().size()];
-            values=mL1Calibrator.getMaxPixels().toArray(values);
+        L1Calibrator cal = L1Calibrator.getInstance();
+        if (cal !=null && mGraphSeriesTime !=null) {
+            Integer[] values = new Integer[cal.getMaxPixels().size()];
+            values=cal.getMaxPixels().toArray(values);
             mGraphSeriesTime.resetData(make_graph_data(values));
             // time average
             float mean = 0;
-            for (int i=0;i<values.length;i++)
-                mean += values[i];
+            for(int val : values)
+                mean += val;
             mean /= (1.0*values.length);
             mSpeedometerView.setSpeed(mean);
         }

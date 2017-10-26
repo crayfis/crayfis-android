@@ -22,6 +22,7 @@ import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.gallery.SavedImage;
 import io.crayfis.android.gallery.Utils;
 import io.crayfis.android.ui.LayoutBlack;
+import io.crayfis.android.ui.LayoutHist;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -295,7 +296,7 @@ public class L2Task implements Runnable {
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
-            L2Processor.histL2Pixels.fill(adjustedVal);
+            LayoutHist.appendData(val);
             try {
                 RecoPixel.Builder builder = new RecoPixel.Builder();
                 builder.setX(ix)

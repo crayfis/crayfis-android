@@ -15,11 +15,7 @@
         <item>Good Cand.</item>
         <item>Clean Cand.</item>
     </string-array>
-    <string-array name="time_bins" translatable="false">
-        <item></item>
-        <item>Frame Samples</item>
-        <item></item>
-    </string-array>
+
     <string-array name="pager_titles" translatable="false">
         <item>Developer</item>
         <item>Live View</item>
