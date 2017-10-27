@@ -140,21 +140,6 @@ public abstract class CFCamera {
 
         if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startStabilizationTimer();
-            if(!isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
-            } else {
-                badFlatEvents++;
-                if(badFlatEvents < 5) {
-                    mApplication.userErrorMessage(R.string.warning_bright, false);
-                } else {
-                    // gravity sensor is clearly impaired, so just determine orientation with light levels
-                    mApplication.userErrorMessage(R.string.sensor_error, false);
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-                    prefs.edit()
-                            .putString("prefCameraSelectMode", "1")
-                            .apply();
-                }
-            }
         }
 
         ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);

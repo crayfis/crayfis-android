@@ -74,7 +74,7 @@ public class DAQActivity extends AppCompatActivity {
 
     private ServiceConnection mServiceConnection;
 
-    private boolean mRestartAfterSettings = false;
+    private boolean mRestart = false;
 
 
 	Context context;
@@ -136,7 +136,7 @@ public class DAQActivity extends AppCompatActivity {
         DAQIntent = new Intent(this, DAQService.class);
 
         // make sure we begin the service when the activity is created
-        mRestartAfterSettings = true;
+        mRestart = true;
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -183,8 +183,8 @@ public class DAQActivity extends AppCompatActivity {
 
         // see if we are intentionally finished
         CFApplication application = (CFApplication) getApplication();
-        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestartAfterSettings) return;
-        mRestartAfterSettings = false;
+        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestart) return;
+        mRestart = false;
 
         // if not, start the service
         startService(DAQIntent);
@@ -215,6 +215,9 @@ public class DAQActivity extends AppCompatActivity {
         CFLog.d("onStop()");
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(ERROR_RECEIVER);
+
+        // once DAQActivity is stopped, we might as well restart when it is resumed
+        mRestart = true;
     }
 
 
@@ -326,7 +329,7 @@ public class DAQActivity extends AppCompatActivity {
 
         if(state != CFApplication.State.FINISHED) {
             application.setApplicationState(CFApplication.State.FINISHED);
-            mRestartAfterSettings = true;
+            mRestart = true;
         }
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);

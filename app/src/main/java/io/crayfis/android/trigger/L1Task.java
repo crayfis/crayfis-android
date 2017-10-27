@@ -1,6 +1,10 @@
 package io.crayfis.android.trigger;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
 import io.crayfis.android.CFApplication;
+import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -43,7 +47,23 @@ class L1Task implements Runnable {
     protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
-            CFCamera.getInstance().changeCameraFrom(mFrame.getCameraId());
+            CFCamera camera = CFCamera.getInstance();
+            camera.changeCameraFrom(mFrame.getCameraId());
+            if(!camera.isFlat()) {
+                mApplication.userErrorMessage(R.string.warning_facedown, false);
+            } else {
+                camera.badFlatEvents++;
+                if(camera.badFlatEvents < 5) {
+                    mApplication.userErrorMessage(R.string.warning_bright, false);
+                } else {
+                    // gravity sensor is clearly impaired, so just determine orientation with light levels
+                    mApplication.userErrorMessage(R.string.sensor_error, false);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+                    prefs.edit()
+                            .putString("prefCameraSelectMode", "1")
+                            .apply();
+                }
+            }
             return true;
         }
         return false;

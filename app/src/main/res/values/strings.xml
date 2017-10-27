@@ -142,7 +142,7 @@
     <string name="warning_facedown" translatable="false">Please lay the phone flat.</string>
     <string name="warning_bright" translatable="false">Please make sure the face-down camera is fully covered.</string>
 
-    <string name="hist_xlabel" translatable="false">Pixel values</string>
+    <string name="hist_xlabel" translatable="false">Pixel Brightness</string>
     <string name="hist_fair" translatable="false">Fair</string>
     <string name="hist_good" translatable="false">Good</string>
     <string name="hist_ideal" translatable="false">Ideal</string>
