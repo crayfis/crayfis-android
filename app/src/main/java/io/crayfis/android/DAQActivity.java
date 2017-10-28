@@ -215,8 +215,13 @@ public class DAQActivity extends AppCompatActivity {
         CFLog.d("onStop()");
 
         LocalBroadcastManager.getInstance(this).unregisterReceiver(ERROR_RECEIVER);
+    }
 
-        // once DAQActivity is stopped, we might as well restart when it is resumed
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // once DAQActivity is destroyed, we might as well restart when it is resumed
         mRestart = true;
     }
 
