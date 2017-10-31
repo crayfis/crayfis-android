@@ -14,6 +14,11 @@ import com.google.protobuf.AbstractMessage;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.DataProtos;
@@ -160,12 +165,25 @@ public class UploadExposureService extends IntentService {
         if(intent.getBooleanExtra(EXTRA_UPLOAD_CACHE, false)) {
             // upload everything in the file directory
             Context context = getApplicationContext();
-            File[] cache = context.getFilesDir().listFiles();
-            for(File f: cache) {
-                if(f.getName().endsWith(".bin")) {
-                    uploadFile(f);
+            final List<File> cache = new LinkedList<>(Arrays.asList(context.getFilesDir().listFiles()));
+            final long spacing = 200L;
+            Timer timer = new Timer();
+            TimerTask uploadTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if(cache.isEmpty()) {
+                        this.cancel();
+                        return;
+                    }
+                    File f = cache.remove(0);
+                    if(f.getName().endsWith(".bin")) {
+                        uploadFile(f);
+                    }
                 }
-            }
+            };
+
+            timer.scheduleAtFixedRate(uploadTask, 0, spacing);
+
         } else {
             // otherwise, make a file from protobuf data
             final AbstractMessage message = getAbstractMessage(intent);
