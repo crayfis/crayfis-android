@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.os.BatteryManager;
 import android.content.IntentFilter;
@@ -21,44 +22,55 @@ public class AutostartReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(final Context context, Intent intent) {
 
-		CFLog.d("receiver: got action=" + intent.getAction());
+        CFLog.d("receiver: got action=" + intent.getAction());
 
-		CFApplication application = (CFApplication) context.getApplicationContext();
+		// wait between power connected and charging
 
-		// Confirm that we are charging
-		IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-		Intent batteryStatus = context.registerReceiver(null, ifilter);
-		int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-		boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-				(status == BatteryManager.BATTERY_STATUS_FULL));
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                CFApplication application = (CFApplication) context.getApplicationContext();
 
-        CFLog.d("receiver: is battery charging? "+isCharging);
+                // Confirm that we are charging
+                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                Intent batteryStatus = context.registerReceiver(null, ifilter);
+                if(batteryStatus == null) return;
+                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+                boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                        (status == BatteryManager.BATTERY_STATUS_FULL));
 
-        // don't autostart if not charging
-        if (!isCharging) return;
+                CFLog.d("receiver: is battery charging? "+isCharging);
 
-        // check if autostart is available
+                // don't autostart if not charging
+                if (!isCharging) return;
 
-		if (application.inAutostartWindow()) {
+                // check if autostart is available
 
-			SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
-			int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
+                if (application.inAutostartWindow()) {
 
-			final Intent it = new Intent(context, DAQService.class);
-			it.setAction(Intent.ACTION_MAIN);
-			it.addCategory(Intent.CATEGORY_LAUNCHER);
-			it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
-			it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    int startWait = Integer.parseInt(sharedPrefs.getString("prefStartWait","0"));
 
-			Handler autostartHandler = new Handler();
-			autostartHandler.postDelayed(new Runnable() {
-					@Override
-					public void run() {
-						context.startService(it);
-					}
-				}, 1000L*startWait);
+                    final Intent it = new Intent(context, DAQService.class);
+                    it.setAction(Intent.ACTION_MAIN);
+                    it.addCategory(Intent.CATEGORY_LAUNCHER);
+                    it.setComponent(new ComponentName(context.getPackageName(), DAQService.class.getName()));
+                    it.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-		}
+                    Handler autostartHandler = new Handler();
+                    autostartHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            context.startService(it);
+                        }
+                    }, 1000L*startWait);
+
+                }
+            }
+        }, 5000L);
+
+
 	}
 
 }
