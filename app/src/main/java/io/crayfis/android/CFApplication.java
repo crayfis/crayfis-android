@@ -33,6 +33,7 @@ import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
+import io.fabric.sdk.android.Fabric;
 
 
 /**
@@ -108,7 +109,7 @@ public class CFApplication extends Application {
     public void onCreate() {
         super.onCreate();
 
-        Crashlytics.start(this);
+        Fabric.with(this, new Crashlytics());
 
         //SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

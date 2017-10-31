@@ -91,7 +91,7 @@
             android:value="@integer/google_play_services_version" />
 
         <meta-data
-            android:name="com.crashlytics.ApiKey"
+            android:name="io.Fabric.ApiKey"
             android:value="2e730bea6fb33d746b55551b0fa2338ef7dfac5b"/>
 
     </application>
