@@ -77,7 +77,7 @@ public final class ExposureBlockManager {
         public void onFinish() {
             newExposureBlock(CFApplication.State.DATA);
         }
-    };
+    }
 
     private static ExposureBlockManager sInstance;
 
@@ -134,7 +134,7 @@ public final class ExposureBlockManager {
         if(state == CFApplication.State.DATA) {
             mXBExpirationTimer = new XBExpirationTimer();
             mXBExpirationTimer.start();
-            if(!CONFIG.getTriggerLock()) {
+            if(state == CFApplication.State.DATA && !CONFIG.getTriggerLock()) {
                 // re-evaluate thresholds for new XB
                 L1Calibrator.getInstance().updateThresholds();
             }
@@ -142,7 +142,7 @@ public final class ExposureBlockManager {
 
         int cameraId = camera.getCameraId();
 
-        APPLICATION.updateBatteryStats();
+        APPLICATION.checkBatteryStats();
 
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,

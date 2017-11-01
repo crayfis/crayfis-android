@@ -76,7 +76,7 @@ class L1Task implements Runnable {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         } else if(mL1Processor.mPreCal.count.incrementAndGet()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
-            mApplication.updateBatteryStats();
+            mApplication.checkBatteryStats();
         }
 
         return false;

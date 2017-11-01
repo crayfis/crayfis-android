@@ -71,6 +71,7 @@ public class CFApplication extends Application {
         @Override
         public void onFinish() {
             // see if we should quit the app here
+            if(mApplicationState == State.FINISHED) return;
             consecutiveIdles++;
             CFLog.d("" + consecutiveIdles + " consecutive IDLEs");
 
@@ -273,12 +274,18 @@ public class CFApplication extends Application {
         }
     }
 
-    public void updateBatteryStats() {
+    /**
+     * Finds the battery temperature and charge, then switches to IDLE mode if the battery
+     * has poor health or to STABILIZATION if the battery returns to health
+     *
+     * @return true if in good health, false otherwise
+     */
+    public Boolean checkBatteryStats() {
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
 
         // get battery updates
-        if(batteryStatus == null) return;
+        if(batteryStatus == null) return null;
         int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
         int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
         float batteryPct = level / (float) scale;
@@ -320,7 +327,7 @@ public class CFApplication extends Application {
 
 
         // go into idle mode if necessary
-        if (mApplicationState != io.crayfis.android.CFApplication.State.IDLE
+        if (mApplicationState != CFApplication.State.IDLE && mApplicationState != State.FINISHED
                 && (mBatteryLow || mBatteryOverheated)) {
             setApplicationState(CFApplication.State.IDLE);
         }
@@ -331,6 +338,8 @@ public class CFApplication extends Application {
 
             setApplicationState(CFApplication.State.STABILIZATION);
         }
+
+        return !mBatteryLow && !mBatteryOverheated;
 
     }
 

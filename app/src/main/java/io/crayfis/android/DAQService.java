@@ -217,6 +217,20 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         mNotificationBuilder.setContentText(getString(R.string.notification_idle));
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
+        // schedule a timer to check battery
+        Timer idleTimer = new Timer();
+        TimerTask idleTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                if(mApplication.checkBatteryStats() == Boolean.TRUE) {
+                    this.cancel();
+                }
+            }
+        };
+        idleTimer.schedule(idleTimerTask,
+                CONFIG.getExposureBlockPeriod(),
+                CONFIG.getExposureBlockPeriod());
+
         switch(previousState) {
             case INIT:
                 // starting with low battery, but finish initialization first
