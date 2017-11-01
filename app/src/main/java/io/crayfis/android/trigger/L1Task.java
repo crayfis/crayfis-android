@@ -1,9 +1,14 @@
 package io.crayfis.android.trigger;
 
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
 import io.crayfis.android.CFApplication;
+import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -28,6 +33,8 @@ class L1Task implements Runnable {
     private CFApplication mApplication = null;
     private boolean mKeepFrame = false;
 
+    private final CFConfig CONFIG = CFConfig.getInstance();
+
     public L1Task(L1Processor l1processor, RawCameraFrame frame) {
         mL1Processor = l1processor;
         mFrame = frame;
@@ -40,7 +47,23 @@ class L1Task implements Runnable {
     protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
-            CFCamera.getInstance().changeCameraFrom(mFrame.getCameraId());
+            CFCamera camera = CFCamera.getInstance();
+            camera.changeCameraFrom(mFrame.getCameraId());
+            if(!camera.isFlat()) {
+                mApplication.userErrorMessage(R.string.warning_facedown, false);
+            } else {
+                camera.badFlatEvents++;
+                if(camera.badFlatEvents < 5) {
+                    mApplication.userErrorMessage(R.string.warning_bright, false);
+                } else {
+                    // gravity sensor is clearly impaired, so just determine orientation with light levels
+                    mApplication.userErrorMessage(R.string.sensor_error, false);
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+                    prefs.edit()
+                            .putString("prefCameraSelectMode", "1")
+                            .apply();
+                }
+            }
             return true;
         }
         return false;
@@ -51,6 +74,9 @@ class L1Task implements Runnable {
         if(mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+        } else if(mL1Processor.mPreCal.count.incrementAndGet()
+                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
+            mApplication.checkBatteryStats();
         }
 
         return false;
@@ -89,9 +115,6 @@ class L1Task implements Runnable {
         mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
 
-        // check if we pass the L1 threshold
-        boolean pass = false;
-
         int max = mFrame.getPixMax();
 
         mExposureBlock.total_background += mFrame.getPixAvg();
@@ -100,10 +123,7 @@ class L1Task implements Runnable {
         if (max > mExposureBlock.getL1Thresh()) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
-            pass = true;
-        }
 
-        if (pass) {
             mExposureBlock.L1_pass++;
 
             mKeepFrame = true;
@@ -125,7 +145,6 @@ class L1Task implements Runnable {
     }
 
     protected void processFinal() {
-        return;
     }
 
     private void processFrame() {

@@ -15,7 +15,7 @@ import org.opencv.imgcodecs.Imgcodecs;
 
 import java.math.BigInteger;
 
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_downsample;
 import io.crayfis.android.ScriptC_sumFrames;

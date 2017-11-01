@@ -8,15 +8,12 @@ import android.os.Build;
 import android.preference.PreferenceManager;
 import android.renderscript.RenderScript;
 
-import java.util.ArrayDeque;
-
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.precalibration.PreCalibrator;
-import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
 
 import static io.crayfis.android.CFApplication.MODE_AUTO_DETECT;
@@ -32,7 +29,7 @@ public abstract class CFCamera {
 
     CFApplication mApplication;
     final CFConfig CONFIG;
-    final RenderScript RS;
+    RenderScript mRS;
 
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
@@ -53,7 +50,6 @@ public abstract class CFCamera {
     CFCamera() {
 
         CONFIG = CFConfig.getInstance();
-        RS = CFApplication.getRenderScript();
     }
 
     /**
@@ -82,6 +78,8 @@ public abstract class CFCamera {
     public void register(Context context) {
         if(mCallback == null) return;
         mApplication = (CFApplication) context;
+        mRS = mApplication.getRenderScript();
+
         mCFSensor = new CFSensor(context, getFrameBuilder());
         mCFLocation = new CFLocation(context, getFrameBuilder());
         changeCamera();
@@ -119,9 +117,6 @@ public abstract class CFCamera {
         int nextId = -1;
         CFApplication.State state = mApplication.getApplicationState();
         switch(state) {
-            case RECONFIGURE:
-                nextId = currentId;
-                break;
             case INIT:
                 nextId = 0;
                 break;
@@ -145,21 +140,6 @@ public abstract class CFCamera {
 
         if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startStabilizationTimer();
-            if(!isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
-            } else {
-                badFlatEvents++;
-                if(badFlatEvents < 5) {
-                    mApplication.userErrorMessage(R.string.warning_bright, false);
-                } else {
-                    // gravity sensor is clearly impaired, so just determine orientation with light levels
-                    mApplication.userErrorMessage(R.string.sensor_error, false);
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-                    prefs.edit()
-                            .putString("prefCameraSelectMode", "1")
-                            .apply();
-                }
-            }
         }
 
         ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);

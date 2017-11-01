@@ -20,7 +20,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -28,12 +27,13 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.server.ServerCommand;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.util.CFLog;
+import io.fabric.sdk.android.Fabric;
 
 
 /**
@@ -57,6 +57,9 @@ public class CFApplication extends Application {
     private boolean mWaitingForStabilization = false;
     public int consecutiveIdles = 0;
 
+    private final CFConfig CONFIG = CFConfig.getInstance();
+    private final CFCamera CAMERA = CFCamera.getInstance();
+
     private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
@@ -68,6 +71,7 @@ public class CFApplication extends Application {
         @Override
         public void onFinish() {
             // see if we should quit the app here
+            if(mApplicationState == State.FINISHED) return;
             consecutiveIdles++;
             CFLog.d("" + consecutiveIdles + " consecutive IDLEs");
 
@@ -89,19 +93,24 @@ public class CFApplication extends Application {
 
     //private static final String SHARED_PREFS_NAME = "global";
     private static long mStartTimeNano;
-    private static int mBatteryTemp;
+    private int mBatteryTemp = -1;
+    private final int mBatteryStartTemp = 350;
+    private final float mBatteryStartPct = .80f;
+    private boolean mBatteryLow;
+    private boolean mBatteryOverheated;
+
 
     private State mApplicationState;
 
     private AppBuild mAppBuild;
 
-    private static RenderScript mRS;
+    private RenderScript mRS;
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        Crashlytics.start(this);
+        Fabric.with(this, new Crashlytics());
 
         //SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -127,17 +136,6 @@ public class CFApplication extends Application {
         //final SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         final SharedPreferences localPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         CFConfig.getInstance().save(localPrefs);
-    }
-
-    public void onServerCommandRecieved(ServerCommand sc) {
-        if (sc.shouldRecalibrate()) {
-            // recieved a command from the server to enter calibration loop!
-            setApplicationState(State.STABILIZATION);
-        }
-        if (sc.getResolution() != null) {
-            // go to the recalibrate state, so that the camera can be setup with the new resolution.
-            setApplicationState(State.RECONFIGURE);
-        }
     }
 
     /**
@@ -276,18 +274,83 @@ public class CFApplication extends Application {
         }
     }
 
-    public static int getBatteryTemp() {
-        return mBatteryTemp;
+    /**
+     * Finds the battery temperature and charge, then switches to IDLE mode if the battery
+     * has poor health or to STABILIZATION if the battery returns to health
+     *
+     * @return true if in good health, false otherwise
+     */
+    public Boolean checkBatteryStats() {
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = registerReceiver(null, ifilter);
+
+        // get battery updates
+        if(batteryStatus == null) return null;
+        int level = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+        float batteryPct = level / (float) scale;
+        int newTemp = batteryStatus.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1);
+
+        // check for low battery
+        if (mBatteryLow) {
+            mBatteryLow = batteryPct < mBatteryStartPct;
+        } else {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            String batteryPref = prefs.getString(getString(R.string.prefBatteryStop), "20%");
+            batteryPref = batteryPref.substring(0, batteryPref.length()-1);
+            double batteryStopPct = Integer.parseInt(batteryPref)/100.;
+            mBatteryLow = batteryPct < batteryStopPct;
+        }
+
+        // check temperature for overheat
+        if (mBatteryOverheated) {
+            // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
+            mBatteryOverheated = (newTemp <= mBatteryTemp && newTemp > mBatteryStartTemp) || newTemp > CONFIG.getBatteryOverheatTemp();
+            DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                    newTemp / 10.));
+        } else {
+            mBatteryOverheated = newTemp > CONFIG.getBatteryOverheatTemp();
+        }
+
+        if(mBatteryTemp != newTemp) {
+            CFLog.i("Temperature change: " + mBatteryTemp + "->" + newTemp);
+            mBatteryTemp = newTemp;
+        }
+
+        if(mBatteryLow) {
+            DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_low),
+                    (int) (batteryPct * 100), (int) (mBatteryStartPct * 100)));
+        } else if(mBatteryOverheated) {
+            DataCollectionFragment.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
+                    newTemp / 10.));
+        }
+
+
+        // go into idle mode if necessary
+        if (mApplicationState != CFApplication.State.IDLE && mApplicationState != State.FINISHED
+                && (mBatteryLow || mBatteryOverheated)) {
+            setApplicationState(CFApplication.State.IDLE);
+        }
+
+        // if we are in idle mode, restart if everything is okay
+        else if (mApplicationState == CFApplication.State.IDLE
+                && !mBatteryLow && !mBatteryOverheated && !mWaitingForStabilization) {
+
+            setApplicationState(CFApplication.State.STABILIZATION);
+        }
+
+        return !mBatteryLow && !mBatteryOverheated;
+
     }
 
-    public static void setBatteryTemp(int newTemp) {
-        mBatteryTemp = newTemp;
+    public int getBatteryTemp() {
+        return mBatteryTemp;
     }
 
     public static long getStartTimeNano() { return mStartTimeNano; }
     public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
 
-    public static RenderScript getRenderScript() {
+    public RenderScript getRenderScript() {
         return mRS;
     }
 
@@ -386,8 +449,6 @@ public class CFApplication extends Application {
     }
 
     public void setNewestPrecalUUID() {
-        final CFConfig CONFIG = CFConfig.getInstance();
-        final CFCamera CAMERA = CFCamera.getInstance();
         CONFIG.setPrecalId(CAMERA.getCameraId(), mAppBuild.getRunId());
     }
 
@@ -415,7 +476,6 @@ public class CFApplication extends Application {
         DATA,
         STABILIZATION,
         IDLE,
-        RECONFIGURE,
         FINISHED
     }
 

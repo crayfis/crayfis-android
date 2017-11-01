@@ -6,13 +6,13 @@
 
     <io.crayfis.android.widget.SpeedometerView
         android:layout_height="wrap_content"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:id="@+id/needle_view" />
 
 
-    <LinearLayout
+    <com.jjoe64.graphview.GraphView
         android:orientation="vertical"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/time_graph_view" />
 

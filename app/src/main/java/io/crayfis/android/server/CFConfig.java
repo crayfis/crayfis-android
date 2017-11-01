@@ -1,4 +1,4 @@
-package io.crayfis.android;
+package io.crayfis.android.server;
 
 import android.content.SharedPreferences;
 import android.hardware.Camera;
@@ -11,8 +11,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import io.crayfis.android.CFApplication;
+import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
-import io.crayfis.android.server.ServerCommand;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -51,7 +52,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_ACCOUNT_SCORE = "account_score";
     private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
+    private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_CAMERA_SELECT_MODE = "prefCameraSelectMode";
+    private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
+    private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
+
+
 
 
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
@@ -67,9 +73,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final float DEFAULT_HOTCELL_THRESH = .002f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final int DEFAULT_STABILIZATION_FRAMES = 45;
-    private static final float DEFAULT_TARGET_EPM = 60;
+    private static final float DEFAULT_TARGET_EPM = 30;
     private static final int DEFAULT_XB_PERIOD = 120;
-    private static final float DEFAULT_BG_AVG_CUT = 5f;
+    private static final float DEFAULT_BG_AVG_CUT = 10f;
     private static final float DEFAULT_BG_VAR_CUT = 30f;
     private static final double DEFAULT_ORIENT_CUT = (10 * Math.PI/180);
     private static final float DEFAULT_PIX_FRAC_CUT = 0.10f;
@@ -82,7 +88,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
+    private static final String DEFAULT_TARGET_FPS = "15";
     private static final int DEFAULT_CAMERA_SELECT_MODE = CFApplication.MODE_FACE_DOWN;
+    private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
+    private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
 
     private String mL1Trigger;
     private String mL2Trigger;
@@ -113,7 +122,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private float mAccountScore;
     private boolean mTriggerLock;
     private String mTargetResolutionStr;
+    private String mTargetFPS;
     private int mCameraSelectMode;
+    private int mBatteryOverheatTemp;
+    private Long mPrecalResetTime; // ms
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -144,6 +156,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mCameraSelectMode = DEFAULT_CAMERA_SELECT_MODE;
+        mTargetFPS = DEFAULT_TARGET_FPS;
+        mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
+        mPrecalResetTime = DEFAULT_PRECAL_RESET_TIME;
 
         mHotcells = new ArrayList<>(N_CAMERAS);
         for(int i=0; i<N_CAMERAS; i++) {
@@ -326,7 +341,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     /**
      * Get the instance of the configuration.
      *
-     * @return {@link io.crayfis.android.CFConfig}
+     * @return {@link CFConfig}
      */
     public static CFConfig getInstance() {
         return INSTANCE;
@@ -399,12 +414,31 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
+    public int getTargetFPS() {
+        try {
+            return Integer.parseInt(mTargetFPS);
+        } catch(NumberFormatException e) {
+            // FIXME: should be a better way to check for long exposure
+            return 0;
+        }
+    }
+
     /**
      * Get the camera selection mode
      *
      * @return int
      */
-    public int getCameraSelectMode() { return mCameraSelectMode; }
+    public int getCameraSelectMode() {
+        return mCameraSelectMode;
+    }
+
+    public int getBatteryOverheatTemp() {
+        return mBatteryOverheatTemp;
+    }
+
+    public Long getPrecalResetTime() {
+        return mPrecalResetTime;
+    }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
@@ -431,9 +465,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
         mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
+        mTargetFPS = sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS);
         String cameraSelectStr = sharedPreferences.getString(KEY_CAMERA_SELECT_MODE,
                 Integer.toString(DEFAULT_CAMERA_SELECT_MODE));
         mCameraSelectMode = Integer.parseInt(cameraSelectStr);
+        mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
 
         mPrecalWeights = new String[N_CAMERAS];
         mPrecalUUID = new UUID[N_CAMERAS];
@@ -456,7 +492,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @param serverCommand {@link io.crayfis.android.server.ServerCommand}
      */
-    public void updateFromServer(@NonNull final ServerCommand serverCommand) {
+    void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
         if (serverCommand.getPrecalWeights() != null) {
@@ -537,11 +573,30 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getTriggerLock() != null) {
             mTriggerLock = serverCommand.getTriggerLock();
         }
+
+        // if we're changing the camera settings, reconfigure it
         if (serverCommand.getResolution() != null) {
             mTargetResolutionStr = serverCommand.getResolution();
+            CFCamera.getInstance().changeCamera();
         }
+        if(serverCommand.getTargetFPS() != null) {
+            mTargetFPS = serverCommand.getTargetFPS();
+            CFCamera.getInstance().changeCamera();
+        }
+
         if (serverCommand.getCameraSelectMode() != null) {
             mCameraSelectMode = serverCommand.getCameraSelectMode();
+        }
+        if (serverCommand.getBatteryOverheatTemp() != null) {
+            mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
+        }
+        if (serverCommand.getPrecalResetTime() != null) {
+            // in case we choose to only update through the server
+            if(serverCommand.getPrecalResetTime() > 0) {
+                mPrecalResetTime = serverCommand.getPrecalResetTime();
+            } else {
+                mPrecalResetTime = null;
+            }
         }
     }
 
@@ -579,7 +634,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
-                .putString(KEY_CAMERA_SELECT_MODE,Integer.toString(mCameraSelectMode))
+                .putString(KEY_TARGET_FPS, mTargetFPS)
+                .putString(KEY_CAMERA_SELECT_MODE, Integer.toString(mCameraSelectMode))
+                .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
                 .apply();
     }
 }

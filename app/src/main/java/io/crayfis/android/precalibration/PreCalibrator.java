@@ -19,9 +19,10 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.CFCamera;
@@ -43,9 +44,9 @@ public class PreCalibrator {
     private final CFConfig CONFIG;
     private final CFCamera CAMERA;
 
-    private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
+    public AtomicInteger count = new AtomicInteger(0);
 
-    private final long DUE_FOR_PRECAL_TIME = 7*24*3600*1000; // after 1 week, check weights and hotcells again
+    private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
 
     private final int INTER = Imgproc.INTER_CUBIC;
 
@@ -60,7 +61,7 @@ public class PreCalibrator {
 
     private PreCalibrator(Context ctx) {
         APPLICATION = (CFApplication) ctx;
-        RS = CFApplication.getRenderScript();
+        RS = APPLICATION.getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
 
@@ -101,7 +102,7 @@ public class PreCalibrator {
 
         PRECAL_BUILDER.setRunId(APPLICATION.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setEndTime(System.currentTimeMillis())
-                .setBatteryTemp(CFApplication.getBatteryTemp())
+                .setBatteryTemp(APPLICATION.getBatteryTemp())
                 .setInterpolation(INTER);
 
         // submit the PreCalibrationResult object
@@ -188,7 +189,8 @@ public class PreCalibrator {
      */
     public boolean dueForPreCalibration(int cameraId) {
 
-        boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > DUE_FOR_PRECAL_TIME;
+        if(CONFIG.getPrecalResetTime() == null) return false;
+        boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > CONFIG.getPrecalResetTime();
         if(CONFIG.getPrecalWeights(cameraId) == null || CAMERA.getResX() != CONFIG.getLastPrecalResX(cameraId) || expired) {
             PRECAL_BUILDER.setStartTime(System.currentTimeMillis());
             return true;

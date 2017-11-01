@@ -19,7 +19,6 @@ import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
@@ -29,7 +28,7 @@ import io.crayfis.android.util.CFLog;
  *
  * Upon a successful upload, the chunk will be removed from the cache.  This will also
  * parse any response from the server and update the local configuration accordingly through
- * {@link io.crayfis.android.CFConfig#updateFromServer(ServerCommand)}.
+ * {@link CFConfig#updateFromServer(ServerCommand)}.
  */
 public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
@@ -183,7 +182,6 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
         CFConfig.getInstance().updateFromServer(serverCommand);
         mApplication.savePreferences();
-        mApplication.onServerCommandRecieved(serverCommand);
 
         CFLog.i("Connected! Status = " + serverResponseCode);
         CFLog.d("Received json response:\n" + sb.toString());

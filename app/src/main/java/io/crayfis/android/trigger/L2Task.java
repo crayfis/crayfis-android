@@ -22,6 +22,7 @@ import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.gallery.SavedImage;
 import io.crayfis.android.gallery.Utils;
 import io.crayfis.android.ui.LayoutBlack;
+import io.crayfis.android.ui.LayoutHist;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -90,7 +91,6 @@ public class L2Task implements Runnable {
         private final long time_nano;
         private final long time_ntp;
         private final long time_target;
-        private final int batteryTemp;
         private final Location location;
         private final float[] orientation;
         private final float pressure;
@@ -113,7 +113,6 @@ public class L2Task implements Runnable {
             location = frame.getLocation();
             orientation = frame.getOrientation();
             pressure = frame.getPressure();
-            batteryTemp = frame.getBatteryTemp();
 
             background = frame.getPixAvg();
             std = frame.getPixStd();
@@ -131,7 +130,6 @@ public class L2Task implements Runnable {
             buf.setTimestampNtp(time_ntp);
             buf.setTimestampTarget(time_target);
             buf.setPressure(pressure);
-            buf.setBatteryTemp(batteryTemp);
             buf.setGpsLat(location.getLatitude());
             buf.setGpsLon(location.getLongitude());
             buf.setGpsFixtime(location.getTime());
@@ -295,7 +293,7 @@ public class L2Task implements Runnable {
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
-            L2Processor.histL2Pixels.fill(adjustedVal);
+            LayoutHist.appendData(val);
             try {
                 RecoPixel.Builder builder = new RecoPixel.Builder();
                 builder.setX(ix)

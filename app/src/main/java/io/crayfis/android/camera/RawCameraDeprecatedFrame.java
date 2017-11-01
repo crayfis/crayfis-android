@@ -33,7 +33,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final float[] orientation,
                              final float rotationZZ,
                              final float pressure,
-                             final int batteryTemp,
                              final ExposureBlock exposureBlock,
                              final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                              final ScriptC_weight scriptCWeight,
@@ -41,7 +40,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final Allocation out) {
 
         super(cameraId, facingBack, frameWidth, frameHeight, length, bufferSize, acquisitionTime, timestamp,
-                location, orientation, rotationZZ, pressure, batteryTemp, exposureBlock, scriptIntrinsicHistogram,
+                location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
         mRawBytes = bytes;
@@ -117,7 +116,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
         public RawCameraDeprecatedFrame build() {
             return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
                     bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
-                    bOrientation, bRotationZZ, bPressure, bBatteryTemp, bExposureBlock,
+                    bOrientation, bRotationZZ, bPressure, bExposureBlock,
                     bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
         }
 

@@ -3,7 +3,7 @@ package io.crayfis.android.trigger;
 import android.os.AsyncTask;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.calibration.L1Calibrator;
 import io.crayfis.android.precalibration.PreCalibrator;
 import io.crayfis.android.camera.RawCameraFrame;

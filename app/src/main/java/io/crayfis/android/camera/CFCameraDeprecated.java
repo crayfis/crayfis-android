@@ -75,20 +75,30 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             Camera.Parameters param= mCamera.getParameters();
 
-            // param.setFocusMode("FIXED");
             param.setExposureCompensation(0);
 
-            // Try to pick the highest FPS range possible
-            int minfps = 0, maxfps = 0;
+            // Try to pick the highest FPS range up to target FPS
+            int frameRateMs = 1000 * CONFIG.getTargetFPS();
             List<int[]> validRanges = param.getSupportedPreviewFpsRange();
-            if (validRanges != null)
-                for (int[] rng : validRanges) {
-                    CFLog.i("Supported FPS range: [ " + rng[0] + ", " + rng[1] + " ]");
-                    if (rng[1] > maxfps || (rng[1] == maxfps && rng[0] > minfps)) {
-                        maxfps = rng[1];
-                        minfps = rng[0];
-                    }
+
+            String rngtxt = "Supported FPS ranges:";
+
+            // initialize fps range to first choice
+            int[] firstRange = validRanges.remove(0);
+            int minfps = firstRange[0]; int maxfps = firstRange[1];
+
+            rngtxt += "[" + minfps + "," + maxfps + "]";
+
+
+            for (int[] rng : validRanges) {
+                rngtxt += " [" + rng[0] + ", " + rng[1] + "]";
+                if(Math.abs(rng[1] - frameRateMs) < Math.abs(maxfps - frameRateMs)) {
+                    minfps = rng[0];
+                    maxfps = rng[1];
                 }
+            }
+
+            CFLog.i(rngtxt);
             CFLog.i("Selected FPS range: [ " + minfps + ", " + maxfps + " ]");
             try{
                 // Try to set minimum=maximum FPS range.
@@ -128,7 +138,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             mCamera.setPreviewTexture(mTexture);
 
-            RCF_BUILDER.setCamera(mCamera, mCameraId, RS);
+            RCF_BUILDER.setCamera(mCamera, mCameraId, mRS);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);

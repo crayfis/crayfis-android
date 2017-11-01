@@ -10,6 +10,7 @@ import java.util.Comparator;
 
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.ui.LayoutHist;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -100,7 +101,7 @@ public class L2TaskMaxN extends L2Task {
             int val = frame.getRawByteAt(ix, iy) & 0xFF;
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
-            L2Processor.histL2Pixels.fill(adjustedVal);
+            LayoutHist.appendData(val);
             try {
                 RecoPixel.Builder builder = new RecoPixel.Builder();
                 builder.setX(ix)

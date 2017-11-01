@@ -16,8 +16,6 @@ public class L2Processor {
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    public static Histogram histL2Pixels = new Histogram(256);
-
     L2Processor(CFApplication application) {
         // TODO: it will make more sense to have the triggerType assigned to the XB and then get it from there.
         mApplication = application;

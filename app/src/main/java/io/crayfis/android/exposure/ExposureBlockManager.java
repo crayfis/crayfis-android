@@ -10,7 +10,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import io.crayfis.android.CFApplication;
-import io.crayfis.android.CFConfig;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
@@ -50,9 +50,15 @@ public final class ExposureBlockManager {
 
     private long safe_time = 0;
 
+    private XBExpirationTimer mXBExpirationTimer;
+
     // timer for creating new DATA blocks
-    private final CountDownTimer mXBExpirationTimer = new CountDownTimer(
-            CONFIG.getExposureBlockPeriod()*1000L, PASS_RATE_CHECK_TIME) {
+    private class XBExpirationTimer extends CountDownTimer {
+
+        XBExpirationTimer() {
+            super(CONFIG.getExposureBlockPeriod()*1000L, PASS_RATE_CHECK_TIME);
+        }
+
         @Override
         public void onTick(long millisUntilFinished) {
             // do nothing the first time
@@ -71,7 +77,7 @@ public final class ExposureBlockManager {
         public void onFinish() {
             newExposureBlock(CFApplication.State.DATA);
         }
-    };
+    }
 
     private static ExposureBlockManager sInstance;
 
@@ -122,16 +128,21 @@ public final class ExposureBlockManager {
         }
 
         // set a timer for when this XB expires, if we are in DATA mode
-        mXBExpirationTimer.cancel();
+        if(mXBExpirationTimer != null) {
+            mXBExpirationTimer.cancel();
+        }
         if(state == CFApplication.State.DATA) {
+            mXBExpirationTimer = new XBExpirationTimer();
             mXBExpirationTimer.start();
-            if(!CONFIG.getTriggerLock()) {
+            if(state == CFApplication.State.DATA && !CONFIG.getTriggerLock()) {
                 // re-evaluate thresholds for new XB
                 L1Calibrator.getInstance().updateThresholds();
             }
         }
 
         int cameraId = camera.getCameraId();
+
+        APPLICATION.checkBatteryStats();
 
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
         current_xb = new ExposureBlock(mTotalXBs,
@@ -141,7 +152,7 @@ public final class ExposureBlockManager {
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
                 camera.getLastKnownLocation(),
-                CFApplication.getBatteryTemp(),
+                APPLICATION.getBatteryTemp(),
                 state, camera.getResX(), camera.getResY());
 
         // start assigning frames to new xb

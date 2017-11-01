@@ -88,7 +88,8 @@ public class ConfigureAutostartActivity extends Activity {
      */
     private void configure() {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int timeInMinutes = sharedPreferences.getInt(mPreference, 0);
+        int defaultTime = mPreference.equals(getString(R.string.prefStartAfter)) ? 0 : 480;
+        int timeInMinutes = sharedPreferences.getInt(mPreference, defaultTime);
         mTimePicker.setCurrentHour(timeInMinutes/60);
         mTimePicker.setCurrentMinute(timeInMinutes % 60);
 

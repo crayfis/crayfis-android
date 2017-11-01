@@ -43,11 +43,27 @@
     </CheckBoxPreference>
 
     <ListPreference
-        android:key="prefResolution"
+        android:key="@string/prefResolution"
         android:defaultValue="@string/resolution_1080p"
         android:entries="@array/pref_resolution"
         android:summary="@string/settings_pref_resolution_summary"
         android:entryValues="@array/pref_resolution"
         android:title="@string/settings_pref_resolution_title" />
+
+    <ListPreference
+        android:key="@string/prefFPS"
+        android:defaultValue="15"
+        android:entries="@array/pref_fps_vals"
+        android:entryValues="@array/pref_fps_vals"
+        android:summary="@string/settings_pref_fps_summary"
+        android:title="@string/settings_pref_fps_title" />
+
+    <ListPreference
+        android:key="@string/prefBatteryStop"
+        android:defaultValue="@string/battery_stop_default"
+        android:entries="@array/pref_battery_stop_vals"
+        android:entryValues="@array/pref_battery_stop_vals"
+        android:summary="@string/settings_battery_stop_summary"
+        android:title="@string/settings_battery_stop_title" />
 
 </PreferenceScreen>

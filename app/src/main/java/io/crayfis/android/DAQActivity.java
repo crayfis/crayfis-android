@@ -54,6 +54,7 @@ import java.util.List;
 
 import io.crayfis.android.navdrawer.NavDrawerAdapter;
 import io.crayfis.android.navdrawer.NavHelper;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ui.CFFragment;
 import io.crayfis.android.ui.DataCollectionFragment;
 import io.crayfis.android.ui.LayoutFeedback;
@@ -73,7 +74,7 @@ public class DAQActivity extends AppCompatActivity {
 
     private ServiceConnection mServiceConnection;
 
-    private boolean mRestartAfterSettings = false;
+    private boolean mRestart = false;
 
 
 	Context context;
@@ -135,7 +136,7 @@ public class DAQActivity extends AppCompatActivity {
         DAQIntent = new Intent(this, DAQService.class);
 
         // make sure we begin the service when the activity is created
-        mRestartAfterSettings = true;
+        mRestart = true;
 
         mServiceConnection = new ServiceConnection() {
             @Override
@@ -182,8 +183,8 @@ public class DAQActivity extends AppCompatActivity {
 
         // see if we are intentionally finished
         CFApplication application = (CFApplication) getApplication();
-        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestartAfterSettings) return;
-        mRestartAfterSettings = false;
+        if(application.getApplicationState() == CFApplication.State.FINISHED && !mRestart) return;
+        mRestart = false;
 
         // if not, start the service
         startService(DAQIntent);
@@ -216,6 +217,14 @@ public class DAQActivity extends AppCompatActivity {
         LocalBroadcastManager.getInstance(this).unregisterReceiver(ERROR_RECEIVER);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // once DAQActivity is destroyed, we might as well restart when it is resumed
+        mRestart = true;
+    }
+
 
     /////////////////////////
     // Toolbar and Drawers //
@@ -226,8 +235,6 @@ public class DAQActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.daq_activity, menu);
-        // FIXME: this is a dumb way to do this, but it works
-        invalidateOptionsMenu();
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -327,7 +334,7 @@ public class DAQActivity extends AppCompatActivity {
 
         if(state != CFApplication.State.FINISHED) {
             application.setApplicationState(CFApplication.State.FINISHED);
-            mRestartAfterSettings = true;
+            mRestart = true;
         }
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
@@ -383,7 +390,6 @@ public class DAQActivity extends AppCompatActivity {
     }
 
     private void clickedStart() {
-        CFLog.d("clickedStart()");
         invalidateOptionsMenu();
 
         startService(DAQIntent);
