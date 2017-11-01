@@ -50,7 +50,7 @@
         <item>120 </item>
     </string-array>
 
-    <string-array name="pref_battery_stop_vals">
+    <string-array name="pref_battery_stop_vals" translatable="false">
         <item>0%</item>
         <item>10%</item>
         <item>20%</item>

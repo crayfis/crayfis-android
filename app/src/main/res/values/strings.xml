@@ -37,8 +37,8 @@
     <string name="settings_notif_summary" translatable="false">Allow CRAYFIS to post notifications to your phone when app finishes</string>
     <string name="settings_autostart_summary">Automatically take data while charging</string>
     <string name="settings_autostart_title">Click to configure autostart</string>
-    <string name="settings_battery_stop_summary">Stop when battery goes below this charge</string>
-    <string name="settings_battery_stop_title">Quit at low power</string>
+    <string name="settings_battery_stop_summary" translatable="false">Stop when battery goes below this charge</string>
+    <string name="settings_battery_stop_title" translatable="false">Quit at low power</string>
     <string name="settings_pref_resolution_summary" translatable="false">Decrease resolution if temperature is too high</string>
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_pref_fps_summary" translatable="false">Decrease frame rate if temperature is too high</string>
