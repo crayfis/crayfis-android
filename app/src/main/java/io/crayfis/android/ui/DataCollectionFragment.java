@@ -17,7 +17,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import io.crayfis.android.CFApplication;
+import io.crayfis.android.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.exposure.ExposureBlockManager;
+import io.crayfis.android.precalibration.PreCalibrator;
+import io.crayfis.android.server.CFConfig;
+import io.crayfis.android.trigger.L1Processor;
 import io.crayfis.android.util.CFUtil;
 import io.crayfis.android.DAQActivity;
 import io.crayfis.android.DAQService;
@@ -84,7 +89,7 @@ public class DataCollectionFragment extends CFFragment {
             case PRECALIBRATION:
                 mStatus.setText(R.string.precalibration);
                 mProgressBar.setVisibility(View.VISIBLE);
-                mStatusMessage.setVisibility(View.GONE);
+                mStatusMessage.setVisibility(View.VISIBLE);
                 mDataCollectionStats.setVisibility(View.GONE);
                 break;
             case CALIBRATION:
@@ -197,7 +202,26 @@ public class DataCollectionFragment extends CFFragment {
         }
 
         final CFApplication application = (CFApplication) activity.getApplication();
-        if(application.getApplicationState() == CFApplication.State.FINISHED) return;
+        final CFConfig config = CFConfig.getInstance();
+        switch (application.getApplicationState()) {
+            case IDLE:
+                setStatusMessage(mIdleStatus);
+                break;
+            case PRECALIBRATION:
+            case CALIBRATION:
+                final int count, total;
+                if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
+                    count = PreCalibrator.getInstance(application).count.intValue();
+                    total = config.getHotcellSampleFrames() + config.getWeightingSampleFrames();
+                } else {
+                    count = ExposureBlockManager.getInstance(activity).getCurrentExposureBlock().count.intValue();
+                    total = config.getCalibrationSampleFrames();
+                }
+                int pct = 100*count/total;
+                int sLeft = (total-count)/config.getTargetFPS();
+                setStatusMessage(String.format(getString(R.string.status_pct), pct, sLeft/60, sLeft%60));
+
+        }
 
         if (!CFCamera.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
@@ -216,9 +240,6 @@ public class DataCollectionFragment extends CFFragment {
             if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
                 final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
                 mDataCollectionStats.setStatus(status);
-            }
-            if (mStatusMessage.getVisibility() == View.VISIBLE) {
-                setStatusMessage(mIdleStatus);
             }
         } catch (Exception e) {
             // don't crash
