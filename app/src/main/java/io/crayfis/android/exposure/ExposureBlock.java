@@ -18,7 +18,6 @@ import io.crayfis.android.trigger.L2Task.RecoEvent;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
-	public static final String TAG = "ExposureBlock";
 
 	private final UUID run_id;
     private final UUID precal_id;
@@ -65,10 +64,7 @@ public class ExposureBlock {
     public double total_max = 0.0;
 
     // list of raw frames that have been assigned to this XB (but not yet processed)
-    private LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
-
-    // list of frames that have been processed fully and committed to the XB.
-    private ArrayList<RawCameraFrame> processedFrames = new ArrayList<>();
+    private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
     private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
@@ -172,14 +168,10 @@ public class ExposureBlock {
     }
 
     public void clearFrame(RawCameraFrame frame) {
-        boolean removed = false;
         synchronized (assignedFrames) {
-            removed = assignedFrames.remove(frame);
-        }
-        if (!removed) {
-            CFLog.e("clearFrame() called but frame was not assigned.");
-        } else {
-            processedFrames.add(frame);
+            if(!assignedFrames.remove(frame)) {
+                CFLog.e("clearFrame() called but frame was not assigned.");
+            }
         }
     }
 	

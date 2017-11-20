@@ -218,7 +218,7 @@ public class DataCollectionFragment extends CFFragment {
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;
-                int sLeft = (total-count)/config.getTargetFPS();
+                int sLeft = (int)((total-count)/CFCamera.getInstance().getFPS());
                 setStatusMessage(String.format(getString(R.string.status_pct), pct, sLeft/60, sLeft%60));
 
         }

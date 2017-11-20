@@ -58,7 +58,6 @@ public class CFApplication extends Application {
     public int consecutiveIdles = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-    private final CFCamera CAMERA = CFCamera.getInstance();
 
     private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
         @Override
@@ -71,12 +70,13 @@ public class CFApplication extends Application {
         @Override
         public void onFinish() {
             // see if we should quit the app here
-            if(mApplicationState == State.FINISHED) return;
+            if(mApplicationState != State.IDLE) return;
             consecutiveIdles++;
             CFLog.d("" + consecutiveIdles + " consecutive IDLEs");
 
             if(consecutiveIdles >= 3) {
                 handleUnresponsive();
+                return;
             }
             if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
                     || CFCamera.getInstance().isFlat()) {
@@ -449,7 +449,7 @@ public class CFApplication extends Application {
     }
 
     public void setNewestPrecalUUID() {
-        CONFIG.setPrecalId(CAMERA.getCameraId(), mAppBuild.getRunId());
+        CONFIG.setPrecalId(CFCamera.getInstance().getCameraId(), mAppBuild.getRunId());
     }
 
     public void startStabilizationTimer() {
@@ -460,10 +460,6 @@ public class CFApplication extends Application {
 
     public void killTimer() {
         mStabilizationTimer.cancel();
-    }
-
-    public boolean isWaitingForStabilization() {
-        return mWaitingForStabilization;
     }
 
     /**
