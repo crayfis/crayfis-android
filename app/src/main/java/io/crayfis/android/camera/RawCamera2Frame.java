@@ -13,6 +13,9 @@ import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 import android.support.annotation.NonNull;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.ScriptC_weight;
@@ -37,7 +40,6 @@ class RawCamera2Frame extends RawCameraFrame {
                     final int frameWidth,
                     final int frameHeight,
                     final int length,
-                    final int bufferSize,
                     final AcquisitionTime acquisitionTime,
                     final long timestamp,
                     final Location location,
@@ -50,7 +52,7 @@ class RawCamera2Frame extends RawCameraFrame {
                     final Allocation in,
                     final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, bufferSize, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
                 location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
@@ -74,10 +76,25 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     public void claim() {
-        mRawBytes = new byte[aRaw.getBytesSize()];
+        super.claim();
+
+        // use the same byte[] buffer for raw and weighted
+        byte[] adjustedBytes = new byte[aRaw.getBytesSize()];
+        aWeighted.copyTo(adjustedBytes);
+        weightingLock.unlock();
+        Mat mat1 = new MatOfByte(adjustedBytes);
+
+        mRawBytes = adjustedBytes;
         aRaw.copyTo(mRawBytes);
         mRawLock.release();
-        super.claim();
+
+        // probably a better way to do this, but this
+        // works for preventing native memory leaks
+
+        Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+        mat1.release();
+        mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+        mat2.release();
     }
 
     @Override
@@ -111,7 +128,6 @@ class RawCamera2Frame extends RawCameraFrame {
             bFrameWidth = type.getX();
             bFrameHeight = type.getY();
             bLength = bFrameWidth * bFrameHeight;
-            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
 
             bCameraId = cameraId;
             try {
@@ -132,7 +148,7 @@ class RawCamera2Frame extends RawCameraFrame {
 
         public RawCamera2Frame build() {
             return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                    bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
+                    bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                     bOrientation, bRotationZZ, bPressure, bExposureBlock,
                     bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
         }
