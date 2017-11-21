@@ -231,9 +231,7 @@ public abstract class RawCameraFrame {
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
-    public void claim() {
-        mBufferClaimed = true;
-    }
+    public abstract boolean claim();
 
     /**
      * Notify the ExposureBlock we are done with this frame, and free all memory

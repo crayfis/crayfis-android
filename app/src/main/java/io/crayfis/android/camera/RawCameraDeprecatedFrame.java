@@ -62,26 +62,34 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
 
     @Override
-    public void claim() {
-        super.claim();
+    public boolean claim() {
 
-        byte[] adjustedBytes = new byte[mLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
+        try {
 
-        // update with weighted pixels
-        aWeighted.copyTo(adjustedBytes);
+            byte[] adjustedBytes = new byte[mLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
 
-        weightingLock.unlock();
+            // update with weighted pixels
+            aWeighted.copyTo(adjustedBytes);
+
+            weightingLock.unlock();
 
 
-        // probably a better way to do this, but this
-        // works for preventing native memory leaks
+            // probably a better way to do this, but this
+            // works for preventing native memory leaks
 
-        Mat mat1 = new MatOfByte(adjustedBytes);
-        mCamera.addCallbackBuffer(adjustedBytes);
-        Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
-        mat1.release();
-        mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
-        mat2.release();
+            Mat mat1 = new MatOfByte(adjustedBytes);
+            mCamera.addCallbackBuffer(adjustedBytes);
+            Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat1.release();
+            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+            mat2.release();
+
+            mBufferClaimed = true;
+        } catch (OutOfMemoryError oom) {
+            // TODO: do we need to free native memory?
+        }
+
+        return mBufferClaimed;
     }
 
     @Override

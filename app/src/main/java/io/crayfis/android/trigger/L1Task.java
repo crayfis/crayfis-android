@@ -126,16 +126,20 @@ class L1Task implements Runnable {
 
             mExposureBlock.L1_pass++;
 
-            mKeepFrame = true;
+
 
             // add a new buffer to the queue to make up for this one which
             // will not return
-            // TODO: make sure we check that there's enough memory to allocate a frame!
-            mFrame.claim();
+            if(mFrame.claim()) {
+                // this frame has passed the L1 threshold, put it on the
+                // L2 processing queue.
+                mL2Processor.submitFrame(mFrame);
+                mKeepFrame = true;
+            } else {
+                // out of memory: skip the frame
+                mExposureBlock.L2_skip++;
+            }
 
-            // this frame has passed the L1 threshold, put it on the
-            // L2 processing queue.
-            mL2Processor.submitFrame(mFrame);
         } else {
             // didn't pass. recycle the buffer.
             mExposureBlock.L1_skip++;
