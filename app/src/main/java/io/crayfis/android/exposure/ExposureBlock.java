@@ -19,6 +19,8 @@ import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
 
+    private final CFApplication APPLICATION;
+
 	private final UUID run_id;
     private final UUID precal_id;
 
@@ -28,11 +30,10 @@ public class ExposureBlock {
 	private final Location start_loc;
 
     private final int batteryTemp;
+    private int batteryEndTemp;
 
 	private final int res_x;
 	private final int res_y;
-	
-	long frames_dropped;
 
     private final L1Config L1_trigger_config;
     private final L2Config L2_trigger_config;
@@ -67,9 +68,10 @@ public class ExposureBlock {
     private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
-    private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
+    private final ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 
-    public ExposureBlock(int xbn, UUID run_id,
+    public ExposureBlock(CFApplication application,
+                         int xbn, UUID run_id,
                          UUID precal_id,
                          String L1_config,
                          String L2_config,
@@ -80,6 +82,7 @@ public class ExposureBlock {
                          int resx, int resy) {
         start_time = new AcquisitionTime();
 
+        this.APPLICATION = application;
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
@@ -93,7 +96,6 @@ public class ExposureBlock {
         this.res_x = resx;
         this.res_y = resy;
 
-        frames_dropped = 0;
         L1_processed = L1_pass = L1_skip = 0;
         L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
@@ -143,6 +145,7 @@ public class ExposureBlock {
         synchronized (assignedFrames) {
             frozen = true;
             end_time = new AcquisitionTime();
+            batteryEndTemp = APPLICATION.getBatteryTemp();
         }
     }
 
@@ -235,6 +238,7 @@ public class ExposureBlock {
                 .setRunId(run_id.getLeastSignificantBits())
 
                 .setBatteryTemp(batteryTemp)
+                .setBatteryEndTemp(batteryEndTemp)
                 .setXbn(xbn)
                 .setAborted(aborted);
 
