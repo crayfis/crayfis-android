@@ -77,12 +77,15 @@ class RawCamera2Frame extends RawCameraFrame {
     @Override
     public boolean claim() {
 
+        Mat mat1 = null;
+        Mat mat2 = null;
+
         try {
             // use the same byte[] buffer for raw and weighted
             byte[] adjustedBytes = new byte[aRaw.getBytesSize()];
             aWeighted.copyTo(adjustedBytes);
             weightingLock.unlock();
-            Mat mat1 = new MatOfByte(adjustedBytes);
+            mat1 = new MatOfByte(adjustedBytes);
 
             mRawBytes = adjustedBytes;
             aRaw.copyTo(mRawBytes);
@@ -91,13 +94,17 @@ class RawCamera2Frame extends RawCameraFrame {
             // probably a better way to do this, but this
             // works for preventing native memory leaks
 
-            Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
             mat1.release();
             mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            // TODO: do we need to free native memory?
+            weightingLock.unlock();
+            mRawLock.release();
+            if (mat1 != null) mat1.release();
+            if (mat2 != null) mat2.release();
+            if (mGrayMat != null) mGrayMat.release();
         }
 
         return mBufferClaimed;
