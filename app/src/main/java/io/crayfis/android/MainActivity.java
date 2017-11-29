@@ -33,9 +33,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
-import org.opencv.android.OpenCVLoader;
-
-import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.usernotif.UserNotificationActivity;
 import io.crayfis.android.util.CFLog;
 
@@ -60,14 +57,6 @@ public class MainActivity extends Activity  {
     };
 
 	public String build_version = null;
-
-	static {
-		if(OpenCVLoader.initDebug()) {
-			CFLog.d("OpenCV installed");
-		} else {
-			CFLog.d("OpenCV not installed");
-		}
-	}
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
