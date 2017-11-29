@@ -223,7 +223,9 @@ public class DataCollectionFragment extends CFFragment {
 
         }
 
-        if (!CFCamera.getInstance().isUpdatingLocation()) {
+        if (application.getApplicationState() == CFApplication.State.FINISHED) {
+            setErrorMessage(0);
+        } else if (!CFCamera.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
