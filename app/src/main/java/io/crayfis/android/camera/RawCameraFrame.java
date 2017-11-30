@@ -29,14 +29,14 @@ import static io.crayfis.android.CFApplication.MODE_FRONT_LOCK;
 public abstract class RawCameraFrame {
 
     byte[] mRawBytes;
+    Mat mGrayMat;
 
     private final int mCameraId;
     private final boolean mFacingBack;
 
-    private final int mFrameWidth;
-    private final int mFrameHeight;
-    private final int mLength;
-    private final int mBufferSize;
+    final int mFrameWidth;
+    final int mFrameHeight;
+    final int mLength;
 
     private final AcquisitionTime mAcquiredTime;
     private final long mTimestamp;
@@ -60,9 +60,7 @@ public abstract class RawCameraFrame {
     private Allocation aout;
 
     // lock to make sure allocation doesn't change as we're performing weighting
-    private static final ReentrantLock weightingLock = new ReentrantLock();
-
-    private Mat mGrayMat;
+    static final ReentrantLock weightingLock = new ReentrantLock();
 
     /**
      * Class for creating immutable RawCameraFrames
@@ -75,7 +73,6 @@ public abstract class RawCameraFrame {
         int bFrameWidth;
         int bFrameHeight;
         int bLength;
-        int bBufferSize;
 
         AcquisitionTime bAcquisitionTime;
         long bTimestamp;
@@ -87,7 +84,8 @@ public abstract class RawCameraFrame {
 
         ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
         ScriptC_weight bScriptCWeight;
-        Allocation bWeighted;Allocation bOut;
+        Allocation bWeighted;
+        Allocation bOut;
 
         void setRenderScript(RenderScript rs, int width, int height) {
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
@@ -150,7 +148,6 @@ public abstract class RawCameraFrame {
                    final int frameWidth,
                    final int frameHeight,
                    final int length,
-                   final int bufferSize,
                    final AcquisitionTime acquisitionTime,
                    final long timestamp,
                    final Location location,
@@ -168,7 +165,6 @@ public abstract class RawCameraFrame {
         mFrameWidth = frameWidth;
         mFrameHeight = frameHeight;
         mLength = length;
-        mBufferSize = bufferSize;
         mAcquiredTime = acquisitionTime;
         mTimestamp = timestamp;
         mLocation = location;
@@ -224,34 +220,6 @@ public abstract class RawCameraFrame {
     }
 
     /**
-     * Create Mat from Allocation and recycle buffer to camera
-     *
-     * @return byte[]
-     */
-    protected byte[] createMatAndReturnBuffer() {
-
-        //FIXME: this is way too much copying
-        byte[] adjustedBytes = new byte[mBufferSize];
-
-        // update with weighted pixels
-        aWeighted.copyTo(adjustedBytes);
-
-        weightingLock.unlock();
-
-
-        // probably a better way to do this, but this
-        // works for preventing native memory leaks
-
-        Mat mat1 = new MatOfByte(adjustedBytes);
-        Mat mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
-        mat1.release();
-        mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
-        mat2.release();
-
-        return adjustedBytes;
-    }
-
-    /**
      * Return the image buffer to be used by the camera, and free all locks
      */
     public void retire() {
@@ -263,10 +231,7 @@ public abstract class RawCameraFrame {
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
-    public void claim() {
-        mBufferClaimed = true;
-        createMatAndReturnBuffer();
-    }
+    public abstract boolean claim();
 
     /**
      * Notify the ExposureBlock we are done with this frame, and free all memory

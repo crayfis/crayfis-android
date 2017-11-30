@@ -122,6 +122,9 @@ public final class ExposureBlockManager {
             return;
         }
 
+        // need to check battery BEFORE freezing to set final battery temp
+        APPLICATION.checkBatteryStats();
+
         if (current_xb != null) {
             current_xb.freeze();
             retireExposureBlock(current_xb);
@@ -134,7 +137,7 @@ public final class ExposureBlockManager {
         if(state == CFApplication.State.DATA) {
             mXBExpirationTimer = new XBExpirationTimer();
             mXBExpirationTimer.start();
-            if(state == CFApplication.State.DATA && !CONFIG.getTriggerLock()) {
+            if(!CONFIG.getTriggerLock()) {
                 // re-evaluate thresholds for new XB
                 L1Calibrator.getInstance().updateThresholds();
             }
@@ -142,10 +145,9 @@ public final class ExposureBlockManager {
 
         int cameraId = camera.getCameraId();
 
-        APPLICATION.checkBatteryStats();
-
         CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
-        current_xb = new ExposureBlock(mTotalXBs,
+        current_xb = new ExposureBlock(APPLICATION,
+                mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
                 CONFIG.getL1Trigger(),

@@ -62,7 +62,7 @@ public class Utils {
     }
 
 
-    public static final int MAX_NUM_IMAGES = 100;
+    private static final int MAX_NUM_IMAGES = 100;
 
     // Number of columns of Grid View
     public static final int NUM_OF_COLUMNS = 2;
@@ -71,10 +71,10 @@ public class Utils {
     public static final int GRID_PADDING = 4; // in dp
 
     // SD card image directory
-    public static final String DIRNAME = "/.crayfis";
+    private static final String DIRNAME = "/.crayfis";
 
     // supported file formats
-    public static final List<String> FILE_EXTN = Arrays.asList("jpg", "jpeg",
+    private static final List<String> FILE_EXTN = Arrays.asList("jpg", "jpeg",
             "png");
 
     private Context _context;
@@ -84,44 +84,29 @@ public class Utils {
         this._context = context;
     }
 
-    public int deleteImages()
-    {
+    public int deleteImages() {
+
         int num_deleted=0;
 
-        try
-        {
-        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File directory = new File(sdCard.getAbsolutePath() + DIRNAME);
+        try {
 
-
-        // check for directory
-        if (directory.isDirectory()) {
-            // getting list of file paths
-            File[] listFiles = directory.listFiles();
-            CFLog.d("Gallery: Gallery files num=" + listFiles.length);
             // Check for count
-            if (listFiles.length > 0) {
+            for (String image: getListOfImages()) {
 
-                // loop through all files
-                for (int i = 0; i < listFiles.length; i++) {
+                // get file path
+                File file = new File(image);
+                boolean res = file.delete();
+                CFLog.d("Gallery: success? " + res + " deleting file " + image);
+                if (res) num_deleted++;
 
-                    // get file path
-                    String filePath = listFiles[i].getAbsolutePath();
-                    File file = new File(filePath);
-                    boolean res = file.delete();
-                    CFLog.d("Gallery: success? " + res + " deleting file " + filePath);
-                    if (res) num_deleted++;
-                }
             }
-        }
-       } catch (Exception e)
-        {
+        } catch (Exception e) {
             Crashlytics.logException(e);
         }
         return num_deleted;
     }
 
-    public ArrayList<String> getListOfImages() {
+    private ArrayList<String> getListOfImages() {
         ArrayList<String> filePaths = new ArrayList<String>();
         File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
@@ -129,93 +114,40 @@ public class Utils {
 
         // check for directory
         if (directory.isDirectory()) {
-            // getting list of file paths
-            File[] listFiles = directory.listFiles();
-            CFLog.d("Gallery: Gallery files num="+listFiles.length);
-            // Check for count
-            if (listFiles.length > 0) {
 
-                // loop through all files
-                for (int i = 0; i < listFiles.length; i++) {
+            // loop through all files
+            for (File f: directory.listFiles()) {
 
-                    // get file path
-                    String filePath = listFiles[i].getAbsolutePath();
-                   // CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
+                // get file path
+                String filePath = f.getAbsolutePath();
+                // CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
 
-                    // check for supported file extension
-                    if (IsSupportedFile(filePath)) {
-                        // Add image path to array list
-                        //CFLog.d("Gallery: Adding file "+i+" = "+filePath);
-
-                        filePaths.add(filePath);
-                    }
+                // check for supported file extension
+                if (IsSupportedFile(filePath)) {
+                    // Add image path to array list
+                    //CFLog.d("Gallery: Adding file "+i+" = "+filePath);
+                     filePaths.add(filePath);
                 }
-            } else {
-                // Gallery now shows number of files, so Toast not needed
-                /*
-                // image directory is empty
-                Toast.makeText(
-                        _context,
-                        DIRNAME
-                                + " is empty. Please load some images in it !",
-                        Toast.LENGTH_LONG).show();
-                        */
             }
-
         }
         return filePaths;
     }
-
-
 
 
     // Reading file paths from SDCard
     public ArrayList<SavedImage> getSavedImages() {
         ArrayList<SavedImage> filePaths = new ArrayList<SavedImage>();
 
-        File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
+        for (String filePath: getListOfImages()) {
 
-
-        // check for directory
-        if (directory.isDirectory()) {
-            // getting list of file paths
-            File[] listFiles = directory.listFiles();
-            CFLog.d("Gallery: Gallery files num="+listFiles.length);
-            // Check for count
-            if (listFiles.length > 0) {
-
-                // loop through all files
-                for (int i = 0; i < listFiles.length; i++) {
-
-                    // get file path
-                    String filePath = listFiles[i].getAbsolutePath();
-                    CFLog.d("Gallery: Gallery file "+i+" = "+filePath);
-
-                    // check for supported file extension
-                    if (IsSupportedFile(filePath)) {
-                        // Add image path to array list
-                        CFLog.d("Gallery: Adding file "+i+" = "+filePath);
-
-                        try {
-                            filePaths.add(new SavedImage(filePath));
-                        } catch (Exception e)
-                        {
-                            Crashlytics.logException(e);
-                        // couldn't do it. Don't crash.
-                         }
-                    }
-                }
-            } else {
-                // Gallery now shows number of files, so Toast not needed
-                /*
-                // image directory is empty
-                Toast.makeText(
-                        _context,
-                        DIRNAME
-                                + " is empty. Please load some images in it !",
-                        Toast.LENGTH_LONG).show();
-                        */
+            try {
+                filePaths.add(new SavedImage(filePath));
+            } catch (OutOfMemoryError e) {
+                File deleteFile = new File(filePath);
+                deleteFile.delete();
+            } catch (Exception e) {
+                Crashlytics.logException(e);
+                // couldn't do it. Don't crash.
             }
 
         }
@@ -227,11 +159,7 @@ public class Utils {
         String ext = filePath.substring((filePath.lastIndexOf(".") + 1),
                 filePath.length());
 
-        if (FILE_EXTN
-                .contains(ext.toLowerCase(Locale.getDefault())))
-            return true;
-        else
-            return false;
+        return FILE_EXTN.contains(ext.toLowerCase(Locale.getDefault()));
 
     }
 

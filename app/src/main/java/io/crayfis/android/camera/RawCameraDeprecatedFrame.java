@@ -8,6 +8,9 @@ import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 
@@ -26,7 +29,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final int frameWidth,
                              final int frameHeight,
                              final int length,
-                             final int bufferSize,
                              final AcquisitionTime acquisitionTime,
                              final long timestamp,
                              final Location location,
@@ -39,12 +41,13 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final Allocation in,
                              final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, bufferSize, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
                 location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
         mRawBytes = bytes;
         mCamera = camera;
+
     }
 
 
@@ -59,9 +62,40 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
 
     @Override
-    public void claim() {
-        mCamera.addCallbackBuffer(super.createMatAndReturnBuffer());
-        mBufferClaimed = true;
+    public boolean claim() {
+
+        Mat mat1 = null;
+        Mat mat2 = null;
+
+        try {
+
+            byte[] adjustedBytes = new byte[mLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
+
+            // update with weighted pixels
+            aWeighted.copyTo(adjustedBytes);
+
+            weightingLock.unlock();
+
+
+            // probably a better way to do this, but this
+            // works for preventing native memory leaks
+
+            mat1 = new MatOfByte(adjustedBytes);
+            mCamera.addCallbackBuffer(adjustedBytes);
+            mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat1.release();
+            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+            mat2.release();
+
+            mBufferClaimed = true;
+        } catch (OutOfMemoryError oom) {
+            weightingLock.unlock();
+            if (mat1 != null) mat1.release();
+            if (mat2 != null) mat2.release();
+            if (mGrayMat != null) mGrayMat.release();
+        }
+
+        return mBufferClaimed;
     }
 
     @Override
@@ -102,7 +136,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
             bFrameWidth = sz.width;
             bFrameHeight = sz.height;
             bLength = bFrameWidth * bFrameHeight;
-            bBufferSize = bLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888);
 
             bCameraId = cameraId;
             Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
@@ -115,7 +148,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
         public RawCameraDeprecatedFrame build() {
             return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
-                    bFrameWidth, bFrameHeight, bLength, bBufferSize, bAcquisitionTime, bTimestamp, bLocation,
+                    bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                     bOrientation, bRotationZZ, bPressure, bExposureBlock,
                     bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
         }

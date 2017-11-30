@@ -18,7 +18,8 @@ import io.crayfis.android.trigger.L2Task.RecoEvent;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
-	public static final String TAG = "ExposureBlock";
+
+    private final CFApplication APPLICATION;
 
 	private final UUID run_id;
     private final UUID precal_id;
@@ -29,11 +30,10 @@ public class ExposureBlock {
 	private final Location start_loc;
 
     private final int batteryTemp;
+    private int batteryEndTemp;
 
 	private final int res_x;
 	private final int res_y;
-	
-	long frames_dropped;
 
     private final L1Config L1_trigger_config;
     private final L2Config L2_trigger_config;
@@ -65,15 +65,13 @@ public class ExposureBlock {
     public double total_max = 0.0;
 
     // list of raw frames that have been assigned to this XB (but not yet processed)
-    private LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
-
-    // list of frames that have been processed fully and committed to the XB.
-    private ArrayList<RawCameraFrame> processedFrames = new ArrayList<>();
+    private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
-    private ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
+    private final ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
 
-    public ExposureBlock(int xbn, UUID run_id,
+    public ExposureBlock(CFApplication application,
+                         int xbn, UUID run_id,
                          UUID precal_id,
                          String L1_config,
                          String L2_config,
@@ -84,6 +82,7 @@ public class ExposureBlock {
                          int resx, int resy) {
         start_time = new AcquisitionTime();
 
+        this.APPLICATION = application;
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
@@ -97,7 +96,6 @@ public class ExposureBlock {
         this.res_x = resx;
         this.res_y = resy;
 
-        frames_dropped = 0;
         L1_processed = L1_pass = L1_skip = 0;
         L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
@@ -147,6 +145,7 @@ public class ExposureBlock {
         synchronized (assignedFrames) {
             frozen = true;
             end_time = new AcquisitionTime();
+            batteryEndTemp = APPLICATION.getBatteryTemp();
         }
     }
 
@@ -172,14 +171,10 @@ public class ExposureBlock {
     }
 
     public void clearFrame(RawCameraFrame frame) {
-        boolean removed = false;
         synchronized (assignedFrames) {
-            removed = assignedFrames.remove(frame);
-        }
-        if (!removed) {
-            CFLog.e("clearFrame() called but frame was not assigned.");
-        } else {
-            processedFrames.add(frame);
+            if(!assignedFrames.remove(frame)) {
+                CFLog.e("clearFrame() called but frame was not assigned.");
+            }
         }
     }
 	
@@ -243,6 +238,7 @@ public class ExposureBlock {
                 .setRunId(run_id.getLeastSignificantBits())
 
                 .setBatteryTemp(batteryTemp)
+                .setBatteryEndTemp(batteryEndTemp)
                 .setXbn(xbn)
                 .setAborted(aborted);
 

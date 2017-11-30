@@ -17,6 +17,8 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.LocalBroadcastManager;
 
+import org.opencv.android.OpenCVLoader;
+
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -42,6 +44,13 @@ import io.crayfis.android.widget.DataCollectionStatsView;
 
 public class DAQService extends Service implements RawCameraFrame.Callback {
 
+    static {
+        if(OpenCVLoader.initDebug()) {
+            CFLog.d("OpenCV installed");
+        } else {
+            CFLog.d("OpenCV not installed");
+        }
+    }
 
 
     ///////////////

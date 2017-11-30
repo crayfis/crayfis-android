@@ -26,7 +26,7 @@ public class SavedImage {
 
     public String makeFilename(int mp,int np, String d)
     {
-        return new String("event_mp_"+mp+"_np_"+np+"_date_"+d+".png");
+        return "event_mp_"+mp+"_np_"+np+"_date_"+d+".png";
     }
 
     private void decodeFilename(String filename)
@@ -114,11 +114,12 @@ public class SavedImage {
         CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
     }
 
-    public SavedImage(String fname)
-    {
-        filename=fname;
+    public SavedImage(String fname) {
+
+        filename = fname;
         bitmap = BitmapFactory.decodeFile(fname);
         decodeFilename(fname);
+
     }
 
 

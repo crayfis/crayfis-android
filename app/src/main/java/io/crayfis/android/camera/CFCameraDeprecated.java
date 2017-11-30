@@ -129,7 +129,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         }
 
         try {
-            final int N_CYCLE_BUFFERS = 5;
+            final int N_CYCLE_BUFFERS = 3;
             int bufSize = previewSize.width*previewSize.height* ImageFormat.getBitsPerPixel(mParams.getPreviewFormat())/8;
             mCamera.setPreviewCallbackWithBuffer(this);
             for(int i=0; i<N_CYCLE_BUFFERS; i++) {
