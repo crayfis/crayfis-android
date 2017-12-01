@@ -56,8 +56,8 @@ public class L1Calibrator {
         double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / fps;
 
         Histogram h = maxPixels.getHistogram();
-        int[] histValues = h.getValues();
-        int nTotal = h.getEntries();
+        long[] histValues = h.getValues();
+        long nTotal = h.getEntries();
         int nTarget = (int) (nTotal * targetL1Rate);
 
         int thresh;

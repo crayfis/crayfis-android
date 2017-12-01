@@ -52,7 +52,6 @@ public class L2Task implements Runnable {
                         cfg_npix = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
                         CFLog.w("Couldn't parse npix argument for L2 configuraion!");
-                        continue;
                     }
                 }
             }
@@ -62,12 +61,11 @@ public class L2Task implements Runnable {
 
         @Override
         public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
-            return new L2Task(l2Processor, frame, this);
+            return new L2Task(l2Processor.mApplication, frame, this);
         }
     }
 
     private RawCameraFrame mFrame = null;
-    L2Processor mL2Processor = null;
 
     RecoEvent mEvent = null;
 
@@ -75,11 +73,10 @@ public class L2Task implements Runnable {
 
     private final Utils mUtils;
 
-    L2Task(L2Processor l2processor, RawCameraFrame frame, Config config) {
+    L2Task(CFApplication application, RawCameraFrame frame, Config config) {
         mFrame = frame;
-        mL2Processor = l2processor;
 
-        mApplication = mL2Processor.mApplication;
+        mApplication = application;
 
         mConfig = config;
 
@@ -95,12 +92,14 @@ public class L2Task implements Runnable {
         private final float[] orientation;
         private final float pressure;
 
+        private final int[] hist;
         private final double background;
         private final double std;
 
         int npix_dropped;
 
         private final int xbn;
+        private final int l1thresh;
 
         private final ArrayList<RecoPixel> pixels;
 
@@ -114,10 +113,12 @@ public class L2Task implements Runnable {
             orientation = frame.getOrientation();
             pressure = frame.getPressure();
 
+            hist = frame.getHist();
             background = frame.getPixAvg();
             std = frame.getPixStd();
 
             xbn = frame.getExposureBlock().getXBN();
+            l1thresh = frame.getExposureBlock().getL1Thresh();
 
             pixels = l2Task.buildPixels(frame);
         }
@@ -146,6 +147,9 @@ public class L2Task implements Runnable {
 
             buf.setAvg(background);
             buf.setStd(std);
+            for (int i=0; i<=l1thresh; i++) {
+                buf.addHist(hist[i]);
+            }
 
             buf.setXbn(xbn);
 
@@ -182,7 +186,7 @@ public class L2Task implements Runnable {
         float avg_3, avg_5;
         int near_max;
 
-        public DataProtos.Pixel buildProto() {
+        private DataProtos.Pixel buildProto() {
             DataProtos.Pixel.Builder buf = DataProtos.Pixel.newBuilder();
             buf.setX(x);
             buf.setY(y);

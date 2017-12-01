@@ -57,7 +57,7 @@ public class L2TaskMaxN extends L2Task {
     private final int mNpix;
 
     private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
-        super(l2processor, frame, null);
+        super(l2processor.mApplication, frame, null);
         mNpix = npix;
     }
 

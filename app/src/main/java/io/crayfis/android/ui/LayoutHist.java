@@ -95,7 +95,7 @@ public class LayoutHist extends CFFragment {
     }
 
     public DataPoint[] make_graph_data() {
-        int[] values = histL2Pixels.getValues();
+        long[] values = histL2Pixels.getValues();
 
         // include an overflow bin if necessary
         DataPoint[] data = new DataPoint[256];
@@ -218,8 +218,8 @@ public class LayoutHist extends CFFragment {
         if (mGraphSeries !=null) {
             final double passRate = CONFIG.getTargetEventsPerMinute();
 
-            final int totalEntries = histL2Pixels.getEntries();
-            final int[] values = histL2Pixels.getValues();
+            final long totalEntries = histL2Pixels.getEntries();
+            final long[] values = histL2Pixels.getValues();
             if(totalEntries == 0) return;
 
             final int targetGood = (int)((1-GOOD_EPM/passRate)*totalEntries+1);

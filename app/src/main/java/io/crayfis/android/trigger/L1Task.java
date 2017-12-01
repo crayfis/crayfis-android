@@ -44,7 +44,7 @@ class L1Task implements Runnable {
         mL2Processor = mL1Processor.mL2Processor;
     }
 
-    protected boolean processInitial() {
+    private boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
             CFCamera camera = CFCamera.getInstance();
@@ -69,7 +69,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected boolean processPreCalibration() {
+    private boolean processPreCalibration() {
 
         if(mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
@@ -82,7 +82,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected boolean processCalibration() {
+    private boolean processCalibration() {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = mExposureBlock.count.incrementAndGet();
@@ -95,7 +95,7 @@ class L1Task implements Runnable {
         return true;
     }
 
-    protected boolean processStabilization() {
+    private boolean processStabilization() {
         // If we're in stabilization mode, just drop frames until we've skipped enough
         long count = mExposureBlock.count.incrementAndGet();
         if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
@@ -104,21 +104,20 @@ class L1Task implements Runnable {
         return true;
     }
 
-    protected boolean processIdle() {
+    private boolean processIdle() {
         // Not sure why we're still acquiring frames in IDLE mode...
         CFLog.w("DAQActivity Frames still being received in IDLE mode");
         return true;
     }
 
-    protected boolean processData() {
+    private boolean processData() {
 
         mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
 
         int max = mFrame.getPixMax();
 
-        mExposureBlock.total_background += mFrame.getPixAvg();
-        mExposureBlock.total_max += mFrame.getPixMax();
+        mExposureBlock.underflow_hist.fill(mFrame.getHist());
 
         if (max > mExposureBlock.getL1Thresh()) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
@@ -148,7 +147,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected void processFinal() {
+    private void processFinal() {
     }
 
     private void processFrame() {
