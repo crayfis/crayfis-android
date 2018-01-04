@@ -6,10 +6,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
-import io.crayfis.android.ui.DataCollectionFragment;
+import io.crayfis.android.ui.navdrawer.navfragments.LayoutStatus;
 
 /**
  * Created by Jeff on 4/15/2017.
@@ -87,7 +87,7 @@ class CFSensor implements SensorEventListener {
             case Sensor.TYPE_ROTATION_VECTOR:
                 if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_HIGH
                         && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
-                    DataCollectionFragment.updateIdleStatus(APPLICATION.getResources().getString(R.string.idle_sensors));
+                    LayoutStatus.updateIdleStatus(APPLICATION.getResources().getString(R.string.idle_sensors));
                     APPLICATION.setApplicationState(CFApplication.State.IDLE);
                 }
         }

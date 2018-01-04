@@ -1,25 +1,22 @@
 package io.crayfis.android.camera;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
-import android.preference.PreferenceManager;
 import android.renderscript.RenderScript;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.R;
-import io.crayfis.android.calibration.FrameHistory;
+import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
-import io.crayfis.android.precalibration.PreCalibrator;
+import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
 
-import static io.crayfis.android.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.CFApplication.MODE_FRONT_LOCK;
+import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
+import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
+import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
+import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Created by Jeff on 8/31/2017.

@@ -8,7 +8,6 @@ import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
 
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -17,10 +16,10 @@ import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
 
-import static io.crayfis.android.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.CFApplication.MODE_FRONT_LOCK;
+import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
+import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
+import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
+import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the

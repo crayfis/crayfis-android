@@ -2,11 +2,9 @@ package io.crayfis.android.trigger;
 
 import android.os.AsyncTask;
 
-import io.crayfis.android.CFApplication;
-import io.crayfis.android.calibration.FrameHistory;
-import io.crayfis.android.calibration.Histogram;
+import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.camera.RawCameraFrame;
-import io.crayfis.android.util.CFLog;
 
 public class L2Processor {
     final CFApplication mApplication;

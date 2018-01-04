@@ -14,15 +14,15 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.gallery.SavedImage;
-import io.crayfis.android.gallery.Utils;
-import io.crayfis.android.ui.LayoutBlack;
-import io.crayfis.android.ui.LayoutHist;
+import io.crayfis.android.ui.gallery.SavedImage;
+import io.crayfis.android.ui.gallery.Utils;
+import io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView;
+import io.crayfis.android.ui.navdrawer.navfragments.LayoutData;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -297,7 +297,7 @@ public class L2Task implements Runnable {
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
-            LayoutHist.appendData(val);
+            LayoutData.appendData(val);
             try {
                 RecoPixel.Builder builder = new RecoPixel.Builder();
                 builder.setX(ix)
@@ -340,7 +340,7 @@ public class L2Task implements Runnable {
 
         // First, build the event from the raw frame.
         mEvent = new RecoEvent(mFrame, this);
-        LayoutBlack lb = LayoutBlack.getInstance();
+        LayoutLiveView lb = LayoutLiveView.getInstance();
         if(lb.events != null) {
             lb.addEvent(mEvent);
         }

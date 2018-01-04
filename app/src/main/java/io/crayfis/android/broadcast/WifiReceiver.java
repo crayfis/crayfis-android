@@ -8,7 +8,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.util.CFLog;
 

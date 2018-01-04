@@ -3,7 +3,7 @@ package io.crayfis.android.trigger;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.RawCameraFrame;

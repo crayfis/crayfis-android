@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import io.crayfis.android.AutostartUtil;
+import io.crayfis.android.util.AutostartUtil;
 import io.crayfis.android.R;
 
 /**

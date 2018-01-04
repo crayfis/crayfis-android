@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;

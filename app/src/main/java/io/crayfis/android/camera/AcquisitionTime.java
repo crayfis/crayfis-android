@@ -1,10 +1,9 @@
 package io.crayfis.android.camera;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 
 /**
  * Created by cshimmin on 5/13/16.

@@ -9,9 +9,9 @@ import android.support.annotation.NonNull;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.calibration.L1Calibrator;
+import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L2Processor;

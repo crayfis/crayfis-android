@@ -18,7 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
@@ -46,7 +46,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
     /**
      * Create a new instance.
      *
-     * @param application {@link io.crayfis.android.CFApplication}
+     * @param application {@link CFApplication}
      * @param serverInfo The {@link io.crayfis.android.server.UploadExposureService.ServerInfo} to use for uploading.
      * @param file The File to upload.
      */

@@ -1,22 +1,20 @@
 package io.crayfis.android.exposure;
 
 import android.location.Location;
-import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.calibration.Histogram;
+import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.trigger.L1Config;
 import io.crayfis.android.trigger.L2Config;
 import io.crayfis.android.trigger.L2Task.RecoEvent;
-import io.crayfis.android.ui.LayoutHist;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {

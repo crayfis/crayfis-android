@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import io.crayfis.android.CFApplication;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
 import io.crayfis.android.util.CFLog;
