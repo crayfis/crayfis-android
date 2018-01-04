@@ -30,6 +30,7 @@ public abstract class RawCameraFrame {
 
     byte[] mRawBytes;
     Mat mGrayMat;
+    int[] mHist = new int[256];
 
     private final int mCameraId;
     private final boolean mFacingBack;
@@ -320,22 +321,22 @@ public abstract class RawCameraFrame {
             // somebody beat us to it! nothing to do.
             return;
         }
-        int[] hist = new int[256];
+
         int max = 255;
         int sum = 0;
         double sumDevSq = 0;
 
         mScriptIntrinsicHistogram.forEach(getWeightedAllocation());
-        aout.copyTo(hist);
+        aout.copyTo(mHist);
 
         // find max first, so sums are easier
-        while(hist[max] == 0 && max > 0) {
+        while(mHist[max] == 0 && max > 0) {
             max--;
         }
 
         // then find average and standard deviation
         for(int i=0; i<=max; i++) {
-            sum += i*hist[i];
+            sum += i*mHist[i];
         }
 
         mPixMax = max;
@@ -343,7 +344,7 @@ public abstract class RawCameraFrame {
 
         for(int i=0; i<=max; i++) {
             double dev = i - mPixAvg;
-            sumDevSq += hist[i]*dev*dev;
+            sumDevSq += mHist[i]*dev*dev;
         }
 
         mPixStd = Math.sqrt(sumDevSq/(mLength-1));
@@ -369,6 +370,10 @@ public abstract class RawCameraFrame {
             calculateStatistics();
         }
         return mPixStd;
+    }
+
+    public int[] getHist() {
+        return mHist;
     }
 
     /**

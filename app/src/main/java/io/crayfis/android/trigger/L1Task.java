@@ -117,8 +117,7 @@ class L1Task implements Runnable {
 
         int max = mFrame.getPixMax();
 
-        mExposureBlock.total_background += mFrame.getPixAvg();
-        mExposureBlock.total_max += mFrame.getPixMax();
+        mExposureBlock.underflow_hist.fill(mFrame.getHist());
 
         if (max > mExposureBlock.getL1Thresh()) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
@@ -151,7 +150,7 @@ class L1Task implements Runnable {
     protected void processFinal() {
     }
 
-    private void processFrame() {
+    protected void processFrame() {
 
         if (processInitial()) { return; }
 

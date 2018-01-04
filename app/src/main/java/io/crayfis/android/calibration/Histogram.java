@@ -1,28 +1,37 @@
 package io.crayfis.android.calibration;
 
+import android.support.annotation.NonNull;
+
 import java.util.Iterator;
+
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 11/18/14.
  */
-public class Histogram implements Iterable<Integer> {
-    private int[] values;
+public class Histogram implements Iterable<Long> {
+    private long[] values;
     private double[] errors;
     private boolean mean_valid = false;
     private boolean variance_valid = false;
     private double mean = 0;
     private double variance = 0;
     private double integral = 0;
-    private int entries = 0;
+    private long entries = 0;
     private boolean doErrors = false;
     private final int nbins;
 
+    private long underflow;
+    private double underflowError;
+    private long overflow;
+    private double overflowError;
+
 
     // Iterator over the values of each bin. Does not include overflow/underflow bins.
-    private class HistogramIterator implements Iterator<Integer> {
+    private class HistogramIterator implements Iterator<Long> {
         private int pos = 0;
-        public Integer next() { pos += 1; return values[pos-1]; }
-        public boolean hasNext() { return (pos < values.length); }
+        public Long next() { pos += 1; return values[pos-1]; }
+        public boolean hasNext() { return (pos < values.length-1); }
         public void remove() { throw new UnsupportedOperationException(); }
     }
 
@@ -39,10 +48,10 @@ public class Histogram implements Iterable<Integer> {
         this.doErrors = doErrors;
 
         // make two additional bins for under/overflow
-        values = new int[nbins+2];
+        values = new long[nbins];
 
         if (doErrors) {
-            errors = new double[nbins+2];
+            errors = new double[nbins];
         }
     }
 
@@ -50,11 +59,11 @@ public class Histogram implements Iterable<Integer> {
     public String toString()
     {
         String res="";
-        int n_total = getEntries();
+        double n_total = getIntegral();
         int nprint = 0;
         for (int i=0;i<values.length && nprint<10;i++) {
             double rate = getIntegral(i, 256) / (1.0*n_total);
-            if (rate == 1.0) { continue; }
+            if (values[i] == 0) { continue; }
             nprint++;
             res += "[ bin " + i + " = " + values[i] + " eff = " + String.format("%.3f", rate) + "] \n";
         }
@@ -77,7 +86,7 @@ public class Histogram implements Iterable<Integer> {
         fill(val, 1);
     }
     public void remove(int val) { fill(val, -1); }
-    public void fill(int x, double weight) {
+    public void fill(int x, int weight) {
         // keep track of the total number of raw entries filled
         entries += Math.signum(weight);
 
@@ -86,18 +95,18 @@ public class Histogram implements Iterable<Integer> {
         // included for iteration
         if (x < 0) {
             // underflow
-            values[nbins] += weight;
+            underflow += weight;
             if (doErrors) {
-                double lastval = errors[nbins];
-                errors[nbins] = Math.sqrt(weight * weight + lastval * lastval);
+                double lastval = underflowError;
+                underflowError = Math.sqrt(weight * weight + lastval * lastval);
             }
         }
         else if (x >= nbins) {
             // overflow
-            values[nbins+1] += weight;
+            overflow += weight;
             if (doErrors) {
-                double lastval = errors[nbins+1];
-                errors[nbins+1] = Math.sqrt(weight * weight + lastval * lastval);
+                double lastval = overflowError;
+                overflowError = Math.sqrt(weight * weight + lastval * lastval);
             }
         }
         else {
@@ -113,6 +122,31 @@ public class Histogram implements Iterable<Integer> {
         }
     }
 
+    public void fill(int[] values) {
+        for(int i=0; i<values.length; i++) {
+            if(values[i] > 0) {
+                fill(i, values[i]);
+            }
+        }
+
+    }
+
+    public void merge(Histogram hist) {
+        entries += hist.getEntries();
+        integral += hist.getIntegral();
+
+        underflow += hist.getUnderflow();
+        overflow += hist.getOverflow();
+        for(int i=0; i<hist.getValues().length; i++) {
+            values[i] += hist.getBinValue(i);
+        }
+
+        if(doErrors) {
+            underflowError = Math.sqrt(underflowError*underflowError + hist.getUnderflowError()*hist.getUnderflowError());
+            overflowError = Math.sqrt(overflowError*overflowError + hist.getOverflowError()*hist.getOverflowError());
+        }
+    }
+
     // mark the statistics as invalid, forcing recomputation
     // the next time any of them are called.
     private void invalidateStats() {
@@ -124,15 +158,15 @@ public class Histogram implements Iterable<Integer> {
     public double getMean() {
         // if the mean has not been invalidated since the last
         // time we calculated it, just return the previous value.
-        if (mean_valid)
-            return mean;
+        if (!mean_valid) {
 
-        int sum = 0;
-        for (int i = 0; i < nbins; ++i) {
-            sum += values[i];
+            int sum = 0;
+            for (int i = 0; i < nbins; ++i) {
+                sum += values[i];
+            }
+            mean = ((double) sum) / integral;
+            mean_valid = true;
         }
-        mean = ((double) sum) / integral;
-        mean_valid = true;
         return mean;
     }
 
@@ -140,17 +174,17 @@ public class Histogram implements Iterable<Integer> {
     public double getVariance() {
         // if the variance has not been invalidated since the last
         // time we calculated it, just return the previous value.
-        if (variance_valid)
-            return variance;
+        if (!variance_valid) {
 
-        mean = getMean();
-        int sum = 0;
-        for (int i = 0; i < nbins; ++i) {
-            double val = values[i];
-            sum += (val-mean)*(val-mean);
+            mean = getMean();
+            int sum = 0;
+            for (int i = 0; i < nbins; ++i) {
+                double val = values[i];
+                sum += (val - mean) * (val - mean);
+            }
+            variance = ((double) sum) / integral;
+            variance_valid = true;
         }
-        variance = ((double) sum) / integral;
-        variance_valid = true;
         return variance;
     }
 
@@ -186,11 +220,29 @@ public class Histogram implements Iterable<Integer> {
     }
 
     // return the value of overflow/underflow bins.
-    public double getUnderflow() { return values[nbins]; }
-    public double getOverflow() { return values[nbins+1]; }
+    public long getUnderflow() {
+        return underflow;
+    }
+    public long getOverflow() {
+        return overflow;
+    }
+    public double getUnderflowError() {
+        if (doErrors) {
+            return underflowError;
+        } else {
+            return 0;
+        }
+    }
+    public double getOverflowError() {
+        if (doErrors) {
+            return overflowError;
+        } else {
+            return 0;
+        }
+    }
 
     // get the value of a specific bin. returns 0 for any bins outside the range.
-    public double getBinValue(int i) {
+    public long getBinValue(int i) {
         if (i >= 0 && i < nbins) {
             return values[i];
         } else {
@@ -208,11 +260,12 @@ public class Histogram implements Iterable<Integer> {
     }
 
     // get the raw number of entries filled.
-    public int getEntries() { return entries; }
+    public long getEntries() { return entries; }
 
     // get an iterator over the bin contents. iterator does not include overflow/underflow bins.
-    public Iterator<Integer> iterator() { return new HistogramIterator(); }
+    @NonNull
+    public Iterator<Long> iterator() { return new HistogramIterator(); }
 
     // get a copy of the whole array of bin values.
-    public int[] getValues() { return values.clone(); }
+    public long[] getValues() { return values.clone(); }
 }

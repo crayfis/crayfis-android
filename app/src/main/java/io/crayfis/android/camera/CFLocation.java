@@ -245,7 +245,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 + " provider = " + mLastLocationDeprecated.getProvider()
                 + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
                 + (currentLocation != null ? " Official location = (long=" + currentLocation.getLongitude()
-                +" lat="+currentLocation.getLatitude() : "") + "\n";
+                +" lat="+currentLocation.getLatitude() : "") + ")\n";
 
     }
 

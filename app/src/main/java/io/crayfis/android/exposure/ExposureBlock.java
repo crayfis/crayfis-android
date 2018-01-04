@@ -10,11 +10,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.CFApplication;
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.trigger.L1Config;
 import io.crayfis.android.trigger.L2Config;
 import io.crayfis.android.trigger.L2Task.RecoEvent;
+import io.crayfis.android.ui.LayoutHist;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
@@ -61,8 +63,7 @@ public class ExposureBlock {
 	boolean aborted = false;
 
     // keep track of the (average) frame statistics as well
-    public double total_background = 0.0;
-    public double total_max = 0.0;
+    public final Histogram underflow_hist;
 
     // list of raw frames that have been assigned to this XB (but not yet processed)
     private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
@@ -90,6 +91,7 @@ public class ExposureBlock {
         this.L2_trigger_config = L2Config.makeConfig(L2_config);
         this.L1_threshold = L1_threshold;
         this.L2_threshold = L2_threshold;
+        this.underflow_hist = new Histogram(L1_threshold+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -209,7 +211,7 @@ public class ExposureBlock {
 		}
 	}
 	
-	public DataProtos.ExposureBlock buildProto() {
+	DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
                 .setL1Pass((int) L1_pass)
@@ -256,9 +258,7 @@ public class ExposureBlock {
 			buf.setResX(res_x).setResY(res_y);
 		}
 
-        if (L1_processed > 0) {
-            buf.setBgAvg(total_background / L1_processed);
-        }
+        buf.addAllHist(underflow_hist);
 
         // should be null for PRECALIBRATION
         if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
@@ -283,24 +283,6 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock buf = buildProto();
 		return buf.toByteArray();
 	}
-
-    public double getPixAverage() {
-        long nevt = L1_processed;
-        if (nevt > 0) {
-            return total_background / nevt;
-        } else {
-            return 0;
-        }
-    }
-
-    public double getPixMax() {
-        long nevt = L1_processed;
-        if (nevt > 0) {
-            return total_max / nevt;
-        } else {
-            return 0;
-        }
-    }
 
     public L1Config getL1Config() {
         return L1_trigger_config;

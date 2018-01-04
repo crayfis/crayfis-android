@@ -321,8 +321,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 // build the calibration result object
                 DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
 
-                for (int v : L1cal.getHistogram()) {
-                    cal.addHistMaxpixel(v);
+                for (long v : L1cal.getHistogram()) {
+                    cal.addHistMaxpixel((int)v);
                 }
 
                 // and commit it to the output stream
@@ -523,7 +523,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             devtxt += mCFCamera.getStatus();
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             if(xb != null) {
-                devtxt += "xb avg: " + String.format("%1.4f", xb.getPixAverage()) + " max: " + String.format("%1.2f", xb.getPixMax()) + "\n";
+                devtxt += xb.underflow_hist.toString();
             }
             devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n";
             return devtxt;
