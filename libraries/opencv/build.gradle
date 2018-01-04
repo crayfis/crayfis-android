@@ -2,10 +2,10 @@ apply plugin: 'com.android.library'
 
 buildscript {
     repositories {
-        mavenCentral()
+        maven { url 'http://maven.fabric.io/public' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'io.fabric.tools:gradle:1.22.1'
     }
 }
 
