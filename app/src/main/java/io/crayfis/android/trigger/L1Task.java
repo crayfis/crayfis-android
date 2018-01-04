@@ -44,7 +44,7 @@ class L1Task implements Runnable {
         mL2Processor = mL1Processor.mL2Processor;
     }
 
-    private boolean processInitial() {
+    protected boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
             CFCamera camera = CFCamera.getInstance();
@@ -69,7 +69,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    private boolean processPreCalibration() {
+    protected boolean processPreCalibration() {
 
         if(mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
@@ -82,7 +82,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    private boolean processCalibration() {
+    protected boolean processCalibration() {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = mExposureBlock.count.incrementAndGet();
@@ -95,7 +95,7 @@ class L1Task implements Runnable {
         return true;
     }
 
-    private boolean processStabilization() {
+    protected boolean processStabilization() {
         // If we're in stabilization mode, just drop frames until we've skipped enough
         long count = mExposureBlock.count.incrementAndGet();
         if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
@@ -104,13 +104,13 @@ class L1Task implements Runnable {
         return true;
     }
 
-    private boolean processIdle() {
+    protected boolean processIdle() {
         // Not sure why we're still acquiring frames in IDLE mode...
         CFLog.w("DAQActivity Frames still being received in IDLE mode");
         return true;
     }
 
-    private boolean processData() {
+    protected boolean processData() {
 
         mL1Processor.mL1Cal.addFrame(mFrame);
         mL1Processor.mL1CountData++;
@@ -147,10 +147,10 @@ class L1Task implements Runnable {
         return false;
     }
 
-    private void processFinal() {
+    protected void processFinal() {
     }
 
-    private void processFrame() {
+    protected void processFrame() {
 
         if (processInitial()) { return; }
 
