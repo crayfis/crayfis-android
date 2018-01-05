@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.trigger.L0Config;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
@@ -35,6 +36,7 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
+	private final L0Config L0_trigger_config;
     private final L1Config L1_trigger_config;
     private final L2Config L2_trigger_config;
 
@@ -72,6 +74,7 @@ public class ExposureBlock {
     public ExposureBlock(CFApplication application,
                          int xbn, UUID run_id,
                          UUID precal_id,
+                         String L0_config,
                          String L1_config,
                          String L2_config,
                          int L1_threshold, int L2_threshold,
@@ -85,6 +88,7 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
+        this.L0_trigger_config = L0Config.makeConfig(L0_config);
         this.L1_trigger_config = L1Config.makeConfig(L1_config);
         this.L2_trigger_config = L2Config.makeConfig(L2_config);
         this.L1_threshold = L1_threshold;
@@ -281,6 +285,8 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock buf = buildProto();
 		return buf.toByteArray();
 	}
+
+	public L0Config getL0Config() { return L0_trigger_config; }
 
     public L1Config getL1Config() {
         return L1_trigger_config;

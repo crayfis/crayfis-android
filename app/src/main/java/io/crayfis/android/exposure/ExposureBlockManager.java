@@ -150,6 +150,7 @@ public final class ExposureBlockManager {
                 mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
+                CONFIG.getL0Trigger(),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),

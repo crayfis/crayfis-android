@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
+import io.crayfis.android.trigger.L0Processor;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
@@ -171,7 +172,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
                 // Frame Processing
 
-                mL1Processor = new L1Processor(mApplication);
+                mL0Processor = new L0Processor(mApplication);
                 mPreCal = PreCalibrator.getInstance(context);
                 L1cal = L1Calibrator.getInstance();
 
@@ -439,8 +440,8 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     //////////////////////
 
     private ExposureBlockManager xbManager;
-    // helper that dispatches L1 inputs to be processed by the L1 trigger.
-    private L1Processor mL1Processor = null;
+    // helper that dispatches L0 inputs to be processed by the L0 trigger.
+    private L0Processor mL0Processor = null;
 
     private L1Calibrator L1cal;
     private PreCalibrator mPreCal;
@@ -461,7 +462,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         // If we made it here, we can submit the XB to the L1Processor.
         // It will pop the assigned frame from the XB's internal list, and will also handle
         // recycling the buffers.
-        mL1Processor.submitFrame(frame);
+        mL0Processor.submitFrame(frame);
 
     }
 

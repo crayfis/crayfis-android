@@ -23,6 +23,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final CFConfig INSTANCE = new CFConfig();
 
+    private static final String KEY_L0_TRIGGER = "L0_trigger";
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
     private static final String KEY_WEIGHTS = "precal_weights_";
@@ -63,6 +64,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
     // either determined via calibration, or are set by the server (until the next calibration).
     private final int N_CAMERAS;
+    private static final String DEFAULT_L0_TRIGGER = "default";
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final int DEFAULT_L1_THRESHOLD = 0;
@@ -93,6 +95,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
     private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
 
+    private String mL0Trigger;
     private String mL1Trigger;
     private String mL2Trigger;
     private List<Set<String>> mHotcells;
@@ -131,6 +134,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // FIXME: shouldn't we initialize based on the persistent config values?
         N_CAMERAS = Camera.getNumberOfCameras();
 
+        mL0Trigger = DEFAULT_L0_TRIGGER;
         mL1Trigger = DEFAULT_L1_TRIGGER;
         mL2Trigger = DEFAULT_L2_TRIGGER;
         mL1Threshold = DEFAULT_L1_THRESHOLD;
@@ -165,6 +169,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mHotcells.add(new HashSet<String>());
         }
     }
+
+    public String getL0Trigger() { return mL0Trigger; }
 
     public String getL1Trigger() {
         return mL1Trigger;
@@ -442,6 +448,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        mL0Trigger = sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER);
         mL1Trigger = sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER);
         mL2Trigger = sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER);
         mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
@@ -564,6 +571,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
         }
+        if (serverCommand.getL0Trigger() != null) {
+            mL0Trigger = serverCommand.getL0Trigger();
+        }
         if (serverCommand.getL1Trigger() != null) {
             mL1Trigger = serverCommand.getL1Trigger();
         }
@@ -612,7 +622,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                     .putInt(KEY_LAST_PRECAL_RES_X + i, mLastPrecalResX[i]);
         }
 
-        editor.putString(KEY_L1_TRIGGER, mL1Trigger)
+        editor.putString(KEY_L0_TRIGGER, mL0Trigger)
+                .putString(KEY_L1_TRIGGER, mL1Trigger)
                 .putString(KEY_L2_TRIGGER, mL2Trigger)
                 .putInt(KEY_L1_THRESHOLD, mL1Threshold)
                 .putInt(KEY_L2_THRESHOLD, mL2Threshold)
