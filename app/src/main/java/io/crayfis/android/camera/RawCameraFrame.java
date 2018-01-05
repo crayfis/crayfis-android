@@ -11,9 +11,11 @@ import org.opencv.core.Mat;
 
 import java.util.concurrent.locks.ReentrantLock;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.trigger.L2Task;
 import io.crayfis.android.util.CFLog;
 
 import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
@@ -51,6 +53,10 @@ public abstract class RawCameraFrame {
     private double mPixStd = -1;
 
     Boolean mBufferClaimed = false;
+
+    private boolean mUploadRequested = false;
+
+    private DataProtos.Event.Builder mEventBuilder = null;
 
     // RenderScript objects
 
@@ -219,6 +225,14 @@ public abstract class RawCameraFrame {
         return mGrayMat;
     }
 
+    public void setUploadRequest() {
+        mUploadRequested = true;
+    }
+
+    public boolean uploadRequested() {
+        return mUploadRequested;
+    }
+
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
@@ -231,7 +245,13 @@ public abstract class RawCameraFrame {
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
-    public abstract boolean claim();
+    public boolean claim() {
+        // ensure that calculateStatistics has been called, so that allocated
+        // data doesn't disappear.
+        calculateStatistics();
+
+        return true;
+    }
 
     /**
      * Notify the ExposureBlock we are done with this frame, and free all memory
@@ -412,6 +432,41 @@ public abstract class RawCameraFrame {
             default:
                 throw new RuntimeException("Invalid camera select mode");
         }
+    }
+
+    public DataProtos.Event.Builder getEventBuilder() {
+        if (mEventBuilder != null) return mEventBuilder;
+
+        mEventBuilder = DataProtos.Event.newBuilder();
+
+        mEventBuilder.setTimestamp(getAcquiredTime());
+        mEventBuilder.setTimestampNano(getAcquiredTimeNano());
+        mEventBuilder.setTimestampNtp(getAcquiredTimeNTP());
+        mEventBuilder.setTimestampTarget(getTimestamp());
+        mEventBuilder.setPressure(getPressure());
+        mEventBuilder.setGpsLat(mLocation.getLatitude());
+        mEventBuilder.setGpsLon(mLocation.getLongitude());
+        mEventBuilder.setGpsFixtime(mLocation.getTime());
+        if (mLocation.hasAccuracy()) {
+            mEventBuilder.setGpsAccuracy(mLocation.getAccuracy());
+        }
+        if (mLocation.hasAltitude()) {
+            mEventBuilder.setGpsAltitude(mLocation.getAltitude());
+        }
+
+        mEventBuilder.setOrientX(mOrientation[0]);
+        mEventBuilder.setOrientY(mOrientation[1]);
+        mEventBuilder.setOrientZ(mOrientation[2]);
+
+        mEventBuilder.setAvg(getPixAvg());
+        mEventBuilder.setStd(getPixStd());
+        for (int i=0; i<=mExposureBlock.getL1Thresh(); i++) {
+            mEventBuilder.addHist(mHist[i]);
+        }
+
+        mEventBuilder.setXbn(mExposureBlock.getXBN());
+
+        return mEventBuilder;
     }
 
     /**

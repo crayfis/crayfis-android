@@ -76,6 +76,9 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     public boolean claim() {
+        super.claim();
+
+        if (mBufferClaimed) return true;
 
         Mat mat1 = null;
         Mat mat2 = null;

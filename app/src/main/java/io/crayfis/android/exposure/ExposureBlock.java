@@ -15,7 +15,6 @@ import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.trigger.L1Config;
 import io.crayfis.android.trigger.L2Config;
-import io.crayfis.android.trigger.L2Task.RecoEvent;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
@@ -69,7 +68,7 @@ public class ExposureBlock {
     private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
-    private final ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
+    private final ArrayList<DataProtos.Event> events = new ArrayList<>();
 
     public ExposureBlock(CFApplication application,
                          int xbn, UUID run_id,
@@ -176,13 +175,17 @@ public class ExposureBlock {
 
     public void clearFrame(RawCameraFrame frame) {
         synchronized (assignedFrames) {
+            if (frame.uploadRequested()) {
+                // this frame passed some trigger, so add it to the XB
+                addEvent(frame.getEventBuilder().build());
+            }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
             }
         }
     }
 	
-	public void addEvent(RecoEvent event) {
+	public void addEvent(DataProtos.Event event) {
 		// Don't keep event information during calibration... it's too much data.
 		if (daq_state == CFApplication.State.CALIBRATION) {
 			return;
@@ -191,7 +194,7 @@ public class ExposureBlock {
             events.add(event);
         }
 		
-		int npix = event.getNPix();
+		int npix = event.getPixelsCount();
 
 		total_pixels += npix;
 		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
@@ -270,9 +273,9 @@ public class ExposureBlock {
 		// don't output event information for calibration blocks...
 		// they're really huge.
 		if (daq_state == CFApplication.State.DATA) {
-			for (RecoEvent evt : events) {
+			for (DataProtos.Event evt : events) {
                 try {
-                    buf.addEvents(evt.buildProto());
+                    buf.addEvents(evt);
                 } catch (Exception e) {
                 }
 			}

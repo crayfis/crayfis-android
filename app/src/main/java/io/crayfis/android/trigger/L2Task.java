@@ -67,8 +67,6 @@ public class L2Task implements Runnable {
 
     private RawCameraFrame mFrame = null;
 
-    RecoEvent mEvent = null;
-
     private final Config mConfig;
 
     private final Utils mUtils;
@@ -81,103 +79,6 @@ public class L2Task implements Runnable {
         mConfig = config;
 
         mUtils = new Utils(mApplication);
-    }
-
-    public static class RecoEvent {
-        private final long time;
-        private final long time_nano;
-        private final long time_ntp;
-        private final long time_target;
-        private final Location location;
-        private final float[] orientation;
-        private final float pressure;
-
-        private final int[] hist;
-        private final double background;
-        private final double std;
-
-        int npix_dropped;
-
-        private final int xbn;
-        private final int l1thresh;
-
-        private final ArrayList<RecoPixel> pixels;
-
-        RecoEvent(RawCameraFrame frame, L2Task l2Task) {
-
-            time = frame.getAcquiredTime();
-            time_nano = frame.getAcquiredTimeNano();
-            time_ntp = frame.getAcquiredTimeNTP();
-            time_target = frame.getTimestamp();
-            location = frame.getLocation();
-            orientation = frame.getOrientation();
-            pressure = frame.getPressure();
-
-            hist = frame.getHist();
-            background = frame.getPixAvg();
-            std = frame.getPixStd();
-
-            xbn = frame.getExposureBlock().getXBN();
-            l1thresh = frame.getExposureBlock().getL1Thresh();
-
-            pixels = l2Task.buildPixels(frame);
-        }
-
-        public DataProtos.Event buildProto() {
-            DataProtos.Event.Builder buf = DataProtos.Event.newBuilder();
-
-            buf.setTimestamp(time);
-            buf.setTimestampNano(time_nano);
-            buf.setTimestampNtp(time_ntp);
-            buf.setTimestampTarget(time_target);
-            buf.setPressure(pressure);
-            buf.setGpsLat(location.getLatitude());
-            buf.setGpsLon(location.getLongitude());
-            buf.setGpsFixtime(location.getTime());
-            if (location.hasAccuracy()) {
-                buf.setGpsAccuracy(location.getAccuracy());
-            }
-            if (location.hasAltitude()) {
-                buf.setGpsAltitude(location.getAltitude());
-            }
-
-            buf.setOrientX(orientation[0]);
-            buf.setOrientY(orientation[1]);
-            buf.setOrientZ(orientation[2]);
-
-            buf.setAvg(background);
-            buf.setStd(std);
-            for (int i=0; i<=l1thresh; i++) {
-                buf.addHist(hist[i]);
-            }
-
-            buf.setXbn(xbn);
-
-            if (pixels != null)
-                for (RecoPixel p : pixels) {
-                    try {
-                        buf.addPixels(p.buildProto());
-                    } catch (Exception e) { // do not crash
-                    }
-                }
-
-            return buf.build();
-        }
-
-        public Iterator<RecoPixel> getPixelIterator() {
-            return pixels.iterator();
-        }
-
-        public long getTime() {
-            return time;
-        }
-
-        public int getNPix() {
-            if(pixels == null) {
-                return 0;
-            }
-            return pixels.size();
-        }
     }
 
     public static class RecoPixel {
@@ -322,7 +223,6 @@ public class L2Task implements Runnable {
 
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-                mEvent.npix_dropped++;
             }
 
         }
@@ -338,11 +238,24 @@ public class L2Task implements Runnable {
         ExposureBlock xb = mFrame.getExposureBlock();
         xb.L2_processed++;
 
-        // First, build the event from the raw frame.
-        mEvent = new RecoEvent(mFrame, this);
-        LayoutLiveView lb = LayoutLiveView.getInstance();
-        if(lb.events != null) {
-            lb.addEvent(mEvent);
+        // First, ensure the event is built from the raw frame.
+        //mEvent = new RecoEvent(mFrame, this);
+        DataProtos.Event.Builder eventBuilder = mFrame.getEventBuilder();
+
+        ArrayList<RecoPixel> pixels = buildPixels(mFrame);
+        // add pixel information to the protobuf builder
+        for (RecoPixel p : pixels) {
+            try {
+                eventBuilder.addPixels(p.buildProto());
+            } catch (Exception e) { // do not crash
+            }
+        }
+
+        LayoutLiveView lv = LayoutLiveView.getInstance();
+        if(lv.events != null) {
+            // FIXME: the liveview needs to work with either the new protobuf event or
+            // with just the pixels
+            //lv.addEvent(mEvent);
         }
 
         // If this event was not taken in DATA mode, we're done here.
@@ -350,19 +263,12 @@ public class L2Task implements Runnable {
             return;
         }
 
-        if(mEvent.getNPix() >= 7) {
+        if(pixels.size() >= 7) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
             if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)
                     && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                     || mApplication.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED)) {
-
-                // make a copy of the pixels
-                ArrayList<L2Task.RecoPixel> pixels = new ArrayList<>();
-                Iterator<L2Task.RecoPixel> pixIter = mEvent.getPixelIterator();
-                while(pixIter.hasNext()) {
-                    pixels.add(pixIter.next());
-                }
 
                 mUtils.saveImage(new SavedImage(pixels, mFrame.getPixMax(), mFrame.getWidth(),
                         mFrame.getHeight(), mFrame.getAcquiredTimeNano()));
@@ -370,7 +276,9 @@ public class L2Task implements Runnable {
         }
 
         // Finally, add the event to the proper exposure block
-        xb.addEvent(mEvent);
+        //xb.addEvent(eventBuilder.build());
+        mFrame.setUploadRequest();
+
         // And notify the XB that we are done processing this frame.
         mFrame.clear();
     }

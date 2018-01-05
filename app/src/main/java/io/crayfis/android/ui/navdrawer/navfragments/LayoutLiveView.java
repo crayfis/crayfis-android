@@ -4,8 +4,10 @@ package io.crayfis.android.ui.navdrawer.navfragments;
  * Created by danielwhiteson on 1/29/15.
  */
 
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -69,14 +71,15 @@ public class LayoutLiveView extends CFFragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
+    public ArrayList<Pair<Long, ArrayList<L2Task.RecoPixel>>> events;
     private static final int max_events = 100;
-    public ArrayList<L2Task.RecoEvent> events;
+    //public ArrayList<L2Task.RecoEvent> events;
 
-    public void addEvent(L2Task.RecoEvent p)
+    public void addEvent(Long timestamp, ArrayList<L2Task.RecoPixel> pixels)
     {
         synchronized(event_lock)
         {
-            events.add(p);
+            events.add(Pair.create(timestamp, pixels));
         }
         //CFLog.d(" Layoutblack "+this+" add event with "+p.pixels.size()+ " from time "+p.time+ " #events="+events.size());
 

@@ -127,7 +127,6 @@ public class L2TaskMaxN extends L2Task {
 
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-                mEvent.npix_dropped++;
             }
 
         }

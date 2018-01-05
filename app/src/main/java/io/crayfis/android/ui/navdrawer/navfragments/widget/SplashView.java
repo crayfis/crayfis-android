@@ -14,10 +14,14 @@ import android.os.Handler;
 import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.graphics.RectF;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import android.graphics.Color;
+import android.util.Pair;
 
+import static io.crayfis.android.trigger.L2Task.*;
 import static io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView.*;
 import io.crayfis.android.trigger.L2Task;
 
@@ -99,13 +103,13 @@ public class SplashView extends AppCompatImageView
                 //CFLog.d("The splashView does not have the camera size "+mLayoutBlack);
             }
 
-            Iterator<L2Task.RecoEvent> iterator;
+            Iterator<Pair<Long, ArrayList<L2Task.RecoPixel>>> iterator = mLayoutBlack.events.iterator();
             // loop over events
             for (iterator = mLayoutBlack.events.iterator(); iterator.hasNext();) {
                 // get the event and pixels
 
-                L2Task.RecoEvent event = iterator.next();
-                long event_time = event.getTime();
+                Pair<Long, ArrayList<L2Task.RecoPixel>> event = iterator.next();
+                long event_time = event.first;
                 //CFLog.d(" SplashView draw event with "+pixels.size()+ " from time "+mLayoutBlack.events.get(ie).time);
 
                 // calculate the event age
@@ -117,9 +121,9 @@ public class SplashView extends AppCompatImageView
                     //CFLog.d("Splashview removing event of age " + age + " from time " + event_time);
                     iterator.remove();
                 } else {
-                    Iterator<L2Task.RecoPixel> pixelIterator = event.getPixelIterator();
+                    Iterator<L2Task.RecoPixel> pixelIterator = event.second.iterator();
                     while(pixelIterator.hasNext()) {
-                        L2Task.RecoPixel p = pixelIterator.next();
+                        RecoPixel p = pixelIterator.next();
                         int x = (int)(scale_y*p.getY());
                         int y = (int)(scale_x*p.getX());
 
