@@ -1,10 +1,10 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L1;
 
 import android.os.AsyncTask;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.L1.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.RawCameraFrame;
 
@@ -15,7 +15,7 @@ import io.crayfis.android.camera.RawCameraFrame;
 public class L1Processor {
 
     final CFApplication mApplication;
-    public final L1Config mL1Config;
+    private final L1Config mL1Config;
     public final int mL1Thresh;
 
     L1Calibrator mL1Cal;
@@ -25,13 +25,11 @@ public class L1Processor {
 
     int mBufferBalance = 0;
 
-    L2Processor mL2Processor = null;
-
     final CFConfig CONFIG = CFConfig.getInstance();
 
-    public L1Processor(CFApplication application, L1Config config, int l1thresh) {
+    public L1Processor(CFApplication application, String configStr, int l1thresh) {
         mApplication = application;
-        mL1Config = config;
+        mL1Config = L1Config.makeConfig(configStr);
         mL1Thresh = l1thresh;
         mL1Cal = L1Calibrator.getInstance();
         mPreCal = PreCalibrator.getInstance(application);
@@ -44,5 +42,9 @@ public class L1Processor {
     public void submitFrame(RawCameraFrame frame) {
         mBufferBalance++;
         AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
+    }
+
+    public String getConfig() {
+        return mL1Config.toString();
     }
 }

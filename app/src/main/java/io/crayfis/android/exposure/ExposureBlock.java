@@ -9,15 +9,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.trigger.L0Config;
-import io.crayfis.android.trigger.L0Processor;
-import io.crayfis.android.trigger.L1Processor;
-import io.crayfis.android.trigger.L2Processor;
-import io.crayfis.android.trigger.calibration.Histogram;
+import io.crayfis.android.trigger.L0.L0Processor;
+import io.crayfis.android.trigger.L1.L1Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
+import io.crayfis.android.trigger.L1.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
-import io.crayfis.android.trigger.L1Config;
-import io.crayfis.android.trigger.L2Config;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock implements RawCameraFrame.Callback {
@@ -87,9 +84,9 @@ public class ExposureBlock implements RawCameraFrame.Callback {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.mL0Processor = new L0Processor(APPLICATION, L0Config.makeConfig(L0_config));
-        this.mL1Processor = new L1Processor(APPLICATION, L1Config.makeConfig(L1_config), L1_threshold);
-        this.mL2Processor = new L2Processor(APPLICATION, L2Config.makeConfig(L2_config), L2_threshold);
+        this.mL0Processor = new L0Processor(APPLICATION, L0_config);
+        this.mL1Processor = new L1Processor(APPLICATION, L1_config, L1_threshold);
+        this.mL2Processor = new L2Processor(APPLICATION, L2_config, L2_threshold);
         this.underflow_hist = new Histogram(L1_threshold+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -235,19 +232,19 @@ public class ExposureBlock implements RawCameraFrame.Callback {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
 
-                .setL0Conf(mL0Processor.mL0Config.toString())
+                .setL0Conf(mL0Processor.getConfig())
 
                 .setL1Pass((int) L1_pass)
                 .setL1Processed((int) L1_processed)
                 .setL1Skip((int) L1_skip)
                 .setL1Thresh(mL1Processor.mL1Thresh)
-                .setL1Conf(mL1Processor.mL1Config.toString())
+                .setL1Conf(mL1Processor.getConfig())
 		
 		        .setL2Pass((int) L2_pass)
 		        .setL2Processed((int) L2_processed)
 		        .setL2Skip((int) L2_skip)
 		        .setL2Thresh(mL2Processor.mL2Thresh)
-                .setL2Conf(mL2Processor.mL2Config.toString())
+                .setL2Conf(mL2Processor.getConfig())
 
 				.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())

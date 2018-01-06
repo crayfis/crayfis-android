@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L0;
 
 
 import io.crayfis.android.camera.RawCameraFrame;
@@ -12,18 +12,17 @@ import io.fabric.sdk.android.services.concurrency.AsyncTask;
 
 public class L0Processor {
     final CFApplication mApplication;
-    public final L0Config mL0Config;
+    private final L0Config mL0Config;
 
     public static int mL0Count = 0;
-    public static int mL0CountData;
 
     int mBufferBalance = 0;
 
     final CFConfig CONFIG = CFConfig.getInstance();
 
-    public L0Processor(CFApplication application, L0Config config) {
+    public L0Processor(CFApplication application, String configString) {
         mApplication = application;
-        mL0Config = config;
+        mL0Config = L0Config.makeConfig(configString);
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
@@ -35,5 +34,9 @@ public class L0Processor {
         // Note: we use a serial_executor here so that the zerobias processor
         // sees frames in the order in which they are received.
         AsyncTask.SERIAL_EXECUTOR.execute(makeTask(frame));
+    }
+
+    public String getConfig() {
+        return mL0Config.toString();
     }
 }

@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.trigger.L1.calibration;
 
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.camera.CFCamera;

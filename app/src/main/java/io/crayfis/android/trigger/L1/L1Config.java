@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L1;
 
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
@@ -6,9 +6,9 @@ import io.crayfis.android.util.CFLog;
 /**
  * Created by cshimmin on 5/17/16.
  */
-public abstract class L1Config {
+abstract class L1Config {
 
-    public static L1Config makeConfig(String trigstr) {
+    static L1Config makeConfig(String trigstr) {
         String[] pieces = trigstr.split(";", 2);
 
         String name = pieces[0];
@@ -29,10 +29,10 @@ public abstract class L1Config {
     }
 
 
-    public final String mName;
-    public final String mConfig;
+    private final String mName;
+    private final String mConfig;
 
-    protected L1Config(String name, String cfg) {
+    L1Config(String name, String cfg) {
         mName = name;
         mConfig = cfg;
 
@@ -41,7 +41,7 @@ public abstract class L1Config {
 
     public abstract L1Task makeTask(L1Processor l1Processor, RawCameraFrame frame);
 
-    protected void parseConfig() {
+    void parseConfig() {
         return;
     }
 

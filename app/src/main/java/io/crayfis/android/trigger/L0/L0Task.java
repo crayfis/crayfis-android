@@ -1,12 +1,9 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L0;
 
 import org.opencv.core.Mat;
 
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
@@ -80,7 +77,6 @@ class L0Task implements Runnable {
     private ExposureBlock mExposureBlock;
     private CFApplication mApplication;
     private Config mConfig;
-    private int mCurrentCount;
 
     L0Task(L0Processor l0Processor, RawCameraFrame frame, Config cfg) {
         mL0Processor = l0Processor;
@@ -95,13 +91,12 @@ class L0Task implements Runnable {
         if (mConfig.random) {
             return Math.random() < 1. / mConfig.prescale;
         } else {
-            return (mCurrentCount % mConfig.prescale == 0);
+            return (++L0Processor.mL0Count % mConfig.prescale == 0);
         }
     }
 
     @Override
     public void run() {
-        mCurrentCount = ++L0Processor.mL0Count;
 
         if (isZeroBias()) {
             // do the zero bias things!

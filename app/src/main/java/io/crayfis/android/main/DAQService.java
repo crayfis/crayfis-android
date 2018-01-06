@@ -22,18 +22,16 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.L0Processor;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.L1.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.trigger.L1Processor;
-import io.crayfis.android.trigger.L2Processor;
+import io.crayfis.android.trigger.L1.L1Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
 import io.crayfis.android.ui.navdrawer.navfragments.widget.DataCollectionStatsView;
 

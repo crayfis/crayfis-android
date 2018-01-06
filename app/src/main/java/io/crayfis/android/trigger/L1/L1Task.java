@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L1;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;

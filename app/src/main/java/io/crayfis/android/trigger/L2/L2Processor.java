@@ -1,14 +1,14 @@
-package io.crayfis.android.trigger;
+package io.crayfis.android.trigger.L2;
 
 import android.os.AsyncTask;
 
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.trigger.calibration.FrameHistory;
+import io.crayfis.android.trigger.L1.calibration.FrameHistory;
 import io.crayfis.android.camera.RawCameraFrame;
 
 public class L2Processor {
     final CFApplication mApplication;
-    public final L2Config mL2Config;
+    private final L2Config mL2Config;
     public final int mL2Thresh;
 
     public static int mL2Count = 0;
@@ -16,9 +16,9 @@ public class L2Processor {
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    public L2Processor(CFApplication application, L2Config config, int l2thresh) {
+    public L2Processor(CFApplication application, String configStr, int l2thresh) {
         mApplication = application;
-        mL2Config = config;
+        mL2Config = L2Config.makeConfig(configStr);
         mL2Thresh = l2thresh;
     }
 
@@ -26,7 +26,7 @@ public class L2Processor {
         return mL2Config.makeTask(this, frame);
     }
 
-    void submitFrame(RawCameraFrame frame) {
+    public void submitFrame(RawCameraFrame frame) {
         // the frame ought to be claimed by the L1 stage by the time it gets here!
         assert !frame.isOutstanding();
 
@@ -52,5 +52,9 @@ public class L2Processor {
             double dtMin = dt / 1000000000. / 60.;
             return sPassTimes.size() / dtMin;
         }
+    }
+
+    public String getConfig() {
+        return mL2Config.toString();
     }
 }

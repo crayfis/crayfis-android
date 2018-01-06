@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.trigger.L1.calibration;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
