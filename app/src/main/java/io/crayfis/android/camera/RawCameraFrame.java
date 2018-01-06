@@ -9,6 +9,7 @@ import android.renderscript.Type;
 
 import org.opencv.core.Mat;
 
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
@@ -53,9 +54,9 @@ public abstract class RawCameraFrame {
 
     Boolean mBufferClaimed = false;
 
-    private boolean mUploadRequested = false;
-
-    private DataProtos.Event.Builder mEventBuilder = null;
+    private DataProtos.Event.Builder mEventBuilder;
+    private DataProtos.Event mEvent;
+    private boolean mUploadRequested;
 
     // RenderScript objects
 
@@ -222,10 +223,6 @@ public abstract class RawCameraFrame {
             claim();
         }
         return mGrayMat;
-    }
-
-    public void setUploadRequest() {
-        mUploadRequested = true;
     }
 
     public boolean uploadRequested() {
@@ -433,39 +430,63 @@ public abstract class RawCameraFrame {
         }
     }
 
-    public DataProtos.Event.Builder getEventBuilder() {
-        if (mEventBuilder != null) return mEventBuilder;
+    private DataProtos.Event.Builder getEventBuilder() {
+        if (mEventBuilder == null) {
+            mEventBuilder = DataProtos.Event.newBuilder();
 
-        mEventBuilder = DataProtos.Event.newBuilder();
+            mEventBuilder.setTimestamp(getAcquiredTime())
+                    .setTimestampNano(getAcquiredTimeNano())
+                    .setTimestampNtp(getAcquiredTimeNTP())
+                    .setTimestampTarget(getTimestamp())
+                    .setPressure(getPressure())
+                    .setGpsLat(mLocation.getLatitude())
+                    .setGpsLon(mLocation.getLongitude())
+                    .setGpsFixtime(mLocation.getTime());
+            if (mLocation.hasAccuracy()) {
+                mEventBuilder.setGpsAccuracy(mLocation.getAccuracy());
+            }
+            if (mLocation.hasAltitude()) {
+                mEventBuilder.setGpsAltitude(mLocation.getAltitude());
+            }
 
-        mEventBuilder.setTimestamp(getAcquiredTime());
-        mEventBuilder.setTimestampNano(getAcquiredTimeNano());
-        mEventBuilder.setTimestampNtp(getAcquiredTimeNTP());
-        mEventBuilder.setTimestampTarget(getTimestamp());
-        mEventBuilder.setPressure(getPressure());
-        mEventBuilder.setGpsLat(mLocation.getLatitude());
-        mEventBuilder.setGpsLon(mLocation.getLongitude());
-        mEventBuilder.setGpsFixtime(mLocation.getTime());
-        if (mLocation.hasAccuracy()) {
-            mEventBuilder.setGpsAccuracy(mLocation.getAccuracy());
+            mEventBuilder.setOrientX(mOrientation[0])
+                    .setOrientY(mOrientation[1])
+                    .setOrientZ(mOrientation[2])
+                    .setAvg(getPixAvg())
+                    .setStd(getPixStd());
+            for (int i=0; i<=mExposureBlock.getL1Thresh(); i++) {
+                mEventBuilder.addHist(mHist[i]);
+            }
+
+            mEventBuilder.setXbn(mExposureBlock.getXBN());
         }
-        if (mLocation.hasAltitude()) {
-            mEventBuilder.setGpsAltitude(mLocation.getAltitude());
-        }
-
-        mEventBuilder.setOrientX(mOrientation[0]);
-        mEventBuilder.setOrientY(mOrientation[1]);
-        mEventBuilder.setOrientZ(mOrientation[2]);
-
-        mEventBuilder.setAvg(getPixAvg());
-        mEventBuilder.setStd(getPixStd());
-        for (int i=0; i<=mExposureBlock.getL1Thresh(); i++) {
-            mEventBuilder.addHist(mHist[i]);
-        }
-
-        mEventBuilder.setXbn(mExposureBlock.getXBN());
 
         return mEventBuilder;
+    }
+
+    public void setPixels(List<DataProtos.Pixel> pixels) {
+        mEvent = null;
+        mUploadRequested = true;
+        getEventBuilder().addAllPixels(pixels);
+    }
+
+    public void setZeroBias(Mat zeroBiasWindow) {
+        mEvent = null;
+        mUploadRequested = true;
+        DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
+        for(int iy=0; iy<zeroBiasWindow.width(); iy++) {
+            for(int ix=0; ix<zeroBiasWindow.height(); ix++) {
+                zeroBiasBuilder.addVal((int)zeroBiasWindow.get(ix, iy)[0]);
+            }
+        }
+        getEventBuilder().setZeroBias(zeroBiasBuilder.build());
+    }
+
+    public DataProtos.Event buildEvent() {
+        if(mEvent == null) {
+            mEvent = mEventBuilder.build();
+        }
+        return mEvent;
     }
 
     /**

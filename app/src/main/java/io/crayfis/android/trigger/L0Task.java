@@ -1,5 +1,8 @@
 package io.crayfis.android.trigger;
 
+import org.opencv.core.Mat;
+
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -79,7 +82,7 @@ class L0Task implements Runnable {
     private Config mConfig;
     private int mCurrentCount;
 
-    public L0Task(L0Processor l0Processor, RawCameraFrame frame, Config cfg) {
+    L0Task(L0Processor l0Processor, RawCameraFrame frame, Config cfg) {
         mL0Processor = l0Processor;
         mFrame = frame;
         mExposureBlock = mFrame.getExposureBlock();
@@ -88,7 +91,7 @@ class L0Task implements Runnable {
         mApplication = mL0Processor.mApplication;
     }
 
-    public boolean isZeroBias() {
+    boolean isZeroBias() {
         if (mConfig.random) {
             return Math.random() < 1. / mConfig.prescale;
         } else {
@@ -101,15 +104,19 @@ class L0Task implements Runnable {
         mCurrentCount = ++L0Processor.mL0Count;
 
         if (isZeroBias()) {
-            CFLog.i("Trigger alert!!! (zero bias (a.k.a. microbias))");
-            mFrame.setUploadRequest();
-
             // do the zero bias things!
-            mFrame.claim();
+            Mat grayMat = mFrame.getGrayMat();
 
-            DataProtos.Event.Builder builder = mFrame.getEventBuilder();
+            // find a random pixel to be upper left corner
+            Random r = new Random();
+            int windowSize = mConfig.windowSize;
+            int xMin = r.nextInt(grayMat.width() - windowSize + 1);
+            int yMin = r.nextInt(grayMat.height() - windowSize + 1);
+            Mat window = grayMat.submat(xMin, xMin + windowSize, yMin, yMin + windowSize);
 
-            // add zerobias-related info to the event!
+            // save block to the frame
+            mFrame.setZeroBias(window);
+            window.release();
         }
 
         // now hand off to the L1 processor.

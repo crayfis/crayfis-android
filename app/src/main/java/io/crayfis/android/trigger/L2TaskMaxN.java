@@ -77,9 +77,8 @@ class L2TaskMaxN extends L2Task {
     }
 
     @Override
-    DataProtos.Event buildEvent(RawCameraFrame frame) {
+    void buildPixels(RawCameraFrame frame) {
 
-        DataProtos.Event.Builder eventBuilder = DataProtos.Event.newBuilder();
         ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
         Mat grayMat = frame.getGrayMat();
@@ -131,7 +130,6 @@ class L2TaskMaxN extends L2Task {
 
         }
 
-        return eventBuilder.addAllPixels(pixels)
-                .build();
+        frame.setPixels(pixels);
     }
 }

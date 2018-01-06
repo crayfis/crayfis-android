@@ -10,6 +10,8 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayList;
+
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
@@ -78,9 +80,9 @@ class L2Task implements Runnable {
     }
 
 
-    DataProtos.Event buildEvent(RawCameraFrame frame) {
+    void buildPixels(RawCameraFrame frame) {
 
-        DataProtos.Event.Builder eventBuilder = mFrame.getEventBuilder();
+        ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
         Mat grayMat = frame.getGrayMat();
         Mat threshMat = new Mat();
@@ -129,7 +131,7 @@ class L2Task implements Runnable {
                 grayAvg3.release();
                 grayAvg5.release();
 
-                eventBuilder.addPixels(pixBuilder.build());
+                pixels.add(pixBuilder.build());
 
 
             } catch (OutOfMemoryError e) {
@@ -139,7 +141,7 @@ class L2Task implements Runnable {
         }
         l2PixelCoords.release();
 
-        return eventBuilder.build();
+        mFrame.setPixels(pixels);
     }
 
     @Override
@@ -150,12 +152,12 @@ class L2Task implements Runnable {
         xb.L2_processed++;
 
         // add pixel information to the protobuf builder
-        DataProtos.Event event = buildEvent(mFrame);
+        buildPixels(mFrame);
+
+        DataProtos.Event event = mFrame.buildEvent();
 
         LayoutLiveView lv = LayoutLiveView.getInstance();
         if(lv.events != null) {
-            // FIXME: the liveview needs to work with either the new protobuf event or
-            // with just the pixels
             lv.addEvent(event);
         }
 
@@ -175,9 +177,6 @@ class L2Task implements Runnable {
                         mFrame.getHeight(), mFrame.getAcquiredTimeNano()));
             }
         }
-
-        // Finally, add the event to the proper exposure block
-        mFrame.setUploadRequest();
 
         // And notify the XB that we are done processing this frame.
         mFrame.clear();

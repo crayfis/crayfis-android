@@ -162,9 +162,7 @@ public abstract class CFCamera {
         synchronized(mTimestampHistory) {
             int nframes = mTimestampHistory.size();
             if (nframes>0) {
-                double fps = ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
-                CFLog.d("fps = " + fps);
-                return fps;
+                return ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
             }
         }
 

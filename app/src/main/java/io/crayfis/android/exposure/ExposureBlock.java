@@ -177,7 +177,7 @@ public class ExposureBlock {
         synchronized (assignedFrames) {
             if (frame.uploadRequested()) {
                 // this frame passed some trigger, so add it to the XB
-                addEvent(frame.getEventBuilder().build());
+                addEvent(frame.buildEvent());
             }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
