@@ -159,11 +159,12 @@ public abstract class CFCamera {
      * @return double
      */
     public double getFPS() {
-        long now = System.nanoTime() - CFApplication.getStartTimeNano();
         synchronized(mTimestampHistory) {
             int nframes = mTimestampHistory.size();
             if (nframes>0) {
-                return ((double) nframes) / (now - mTimestampHistory.getOldest()) * 1000000000L;
+                double fps = ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
+                CFLog.d("fps = " + fps);
+                return fps;
             }
         }
 

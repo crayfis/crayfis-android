@@ -183,7 +183,7 @@ class CFCamera2 extends CFCamera {
                         .setTimestamp(mQueuedTimestamps.poll());
 
                 final RawCamera2Frame frame = RCF_BUILDER.build();
-                mTimestampHistory.addValue(frame.getAcquiredTimeNano());
+                mTimestampHistory.addValue(frame.getAcquiredTime());
                 mFrameHandler.post(new Runnable() {
                     @Override
                     public void run() {

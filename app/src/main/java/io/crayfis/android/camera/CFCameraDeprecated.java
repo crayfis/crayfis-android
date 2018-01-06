@@ -159,7 +159,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
 
         RawCameraFrame frame = RCF_BUILDER.build();
-        mTimestampHistory.addValue(frame.getAcquiredTimeNano());
+        mTimestampHistory.addValue(frame.getAcquiredTime());
         if(mCallback != null) {
             mCallback.onRawCameraFrame(frame);
         }
