@@ -1,7 +1,7 @@
 package io.crayfis.android.trigger.L0;
 
 
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.fabric.sdk.android.services.concurrency.AsyncTask;

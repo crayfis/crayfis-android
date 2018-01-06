@@ -20,7 +20,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_downsample;
 import io.crayfis.android.ScriptC_sumFrames;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**

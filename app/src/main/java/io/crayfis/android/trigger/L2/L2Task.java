@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.ui.navdrawer.gallery.SavedImage;
 import io.crayfis.android.ui.navdrawer.gallery.Utils;

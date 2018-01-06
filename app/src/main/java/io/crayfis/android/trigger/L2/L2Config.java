@@ -1,6 +1,6 @@
 package io.crayfis.android.trigger.L2;
 
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**

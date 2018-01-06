@@ -1,5 +1,11 @@
-package io.crayfis.android.camera;
+package io.crayfis.android.exposure.frame;
 
+import android.annotation.TargetApi;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -13,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -68,10 +75,24 @@ public abstract class RawCameraFrame {
     // lock to make sure allocation doesn't change as we're performing weighting
     static final ReentrantLock weightingLock = new ReentrantLock();
 
+    private enum FrameType {
+        DEPRECATED,
+        YUV
+    }
+
     /**
      * Class for creating immutable RawCameraFrames
      */
-    public static abstract class Builder {
+    public static class Builder {
+
+        FrameType bFrameType;
+
+        // Deprecated
+        private byte[] bBytes;
+        private Camera bCamera;
+
+        // Camera2 YUV
+        private Allocation bRaw;
 
         int bCameraId;
         boolean bFacingBack;
@@ -93,7 +114,78 @@ public abstract class RawCameraFrame {
         Allocation bWeighted;
         Allocation bOut;
 
-        void setRenderScript(RenderScript rs, int width, int height) {
+        /**
+         * Method for configuring Builder to create RawCameraDeprecatedFrames
+         *
+         * @param camera Camera
+         * @param cameraId int
+         * @param rs RenderScript context
+         * @return Builder
+         */
+        public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
+
+            bFrameType = FrameType.DEPRECATED;
+            bCamera = camera;
+            Camera.Parameters params = camera.getParameters();
+            Camera.Size sz = params.getPreviewSize();
+            bFrameWidth = sz.width;
+            bFrameHeight = sz.height;
+            bLength = bFrameWidth * bFrameHeight;
+
+            bCameraId = cameraId;
+            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+            Camera.getCameraInfo(cameraId, cameraInfo);
+            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
+
+            setRenderScript(rs, bFrameWidth, bFrameHeight);
+            return this;
+        }
+
+        public Builder setBytes(byte[] bytes) {
+            bBytes = bytes;
+            return this;
+        }
+
+        /**
+         * Method for configuring Builder to create RawCamera2Frames
+         *
+         * @param manager CameraManager
+         * @param cameraId int
+         * @param alloc Allocation camera buffer
+         * @param rs RenderScript context
+         * @return Builder
+         */
+        @TargetApi(21)
+        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
+
+            bFrameType = FrameType.YUV;
+
+            bRaw = alloc;
+
+            Type type = alloc.getType();
+
+            bFrameWidth = type.getX();
+            bFrameHeight = type.getY();
+            bLength = bFrameWidth * bFrameHeight;
+
+            bCameraId = cameraId;
+            try {
+                String[] idList = manager.getCameraIdList();
+                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
+                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+                if (lensFacing != null) {
+                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
+                }
+            } catch (CameraAccessException e) {
+                CFLog.e("CameraAccessException");
+            }
+
+            setRenderScript(rs, bFrameWidth, bFrameHeight);
+
+            return this;
+        }
+
+        private void setRenderScript(RenderScript rs, int width, int height) {
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(width)
                     .setY(height)
@@ -145,6 +237,24 @@ public abstract class RawCameraFrame {
         public Builder setWeights(ScriptC_weight weights) {
             bScriptCWeight = weights;
             return this;
+        }
+
+        public RawCameraFrame build() {
+            switch (bFrameType) {
+                case DEPRECATED:
+                    return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
+                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
+                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+                case YUV:
+                    return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
+                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
+                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+                default:
+                    CFLog.e("Frame builder not configured: returning null");
+                    return null;
+            }
         }
 
     }

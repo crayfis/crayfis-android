@@ -26,7 +26,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.server.UploadExposureService;
 
 

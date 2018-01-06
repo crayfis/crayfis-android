@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.trigger.L1.calibration.FrameHistory;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 
 public class L2Processor {
     final CFApplication mApplication;

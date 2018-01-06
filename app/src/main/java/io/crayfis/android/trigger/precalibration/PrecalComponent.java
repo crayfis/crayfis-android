@@ -5,7 +5,7 @@ import android.renderscript.RenderScript;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 
 /**
  * Created by Jeff on 7/21/2017.

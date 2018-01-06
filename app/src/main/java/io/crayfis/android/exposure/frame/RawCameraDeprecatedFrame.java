@@ -1,10 +1,9 @@
-package io.crayfis.android.camera;
+package io.crayfis.android.exposure.frame;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.location.Location;
 import android.renderscript.Allocation;
-import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
@@ -12,6 +11,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
 import io.crayfis.android.ScriptC_weight;
+import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
 
 /**
@@ -22,7 +22,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     private final Camera mCamera;
 
-    private RawCameraDeprecatedFrame(@NonNull final byte[] bytes,
+    RawCameraDeprecatedFrame(@NonNull final byte[] bytes,
                              final Camera camera,
                              final int cameraId,
                              final boolean facingBack,
@@ -111,51 +111,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                 mRawBytes = null;
             }
         }
-    }
-
-    static class Builder extends RawCameraFrame.Builder {
-
-        private byte[] bBytes;
-        private Camera bCamera;
-
-        public Builder setBytes(byte[] bytes) {
-            bBytes = bytes;
-            return this;
-        }
-
-        /**
-         * Method for configuring Builder to create RawCameraDeprecatedFrames
-         *
-         * @param camera Camera
-         * @param cameraId int
-         * @param rs RenderScript context
-         * @return Builder
-         */
-        public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
-
-            bCamera = camera;
-            Camera.Parameters params = camera.getParameters();
-            Camera.Size sz = params.getPreviewSize();
-            bFrameWidth = sz.width;
-            bFrameHeight = sz.height;
-            bLength = bFrameWidth * bFrameHeight;
-
-            bCameraId = cameraId;
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(cameraId, cameraInfo);
-            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
-
-            setRenderScript(rs, bFrameWidth, bFrameHeight);
-            return this;
-        }
-
-        public RawCameraDeprecatedFrame build() {
-            return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
-                    bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
-                    bOrientation, bRotationZZ, bPressure, bExposureBlock,
-                    bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-        }
-
     }
 
 }

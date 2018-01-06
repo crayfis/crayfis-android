@@ -14,7 +14,7 @@ import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.L1.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock implements RawCameraFrame.Callback {

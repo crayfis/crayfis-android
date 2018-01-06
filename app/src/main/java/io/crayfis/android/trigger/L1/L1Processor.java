@@ -6,7 +6,7 @@ import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.L1.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
-import io.crayfis.android.camera.RawCameraFrame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 
 /**
  * Created by cshimmin on 5/4/16.
