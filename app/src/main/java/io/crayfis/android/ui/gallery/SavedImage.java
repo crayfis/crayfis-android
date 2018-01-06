@@ -3,16 +3,16 @@ package io.crayfis.android.ui.gallery;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.util.CFLog;
 
 
 import com.crashlytics.android.Crashlytics;
 
-import java.util.ArrayList;
-
-import io.crayfis.android.trigger.L2Task;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by danielwhiteson on 11/20/14.
@@ -48,7 +48,7 @@ public class SavedImage {
         }
     }
 
-    public SavedImage(ArrayList<L2Task.RecoPixel> pixels,int max,int width,int height, long t)
+    public SavedImage(List<DataProtos.Pixel> pixels, int max, int width, int height, long t)
     {
 
         max_pix=max;
@@ -67,7 +67,7 @@ public class SavedImage {
         int miny = height - 1;
 
         for (int i = 0; i < pixels.size(); i++) {
-            L2Task.RecoPixel pix = pixels.get(i);
+            DataProtos.Pixel pix = pixels.get(i);
 
             int x = pix.getX();
             int y = pix.getY();
@@ -96,7 +96,7 @@ public class SavedImage {
             if (bitmap != null) {
                 // put all pixels in the bitmap
                 for (int i = 0; i < pixels.size(); i++) {
-                    L2Task.RecoPixel pix = pixels.get(i);
+                    DataProtos.Pixel pix = pixels.get(i);
                     int x = pix.getX() - minx;
                     int y = pix.getY() - miny;
                     int val = (int) (255 * (pix.getVal() / (1.0 * max)));

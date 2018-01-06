@@ -4,10 +4,8 @@ package io.crayfis.android.ui.navdrawer.navfragments;
  * Created by danielwhiteson on 1/29/15.
  */
 
-import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +15,8 @@ import android.hardware.Camera;
 import android.content.Context;
 import java.util.ArrayList;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.L2Task;
 import io.crayfis.android.ui.navdrawer.navfragments.widget.SplashView;
 
 public class LayoutLiveView extends CFFragment {
@@ -67,19 +65,18 @@ public class LayoutLiveView extends CFFragment {
                }
            }
         }
-        else {  }
+
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    public ArrayList<Pair<Long, ArrayList<L2Task.RecoPixel>>> events;
+    public ArrayList<DataProtos.Event> events;
     private static final int max_events = 100;
-    //public ArrayList<L2Task.RecoEvent> events;
 
-    public void addEvent(Long timestamp, ArrayList<L2Task.RecoPixel> pixels)
+    public void addEvent(DataProtos.Event event)
     {
         synchronized(event_lock)
         {
-            events.add(Pair.create(timestamp, pixels));
+            events.add(event);
         }
         //CFLog.d(" Layoutblack "+this+" add event with "+p.pixels.size()+ " from time "+p.time+ " #events="+events.size());
 

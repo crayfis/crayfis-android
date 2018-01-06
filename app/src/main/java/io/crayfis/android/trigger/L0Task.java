@@ -13,7 +13,7 @@ import io.crayfis.android.util.CFLog;
  * Created by cshimmin on 1/4/18.
  */
 
-public class L0Task implements Runnable {
+class L0Task implements Runnable {
     public static class Config extends L0Config {
 
         public final int DEFAULT_PRESCALE = 1000;

@@ -5,6 +5,8 @@ package io.crayfis.android.ui.navdrawer.navfragments.widget;
  */
 
 import android.hardware.Camera;
+
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView;
 
 import android.graphics.Paint;
@@ -15,15 +17,9 @@ import android.support.v7.widget.AppCompatImageView;
 import android.util.AttributeSet;
 import android.graphics.RectF;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import android.graphics.Color;
-import android.util.Pair;
 
-import static io.crayfis.android.trigger.L2Task.*;
 import static io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView.*;
-import io.crayfis.android.trigger.L2Task;
 
 public class SplashView extends AppCompatImageView
 {
@@ -99,17 +95,13 @@ public class SplashView extends AppCompatImageView
                 scale_x = maxCanvasY / ((float) 1.1 * maxCameraX);  // 1.1 to avoid off screen edge effects
                 scale_y = maxCanvasX / ((float) 1.1 * maxCameraY);
                 //CFLog.d("Splashview camera = "+maxCameraX+","+maxCameraY+" canvas = "+maxCanvasX+", "+maxCanvasY+" scaling = "+scale_x+", "+scale_y);
-            } else {
-                //CFLog.d("The splashView does not have the camera size "+mLayoutBlack);
             }
 
-            Iterator<Pair<Long, ArrayList<L2Task.RecoPixel>>> iterator = mLayoutBlack.events.iterator();
             // loop over events
-            for (iterator = mLayoutBlack.events.iterator(); iterator.hasNext();) {
+            for (DataProtos.Event event: mLayoutBlack.events) {
                 // get the event and pixels
 
-                Pair<Long, ArrayList<L2Task.RecoPixel>> event = iterator.next();
-                long event_time = event.first;
+                long event_time = event.getTimestamp();
                 //CFLog.d(" SplashView draw event with "+pixels.size()+ " from time "+mLayoutBlack.events.get(ie).time);
 
                 // calculate the event age
@@ -117,17 +109,12 @@ public class SplashView extends AppCompatImageView
 
                 // remove it if it's too old
                 float ms_to_show = (float) 10000.0;
-                if (age > ms_to_show) {
-                    //CFLog.d("Splashview removing event of age " + age + " from time " + event_time);
-                    iterator.remove();
-                } else {
-                    Iterator<L2Task.RecoPixel> pixelIterator = event.second.iterator();
-                    while(pixelIterator.hasNext()) {
-                        RecoPixel p = pixelIterator.next();
-                        int x = (int)(scale_y*p.getY());
-                        int y = (int)(scale_x*p.getX());
+                if (age <= ms_to_show) {
+                    for(DataProtos.Pixel pix : event.getPixelsList()) {
+                        int x = (int)(scale_y*pix.getY());
+                        int y = (int)(scale_x*pix.getX());
 
-                        int size = 8 + (int) Math.sqrt(p.getVal());
+                        int size = 8 + (int) Math.sqrt(pix.getVal());
                         int trans = (int) (255 * (1.0 - (age / ms_to_show)));
                         if (trans < 0) trans = 0;
                         circleRect.set(x - size, y - size, x + size, y + size);

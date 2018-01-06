@@ -1,5 +1,7 @@
 package io.crayfis.android.trigger;
 
+import android.provider.ContactsContract;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.ui.navdrawer.navfragments.LayoutData;
@@ -16,11 +19,11 @@ import io.crayfis.android.util.CFLog;
 /**
  * Created by cshimmin on 5/16/16.
  */
-public class L2TaskMaxN extends L2Task {
+class L2TaskMaxN extends L2Task {
     public static class Config extends L2Config {
-        public static final int DEFAULT_NPIX = 25;
+        static final int DEFAULT_NPIX = 25;
 
-        public final int npix;
+        final int npix;
         Config(String name, String cfg) {
             super(name, cfg);
 
@@ -39,7 +42,6 @@ public class L2TaskMaxN extends L2Task {
                         cfg_npix = Integer.parseInt(value);
                     } catch (NumberFormatException e) {
                         CFLog.w("Couldn't parse npix argument for L2 configuraion!");
-                        continue;
                     }
                 }
             }
@@ -53,7 +55,7 @@ public class L2TaskMaxN extends L2Task {
         }
     }
 
-    public static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
+    private static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
     private final int mNpix;
 
     private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
@@ -61,24 +63,24 @@ public class L2TaskMaxN extends L2Task {
         mNpix = npix;
     }
 
-    private static class PixelComparator implements Comparator<RecoPixel> {
+    private static class PixelComparator implements Comparator<DataProtos.Pixel> {
 
         @Override
-        public int compare(RecoPixel recoPixel, RecoPixel t1) {
-            return t1.val - recoPixel.val;
+        public int compare(DataProtos.Pixel recoPixel, DataProtos.Pixel t1) {
+            return t1.getAdjustedVal() - recoPixel.getAdjustedVal();
         }
     }
-    private void prunePixels(ArrayList<RecoPixel> pixels, int N) {
-        if (pixels.size() <= N) { return; }
-        //Collections.sort(pixels, PIXEL_COMPARATOR);
+    private void prunePixels(ArrayList<DataProtos.Pixel> pixels, int N) {
+        if (pixels.size() <= N) return;
+        Collections.sort(pixels, PIXEL_COMPARATOR);
         pixels.subList(N, pixels.size()).clear();
     }
 
     @Override
-    ArrayList<RecoPixel> buildPixels(RawCameraFrame frame) {
+    DataProtos.Event buildEvent(RawCameraFrame frame) {
 
-        ArrayList<RecoPixel> pixels = new ArrayList<>();
-
+        DataProtos.Event.Builder eventBuilder = DataProtos.Event.newBuilder();
+        ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
         Mat grayMat = frame.getGrayMat();
         Mat threshMat = new Mat();
@@ -103,26 +105,24 @@ public class L2TaskMaxN extends L2Task {
 
             LayoutData.appendData(val);
             try {
-                RecoPixel.Builder builder = new RecoPixel.Builder();
-                builder.setX(ix)
-                        .setY(iy)
-                        .setVal(val)
-                        .setAdjustedVal(adjustedVal);
-
+                DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
                 Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
                         Math.max(ix-1,0), Math.min(ix+2,width));
                 Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
                         Math.max(ix-2,0), Math.min(ix+3,width));
 
-                builder.setAvg3((float)Core.mean(grayAvg3).val[0])
+                pixBuilder.setX(ix)
+                        .setY(iy)
+                        .setVal(val)
+                        .setAdjustedVal(adjustedVal)
+                        .setAvg3((float)Core.mean(grayAvg3).val[0])
                         .setAvg5((float)Core.mean(grayAvg5).val[0])
                         .setAvg5((int)Core.minMaxLoc(grayAvg3).maxVal);
 
                 grayAvg3.release();
                 grayAvg5.release();
 
-                pixels.add(builder.build());
-                Collections.sort(pixels, PIXEL_COMPARATOR);
+                pixels.add(pixBuilder.build());
                 prunePixels(pixels, mNpix);
 
             } catch (OutOfMemoryError e) {
@@ -131,6 +131,7 @@ public class L2TaskMaxN extends L2Task {
 
         }
 
-        return pixels;
+        return eventBuilder.addAllPixels(pixels)
+                .build();
     }
 }

@@ -15,7 +15,6 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.trigger.L2Task;
 import io.crayfis.android.util.CFLog;
 
 import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
@@ -31,7 +30,7 @@ public abstract class RawCameraFrame {
 
     byte[] mRawBytes;
     Mat mGrayMat;
-    int[] mHist = new int[256];
+    private int[] mHist = new int[256];
 
     private final int mCameraId;
     private final boolean mFacingBack;
