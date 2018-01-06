@@ -8,19 +8,22 @@ import io.crayfis.android.camera.RawCameraFrame;
 
 public class L2Processor {
     final CFApplication mApplication;
+    public final L2Config mL2Config;
+    public final int mL2Thresh;
 
     public static int mL2Count = 0;
 
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    L2Processor(CFApplication application) {
-        // TODO: it will make more sense to have the triggerType assigned to the XB and then get it from there.
+    public L2Processor(CFApplication application, L2Config config, int l2thresh) {
         mApplication = application;
+        mL2Config = config;
+        mL2Thresh = l2thresh;
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
-        return frame.getExposureBlock().getL2Config().makeTask(this, frame);
+        return mL2Config.makeTask(this, frame);
     }
 
     void submitFrame(RawCameraFrame frame) {

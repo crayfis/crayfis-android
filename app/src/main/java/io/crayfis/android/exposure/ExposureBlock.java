@@ -10,6 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.trigger.L0Config;
+import io.crayfis.android.trigger.L0Processor;
+import io.crayfis.android.trigger.L1Processor;
+import io.crayfis.android.trigger.L2Processor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.camera.RawCameraFrame;
@@ -17,7 +20,7 @@ import io.crayfis.android.trigger.L1Config;
 import io.crayfis.android.trigger.L2Config;
 import io.crayfis.android.util.CFLog;
 
-public class ExposureBlock {
+public class ExposureBlock implements RawCameraFrame.Callback {
 
     private final CFApplication APPLICATION;
 
@@ -35,12 +38,9 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-	private final L0Config L0_trigger_config;
-    private final L1Config L1_trigger_config;
-    private final L2Config L2_trigger_config;
-
-    private final int L1_threshold;
-	private final int L2_threshold;
+	public final L0Processor mL0Processor;
+    public final L1Processor mL1Processor;
+    public final L2Processor mL2Processor;
 
     public long L1_processed;
 	public long L1_pass;
@@ -87,11 +87,9 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.L0_trigger_config = L0Config.makeConfig(L0_config);
-        this.L1_trigger_config = L1Config.makeConfig(L1_config);
-        this.L2_trigger_config = L2Config.makeConfig(L2_config);
-        this.L1_threshold = L1_threshold;
-        this.L2_threshold = L2_threshold;
+        this.mL0Processor = new L0Processor(APPLICATION, L0Config.makeConfig(L0_config));
+        this.mL1Processor = new L1Processor(APPLICATION, L1Config.makeConfig(L1_config), L1_threshold);
+        this.mL2Processor = new L2Processor(APPLICATION, L2Config.makeConfig(L2_config), L2_threshold);
         this.underflow_hist = new Histogram(L1_threshold+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -103,7 +101,24 @@ public class ExposureBlock {
         L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
     }
-	
+
+    @Override
+    public void onRawCameraFrame(RawCameraFrame frame) {
+
+        // if we fail to assign the block to the XB, just drop it.
+        if (!assignFrame(frame)) {
+            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
+            frame.retire();
+            return;
+        }
+
+        // If we made it here, we can submit the XB to the L1Processor.
+        // It will pop the assigned frame from the XB's internal list, and will also handle
+        // recycling the buffers.
+        mL0Processor.submitFrame(frame);
+
+    }
+
 	public long nanoAge() {
 		if (frozen) {
 			return end_time.Nano - start_time.Nano;
@@ -219,17 +234,20 @@ public class ExposureBlock {
 	DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
+
+                .setL0Conf(mL0Processor.mL0Config.toString())
+
                 .setL1Pass((int) L1_pass)
                 .setL1Processed((int) L1_processed)
                 .setL1Skip((int) L1_skip)
-                .setL1Thresh(L1_threshold)
-                .setL1Conf(L1_trigger_config.toString())
+                .setL1Thresh(mL1Processor.mL1Thresh)
+                .setL1Conf(mL1Processor.mL1Config.toString())
 		
 		        .setL2Pass((int) L2_pass)
 		        .setL2Processed((int) L2_processed)
 		        .setL2Skip((int) L2_skip)
-		        .setL2Thresh(L2_threshold)
-                .setL2Conf(L2_trigger_config.toString())
+		        .setL2Thresh(mL2Processor.mL2Thresh)
+                .setL2Conf(mL2Processor.mL2Config.toString())
 
 				.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())
@@ -289,22 +307,12 @@ public class ExposureBlock {
 		return buf.toByteArray();
 	}
 
-	public L0Config getL0Config() { return L0_trigger_config; }
-
-    public L1Config getL1Config() {
-        return L1_trigger_config;
-    }
-
     public int getL1Thresh() {
-        return L1_threshold;
-    }
-
-    public L2Config getL2Config() {
-        return L2_trigger_config;
+        return mL1Processor.mL1Thresh;
     }
 
     public int getL2Thresh() {
-        return L2_threshold;
+        return mL2Processor.mL2Thresh;
     }
 
     public long getStartTimeNano() {

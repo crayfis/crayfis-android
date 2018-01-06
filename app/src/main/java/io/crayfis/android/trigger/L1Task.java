@@ -27,7 +27,6 @@ class L1Task implements Runnable {
     }
 
     private L1Processor mL1Processor = null;
-    private L2Processor mL2Processor = null;
     private RawCameraFrame mFrame = null;
     private ExposureBlock mExposureBlock = null;
     private CFApplication mApplication = null;
@@ -41,7 +40,6 @@ class L1Task implements Runnable {
         mExposureBlock = mFrame.getExposureBlock();
 
         mApplication = mL1Processor.mApplication;
-        mL2Processor = mL1Processor.mL2Processor;
     }
 
     protected boolean processInitial() {
@@ -119,7 +117,7 @@ class L1Task implements Runnable {
 
         mExposureBlock.underflow_hist.fill(mFrame.getHist());
 
-        if (max > mExposureBlock.getL1Thresh()) {
+        if (max > mL1Processor.mL1Thresh) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
 
@@ -132,7 +130,7 @@ class L1Task implements Runnable {
             if(mFrame.claim()) {
                 // this frame has passed the L1 threshold, put it on the
                 // L2 processing queue.
-                mL2Processor.submitFrame(mFrame);
+                mExposureBlock.mL2Processor.submitFrame(mFrame);
                 mKeepFrame = true;
             } else {
                 // out of memory: skip the frame

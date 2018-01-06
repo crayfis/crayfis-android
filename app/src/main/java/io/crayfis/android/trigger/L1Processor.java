@@ -15,6 +15,8 @@ import io.crayfis.android.camera.RawCameraFrame;
 public class L1Processor {
 
     final CFApplication mApplication;
+    public final L1Config mL1Config;
+    public final int mL1Thresh;
 
     L1Calibrator mL1Cal;
     PreCalibrator mPreCal;
@@ -27,15 +29,16 @@ public class L1Processor {
 
     final CFConfig CONFIG = CFConfig.getInstance();
 
-    public L1Processor(CFApplication application) {
+    public L1Processor(CFApplication application, L1Config config, int l1thresh) {
         mApplication = application;
-        mL2Processor = new L2Processor(application);
+        mL1Config = config;
+        mL1Thresh = l1thresh;
         mL1Cal = L1Calibrator.getInstance();
         mPreCal = PreCalibrator.getInstance(application);
     }
 
     private Runnable makeTask(RawCameraFrame frame) {
-        return frame.getExposureBlock().getL1Config().makeTask(this, frame);
+        return mL1Config.makeTask(this, frame);
     }
 
     public void submitFrame(RawCameraFrame frame) {

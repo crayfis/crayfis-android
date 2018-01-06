@@ -31,8 +31,6 @@ public abstract class CFCamera {
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
 
-    RawCameraFrame.Callback mCallback;
-
     int mCameraId = -1;
 
     int mResX;
@@ -73,7 +71,6 @@ public abstract class CFCamera {
      * @param context The Application context
      */
     public void register(Context context) {
-        if(mCallback == null) return;
         mApplication = (CFApplication) context;
         mRS = mApplication.getRenderScript();
 
@@ -204,10 +201,6 @@ public abstract class CFCamera {
         }
         devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
         return devtxt;
-    }
-    
-    public void setCallback(RawCameraFrame.Callback callback) {
-        mCallback = callback;
     }
 
     public abstract RawCameraFrame.Builder getFrameBuilder();

@@ -41,7 +41,7 @@ import io.crayfis.android.ui.navdrawer.navfragments.widget.DataCollectionStatsVi
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements RawCameraFrame.Callback {
+public class DAQService extends Service {
 
     static {
         if(OpenCVLoader.initDebug()) {
@@ -172,7 +172,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
                 // Frame Processing
 
-                mL0Processor = new L0Processor(mApplication);
                 mPreCal = PreCalibrator.getInstance(context);
                 L1cal = L1Calibrator.getInstance();
 
@@ -182,7 +181,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 // start camera
 
                 mCFCamera = CFCamera.getInstance();
-                mCFCamera.setCallback(this);
                 mCFCamera.register(context);
 
                 break;
@@ -440,31 +438,11 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     //////////////////////
 
     private ExposureBlockManager xbManager;
-    // helper that dispatches L0 inputs to be processed by the L0 trigger.
-    private L0Processor mL0Processor = null;
 
     private L1Calibrator L1cal;
     private PreCalibrator mPreCal;
 
     private Context context;
-
-
-    @Override
-    public void onRawCameraFrame(RawCameraFrame frame) {
-
-        // if we fail to assign the block to the XB, just drop it.
-        if (!frame.getExposureBlock().assignFrame(frame)) {
-            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
-            frame.retire();
-            return;
-        }
-
-        // If we made it here, we can submit the XB to the L1Processor.
-        // It will pop the assigned frame from the XB's internal list, and will also handle
-        // recycling the buffers.
-        mL0Processor.submitFrame(frame);
-
-    }
 
 
     /////////////////

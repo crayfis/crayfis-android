@@ -188,7 +188,7 @@ class CFCamera2 extends CFCamera {
                     @Override
                     public void run() {
                         frame.receiveBytes();
-                        mCallback.onRawCameraFrame(frame);
+                        frame.getExposureBlock().onRawCameraFrame(frame);
                     }
                 });
                 mBuffersQueued.decrementAndGet();

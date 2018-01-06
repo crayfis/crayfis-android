@@ -75,10 +75,10 @@ class L0Task implements Runnable {
         }
     }
 
-    private L0Processor mL0Processor = null;
-    private RawCameraFrame mFrame = null;
-    private ExposureBlock mExposureBlock = null;
-    private CFApplication mApplication = null;
+    private L0Processor mL0Processor;
+    private RawCameraFrame mFrame;
+    private ExposureBlock mExposureBlock;
+    private CFApplication mApplication;
     private Config mConfig;
     private int mCurrentCount;
 
@@ -120,6 +120,6 @@ class L0Task implements Runnable {
         }
 
         // now hand off to the L1 processor.
-        mL0Processor.mL1Processor.submitFrame(mFrame);
+        mExposureBlock.mL1Processor.submitFrame(mFrame);
     }
 }
