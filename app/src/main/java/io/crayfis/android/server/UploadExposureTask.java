@@ -30,13 +30,10 @@ import io.crayfis.android.util.CFLog;
  * parse any response from the server and update the local configuration accordingly through
  * {@link CFConfig#updateFromServer(ServerCommand)}.
  */
-public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
+class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
     private static final String INVALID_FILE = "invalid_file";
     private static final String MALFORMED_FILE = "malformed";
-
-    public static final AtomicBoolean sPermitUpload = new AtomicBoolean(true);
-    public static final AtomicBoolean sValidId = new AtomicBoolean(true);
 
     private final CFApplication mApplication;
     private final UploadExposureService.ServerInfo mServerInfo;
@@ -158,7 +155,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             // server rejected us! so we are not allowed to upload.
             // oh well! we can still take data at least.
 
-            sPermitUpload.set(false);
+            UploadExposureService.sPermitUpload.set(false);
 
             if (serverResponseCode == 401) {
                 // server rejected us because our app code is invalid.
@@ -166,7 +163,7 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
                 editor.putBoolean("badID", true);
                 editor.apply();
                 CFLog.w("Setting bad ID flag!");
-                sValidId.set(false);
+                UploadExposureService.sValidId.set(false);
             }
 
             return Boolean.FALSE;
@@ -194,13 +191,13 @@ public class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             SharedPreferences.Editor editor = sharedprefs.edit();
             editor.putBoolean("badID", false);
             editor.apply();
-            sValidId.set(true);
+            UploadExposureService.sValidId.set(true);
         }
 
         return Boolean.TRUE;
     }
 
     private boolean canUpload() {
-        return mApplication.isNetworkAvailable() && sPermitUpload.get() && sValidId.get();
+        return mApplication.isNetworkAvailable() && UploadExposureService.sPermitUpload.get() && UploadExposureService.sValidId.get();
     }
 }

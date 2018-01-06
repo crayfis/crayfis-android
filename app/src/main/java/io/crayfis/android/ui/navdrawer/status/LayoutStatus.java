@@ -26,7 +26,7 @@ import io.crayfis.android.util.CFUtil;
 import io.crayfis.android.main.DAQActivity;
 import io.crayfis.android.main.DAQService;
 import io.crayfis.android.R;
-import io.crayfis.android.server.UploadExposureTask;
+import io.crayfis.android.server.UploadExposureService;
 
 /**
  * Fragment for showing current data collection status.
@@ -227,9 +227,9 @@ public class LayoutStatus extends NavDrawerFragment {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);
-        } else if (!UploadExposureTask.sValidId.get()) {
+        } else if (!UploadExposureService.sValidId.get()) {
             setErrorMessage(R.string.bad_user_code);
-        } else if (!UploadExposureTask.sPermitUpload.get()) {
+        } else if (!UploadExposureService.sPermitUpload.get()) {
             setErrorMessage(R.string.server_overload);
         } else {
             setErrorMessage(0);
