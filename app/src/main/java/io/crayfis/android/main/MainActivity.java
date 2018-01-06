@@ -33,9 +33,9 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
-import io.crayfis.android.ui.ConfigureAutostartActivity;
+import io.crayfis.android.ui.settings.ConfigureAutostartActivity;
 import io.crayfis.android.R;
-import io.crayfis.android.ui.UserNotificationActivity;
+import io.crayfis.android.ui.usernotif.UserNotificationActivity;
 import io.crayfis.android.util.CFLog;
 
 

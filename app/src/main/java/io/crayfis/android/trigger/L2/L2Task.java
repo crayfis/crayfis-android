@@ -17,10 +17,10 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.ui.gallery.SavedImage;
-import io.crayfis.android.ui.gallery.Utils;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutData;
+import io.crayfis.android.ui.navdrawer.gallery.SavedImage;
+import io.crayfis.android.ui.navdrawer.gallery.Utils;
+import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
+import io.crayfis.android.ui.navdrawer.data.LayoutData;
 import io.crayfis.android.util.CFLog;
 
 /**

@@ -4,7 +4,7 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <io.crayfis.android.ui.navdrawer.navfragments.widget.SpeedometerView
+    <io.crayfis.android.ui.navdrawer.dosimeter.SpeedometerView
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:id="@+id/needle_view" />

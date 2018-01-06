@@ -53,14 +53,15 @@ import android.widget.Toast;
 import java.util.List;
 
 import io.crayfis.android.R;
-import io.crayfis.android.ui.UserSettingActivity;
+import io.crayfis.android.ui.navdrawer.your_account.UserStatusView;
+import io.crayfis.android.ui.settings.UserSettingActivity;
 import io.crayfis.android.ui.navdrawer.NavDrawerAdapter;
 import io.crayfis.android.ui.navdrawer.NavHelper;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.ui.navdrawer.navfragments.CFFragment;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutStatus;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutFeedback;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutLogin;
+import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
+import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
+import io.crayfis.android.ui.navdrawer.feedback.LayoutFeedback;
+import io.crayfis.android.ui.navdrawer.your_account.LayoutYourAccount;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -157,7 +158,7 @@ public class DAQActivity extends AppCompatActivity {
             }
         };
 
-        final View userStatus = findViewById(R.id.user_status);
+        final UserStatusView userStatus = (UserStatusView) findViewById(R.id.user_status);
         if (userStatus != null) {
             userStatus.postInvalidate();
         }
@@ -311,7 +312,7 @@ public class DAQActivity extends AppCompatActivity {
             @Override
             public void onClick(final View v) {
                 if (CONFIG.getAccountName() == null) {
-                    NavHelper.setFragment(DAQActivity.this, new LayoutLogin(), null);
+                    NavHelper.setFragment(DAQActivity.this, new LayoutYourAccount(), null);
                     drawerLayout.closeDrawers();
                 }
             }
@@ -354,7 +355,7 @@ public class DAQActivity extends AppCompatActivity {
             return;
         }
 
-        final CFFragment activeFragment = (CFFragment) fragments.get(fragments.size()-1);
+        final NavDrawerFragment activeFragment = (NavDrawerFragment) fragments.get(fragments.size()-1);
 
         final Resources res = getResources();
         tx1.setText(res.getString(R.string.crayfis_about) + "\n"

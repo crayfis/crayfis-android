@@ -40,7 +40,7 @@
             android:background="?attr/colorPrimaryDark"
             android:src="@drawable/crayfish_white" />
 
-        <io.crayfis.android.ui.userstatus.UserStatusView
+        <io.crayfis.android.ui.navdrawer.your_account.UserStatusView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/standard_margin"

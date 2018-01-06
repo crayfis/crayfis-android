@@ -32,7 +32,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutStatus;
+import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
 import io.crayfis.android.util.CFLog;
 import io.fabric.sdk.android.Fabric;
 

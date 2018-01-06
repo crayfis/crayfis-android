@@ -23,7 +23,7 @@
         android:layout_below="@id/data_collection_status"
         style="@style/DataCollectionFragment.Message"/>
 
-    <io.crayfis.android.ui.navdrawer.navfragments.widget.DataCollectionStatsView
+    <io.crayfis.android.ui.navdrawer.status.DataCollectionStatsView
         android:id="@+id/data_collection_stats"
         android:layout_below="@id/data_collection_message"
         android:layout_width="match_parent"

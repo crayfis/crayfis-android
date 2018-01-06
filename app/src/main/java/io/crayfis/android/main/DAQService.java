@@ -33,7 +33,7 @@ import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.ui.navdrawer.navfragments.widget.DataCollectionStatsView;
+import io.crayfis.android.ui.navdrawer.status.DataCollectionStatsView;
 
 /**
  * Created by Jeff on 2/17/2017.
