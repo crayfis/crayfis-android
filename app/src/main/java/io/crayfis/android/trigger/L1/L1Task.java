@@ -26,15 +26,15 @@ class L1Task implements Runnable {
         }
     }
 
-    private L1Processor mL1Processor = null;
-    private RawCameraFrame mFrame = null;
-    private ExposureBlock mExposureBlock = null;
-    private CFApplication mApplication = null;
+    private L1Processor mL1Processor;
+    private RawCameraFrame mFrame;
+    private ExposureBlock mExposureBlock;
+    private CFApplication mApplication;
     private boolean mKeepFrame = false;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    public L1Task(L1Processor l1processor, RawCameraFrame frame) {
+    L1Task(L1Processor l1processor, RawCameraFrame frame) {
         mL1Processor = l1processor;
         mFrame = frame;
         mExposureBlock = mFrame.getExposureBlock();
@@ -42,7 +42,7 @@ class L1Task implements Runnable {
         mApplication = mL1Processor.mApplication;
     }
 
-    protected boolean processInitial() {
+    boolean processInitial() {
         // check for quality data
         if(!mFrame.isQuality()) {
             CFCamera camera = CFCamera.getInstance();
@@ -67,7 +67,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected boolean processPreCalibration() {
+    boolean processPreCalibration() {
 
         if(mL1Processor.mPreCal.addFrame(mFrame)) {
             mApplication.setNewestPrecalUUID();
@@ -80,7 +80,7 @@ class L1Task implements Runnable {
         return false;
     }
 
-    protected boolean processCalibration() {
+    boolean processCalibration() {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = mExposureBlock.count.incrementAndGet();
@@ -93,7 +93,7 @@ class L1Task implements Runnable {
         return true;
     }
 
-    protected boolean processStabilization() {
+    boolean processStabilization() {
         // If we're in stabilization mode, just drop frames until we've skipped enough
         long count = mExposureBlock.count.incrementAndGet();
         if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
@@ -102,16 +102,16 @@ class L1Task implements Runnable {
         return true;
     }
 
-    protected boolean processIdle() {
+    boolean processIdle() {
         // Not sure why we're still acquiring frames in IDLE mode...
         CFLog.w("DAQActivity Frames still being received in IDLE mode");
         return true;
     }
 
-    protected boolean processData() {
+    boolean processData() {
 
         mL1Processor.mL1Cal.addFrame(mFrame);
-        mL1Processor.mL1CountData++;
+        L1Processor.L1CountData++;
 
         int max = mFrame.getPixMax();
 
@@ -121,7 +121,7 @@ class L1Task implements Runnable {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
 
-            mExposureBlock.L1_pass++;
+            mL1Processor.pass++;
 
 
 
@@ -134,21 +134,21 @@ class L1Task implements Runnable {
                 mKeepFrame = true;
             } else {
                 // out of memory: skip the frame
-                mExposureBlock.L2_skip++;
+                mExposureBlock.mL2Processor.skip++;
             }
 
         } else {
             // didn't pass. recycle the buffer.
-            mExposureBlock.L1_skip++;
+            mL1Processor.skip++;
         }
 
         return false;
     }
 
-    protected void processFinal() {
+    void processFinal() {
     }
 
-    protected void processFrame() {
+    void processFrame() {
 
         if (processInitial()) { return; }
 
@@ -185,7 +185,7 @@ class L1Task implements Runnable {
     @Override
     public void run() {
 
-        ++mL1Processor.mL1Count;
+        ++L1Processor.L1Count;
 
         processFrame();
 

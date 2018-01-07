@@ -14,9 +14,10 @@ public class L0Processor {
     final CFApplication mApplication;
     private final L0Config mL0Config;
 
-    public static int mL0Count = 0;
-
-    int mBufferBalance = 0;
+    public int processed = 0;
+    public int pass = 0;
+    public int skip = 0;
+    public static int L0Count = 0;
 
     final CFConfig CONFIG = CFConfig.getInstance();
 
@@ -30,7 +31,8 @@ public class L0Processor {
     }
 
     public void submitFrame(RawCameraFrame frame) {
-        mBufferBalance++;
+        processed++;
+        L0Count++;
         // Note: we use a serial_executor here so that the zerobias processor
         // sees frames in the order in which they are received.
         AsyncTask.SERIAL_EXECUTOR.execute(makeTask(frame));

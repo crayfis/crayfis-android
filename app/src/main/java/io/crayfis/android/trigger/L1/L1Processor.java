@@ -4,7 +4,7 @@ import android.os.AsyncTask;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.L1.calibration.L1Calibrator;
+import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 
@@ -18,10 +18,14 @@ public class L1Processor {
     private final L1Config mL1Config;
     public final int mL1Thresh;
 
+    public int processed = 0;
+    public int pass = 0;
+    public int skip = 0;
+    public static int L1Count = 0;
+    public static int L1CountData;
+
     L1Calibrator mL1Cal;
     PreCalibrator mPreCal;
-    public static int mL1Count = 0;
-    public static int mL1CountData;
 
     int mBufferBalance = 0;
 
@@ -41,6 +45,7 @@ public class L1Processor {
 
     public void submitFrame(RawCameraFrame frame) {
         mBufferBalance++;
+        processed++;
         AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
     }
 

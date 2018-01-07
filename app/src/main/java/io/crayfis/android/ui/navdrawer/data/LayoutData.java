@@ -25,7 +25,7 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.L1.calibration.Histogram;
+import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 public class LayoutData extends NavDrawerFragment {

@@ -224,7 +224,7 @@ public class CFApplication extends Application {
                 if(safeExit) {
                     title = getString(R.string.notification_quit);
                     text = String.format(getString(R.string.notification_stats),
-                            L1Processor.mL1CountData, L2Processor.mL2Count);
+                            L1Processor.L1CountData, L2Processor.L2Count);
                 } else {
                     title = getString(R.string.notification_error);
                     text = dialogMessage;

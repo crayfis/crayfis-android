@@ -12,7 +12,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
-import io.crayfis.android.trigger.L1.calibration.Histogram;
+import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
@@ -38,14 +38,6 @@ public class ExposureBlock implements RawCameraFrame.Callback {
 	public final L0Processor mL0Processor;
     public final L1Processor mL1Processor;
     public final L2Processor mL2Processor;
-
-    public long L1_processed;
-	public long L1_pass;
-	public long L1_skip;
-	
-	public long L2_processed;
-	public long L2_pass;
-	public long L2_skip;
 	
 	private int total_pixels;
 	
@@ -94,8 +86,6 @@ public class ExposureBlock implements RawCameraFrame.Callback {
         this.res_x = resx;
         this.res_y = resy;
 
-        L1_processed = L1_pass = L1_skip = 0;
-        L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
     }
 
@@ -132,22 +122,19 @@ public class ExposureBlock implements RawCameraFrame.Callback {
      * @param frame
      * @return True if successfully assigned; false if the
      */
-    public boolean assignFrame(RawCameraFrame frame) {
-        boolean added;
+    private boolean assignFrame(RawCameraFrame frame) {
+
         long frame_time = frame.getAcquiredTimeNano();
         synchronized (assignedFrames) {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
                 return false;
             }
-            added = assignedFrames.add(frame);
-        }
-        if (added) {
-            L1_processed++;
-        } else {
-            // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
-            // is re-assigned after it had been processed once (and hence moved to processedFrames).
-            CFLog.w("assignFrame() called but it already is assigned!");
+            if(!assignedFrames.add(frame)) {
+                // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
+                // is re-assigned after it had been processed once (and hence moved to processedFrames).
+                CFLog.w("assignFrame() called but it already is assigned!");
+            }
         }
         return true;
     }
@@ -234,15 +221,15 @@ public class ExposureBlock implements RawCameraFrame.Callback {
 
                 .setL0Conf(mL0Processor.getConfig())
 
-                .setL1Pass((int) L1_pass)
-                .setL1Processed((int) L1_processed)
-                .setL1Skip((int) L1_skip)
+                .setL1Pass(mL1Processor.pass)
+                .setL1Processed(mL1Processor.processed)
+                .setL1Skip(mL1Processor.skip)
                 .setL1Thresh(mL1Processor.mL1Thresh)
                 .setL1Conf(mL1Processor.getConfig())
 		
-		        .setL2Pass((int) L2_pass)
-		        .setL2Processed((int) L2_processed)
-		        .setL2Skip((int) L2_skip)
+		        .setL2Pass(mL2Processor.pass)
+		        .setL2Processed(mL2Processor.processed)
+		        .setL2Skip(mL2Processor.skip)
 		        .setL2Thresh(mL2Processor.mL2Thresh)
                 .setL2Conf(mL2Processor.getConfig())
 

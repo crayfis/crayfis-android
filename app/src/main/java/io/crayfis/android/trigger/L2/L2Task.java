@@ -59,22 +59,22 @@ class L2Task implements Runnable {
 
         @Override
         public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
-            return new L2Task(l2Processor.mApplication, frame, this);
+            return new L2Task(l2Processor, frame, npix);
         }
     }
 
-    private RawCameraFrame mFrame = null;
+    private final RawCameraFrame mFrame;
+    final L2Processor mL2Processor;
 
-    private final Config mConfig;
+    private final int npix;
 
     private final Utils mUtils;
 
-    L2Task(CFApplication application, RawCameraFrame frame, Config config) {
+    L2Task(L2Processor processor, RawCameraFrame frame, int npix) {
         mFrame = frame;
-
-        mApplication = application;
-
-        mConfig = config;
+        mL2Processor = processor;
+        mApplication = mL2Processor.mApplication;
+        this.npix = npix;
 
         mUtils = new Utils(mApplication);
     }
@@ -99,7 +99,8 @@ class L2Task implements Runnable {
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
-        long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
+        long pixN = Math.min(l2PixelCoords.total(), npix);
+        mL2Processor.pass += pixN;
 
         for(int i=0; i<pixN; i++) {
 
@@ -146,10 +147,6 @@ class L2Task implements Runnable {
 
     @Override
     public void run() {
-        ++L2Processor.mL2Count;
-
-        ExposureBlock xb = mFrame.getExposureBlock();
-        xb.L2_processed++;
 
         // add pixel information to the protobuf builder
         buildPixels(mFrame);
@@ -159,11 +156,6 @@ class L2Task implements Runnable {
         LayoutLiveView lv = LayoutLiveView.getInstance();
         if(lv.events != null) {
             lv.addEvent(event);
-        }
-
-        // If this event was not taken in DATA mode, we're done here.
-        if (xb.getDAQState() != CFApplication.State.DATA) {
-            return;
         }
 
         if(event.getPixelsCount() >= 7) {

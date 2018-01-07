@@ -22,7 +22,7 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.L1.calibration.L1Calibrator;
+import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exception.IllegalFsmStateException;
@@ -455,7 +455,7 @@ public class DAQService extends Service {
 
         public void saveStatsBeforeSleeping() {
             mTimeBeforeSleeping = System.currentTimeMillis();
-            mCountsBeforeSleeping = L2Processor.mL2Count;
+            mCountsBeforeSleeping = L2Processor.L2Count;
         }
 
         public long getTimeWhileSleeping() {
@@ -464,15 +464,15 @@ public class DAQService extends Service {
         }
 
         public int getCountsWhileSleeping() {
-            return L2Processor.mL2Count - mCountsBeforeSleeping;
+            return L2Processor.L2Count - mCountsBeforeSleeping;
         }
 
         public DataCollectionStatsView.Status getDataCollectionStatus() {
             final int area = mCFCamera.getResX() * mCFCamera.getResY();
             return new DataCollectionStatsView.Status.Builder()
-                    .setTotalEvents(L2Processor.mL2Count)
-                    .setTotalPixels((long)L1Processor.mL1CountData * area)
-                    .setTotalFrames(L1Processor.mL1CountData)
+                    .setTotalEvents(L2Processor.L2Count)
+                    .setTotalPixels((long)L1Processor.L1CountData * area)
+                    .setTotalFrames(L1Processor.L1CountData)
                     .build();
         }
 
@@ -484,7 +484,7 @@ public class DAQService extends Service {
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                    + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
+                    + "total frames - L1: " + L1Processor.L1Count + " (L2: " + L2Processor.L2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
                     + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
                     + "fps="+String.format("%1.2f",lastFPS)

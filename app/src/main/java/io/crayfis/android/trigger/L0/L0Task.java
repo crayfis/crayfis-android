@@ -75,7 +75,6 @@ class L0Task implements Runnable {
     private L0Processor mL0Processor;
     private RawCameraFrame mFrame;
     private ExposureBlock mExposureBlock;
-    private CFApplication mApplication;
     private Config mConfig;
 
     L0Task(L0Processor l0Processor, RawCameraFrame frame, Config cfg) {
@@ -83,15 +82,13 @@ class L0Task implements Runnable {
         mFrame = frame;
         mExposureBlock = mFrame.getExposureBlock();
         mConfig = cfg;
-
-        mApplication = mL0Processor.mApplication;
     }
 
     boolean isZeroBias() {
         if (mConfig.random) {
             return Math.random() < 1. / mConfig.prescale;
         } else {
-            return (++L0Processor.mL0Count % mConfig.prescale == 0);
+            return (++L0Processor.L0Count % mConfig.prescale == 0);
         }
     }
 
@@ -100,6 +97,7 @@ class L0Task implements Runnable {
 
         if (isZeroBias()) {
             // do the zero bias things!
+            mL0Processor.pass++;
             Mat grayMat = mFrame.getGrayMat();
 
             // find a random pixel to be upper left corner

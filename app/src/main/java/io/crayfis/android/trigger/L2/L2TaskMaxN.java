@@ -54,11 +54,11 @@ class L2TaskMaxN extends L2Task {
     }
 
     private static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
-    private final int mNpix;
+    private final int npix;
 
     private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
-        super(l2processor.mApplication, frame, null);
-        mNpix = npix;
+        super(l2processor, frame, 0);
+        this.npix = npix;
     }
 
     private static class PixelComparator implements Comparator<DataProtos.Pixel> {
@@ -120,7 +120,7 @@ class L2TaskMaxN extends L2Task {
                 grayAvg5.release();
 
                 pixels.add(pixBuilder.build());
-                prunePixels(pixels, mNpix);
+                prunePixels(pixels, npix);
 
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
@@ -128,6 +128,7 @@ class L2TaskMaxN extends L2Task {
 
         }
 
+        mL2Processor.pass += pixels.size();
         frame.setPixels(pixels);
     }
 }

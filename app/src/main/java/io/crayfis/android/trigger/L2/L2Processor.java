@@ -3,7 +3,7 @@ package io.crayfis.android.trigger.L2;
 import android.os.AsyncTask;
 
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.trigger.L1.calibration.FrameHistory;
+import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 
 public class L2Processor {
@@ -11,7 +11,10 @@ public class L2Processor {
     private final L2Config mL2Config;
     public final int mL2Thresh;
 
-    public static int mL2Count = 0;
+    public int processed = 0;
+    public int pass = 0;
+    public int skip = 0;
+    public static int L2Count = 0;
 
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
@@ -27,8 +30,8 @@ public class L2Processor {
     }
 
     public void submitFrame(RawCameraFrame frame) {
-        // the frame ought to be claimed by the L1 stage by the time it gets here!
-        assert !frame.isOutstanding();
+        processed++;
+        L2Count++;
 
         // record the frame time to calculate pass rate
         synchronized (sPassTimes) {

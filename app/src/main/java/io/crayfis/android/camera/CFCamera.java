@@ -9,7 +9,7 @@ import android.renderscript.RenderScript;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.L1.calibration.FrameHistory;
+import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
