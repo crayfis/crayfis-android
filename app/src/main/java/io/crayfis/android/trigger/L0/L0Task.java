@@ -4,6 +4,7 @@ import org.opencv.core.Mat;
 
 import java.util.Random;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
@@ -108,7 +109,13 @@ class L0Task implements Runnable {
             Mat window = grayMat.submat(xMin, xMin + windowSize, yMin, yMin + windowSize);
 
             // save block to the frame
-            mFrame.setZeroBias(window);
+            DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
+            for(int iy=0; iy<window.width(); iy++) {
+                for(int ix=0; ix<window.height(); ix++) {
+                    zeroBiasBuilder.addVal((int)window.get(ix, iy)[0]);
+                }
+            }
+            mFrame.setZeroBias(zeroBiasBuilder.build());
             window.release();
         }
 

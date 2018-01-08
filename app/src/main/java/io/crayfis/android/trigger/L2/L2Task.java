@@ -28,7 +28,7 @@ import io.crayfis.android.util.CFLog;
  */
 class L2Task implements Runnable {
 
-    private final CFApplication mApplication;
+    final CFApplication mApplication;
 
     public static class Config extends L2Config {
         static final int DEFAULT_NPIX = 500;
@@ -63,10 +63,10 @@ class L2Task implements Runnable {
         }
     }
 
-    private final RawCameraFrame mFrame;
+    final RawCameraFrame mFrame;
     final L2Processor mL2Processor;
 
-    private final int npix;
+    final int npix;
 
     private final Utils mUtils;
 
@@ -142,7 +142,7 @@ class L2Task implements Runnable {
         }
         l2PixelCoords.release();
 
-        mFrame.setPixels(pixels);
+        frame.setPixels(pixels);
     }
 
     @Override

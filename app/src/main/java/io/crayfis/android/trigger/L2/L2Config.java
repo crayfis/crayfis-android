@@ -22,6 +22,9 @@ abstract class L2Config {
             case "maxn":
                 cfg = new L2TaskMaxN.Config(name, cfgstr);
                 break;
+            case "byteblock":
+                cfg = new L2TaskByteBlock.Config(name, cfgstr);
+                break;
             default:
                 CFLog.w("No L2 implementation found for " + name + ", using default!");
                 cfg = new L2Task.Config(name, cfgstr);

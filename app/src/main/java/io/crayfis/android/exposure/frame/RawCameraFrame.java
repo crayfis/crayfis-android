@@ -580,16 +580,16 @@ public abstract class RawCameraFrame {
         getEventBuilder().addAllPixels(pixels);
     }
 
-    public void setZeroBias(Mat zeroBiasWindow) {
+    public void setByteBlock(DataProtos.ByteBlock byteBlock) {
         mEvent = null;
         mUploadRequested = true;
-        DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
-        for(int iy=0; iy<zeroBiasWindow.width(); iy++) {
-            for(int ix=0; ix<zeroBiasWindow.height(); ix++) {
-                zeroBiasBuilder.addVal((int)zeroBiasWindow.get(ix, iy)[0]);
-            }
-        }
-        getEventBuilder().setZeroBias(zeroBiasBuilder.build());
+        getEventBuilder().setByteBlock(byteBlock);
+    }
+
+    public void setZeroBias(DataProtos.ZeroBiasSquare zeroBiasSquare) {
+        mEvent = null;
+        mUploadRequested = true;
+        getEventBuilder().setZeroBias(zeroBiasSquare);
     }
 
     public DataProtos.Event buildEvent() {

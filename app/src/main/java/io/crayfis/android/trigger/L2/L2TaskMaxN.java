@@ -54,11 +54,9 @@ class L2TaskMaxN extends L2Task {
     }
 
     private static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
-    private final int npix;
 
     private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
-        super(l2processor, frame, 0);
-        this.npix = npix;
+        super(l2processor, frame, npix);
     }
 
     private static class PixelComparator implements Comparator<DataProtos.Pixel> {
@@ -128,6 +126,7 @@ class L2TaskMaxN extends L2Task {
 
         }
 
+        l2PixelCoords.release();
         mL2Processor.pass += pixels.size();
         frame.setPixels(pixels);
     }
