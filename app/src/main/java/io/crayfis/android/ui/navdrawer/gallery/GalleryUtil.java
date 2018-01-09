@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.util.CFLog;
 
 import android.content.Context;
@@ -23,12 +25,21 @@ import android.graphics.Bitmap;
 import com.crashlytics.android.Crashlytics;
 
 
+public class GalleryUtil {
 
+    private GalleryUtil() { }
 
-public class Utils {
-
-    public void saveImage(SavedImage si)
+    public static void saveImage(DataProtos.Event event)
     {
+        SavedImage si;
+        if(event.getPixelsCount() > 0) {
+            si = new SavedImage(event.getPixelsList(), event.getTimestamp());
+        } else if(event.hasByteBlock()) {
+            si = new SavedImage(event.getByteBlock(), event.getTimestamp());
+        } else {
+            return;
+        }
+
         ArrayList<String> imageList = getListOfImages();
 
         CFLog.d("saveImage: current images: "+imageList.size());
@@ -42,7 +53,7 @@ public class Utils {
             file.delete();
         }
 
-        CFLog.d(" Utils::saveImage si="+si);
+        CFLog.d(" GalleryUtil::saveImage si="+si);
         try {
             File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
             File myDir = new File(sdCard.getAbsolutePath() + DIRNAME);
@@ -77,14 +88,7 @@ public class Utils {
     private static final List<String> FILE_EXTN = Arrays.asList("jpg", "jpeg",
             "png");
 
-    private Context _context;
-
-    // constructor
-    public Utils(Context context) {
-        this._context = context;
-    }
-
-    public int deleteImages() {
+    public static int deleteImages() {
 
         int num_deleted=0;
 
@@ -106,7 +110,7 @@ public class Utils {
         return num_deleted;
     }
 
-    private ArrayList<String> getListOfImages() {
+    private static ArrayList<String> getListOfImages() {
         ArrayList<String> filePaths = new ArrayList<String>();
         File sdCard = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         File directory = new File(sdCard.getAbsolutePath()+DIRNAME);
@@ -135,7 +139,7 @@ public class Utils {
 
 
     // Reading file paths from SDCard
-    public ArrayList<SavedImage> getSavedImages() {
+    public static ArrayList<SavedImage> getSavedImages() {
         ArrayList<SavedImage> filePaths = new ArrayList<SavedImage>();
 
         for (String filePath: getListOfImages()) {
@@ -155,7 +159,7 @@ public class Utils {
     }
 
     // Check supported file extensions
-    private boolean IsSupportedFile(String filePath) {
+    private static boolean IsSupportedFile(String filePath) {
         String ext = filePath.substring((filePath.lastIndexOf(".") + 1),
                 filePath.length());
 
@@ -166,9 +170,9 @@ public class Utils {
     /*
      * getting screen width
      */
-    public int getScreenWidth() {
+    public static int getScreenWidth(Context context) {
         int columnWidth;
-        WindowManager wm = (WindowManager) _context
+        WindowManager wm = (WindowManager) context
                 .getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
 

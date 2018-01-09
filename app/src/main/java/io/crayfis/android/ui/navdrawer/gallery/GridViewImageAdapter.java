@@ -23,14 +23,14 @@ package io.crayfis.android.ui.navdrawer.gallery;
     import com.crashlytics.android.Crashlytics;
 
 
-public class GridViewImageAdapter extends BaseAdapter {
+class GridViewImageAdapter extends BaseAdapter {
 
     private Context _context;
     private LayoutGallery _activity;
     private ArrayList<SavedImage> _filePaths = new ArrayList<SavedImage>();
     private int imageWidth;
 
-    public GridViewImageAdapter(Context context, ArrayList<SavedImage> filePaths,
+    GridViewImageAdapter(Context context, ArrayList<SavedImage> filePaths,
                                 int imageWidth) {
         this._filePaths = filePaths;
         this.imageWidth = imageWidth;
@@ -86,7 +86,7 @@ public class GridViewImageAdapter extends BaseAdapter {
     /*
      * Resizing image size
      */
-    public static Bitmap decodeFile(String filePath, final int WIDTH, final int HEIGHT) {
+    private Bitmap decodeFile(String filePath, final int WIDTH, final int HEIGHT) {
         try {
 
             File f = new File(filePath);

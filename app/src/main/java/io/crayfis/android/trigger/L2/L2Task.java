@@ -17,8 +17,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.ui.navdrawer.gallery.SavedImage;
-import io.crayfis.android.ui.navdrawer.gallery.Utils;
+import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
 import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
 import io.crayfis.android.util.CFLog;
@@ -68,15 +67,11 @@ class L2Task implements Runnable {
 
     final int npix;
 
-    private final Utils mUtils;
-
     L2Task(L2Processor processor, RawCameraFrame frame, int npix) {
         mFrame = frame;
         mL2Processor = processor;
         mApplication = mL2Processor.mApplication;
         this.npix = npix;
-
-        mUtils = new Utils(mApplication);
     }
 
 
@@ -165,8 +160,7 @@ class L2Task implements Runnable {
                     || mApplication.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                         == PackageManager.PERMISSION_GRANTED)) {
 
-                mUtils.saveImage(new SavedImage(event.getPixelsList(), mFrame.getPixMax(), mFrame.getWidth(),
-                        mFrame.getHeight(), mFrame.getAcquiredTimeNano()));
+                GalleryUtil.saveImage(event);
             }
         }
 

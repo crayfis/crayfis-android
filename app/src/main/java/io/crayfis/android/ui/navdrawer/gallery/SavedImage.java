@@ -11,20 +11,23 @@ import io.crayfis.android.util.CFLog;
 import com.crashlytics.android.Crashlytics;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
  * Created by danielwhiteson on 11/20/14.
  */
-public class SavedImage {
-    public String filename;
-    public int max_pix;
-    public int num_pix;
-    public String date;
-    public Bitmap bitmap;
+class SavedImage {
+    String filename;
+    int max_pix;
+    int num_pix;
+    String date;
+    Bitmap bitmap;
 
-    public String makeFilename(int mp,int np, String d)
+    private String makeFilename(int mp,int np, String d)
     {
         return "event_mp_"+mp+"_np_"+np+"_date_"+d+".png";
     }
@@ -48,29 +51,25 @@ public class SavedImage {
         }
     }
 
-    public SavedImage(List<DataProtos.Pixel> pixels, int max, int width, int height, long t)
-    {
-
-        max_pix=max;
-        num_pix=pixels.size();
+    private SavedImage(long t) {
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
         Date resultdate = new Date(t);
         date=sdf.format(resultdate);
-        filename=makeFilename(max, num_pix, date);
+    }
 
-        // make the bitmap
+    SavedImage(DataProtos.ByteBlock bb, long t) {
+        // first generate the date
+        this(t);
 
-        // Get bounding box
+        int minx = Integer.MAX_VALUE;
+        int miny = Integer.MAX_VALUE;
         int maxx = 0;
         int maxy = 0;
-        int minx = width - 1;
-        int miny = height - 1;
 
-        for (int i = 0; i < pixels.size(); i++) {
-            DataProtos.Pixel pix = pixels.get(i);
+        for(int i=0; i<bb.getXCount(); i++) {
 
-            int x = pix.getX();
-            int y = pix.getY();
+            int x = bb.getX(i);
+            int y = bb.getY(i);
 
             CFLog.d(" pixel at x,y=" + x + "," + y);
             if (x < minx) minx = x;
@@ -80,15 +79,97 @@ public class SavedImage {
             if (y > maxy) maxy = y;
         }
 
+        for(int val: bb.getValList()) {
+            if (val > max_pix) max_pix = val;
+        }
 
-        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
         // add a buffer so we don't get super tiny images
-        int delta = 25;
-        maxx = java.lang.Math.min(maxx + delta, width);
-        maxy = java.lang.Math.min(maxy + delta, height);
-        minx = java.lang.Math.max(minx - delta, 0);
-        miny = java.lang.Math.max(miny - delta, 0);
-        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max);
+        int minSide = 50;
+        int deltaX = Math.max(minSide - (maxx - minx), 0) / 2;
+        int deltaY = Math.max(minSide - (maxy - miny), 0) / 2;
+        maxx = maxx + deltaX;
+        maxy = maxy + deltaY;
+        minx = minx - deltaX;
+        miny = miny - deltaY;
+        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max_pix);
+        try {
+
+            bitmap = Bitmap.createBitmap(maxx - minx, maxy - miny, Bitmap.Config.RGB_565);
+
+            if (bitmap != null) {
+                // put all pixels in the bitmap
+                boolean[][] placed = new boolean[maxx-minx][maxy-miny];
+                Iterator<Integer> valIterator = bb.getValList().iterator();
+                int r = (bb.getSideLength()-1)/2;
+
+                for (int i = 0; i < bb.getXCount(); i++) {
+                    int x = bb.getX(i) - minx;
+                    int y = bb.getY(i) - miny;
+
+                    for(int dy=Math.max(y-r,0); dy<=Math.min(y+r, maxy-miny-1); dy++) {
+                        for(int dx=Math.max(x-r,0); dx<=Math.min(x+r, maxx-minx-1); dx++) {
+                            if(!placed[dx][dy]) {
+                                placed[dx][dy] = true;
+                                int val = (int) (255 * (valIterator.next() / (1.0 * max_pix)));
+                                int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
+                                CFLog.d(" pixel at x,y=" + x + "," + y + " = " + val + " argb=" + argb);
+
+                                bitmap.setPixel(x, y, Color.argb(255, val, val, val));
+                            }
+                        }
+                    }
+
+                }
+            }
+        }  catch (Exception e) {
+            Crashlytics.logException(e);
+            e.printStackTrace();
+        }
+        CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
+    }
+
+    SavedImage(List<DataProtos.Pixel> pixels, long t)
+    {
+        // first generate the date
+        this(t);
+
+        num_pix=pixels.size();
+        filename=makeFilename(max_pix, num_pix, date);
+
+        // make the bitmap
+
+        // find the bounds and max value
+        int minx = Integer.MAX_VALUE;
+        int miny = Integer.MAX_VALUE;
+        int maxx = 0;
+        int maxy = 0;
+
+        for (int i = 0; i < pixels.size(); i++) {
+            DataProtos.Pixel pix = pixels.get(i);
+
+            int x = pix.getX();
+            int y = pix.getY();
+            int val = pix.getVal();
+
+            CFLog.d(" pixel at x,y=" + x + "," + y);
+            if (x < minx) minx = x;
+            if (x > maxx) maxx = x;
+
+            if (y < miny) miny = y;
+            if (y > maxy) maxy = y;
+
+            if (val > max_pix) max_pix = val;
+        }
+
+        // add a buffer so we don't get super tiny images
+        int minSide = 50;
+        int deltaX = Math.max(minSide - (maxx - minx), 0) / 2;
+        int deltaY = Math.max(minSide - (maxy - miny), 0) / 2;
+        maxx = maxx + deltaX;
+        maxy = maxy + deltaY;
+        minx = minx - deltaX;
+        miny = miny - deltaY;
+        CFLog.d(" bounding box: x=[" + minx + " - " + maxx + "] y=[" + miny + " - " + maxy + "] max=" + max_pix);
         try {
 
             bitmap = Bitmap.createBitmap(maxx - minx, maxy - miny, Bitmap.Config.RGB_565);
@@ -99,7 +180,7 @@ public class SavedImage {
                     DataProtos.Pixel pix = pixels.get(i);
                     int x = pix.getX() - minx;
                     int y = pix.getY() - miny;
-                    int val = (int) (255 * (pix.getVal() / (1.0 * max)));
+                    int val = (int) (255 * (pix.getVal() / (1.0 * max_pix)));
                     int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
                     CFLog.d(" pixel at x,y=" + x + "," + y + " = " + val + " argb=" + argb);
 
@@ -114,7 +195,7 @@ public class SavedImage {
         CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
     }
 
-    public SavedImage(String fname) {
+    SavedImage(String fname) {
 
         filename = fname;
         bitmap = BitmapFactory.decodeFile(fname);

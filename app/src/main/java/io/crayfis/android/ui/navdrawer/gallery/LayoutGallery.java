@@ -5,7 +5,6 @@ package io.crayfis.android.ui.navdrawer.gallery;
  */
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
@@ -30,14 +29,10 @@ import io.crayfis.android.util.CFLog;
 
 public class LayoutGallery extends NavDrawerFragment {
 
-    private Utils utils;
-//    private ArrayList<String> imagePaths = new ArrayList<String>();
     private ArrayList<SavedImage> images = new ArrayList<SavedImage>();
     private GridViewImageAdapter adapter;
     private GridView gridView;
     private TextView textView;
-
-    public static Context _context;
 
     private int columnWidth;
 
@@ -60,11 +55,11 @@ public class LayoutGallery extends NavDrawerFragment {
     private void InitilizeGridLayout() {
         Resources r = getResources();
         float padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                Utils.GRID_PADDING, r.getDisplayMetrics());
+                GalleryUtil.GRID_PADDING, r.getDisplayMetrics());
 
-        columnWidth = (int) ((utils.getScreenWidth() - ((Utils.NUM_OF_COLUMNS + 1) * padding*2)) / Utils.NUM_OF_COLUMNS);
+        columnWidth = (int) ((GalleryUtil.getScreenWidth(this.getContext()) - ((GalleryUtil.NUM_OF_COLUMNS + 1) * padding*2)) / GalleryUtil.NUM_OF_COLUMNS);
 
-        gridView.setNumColumns(Utils.NUM_OF_COLUMNS);
+        gridView.setNumColumns(GalleryUtil.NUM_OF_COLUMNS);
         gridView.setColumnWidth(columnWidth);
         gridView.setStretchMode(GridView.NO_STRETCH);
         gridView.setPadding((int) padding, (int) padding, (int) padding,
@@ -98,7 +93,6 @@ public class LayoutGallery extends NavDrawerFragment {
             }
 
         }
-        else {  }
         super.setUserVisibleHint(isVisibleToUser);
     }
 
@@ -112,15 +106,12 @@ public class LayoutGallery extends NavDrawerFragment {
         gridView = (GridView) root.findViewById(R.id.grid_view);
         textView = (TextView) root.findViewById(R.id.text_gallery);
 
-        Context context = getActivity();
-        utils = new Utils(context);
-
         // Initilizing Grid View
         InitilizeGridLayout();
 
         // loading all image paths from SD card
         try {
-            images = utils.getSavedImages();
+            images = GalleryUtil.getSavedImages();
         } catch (Exception e) {                             Crashlytics.logException(e);
         }
 
@@ -132,7 +123,7 @@ public class LayoutGallery extends NavDrawerFragment {
             @Override
             public void onClick(View v) {
                 CFLog.d("Layout Gallery: deleting images!");
-                int num = utils.deleteImages();
+                int num = GalleryUtil.deleteImages();
                 Activity act = getActivity();
                 final Resources resources = getResources();
                 if (act != null && !act.isFinishing()) {
@@ -142,7 +133,6 @@ public class LayoutGallery extends NavDrawerFragment {
                             resources.getString(R.string.small_images));
                     Toast.makeText(act, msg, Toast.LENGTH_SHORT).show();
                 }
-                //images = utils.getSavedImages();
 
             }
         });

@@ -62,8 +62,8 @@ class L2TaskMaxN extends L2Task {
     private static class PixelComparator implements Comparator<DataProtos.Pixel> {
 
         @Override
-        public int compare(DataProtos.Pixel recoPixel, DataProtos.Pixel t1) {
-            return t1.getAdjustedVal() - recoPixel.getAdjustedVal();
+        public int compare(DataProtos.Pixel p0, DataProtos.Pixel p1) {
+            return p1.getAdjustedVal() - p0.getAdjustedVal();
         }
     }
     private void prunePixels(ArrayList<DataProtos.Pixel> pixels, int N) {
