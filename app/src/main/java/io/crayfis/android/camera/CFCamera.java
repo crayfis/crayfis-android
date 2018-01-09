@@ -71,14 +71,14 @@ public abstract class CFCamera {
     /**
      * Instates camera, sensors, and location services
      *
-     * @param context The Application context
+     * @param app the application
      */
-    public void register(Context context) {
-        mApplication = (CFApplication) context;
+    public void register(CFApplication app) {
+        mApplication = app;
         mRS = mApplication.getRenderScript();
 
-        mCFSensor = new CFSensor(context, getFrameBuilder());
-        mCFLocation = new CFLocation(context, getFrameBuilder());
+        mCFSensor = new CFSensor(app, getFrameBuilder());
+        mCFLocation = new CFLocation(app, getFrameBuilder());
         changeCamera();
     }
 

@@ -18,10 +18,4 @@ public class AcquisitionTime {
         NTP = SntpClient.getInstance().getNtpTime();
         Sys = System.currentTimeMillis();
     }
-
-    private AcquisitionTime(@NonNull final Parcel parcel) {
-        Nano = parcel.readLong();
-        NTP = parcel.readLong();
-        Sys = parcel.readLong();
-    }
 }

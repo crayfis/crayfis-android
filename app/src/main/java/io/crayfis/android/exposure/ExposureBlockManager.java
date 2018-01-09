@@ -84,18 +84,18 @@ public final class ExposureBlockManager {
     /**
      * Get the instance of {@link ExposureBlockManager}.
      *
-     * @param context The context.
+     * @param app The application context.
      * @return {@link ExposureBlockManager}
      */
-    public static synchronized ExposureBlockManager getInstance(@NonNull final Context context) {
+    public static synchronized ExposureBlockManager getInstance(@NonNull final CFApplication app) {
         if (sInstance == null) {
-            sInstance = new ExposureBlockManager(context);
+            sInstance = new ExposureBlockManager(app);
         }
         return sInstance;
     }
 
-    private ExposureBlockManager(@NonNull final Context context) {
-        APPLICATION = (CFApplication) context.getApplicationContext();
+    private ExposureBlockManager(@NonNull final CFApplication app) {
+        APPLICATION = app;
 
         mFlushHandler = new Handler();
     }

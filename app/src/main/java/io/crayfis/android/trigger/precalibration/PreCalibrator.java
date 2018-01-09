@@ -19,6 +19,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.main.CFApplication;
@@ -52,15 +53,15 @@ public class PreCalibrator {
 
     private static PreCalibrator sInstance;
 
-    public static PreCalibrator getInstance(@NonNull final Context ctx) {
+    public static PreCalibrator getInstance(@NonNull final CFApplication app) {
         if(sInstance == null) {
-            sInstance = new PreCalibrator(ctx);
+            sInstance = new PreCalibrator(app);
         }
         return sInstance;
     }
 
-    private PreCalibrator(Context ctx) {
-        APPLICATION = (CFApplication) ctx;
+    private PreCalibrator(CFApplication app) {
+        APPLICATION = app;
         RS = APPLICATION.getRenderScript();
         SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
         PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
@@ -99,8 +100,12 @@ public class PreCalibrator {
         int cameraId = CAMERA.getCameraId();
         CONFIG.setLastPrecalTime(cameraId, System.currentTimeMillis());
         CONFIG.setLastPrecalResX(cameraId, CAMERA.getResX());
+        CONFIG.setPrecalId(cameraId, UUID.randomUUID());
 
         PRECAL_BUILDER.setRunId(APPLICATION.getBuildInformation().getRunId().getLeastSignificantBits())
+                .setRunIdHi(APPLICATION.getBuildInformation().getRunId().getMostSignificantBits())
+                .setPrecalId(CONFIG.getPrecalId(cameraId).getLeastSignificantBits())
+                .setPrecalIdHi(CONFIG.getPrecalId(cameraId).getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(APPLICATION.getBatteryTemp())
                 .setInterpolation(INTER);

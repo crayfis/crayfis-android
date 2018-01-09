@@ -212,7 +212,7 @@ public class LayoutStatus extends NavDrawerFragment {
                     count = PreCalibrator.getInstance(application).count.intValue();
                     total = config.getHotcellSampleFrames() + config.getWeightingSampleFrames();
                 } else {
-                    count = ExposureBlockManager.getInstance(activity).getCurrentExposureBlock().count.intValue();
+                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;

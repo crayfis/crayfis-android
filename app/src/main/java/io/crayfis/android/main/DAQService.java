@@ -62,14 +62,18 @@ public class DAQService extends Service {
 
     private CFCamera mCFCamera;
 
+    private ExposureBlockManager xbManager;
+
+    private L1Calibrator L1cal;
+    private PreCalibrator mPreCal;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         CFLog.d("DAQService onCreate()");
         mApplication = (CFApplication)getApplication();
-        context = getApplicationContext();
-        mBroadcastManager = LocalBroadcastManager.getInstance(context);
+        mBroadcastManager = LocalBroadcastManager.getInstance(this);
     }
 
     @Override
@@ -170,17 +174,16 @@ public class DAQService extends Service {
 
                 // Frame Processing
 
-                mPreCal = PreCalibrator.getInstance(context);
+                mPreCal = PreCalibrator.getInstance(mApplication);
                 L1cal = L1Calibrator.getInstance();
 
 
-                xbManager = ExposureBlockManager.getInstance(this);
+                xbManager = ExposureBlockManager.getInstance(mApplication);
 
                 // start camera
 
                 mCFCamera = CFCamera.getInstance();
-                mCFCamera.register(context);
-
+                mCFCamera.register(mApplication);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -269,7 +272,7 @@ public class DAQService extends Service {
         // first generate runconfig for specific camera
         if (run_config == null || mCFCamera.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
-            UploadExposureService.submitRunConfig(context, run_config);
+            UploadExposureService.submitRunConfig(this, run_config);
         }
 
         // notify user that camera is running
@@ -314,7 +317,10 @@ public class DAQService extends Service {
                 L1cal.updateThresholds();
 
                 // build the calibration result object
-                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
+                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
+                        .setRunId(run_config.getIdLo())
+                        .setRunIdHi(run_config.getIdHi())
+                        .setEndTime(System.currentTimeMillis());
 
                 for (long v : L1cal.getHistogram()) {
                     cal.addHistMaxpixel((int)v);
@@ -427,20 +433,6 @@ public class DAQService extends Service {
 
         run_config = b.build();
     }
-
-
-
-
-    //////////////////////
-    // Frame processing //
-    //////////////////////
-
-    private ExposureBlockManager xbManager;
-
-    private L1Calibrator L1cal;
-    private PreCalibrator mPreCal;
-
-    private Context context;
 
 
     /////////////////

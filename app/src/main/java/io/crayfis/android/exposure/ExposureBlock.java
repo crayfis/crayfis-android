@@ -219,6 +219,9 @@ public class ExposureBlock implements RawCameraFrame.Callback {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
 
+                .setL0Pass(mL0Processor.pass)
+                .setL0Processed(mL0Processor.processed)
+                .setL0Skip(mL0Processor.skip)
                 .setL0Conf(mL0Processor.getConfig())
 
                 .setL1Pass(mL1Processor.pass)
@@ -245,6 +248,7 @@ public class ExposureBlock implements RawCameraFrame.Callback {
                 .setEndTimeNtp(end_time.NTP)
 
                 .setRunId(run_id.getLeastSignificantBits())
+                .setRunIdHi(run_id.getMostSignificantBits())
 
                 .setBatteryTemp(batteryTemp)
                 .setBatteryEndTemp(batteryEndTemp)
@@ -269,7 +273,8 @@ public class ExposureBlock implements RawCameraFrame.Callback {
 
         // should be null for PRECALIBRATION
         if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
-            buf.setPrecalId(precal_id.getLeastSignificantBits());
+            buf.setPrecalId(precal_id.getLeastSignificantBits())
+                    .setPrecalIdHi(precal_id.getMostSignificantBits());
         }
 		
 		// don't output event information for calibration blocks...
