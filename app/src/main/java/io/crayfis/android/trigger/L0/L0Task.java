@@ -106,7 +106,7 @@ class L0Task implements Runnable {
             int windowSize = mConfig.windowSize;
             int xMin = r.nextInt(grayMat.width() - windowSize + 1);
             int yMin = r.nextInt(grayMat.height() - windowSize + 1);
-            Mat window = grayMat.submat(xMin, xMin + windowSize, yMin, yMin + windowSize);
+            Mat window = grayMat.submat(yMin, yMin + windowSize, xMin, xMin + windowSize);
 
             // save block to the frame
             DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
