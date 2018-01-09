@@ -21,11 +21,15 @@ class SplashView extends AppCompatImageView
 {
     private Handler h;
     private static final int FRAME_RATE = 30;
+    private static float MS_TO_SHOW = (float) 10000.0;
 
     private Paint circlePaint;
     private Paint ringPaint;
     private RectF circleRect;
     private RectF ringRect;
+
+    private float scale_x = 1;
+    private float scale_y = 1;
 
 
     SplashView(Context context, AttributeSet attrs)  {
@@ -61,16 +65,6 @@ class SplashView extends AppCompatImageView
     protected void onDraw(Canvas c)
     {
         super.onDraw(c);
-        // draw it
-        //CFLog.d(" SplashView onDraw()");
-
-        // c.getWidth() c.getHeight();
-
-        float scale_x =1;
-        float scale_y =1;
-
-
-
 
         // make sure the event list is not modified while we loop over it
         synchronized(LayoutLiveView.event_lock) {
@@ -93,33 +87,40 @@ class SplashView extends AppCompatImageView
                 long age = (System.currentTimeMillis() - event.getTimestamp());
 
                 // remove it if it's too old
-                float ms_to_show = (float) 10000.0;
-                if (age <= ms_to_show) {
-                    for(DataProtos.Pixel pix : event.getPixelsList()) {
-                        int x = (int)(scale_y*pix.getY());
-                        int y = (int)(scale_x*pix.getX());
-
-                        int size = 8 + (int) Math.sqrt(pix.getVal());
-                        int trans = (int) (255 * (1.0 - (age / ms_to_show)));
-                        if (trans < 0) trans = 0;
-                        circleRect.set(x - size, y - size, x + size, y + size);
-                        circlePaint.setARGB(trans, 255, 255, 255);
-
-                        int ring_size = size + (int) (age / 20.0); // 50 pixels/second
-                        ringPaint.setARGB(trans, 255, 255, 255);
-                        ringRect.set(x - ring_size, y - ring_size, x + ring_size, y + ring_size);
-
-                        //CFLog.d(" SplashView will draw pixel at pixel "+p.x+","+p.y+" screen " + x + ", " + y + " age = " + age + " trans=" + trans + " val=" + p.val + " size=" + size);
-
-                        // draw a circle at the hit
-                        c.drawArc(circleRect, 0, 360, true, circlePaint);
-                        // draw a ring around the circle
-                        c.drawArc(ringRect, 0, 360, true, ringPaint);
-
+                if (age <= MS_TO_SHOW) {
+                    if(event.getPixelsCount() > 0) {
+                        for (DataProtos.Pixel pix : event.getPixelsList()) {
+                            paintPixel(c, pix.getX(), pix.getY(), pix.getVal(), age);
+                        }
+                    } else if(event.hasByteBlock()) {
+                        DataProtos.ByteBlock bb = event.getByteBlock();
+                        for (int i=0; i<bb.getXCount(); i++) {
+                            paintPixel(c, bb.getX(i), bb.getY(i), 20, age);
+                        }
                     }
                 }
             }
         }
         h.postDelayed(r, FRAME_RATE);
+    }
+
+    private void paintPixel(Canvas c, int px, int py, int val, long dt) {
+        int x = (int) (scale_y * py);
+        int y = (int) (scale_x * px);
+
+        int size = 8 + (int) Math.sqrt(val);
+        int trans = (int) (255 * (1.0 - (dt / MS_TO_SHOW)));
+        if (trans < 0) trans = 0;
+        circleRect.set(x - size, y - size, x + size, y + size);
+        circlePaint.setARGB(trans, 255, 255, 255);
+
+        int ring_size = size + (int) (dt / 20.0); // 50 pixels/second
+        ringPaint.setARGB(trans, 255, 255, 255);
+        ringRect.set(x - ring_size, y - ring_size, x + ring_size, y + ring_size);
+
+        // draw a circle at the hit
+        c.drawArc(circleRect, 0, 360, true, circlePaint);
+        // draw a ring around the circle
+        c.drawArc(ringRect, 0, 360, true, ringPaint);
     }
 }
