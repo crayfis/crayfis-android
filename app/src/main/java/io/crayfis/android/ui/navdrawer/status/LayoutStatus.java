@@ -41,7 +41,7 @@ public class LayoutStatus extends NavDrawerFragment {
     private ProgressBar mProgressBar;
     private StateChangeReceiver mStateChangeReceiver;
 
-    private final @StringRes int ABOUT_ID = R.string.toast_status;
+    private static final @StringRes int ABOUT_ID = R.string.toast_status;
 
     @Override
     public void onDestroyView() {
@@ -52,7 +52,7 @@ public class LayoutStatus extends NavDrawerFragment {
     @Nullable
     @Override
     public View onCreateView(final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-        final View rtn = inflater.inflate(R.layout.fragment_data_collection, container, false);
+        final View rtn = inflater.inflate(R.layout.status, container, false);
         mStatus = (TextView) rtn.findViewById(R.id.data_collection_status);
         mProgressBar = (ProgressBar) rtn.findViewById(R.id.progress_bar);
         mStatusMessage = (TextView) rtn.findViewById(R.id.data_collection_message);

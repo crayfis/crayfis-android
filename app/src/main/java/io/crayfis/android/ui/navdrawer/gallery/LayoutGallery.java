@@ -36,21 +36,7 @@ public class LayoutGallery extends NavDrawerFragment {
 
     private int columnWidth;
 
-    private static LayoutGallery mInstance =null;
-
-    private final @StringRes int ABOUT_ID = R.string.toast_gallery;
-
-
-    public LayoutGallery() {
-
-    }
-
-    public static LayoutGallery getInstance() {
-        if (mInstance==null)
-            mInstance = new LayoutGallery();
-
-        return mInstance;
-    }
+    private static final @StringRes int ABOUT_ID = R.string.toast_gallery;
 
     private void InitilizeGridLayout() {
         Resources r = getResources();
@@ -101,7 +87,7 @@ public class LayoutGallery extends NavDrawerFragment {
 
         CFLog.d("Gallery on create view called");
 
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.gallery, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.gallery, container, false);
 
         gridView = (GridView) root.findViewById(R.id.grid_view);
         textView = (TextView) root.findViewById(R.id.text_gallery);

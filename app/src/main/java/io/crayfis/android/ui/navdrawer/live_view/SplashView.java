@@ -4,10 +4,8 @@ package io.crayfis.android.ui.navdrawer.live_view;
  * Created by danielwhiteson on 1/30/15.
  */
 
-import android.hardware.Camera;
-
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
+import io.crayfis.android.camera.CFCamera;
 
 import android.graphics.Paint;
 import android.content.Context;
@@ -19,25 +17,19 @@ import android.graphics.RectF;
 
 import android.graphics.Color;
 
-import static io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView.*;
-
 class SplashView extends AppCompatImageView
 {
-    private Context mContext;
     private Handler h;
-    private final int FRAME_RATE = 30;
+    private static final int FRAME_RATE = 30;
 
     private Paint circlePaint;
     private Paint ringPaint;
     private RectF circleRect;
     private RectF ringRect;
 
-    // this holds the data, since its static
-    private LayoutLiveView mLayoutBlack = getInstance();
 
     SplashView(Context context, AttributeSet attrs)  {
         super(context, attrs);
-        mContext = context;
         h = new Handler();
 
        // CFLog.d("new Splashview created!"+this);
@@ -81,31 +73,24 @@ class SplashView extends AppCompatImageView
 
 
         // make sure the event list is not modified while we loop over it
-        synchronized(mLayoutBlack.event_lock) {
+        synchronized(LayoutLiveView.event_lock) {
 
-            if (mLayoutBlack != null && mLayoutBlack.previewSize != null && mLayoutBlack.events.size()>0)
+            if (LayoutLiveView.events.size()>0)
             {
-                Camera.Size pv = mLayoutBlack.previewSize;
-                int maxCameraX = pv.width;
-                int maxCameraY = pv.height;
-
                 int maxCanvasX = c.getWidth();
                 int maxCanvasY = c.getHeight();
 
-                scale_x = maxCanvasY / ((float) 1.1 * maxCameraX);  // 1.1 to avoid off screen edge effects
-                scale_y = maxCanvasX / ((float) 1.1 * maxCameraY);
+                scale_x = maxCanvasY / ((float) 1.1 * CFCamera.getInstance().getResX());  // 1.1 to avoid off screen edge effects
+                scale_y = maxCanvasX / ((float) 1.1 * CFCamera.getInstance().getResY());
                 //CFLog.d("Splashview camera = "+maxCameraX+","+maxCameraY+" canvas = "+maxCanvasX+", "+maxCanvasY+" scaling = "+scale_x+", "+scale_y);
             }
 
             // loop over events
-            for (DataProtos.Event event: mLayoutBlack.events) {
+            for (DataProtos.Event event: LayoutLiveView.events) {
                 // get the event and pixels
 
-                long event_time = event.getTimestamp();
-                //CFLog.d(" SplashView draw event with "+pixels.size()+ " from time "+mLayoutBlack.events.get(ie).time);
-
                 // calculate the event age
-                long age = (System.currentTimeMillis() - event_time);
+                long age = (System.currentTimeMillis() - event.getTimestamp());
 
                 // remove it if it's too old
                 float ms_to_show = (float) 10000.0;

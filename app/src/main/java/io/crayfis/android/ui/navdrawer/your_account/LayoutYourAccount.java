@@ -5,7 +5,6 @@ package io.crayfis.android.ui.navdrawer.your_account;
  */
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -29,20 +28,9 @@ import io.crayfis.android.util.CFLog;
 
 public class LayoutYourAccount extends NavDrawerFragment {
 
-
-
-
-    private static LayoutYourAccount mInstance =null;
-
-    public static LayoutYourAccount getInstance() {
-        if (mInstance==null)
-            mInstance= new LayoutYourAccount();
-
-        return mInstance;
-    }
     private static boolean shown_message=false;
 
-    private final @StringRes int ABOUT_ID = R.string.toast_login;
+    private static final @StringRes int ABOUT_ID = R.string.toast_login;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -60,16 +48,8 @@ public class LayoutYourAccount extends NavDrawerFragment {
 
 
         }
-        else {  }
         super.setUserVisibleHint(isVisibleToUser);
     }
-
-
-    private String server_address;
-    private String server_port;
-    private Context context;
-
-
 
 
     WebView browserView;
@@ -79,15 +59,9 @@ public class LayoutYourAccount extends NavDrawerFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
     {
 
-
-
         super.onCreate(savedInstanceState);
 
-         context = getActivity();
-        server_address = context.getString(R.string.server_address);
-        server_port = context.getString(R.string.server_port);
-
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.login, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.your_account, container, false);
 
         //Removes the title bar in the application
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -102,6 +76,7 @@ public class LayoutYourAccount extends NavDrawerFragment {
         browserView.getSettings().setJavaScriptEnabled(true);
 
         browserView.setWebChromeClient(new WebChromeClient() {
+            @Override
             public boolean onConsoleMessage(ConsoleMessage cmsg)
             {
                 // check secret prefix
@@ -141,7 +116,7 @@ public class LayoutYourAccount extends NavDrawerFragment {
                     //
                     // Global preferences were based on DAQActivity functionality, they should be migrated
                     // to the default shared preferences like here.
-                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(LayoutYourAccount.this.getContext());
 
                     if (code.length()==6)
                     {
@@ -196,7 +171,7 @@ public class LayoutYourAccount extends NavDrawerFragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+server_address+"/accounts/login/?embed";
+        final String leaderURL = "http://"+getString(R.string.server_address)+"/accounts/your_account/?embed";
 
         CFLog.d("CRAYFIS loading" + leaderURL);
         browserView.loadUrl(leaderURL);

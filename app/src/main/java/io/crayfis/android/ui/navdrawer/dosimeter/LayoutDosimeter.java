@@ -33,7 +33,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
+    private static final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
 
     public static DataPoint[] make_graph_data(Integer values[])
     {
@@ -55,8 +55,6 @@ public class LayoutDosimeter extends NavDrawerFragment {
         }
         return gd;
     }
-
-    private static LayoutDosimeter mInstance =null;
 
     private SpeedometerView mSpeedometerView;
 
@@ -83,19 +81,9 @@ public class LayoutDosimeter extends NavDrawerFragment {
     }
 
 
-    public LayoutDosimeter() { }
-
-    public static LayoutDosimeter getInstance() {
-        if (mInstance==null)
-            mInstance= new LayoutDosimeter();
-
-        return mInstance;
-    }
-
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.time, container, false);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.dosimeter, container, false);
 
         //Integer novals[] = new Integer[256];
         //for (int i=0;i<256;i++) novals[i]=1;
@@ -160,7 +148,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
             Integer[] values = new Integer[cal.getMaxPixels().size()];
             values=cal.getMaxPixels().toArray(values);
             mGraphSeriesTime.resetData(make_graph_data(values));
-            // time average
+            // dosimeter average
             float mean = 0;
             for(int val : values)
                 mean += val;

@@ -30,17 +30,17 @@ import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 public class LayoutData extends NavDrawerFragment {
 
-    private final @StringRes int ABOUT_ID = R.string.toast_hist;
+    private static final @StringRes int ABOUT_ID = R.string.toast_hist;
 
-    private final float GOOD_EPM = 1f;
-    private final float IDEAL_EPM = 0.3f;
+    private static final float GOOD_EPM = 1f;
+    private static final float IDEAL_EPM = 0.3f;
 
-    private final int FAIR_COLOR = Color.GREEN;
-    private final int GOOD_COLOR = Color.YELLOW;
-    private final int IDEAL_COLOR = Color.RED;
+    private static final int FAIR_COLOR = Color.GREEN;
+    private static final int GOOD_COLOR = Color.YELLOW;
+    private static final int IDEAL_COLOR = Color.RED;
 
-    private final int PADDING = 80;
-    private final int LOG_OFFSET = 1;
+    private static final int PADDING = 80;
+    private static final int LOG_OFFSET = 1;
 
     private int mGoodCutoff;
     private int mIdealCutoff;
@@ -54,8 +54,6 @@ public class LayoutData extends NavDrawerFragment {
     private Viewport mViewport;
     private GridLabelRenderer mGridLabelRenderer;
     private int mMaxX;
-
-    private static LayoutData mInstance =null;
 
     private class ValueDependentColorX implements ValueDependentColor<DataPoint>
     {
@@ -113,17 +111,6 @@ public class LayoutData extends NavDrawerFragment {
         }
         return data;
     }
-    
-
-
-    public LayoutData() {    }
-
-    public static LayoutData getInstance() {
-        if (mInstance==null)
-            mInstance= new LayoutData();
-
-        return mInstance;
-    }
 
     private static boolean shown_message=false;
 
@@ -155,7 +142,7 @@ public class LayoutData extends NavDrawerFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        final View rtn = inflater.inflate(R.layout.hist, container, false);
+        final View rtn = inflater.inflate(R.layout.data, container, false);
         mGraphView = (GraphView) rtn.findViewById(R.id.hist);
 
         mViewport = mGraphView.getViewport();

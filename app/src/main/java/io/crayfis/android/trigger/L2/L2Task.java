@@ -148,10 +148,7 @@ class L2Task implements Runnable {
 
         DataProtos.Event event = mFrame.buildEvent();
 
-        LayoutLiveView lv = LayoutLiveView.getInstance();
-        if(lv.events != null) {
-            lv.addEvent(event);
-        }
+        LayoutLiveView.addEvent(event);
 
         if(event.getPixelsCount() >= 7) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);

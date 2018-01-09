@@ -379,7 +379,7 @@ public class DAQActivity extends AppCompatActivity {
                 })
                 .setNegativeButton(getResources().getString(R.string.feedback), new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        NavHelper.setFragment(DAQActivity.this, LayoutFeedback.getInstance(),
+                        NavHelper.setFragment(DAQActivity.this, new LayoutFeedback(),
                                 NavDrawerAdapter.Type.FEEDBACK.getTitle());
                     }
                 })

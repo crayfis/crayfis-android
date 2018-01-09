@@ -70,39 +70,38 @@ public final class NavHelper {
 
             switch (type) {
                 case DEVELOPER:
-                    newFragment = LayoutDeveloper.getInstance();
+                    newFragment = new LayoutDeveloper();
                     break;
                 case LIVE_VIEW:
-                    newFragment = LayoutLiveView.getInstance();
+                    newFragment = new LayoutLiveView();
                     break;
                 case STATUS:
                     newFragment = new LayoutStatus();
                     break;
                 case DATA:
-                    newFragment = LayoutData.getInstance();
+                    newFragment = new LayoutData();
                     break;
                 case NETWORK_MAP:
-                    newFragment = LayoutNetworkMap.getInstance();
+                    newFragment = new LayoutNetworkMap();
                     break;
                 case YOUR_ACCOUNT:
-                    newFragment = LayoutYourAccount.getInstance();
+                    newFragment = new LayoutYourAccount();
                     break;
                 case DOSIMETER:
-                    newFragment = LayoutDosimeter.getInstance();
+                    newFragment = new LayoutDosimeter();
                     break;
                 case FEEDBACK:
-                    newFragment = LayoutFeedback.getInstance();
+                    newFragment = new LayoutFeedback();
                     break;
                 case GALLERY:
-                    newFragment = LayoutGallery.getInstance();
+                    newFragment = new LayoutGallery();
                     break;
                 default:
-                    newFragment = null;
+                    CFLog.e("Unhandled navigation type " + type);
+                    return;
             }
 
-            if (newFragment == null) {
-                CFLog.e("Unhandled navigation type " + type);
-            } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
+            if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
                 if (drawerListener != null && drawerLayout != null) {
                     drawerListener.setFragmentOnClose(activity, newFragment, type.getTitle());
                     drawerLayout.closeDrawers();

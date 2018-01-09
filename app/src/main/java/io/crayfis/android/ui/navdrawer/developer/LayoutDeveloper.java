@@ -27,25 +27,11 @@ public class LayoutDeveloper extends NavDrawerFragment {
 
     public AppBuildView mAppBuildView;
 
-    private static LayoutDeveloper mInstance =null;
-
-    private final @StringRes int ABOUT_ID = R.string.toast_devel;
-
-    public LayoutDeveloper()
-    {
-    }
-
-    public static LayoutDeveloper getInstance() {
-        if (mInstance==null)
-          mInstance = new LayoutDeveloper();
-
-
-        return mInstance;
-    }
+    private static final @StringRes int ABOUT_ID = R.string.toast_devel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.devel, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.devel, container, false);
 
 
         mTextView = (TextView)root.findViewById(R.id.devel_text);

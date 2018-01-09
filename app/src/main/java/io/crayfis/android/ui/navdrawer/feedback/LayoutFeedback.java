@@ -4,7 +4,6 @@ package io.crayfis.android.ui.navdrawer.feedback;
  * Created by danielwhiteson on 1/5/15.
  */
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.StringRes;
 import android.view.KeyEvent;
@@ -24,24 +23,9 @@ import io.crayfis.android.util.CFLog;
 public class LayoutFeedback extends NavDrawerFragment {
 
 
-    private static LayoutFeedback mInstance =null;
-
-    public static LayoutFeedback getInstance() {
-        if (mInstance==null)
-            mInstance= new LayoutFeedback();
-
-        return mInstance;
-    }
     private static boolean shown_message=false;
 
-    private final @StringRes int ABOUT_ID = R.string.toast_feedback;
-
-
-    private String server_address;
-    private String server_port;
-    private Context context;
-
-
+    private static final @StringRes int ABOUT_ID = R.string.toast_feedback;
 
 
     WebView browserView;
@@ -51,11 +35,7 @@ public class LayoutFeedback extends NavDrawerFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState)
     {
 
-        super.onCreate(savedInstanceState);
-
-        context = getActivity();
-
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.feedback, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.feedback, container, false);
 
         //Removes the title bar in the application
         //requestWindowFeature(Window.FEATURE_NO_TITLE);

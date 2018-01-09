@@ -13,7 +13,6 @@ import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.webkit.WebChromeClient;
 import android.view.View;
-import android.content.Context;
 
 
 import android.widget.Toast;
@@ -24,18 +23,9 @@ import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 public class LayoutNetworkMap extends NavDrawerFragment {
 
-
-    private static LayoutNetworkMap mInstance =null;
-
-    public static LayoutNetworkMap getInstance() {
-        if (mInstance==null)
-            mInstance= new LayoutNetworkMap();
-
-        return mInstance;
-    }
     private static boolean shown_message=false;
 
-    private final @StringRes int ABOUT_ID = R.string.toast_leader;
+    private static final @StringRes int ABOUT_ID = R.string.toast_leader;
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
@@ -53,14 +43,8 @@ public class LayoutNetworkMap extends NavDrawerFragment {
 
 
         }
-        else {  }
         super.setUserVisibleHint(isVisibleToUser);
     }
-
-
-    private String server_address;
-    private String server_port;
-    private Context context;
 
 
     WebView browserView;
@@ -72,11 +56,7 @@ public class LayoutNetworkMap extends NavDrawerFragment {
 
         super.onCreate(savedInstanceState);
 
-         context = getActivity();
-        server_address = context.getString(R.string.server_address);
-        server_port = context.getString(R.string.server_port);
-
-        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.leader, null);
+        ViewGroup root = (ViewGroup) inflater.inflate(R.layout.network_map, container, false);
 
         //Removes the title bar in the application
         //requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -103,7 +83,7 @@ public class LayoutNetworkMap extends NavDrawerFragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+server_address+"/embed/android";
+        final String leaderURL = "http://"+getString(R.string.server_address)+"/embed/android";
 
         browserView.loadUrl(leaderURL);
 
