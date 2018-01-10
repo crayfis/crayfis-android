@@ -36,16 +36,23 @@ public class LayoutGallery extends NavDrawerFragment {
 
     private int columnWidth;
 
+    // Number of columns of Grid View
+    private static final int NUM_OF_COLUMNS = 2;
+
+    // Gridview image padding
+    private static final int GRID_PADDING = 4; // in dp
+
+    static int sGalleryCount = 7;
     private static final @StringRes int ABOUT_ID = R.string.toast_gallery;
 
     private void InitilizeGridLayout() {
         Resources r = getResources();
         float padding = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                GalleryUtil.GRID_PADDING, r.getDisplayMetrics());
+                GRID_PADDING, r.getDisplayMetrics());
 
-        columnWidth = (int) ((GalleryUtil.getScreenWidth(this.getContext()) - ((GalleryUtil.NUM_OF_COLUMNS + 1) * padding*2)) / GalleryUtil.NUM_OF_COLUMNS);
+        columnWidth = (int) ((GalleryUtil.getScreenWidth(this.getContext()) - ((NUM_OF_COLUMNS + 1) * padding*2)) / NUM_OF_COLUMNS);
 
-        gridView.setNumColumns(GalleryUtil.NUM_OF_COLUMNS);
+        gridView.setNumColumns(NUM_OF_COLUMNS);
         gridView.setColumnWidth(columnWidth);
         gridView.setStretchMode(GridView.NO_STRETCH);
         gridView.setPadding((int) padding, (int) padding, (int) padding,
@@ -146,6 +153,10 @@ public class LayoutGallery extends NavDrawerFragment {
     @Override
     public @StringRes int about() {
         return ABOUT_ID;
+    }
+
+    public static int getGalleryCount() {
+        return sGalleryCount;
     }
 
 }

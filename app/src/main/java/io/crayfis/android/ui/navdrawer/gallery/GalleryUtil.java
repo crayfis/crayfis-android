@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,13 +42,28 @@ public class GalleryUtil {
             return;
         }
 
-        ArrayList<String> imageList = getListOfImages();
-
-        CFLog.d("saveImage: current images: "+imageList.size());
-
-        if (imageList.size() > MAX_NUM_IMAGES)
+        while (getListOfImages().size() > MAX_NUM_IMAGES)
         {
-         // delete first image
+            File fileToDelete = null;
+            ArrayList<String> imageList = getListOfImages();
+
+            // decrement so that this stays the same after entering the loop
+            LayoutGallery.sGalleryCount--;
+
+            // sort by num_pix
+            while(fileToDelete == null) {
+                LayoutGallery.sGalleryCount++;
+                if(si.num_pix < LayoutGallery.sGalleryCount) return;
+                for(String filename : imageList) {
+                    SavedImage old = new SavedImage(filename);
+                    if(old.num_pix <= LayoutGallery.sGalleryCount) {
+                        fileToDelete = new File(filename);
+                        break;
+                    }
+                }
+            }
+
+            // delete image with least pixels
             CFLog.d("saveImage: deleting "+imageList.get(0));
 
             File file = new File(imageList.get(0));
@@ -68,18 +85,12 @@ public class GalleryUtil {
             catch (Exception e) {
                 Crashlytics.logException(e);
                 e.printStackTrace();
-            }
+        }
 
     }
 
 
-    private static final int MAX_NUM_IMAGES = 100;
-
-    // Number of columns of Grid View
-    public static final int NUM_OF_COLUMNS = 2;
-
-    // Gridview image padding
-    public static final int GRID_PADDING = 4; // in dp
+    private static final int MAX_NUM_IMAGES = 50;
 
     // SD card image directory
     private static final String DIRNAME = "/.crayfis";

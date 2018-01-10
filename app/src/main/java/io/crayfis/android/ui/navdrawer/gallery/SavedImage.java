@@ -3,6 +3,7 @@ package io.crayfis.android.ui.navdrawer.gallery;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.util.Pair;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.util.CFLog;
@@ -15,6 +16,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 /**
@@ -52,6 +54,7 @@ class SavedImage {
     }
 
     private SavedImage(long t) {
+
         SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy-HH:mm");
         Date resultdate = new Date(t);
         date=sdf.format(resultdate);
@@ -83,6 +86,8 @@ class SavedImage {
             if (val > max_pix) max_pix = val;
         }
 
+        num_pix = bb.getXCount();
+
         // add a buffer so we don't get super tiny images
         int minSide = 50;
         int deltaX = Math.max(minSide - (maxx - minx), 0) / 2;
@@ -98,9 +103,9 @@ class SavedImage {
 
             if (bitmap != null) {
                 // put all pixels in the bitmap
-                boolean[][] placed = new boolean[maxx-minx][maxy-miny];
                 Iterator<Integer> valIterator = bb.getValList().iterator();
                 int r = (bb.getSideLength()-1)/2;
+                LinkedHashSet<Pair<Integer, Integer>> blockXY = new LinkedHashSet<>();
 
                 for (int i = 0; i < bb.getXCount(); i++) {
                     int x = bb.getX(i) - minx;
@@ -108,23 +113,25 @@ class SavedImage {
 
                     for(int dy=Math.max(y-r,0); dy<=Math.min(y+r, maxy-miny-1); dy++) {
                         for(int dx=Math.max(x-r,0); dx<=Math.min(x+r, maxx-minx-1); dx++) {
-                            if(!placed[dx][dy]) {
-                                placed[dx][dy] = true;
-                                int val = (int) (255 * (valIterator.next() / (1.0 * max_pix)));
-                                int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
-                                CFLog.d(" pixel at x,y=" + x + "," + y + " = " + val + " argb=" + argb);
-
-                                bitmap.setPixel(x, y, Color.argb(255, val, val, val));
-                            }
+                            blockXY.add(Pair.create(x, y));
                         }
                     }
 
+                }
+
+                for(Pair<Integer, Integer> xy : blockXY) {
+                    int val = (int) (255 * (valIterator.next() / (1.0 * max_pix)));
+                    int argb = 0xFF000000 | (val << 4) | (val << 2) | val;
+                    CFLog.d(" pixel at x,y=" + xy.first + "," + xy.second + " = " + val + " argb=" + argb);
+
+                    bitmap.setPixel(xy.first, xy.second, Color.argb(255, val, val, val));
                 }
             }
         }  catch (Exception e) {
             Crashlytics.logException(e);
             e.printStackTrace();
         }
+        filename=makeFilename(max_pix, num_pix, date);
         CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
     }
 
@@ -134,7 +141,6 @@ class SavedImage {
         this(t);
 
         num_pix=pixels.size();
-        filename=makeFilename(max_pix, num_pix, date);
 
         // make the bitmap
 
@@ -162,7 +168,7 @@ class SavedImage {
         }
 
         // add a buffer so we don't get super tiny images
-        int minSide = 50;
+        int minSide = 30;
         int deltaX = Math.max(minSide - (maxx - minx), 0) / 2;
         int deltaY = Math.max(minSide - (maxy - miny), 0) / 2;
         maxx = maxx + deltaX;
@@ -192,6 +198,7 @@ class SavedImage {
             Crashlytics.logException(e);
             e.printStackTrace();
         }
+        filename=makeFilename(max_pix, num_pix, date);
         CFLog.d("Success building image bitmap="+bitmap+" filename="+filename);
     }
 

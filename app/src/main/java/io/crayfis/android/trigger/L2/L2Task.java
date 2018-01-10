@@ -18,6 +18,7 @@ import io.crayfis.android.R;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
+import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
 import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
 import io.crayfis.android.util.CFLog;
@@ -150,7 +151,8 @@ class L2Task implements Runnable {
 
         LayoutLiveView.addEvent(event);
 
-        if(event.getPixelsCount() >= 7) {
+        if(event.getPixelsCount() >= LayoutGallery.getGalleryCount()
+                || event.hasByteBlock() && event.getByteBlock().getXCount() >= LayoutGallery.getGalleryCount()) {
             SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
             if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)
                     && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M

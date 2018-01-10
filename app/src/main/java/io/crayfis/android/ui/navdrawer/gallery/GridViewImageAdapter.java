@@ -26,7 +26,6 @@ package io.crayfis.android.ui.navdrawer.gallery;
 class GridViewImageAdapter extends BaseAdapter {
 
     private Context _context;
-    private LayoutGallery _activity;
     private ArrayList<SavedImage> _filePaths = new ArrayList<SavedImage>();
     private int imageWidth;
 
