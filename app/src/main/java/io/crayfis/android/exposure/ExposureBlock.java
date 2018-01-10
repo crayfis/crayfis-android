@@ -17,7 +17,7 @@ import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
-public class ExposureBlock implements RawCameraFrame.Callback {
+public class ExposureBlock {
 
     private final CFApplication APPLICATION;
 
@@ -89,32 +89,6 @@ public class ExposureBlock implements RawCameraFrame.Callback {
         total_pixels = 0;
     }
 
-    @Override
-    public void onRawCameraFrame(RawCameraFrame frame) {
-
-        // if we fail to assign the block to the XB, just drop it.
-        if (!assignFrame(frame)) {
-            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
-            frame.retire();
-            return;
-        }
-
-        // If we made it here, we can submit the XB to the L1Processor.
-        // It will pop the assigned frame from the XB's internal list, and will also handle
-        // recycling the buffers.
-        mL0Processor.submitFrame(frame);
-
-    }
-
-	public long nanoAge() {
-		if (frozen) {
-			return end_time.Nano - start_time.Nano;
-		}
-		else {
-			return (System.nanoTime()-CFApplication.getStartTimeNano()) - start_time.Nano;
-		}
-	}
-
     /***
      * Assign a camera frame to this XB. Increments the internal L1_processed counter for the XB.
      * If the XB is already frozen and the camera timestamp is after the frame's end time, it will
@@ -122,13 +96,13 @@ public class ExposureBlock implements RawCameraFrame.Callback {
      * @param frame
      * @return True if successfully assigned; false if the
      */
-    private boolean assignFrame(RawCameraFrame frame) {
+    public void tryAssignFrame(RawCameraFrame frame) {
 
         long frame_time = frame.getAcquiredTimeNano();
         synchronized (assignedFrames) {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
-                return false;
+                frame.retire();
             }
             if(!assignedFrames.add(frame)) {
                 // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
@@ -136,7 +110,11 @@ public class ExposureBlock implements RawCameraFrame.Callback {
                 CFLog.w("assignFrame() called but it already is assigned!");
             }
         }
-        return true;
+
+        // If we made it here, we can submit the XB to the L1Processor.
+        // It will pop the assigned frame from the XB's internal list, and will also handle
+        // recycling the buffers.
+        mL0Processor.submitFrame(frame);
     }
 
     /**
@@ -166,7 +144,7 @@ public class ExposureBlock implements RawCameraFrame.Callback {
      * the XB Manager to determine whether an XB which it closed can be uploaded yet.
      * @return True iff finalized.
      */
-    public boolean isFinalized() {
+    boolean isFinalized() {
         synchronized (assignedFrames) {
             return frozen && assignedFrames.isEmpty();
         }
@@ -176,31 +154,25 @@ public class ExposureBlock implements RawCameraFrame.Callback {
         synchronized (assignedFrames) {
             if (frame.uploadRequested()) {
                 // this frame passed some trigger, so add it to the XB
-                addEvent(frame.buildEvent());
+                DataProtos.Event event = frame.getEvent();
+                synchronized (events) {
+                    events.add(event);
+                }
+
+                // add to XB pixels
+                int npix = event.getPixelsCount();
+                if(event.hasByteBlock()) {
+                    npix = event.getByteBlock().getXCount();
+                }
+
+                total_pixels += npix;
+                CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
             }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
             }
         }
     }
-	
-	public void addEvent(DataProtos.Event event) {
-		// Don't keep event information during calibration... it's too much data.
-		if (daq_state == CFApplication.State.CALIBRATION) {
-			return;
-		}
-        synchronized (events) {
-            events.add(event);
-        }
-		
-		int npix = event.getPixelsCount();
-		if(npix == 0 && event.hasByteBlock()) {
-		    npix = event.getByteBlock().getXCount();
-        }
-
-		total_pixels += npix;
-		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
-	}
 	
 	// Translate between the internal and external enums
 	private static DataProtos.ExposureBlock.State translateState(CFApplication.State orig) {

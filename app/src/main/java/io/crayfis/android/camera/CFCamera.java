@@ -206,7 +206,9 @@ public abstract class CFCamera {
         return devtxt;
     }
 
-    public abstract RawCameraFrame.Builder getFrameBuilder();
+    public RawCameraFrame.Builder getFrameBuilder() {
+        return RCF_BUILDER;
+    }
 
     public int getResX() {
         return mResX;

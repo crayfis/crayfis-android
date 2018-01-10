@@ -20,7 +20,7 @@ import io.crayfis.android.exposure.ExposureBlock;
  */
 
 @TargetApi(21)
-public class RawCamera2Frame extends RawCameraFrame {
+class RawCamera2Frame extends RawCameraFrame {
 
     private Allocation aRaw;
 
@@ -52,7 +52,8 @@ public class RawCamera2Frame extends RawCameraFrame {
         aRaw = alloc;
     }
 
-    public void receiveBytes() {
+    @Override
+    public void callLocks() {
         mRawLock.acquireUninterruptibly();
         aRaw.ioReceive();
     }

@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.frame.RawCamera2Frame;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
@@ -174,17 +173,16 @@ class CFCamera2 extends CFCamera {
         synchronized (mTimestampHistory) {
 
             if(mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
-                RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                        .setTimestamp(mQueuedTimestamps.poll());
+                final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                        .setTimestamp(mQueuedTimestamps.poll())
+                        .build();
 
-                //FIXME: RawCamera2Frame should be package-private
-                final RawCamera2Frame frame = (RawCamera2Frame) RCF_BUILDER.build();
                 mTimestampHistory.addValue(frame.getAcquiredTime());
                 mFrameHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        frame.receiveBytes();
-                        frame.getExposureBlock().onRawCameraFrame(frame);
+                        frame.callLocks();
+                        frame.assign();
                     }
                 });
                 mBuffersQueued.decrementAndGet();
@@ -422,11 +420,6 @@ class CFCamera2 extends CFCamera {
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
         return devtxt;
-    }
-
-    @Override
-    public RawCameraFrame.Builder getFrameBuilder() {
-        return RCF_BUILDER;
     }
 
 }

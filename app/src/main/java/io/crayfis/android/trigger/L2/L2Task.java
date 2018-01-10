@@ -147,7 +147,7 @@ class L2Task implements Runnable {
         // add pixel information to the protobuf builder
         buildPixels(mFrame);
 
-        DataProtos.Event event = mFrame.buildEvent();
+        DataProtos.Event event = mFrame.getEvent();
 
         LayoutLiveView.addEvent(event);
 

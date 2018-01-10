@@ -50,6 +50,11 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     }
 
+    @Override
+    public void callLocks() {
+
+    }
+
 
     @Override
     protected synchronized void weightAllocation() {

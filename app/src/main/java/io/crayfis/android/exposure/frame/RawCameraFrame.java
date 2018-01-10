@@ -339,6 +339,13 @@ public abstract class RawCameraFrame {
         return mUploadRequested;
     }
 
+    // FIXME: this is a hack
+    public abstract void callLocks();
+
+    public final void assign() {
+        mExposureBlock.tryAssignFrame(this);
+    }
+
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
@@ -548,7 +555,7 @@ public abstract class RawCameraFrame {
                     .setTimestampNano(getAcquiredTimeNano())
                     .setTimestampNtp(getAcquiredTimeNTP())
                     .setTimestampTarget(getTimestamp())
-                    .setPressure(getPressure())
+                    .setPressure(mPressure)
                     .setGpsLat(mLocation.getLatitude())
                     .setGpsLon(mLocation.getLongitude())
                     .setGpsFixtime(mLocation.getTime());
@@ -592,18 +599,10 @@ public abstract class RawCameraFrame {
         getEventBuilder().setZeroBias(zeroBiasSquare);
     }
 
-    public DataProtos.Event buildEvent() {
+    public DataProtos.Event getEvent() {
         if(mEvent == null) {
             mEvent = mEventBuilder.build();
         }
         return mEvent;
-    }
-
-    /**
-     * Interface for listening for frames
-     */
-    public interface Callback {
-
-        void onRawCameraFrame(RawCameraFrame frame);
     }
 }
