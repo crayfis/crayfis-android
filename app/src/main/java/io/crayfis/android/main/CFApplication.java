@@ -52,8 +52,8 @@ public class CFApplication extends Application {
 
     private int errorId = 2;
 
-    private final long STABILIZATION_COUNTDOWN_TICK = 1000; // ms
-    private final long STABILIZATION_DELAY = 10000; // ms
+    private static final long STABILIZATION_COUNTDOWN_TICK = 1000; // ms
+    private static final long STABILIZATION_DELAY = 10000; // ms
 
     private boolean mWaitingForStabilization = false;
     public int consecutiveIdles = 0;
@@ -76,8 +76,7 @@ public class CFApplication extends Application {
             CFLog.d("" + consecutiveIdles + " consecutive IDLEs");
 
             if(consecutiveIdles >= 3) {
-                handleUnresponsive();
-                return;
+                if(handleUnresponsive()) return;
             }
             if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
                     || CFCamera.getInstance().isFlat()) {
@@ -169,7 +168,7 @@ public class CFApplication extends Application {
 
     }
 
-    private void handleUnresponsive() {
+    private boolean handleUnresponsive() {
 
         IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryStatus = registerReceiver(null, ifilter);
@@ -179,7 +178,9 @@ public class CFApplication extends Application {
 
         if(!isCharging || !inAutostartWindow()) {
             finishAndQuit(R.string.quit_no_cameras);
+            return true;
         }
+        return false;
     }
 
     public boolean inAutostartWindow() {
