@@ -1,8 +1,15 @@
 package io.crayfis.android.trigger.L2;
 
+import android.util.Pair;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -14,9 +21,9 @@ import io.crayfis.android.util.CFLog;
  * Created by jswaney on 1/6/18.
  */
 
-public class L2TaskByteBlock extends L2Task {
+class L2TaskByteBlock extends L2Task {
 
-    public static class Config extends L2Config {
+    static class Config extends L2Config {
         static final int DEFAULT_NPIX = 500;
         static final int DEFAULT_RADIUS = 2;
 
@@ -89,6 +96,8 @@ public class L2TaskByteBlock extends L2Task {
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
+        LinkedHashSet<Pair<Integer, Integer>> blockXY = new LinkedHashSet<>();
+
         for(int i=0; i<l2PixelCoords.total(); i++) {
 
             double[] xy = l2PixelCoords.get(i,0);
@@ -103,17 +112,18 @@ public class L2TaskByteBlock extends L2Task {
             try {
                 for(int dy=Math.max(0,iy-radius); dy<=Math.min(height-1, iy+radius); dy++) {
                     for(int dx=Math.max(0,ix-radius); dx<=Math.min(width-1, ix+radius); dx++) {
-                        if(grayMat.get(dy, dx)[0] >= 0) {
-                            grayMat.put(dy, dx, -1);
-                            builder.addVal(mFrame.getRawByteAt(dx, dy));
-                        }
+                        blockXY.add(Pair.create(dx, dy));
                     }
                 }
 
             } catch (OutOfMemoryError e) {
-                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
+                    CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
             }
 
+        }
+
+        for(Pair<Integer, Integer> pairXY : blockXY) {
+            builder.addVal(mFrame.getRawByteAt(pairXY.first, pairXY.second));
         }
 
         mL2Processor.pass += l2PixelCoords.total();

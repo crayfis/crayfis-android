@@ -194,6 +194,9 @@ public class ExposureBlock implements RawCameraFrame.Callback {
         }
 		
 		int npix = event.getPixelsCount();
+		if(npix == 0 && event.hasByteBlock()) {
+		    npix = event.getByteBlock().getXCount();
+        }
 
 		total_pixels += npix;
 		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
