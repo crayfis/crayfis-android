@@ -25,22 +25,21 @@ import io.crayfis.android.R;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.camera.RawCameraFrame;
 import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.trigger.L1Processor;
-import io.crayfis.android.trigger.L2Processor;
+import io.crayfis.android.trigger.L1.L1Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.ui.navdrawer.navfragments.widget.DataCollectionStatsView;
+import io.crayfis.android.ui.navdrawer.status.DataCollectionStatsView;
 
 /**
  * Created by Jeff on 2/17/2017.
  */
 
-public class DAQService extends Service implements RawCameraFrame.Callback {
+public class DAQService extends Service {
 
     static {
         if(OpenCVLoader.initDebug()) {
@@ -63,14 +62,18 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
     private CFCamera mCFCamera;
 
+    private ExposureBlockManager xbManager;
+
+    private L1Calibrator L1cal;
+    private PreCalibrator mPreCal;
+
     @Override
     public void onCreate() {
         super.onCreate();
 
         CFLog.d("DAQService onCreate()");
         mApplication = (CFApplication)getApplication();
-        context = getApplicationContext();
-        mBroadcastManager = LocalBroadcastManager.getInstance(context);
+        mBroadcastManager = LocalBroadcastManager.getInstance(this);
     }
 
     @Override
@@ -171,19 +174,16 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
                 // Frame Processing
 
-                mL1Processor = new L1Processor(mApplication);
-                mPreCal = PreCalibrator.getInstance(context);
+                mPreCal = PreCalibrator.getInstance(mApplication);
                 L1cal = L1Calibrator.getInstance();
 
 
-                xbManager = ExposureBlockManager.getInstance(this);
+                xbManager = ExposureBlockManager.getInstance(mApplication);
 
                 // start camera
 
                 mCFCamera = CFCamera.getInstance();
-                mCFCamera.setCallback(this);
-                mCFCamera.register(context);
-
+                mCFCamera.register(mApplication);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -272,7 +272,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         // first generate runconfig for specific camera
         if (run_config == null || mCFCamera.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
-            UploadExposureService.submitRunConfig(context, run_config);
+            UploadExposureService.submitRunConfig(this, run_config);
         }
 
         // notify user that camera is running
@@ -317,7 +317,10 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
                 L1cal.updateThresholds();
 
                 // build the calibration result object
-                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder();
+                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
+                        .setRunId(run_config.getIdLo())
+                        .setRunIdHi(run_config.getIdHi())
+                        .setEndTime(System.currentTimeMillis());
 
                 for (long v : L1cal.getHistogram()) {
                     cal.addHistMaxpixel((int)v);
@@ -432,40 +435,6 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
     }
 
 
-
-
-    //////////////////////
-    // Frame processing //
-    //////////////////////
-
-    private ExposureBlockManager xbManager;
-    // helper that dispatches L1 inputs to be processed by the L1 trigger.
-    private L1Processor mL1Processor = null;
-
-    private L1Calibrator L1cal;
-    private PreCalibrator mPreCal;
-
-    private Context context;
-
-
-    @Override
-    public void onRawCameraFrame(RawCameraFrame frame) {
-
-        // if we fail to assign the block to the XB, just drop it.
-        if (!frame.getExposureBlock().assignFrame(frame)) {
-            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
-            frame.retire();
-            return;
-        }
-
-        // If we made it here, we can submit the XB to the L1Processor.
-        // It will pop the assigned frame from the XB's internal list, and will also handle
-        // recycling the buffers.
-        mL1Processor.submitFrame(frame);
-
-    }
-
-
     /////////////////
     // UI Feedback //
     /////////////////
@@ -478,7 +447,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
 
         public void saveStatsBeforeSleeping() {
             mTimeBeforeSleeping = System.currentTimeMillis();
-            mCountsBeforeSleeping = L2Processor.mL2Count;
+            mCountsBeforeSleeping = L2Processor.L2Count;
         }
 
         public long getTimeWhileSleeping() {
@@ -487,15 +456,15 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
         }
 
         public int getCountsWhileSleeping() {
-            return L2Processor.mL2Count - mCountsBeforeSleeping;
+            return L2Processor.L2Count - mCountsBeforeSleeping;
         }
 
         public DataCollectionStatsView.Status getDataCollectionStatus() {
             final int area = mCFCamera.getResX() * mCFCamera.getResY();
             return new DataCollectionStatsView.Status.Builder()
-                    .setTotalEvents(L2Processor.mL2Count)
-                    .setTotalPixels((long)L1Processor.mL1CountData * area)
-                    .setTotalFrames(L1Processor.mL1CountData)
+                    .setTotalEvents(L2Processor.L2Count)
+                    .setTotalPixels((long)L1Processor.L1CountData * area)
+                    .setTotalFrames(L1Processor.L1CountData)
                     .build();
         }
 
@@ -507,7 +476,7 @@ public class DAQService extends Service implements RawCameraFrame.Callback {
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                    + "total frames - L1: " + L1Processor.mL1Count + " (L2: " + L2Processor.mL2Count + ")\n"
+                    + "total frames - L1: " + L1Processor.L1Count + " (L2: " + L2Processor.L2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
                     + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
                     + "fps="+String.format("%1.2f",lastFPS)

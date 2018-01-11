@@ -7,6 +7,7 @@ import android.hardware.Camera;
 import java.util.List;
 
 import io.crayfis.android.R;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -15,8 +16,6 @@ import io.crayfis.android.util.CFLog;
 
 class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Camera.ErrorCallback {
 
-    private final RawCameraDeprecatedFrame.Builder RCF_BUILDER;
-
     private Camera mCamera;
     private Camera.Parameters mParams;
     private Camera.Size previewSize;
@@ -24,7 +23,6 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     CFCameraDeprecated() {
         super();
-        RCF_BUILDER = new RawCameraDeprecatedFrame.Builder();
 
         mTexture = new SurfaceTexture(10);
 
@@ -160,9 +158,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
         RawCameraFrame frame = RCF_BUILDER.build();
         mTimestampHistory.addValue(frame.getAcquiredTime());
-        if(mCallback != null) {
-            mCallback.onRawCameraFrame(frame);
-        }
+        frame.getExposureBlock().onRawCameraFrame(frame);
 
     }
 

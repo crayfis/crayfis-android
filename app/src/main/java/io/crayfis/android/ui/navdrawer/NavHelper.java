@@ -11,16 +11,16 @@ import android.view.ViewGroup;
 
 import java.util.List;
 
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutLiveView;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutDeveloper;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutFeedback;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutGallery;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutData;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutLeader;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutLogin;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutDosimeter;
+import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
+import io.crayfis.android.ui.navdrawer.developer.LayoutDeveloper;
+import io.crayfis.android.ui.navdrawer.feedback.LayoutFeedback;
+import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
+import io.crayfis.android.ui.navdrawer.data.LayoutData;
+import io.crayfis.android.ui.navdrawer.network_map.LayoutNetworkMap;
+import io.crayfis.android.ui.navdrawer.your_account.LayoutYourAccount;
+import io.crayfis.android.ui.navdrawer.dosimeter.LayoutDosimeter;
 import io.crayfis.android.R;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutStatus;
+import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -70,39 +70,38 @@ public final class NavHelper {
 
             switch (type) {
                 case DEVELOPER:
-                    newFragment = LayoutDeveloper.getInstance();
+                    newFragment = new LayoutDeveloper();
                     break;
                 case LIVE_VIEW:
-                    newFragment = LayoutLiveView.getInstance();
+                    newFragment = new LayoutLiveView();
                     break;
                 case STATUS:
                     newFragment = new LayoutStatus();
                     break;
                 case DATA:
-                    newFragment = LayoutData.getInstance();
+                    newFragment = new LayoutData();
                     break;
                 case NETWORK_MAP:
-                    newFragment = LayoutLeader.getInstance();
+                    newFragment = new LayoutNetworkMap();
                     break;
                 case YOUR_ACCOUNT:
-                    newFragment = LayoutLogin.getInstance();
+                    newFragment = new LayoutYourAccount();
                     break;
                 case DOSIMETER:
-                    newFragment = LayoutDosimeter.getInstance();
+                    newFragment = new LayoutDosimeter();
                     break;
                 case FEEDBACK:
-                    newFragment = LayoutFeedback.getInstance();
+                    newFragment = new LayoutFeedback();
                     break;
                 case GALLERY:
-                    newFragment = LayoutGallery.getInstance();
+                    newFragment = new LayoutGallery();
                     break;
                 default:
-                    newFragment = null;
+                    CFLog.e("Unhandled navigation type " + type);
+                    return;
             }
 
-            if (newFragment == null) {
-                CFLog.e("Unhandled navigation type " + type);
-            } else if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
+            if (currentFragment == null || !(currentFragment.getClass().isInstance(newFragment))) {
                 if (drawerListener != null && drawerLayout != null) {
                     drawerListener.setFragmentOnClose(activity, newFragment, type.getTitle());
                     drawerLayout.closeDrawers();

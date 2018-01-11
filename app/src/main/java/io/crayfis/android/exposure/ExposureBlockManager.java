@@ -14,7 +14,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
-import io.crayfis.android.trigger.L2Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -84,18 +84,18 @@ public final class ExposureBlockManager {
     /**
      * Get the instance of {@link ExposureBlockManager}.
      *
-     * @param context The context.
+     * @param app The application context.
      * @return {@link ExposureBlockManager}
      */
-    public static synchronized ExposureBlockManager getInstance(@NonNull final Context context) {
+    public static synchronized ExposureBlockManager getInstance(@NonNull final CFApplication app) {
         if (sInstance == null) {
-            sInstance = new ExposureBlockManager(context);
+            sInstance = new ExposureBlockManager(app);
         }
         return sInstance;
     }
 
-    private ExposureBlockManager(@NonNull final Context context) {
-        APPLICATION = (CFApplication) context.getApplicationContext();
+    private ExposureBlockManager(@NonNull final CFApplication app) {
+        APPLICATION = app;
 
         mFlushHandler = new Handler();
     }
@@ -150,6 +150,7 @@ public final class ExposureBlockManager {
                 mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
+                CONFIG.getL0Trigger(),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),

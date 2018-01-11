@@ -6,10 +6,11 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
-import io.crayfis.android.ui.navdrawer.navfragments.LayoutStatus;
+import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
 
 /**
  * Created by Jeff on 4/15/2017.

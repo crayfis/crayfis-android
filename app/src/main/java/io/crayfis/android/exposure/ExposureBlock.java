@@ -9,15 +9,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.trigger.L0.L0Processor;
+import io.crayfis.android.trigger.L1.L1Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.camera.RawCameraFrame;
-import io.crayfis.android.trigger.L1Config;
-import io.crayfis.android.trigger.L2Config;
-import io.crayfis.android.trigger.L2Task.RecoEvent;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
-public class ExposureBlock {
+public class ExposureBlock implements RawCameraFrame.Callback {
 
     private final CFApplication APPLICATION;
 
@@ -35,19 +35,9 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-    private final L1Config L1_trigger_config;
-    private final L2Config L2_trigger_config;
-
-    private final int L1_threshold;
-	private final int L2_threshold;
-
-    public long L1_processed;
-	public long L1_pass;
-	public long L1_skip;
-	
-	public long L2_processed;
-	public long L2_pass;
-	public long L2_skip;
+	public final L0Processor mL0Processor;
+    public final L1Processor mL1Processor;
+    public final L2Processor mL2Processor;
 	
 	private int total_pixels;
 	
@@ -67,11 +57,12 @@ public class ExposureBlock {
     private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
-    private final ArrayList<RecoEvent> events = new ArrayList<RecoEvent>();
+    private final ArrayList<DataProtos.Event> events = new ArrayList<>();
 
     public ExposureBlock(CFApplication application,
                          int xbn, UUID run_id,
                          UUID precal_id,
+                         String L0_config,
                          String L1_config,
                          String L2_config,
                          int L1_threshold, int L2_threshold,
@@ -85,10 +76,9 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.L1_trigger_config = L1Config.makeConfig(L1_config);
-        this.L2_trigger_config = L2Config.makeConfig(L2_config);
-        this.L1_threshold = L1_threshold;
-        this.L2_threshold = L2_threshold;
+        this.mL0Processor = new L0Processor(APPLICATION, L0_config);
+        this.mL1Processor = new L1Processor(APPLICATION, L1_config, L1_threshold);
+        this.mL2Processor = new L2Processor(APPLICATION, L2_config, L2_threshold);
         this.underflow_hist = new Histogram(L1_threshold+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -96,11 +86,26 @@ public class ExposureBlock {
         this.res_x = resx;
         this.res_y = resy;
 
-        L1_processed = L1_pass = L1_skip = 0;
-        L2_processed = L2_pass = L2_skip = 0;
         total_pixels = 0;
     }
-	
+
+    @Override
+    public void onRawCameraFrame(RawCameraFrame frame) {
+
+        // if we fail to assign the block to the XB, just drop it.
+        if (!assignFrame(frame)) {
+            CFLog.e("Cannot assign frame to current XB! Dropping frame.");
+            frame.retire();
+            return;
+        }
+
+        // If we made it here, we can submit the XB to the L1Processor.
+        // It will pop the assigned frame from the XB's internal list, and will also handle
+        // recycling the buffers.
+        mL0Processor.submitFrame(frame);
+
+    }
+
 	public long nanoAge() {
 		if (frozen) {
 			return end_time.Nano - start_time.Nano;
@@ -117,22 +122,19 @@ public class ExposureBlock {
      * @param frame
      * @return True if successfully assigned; false if the
      */
-    public boolean assignFrame(RawCameraFrame frame) {
-        boolean added;
+    private boolean assignFrame(RawCameraFrame frame) {
+
         long frame_time = frame.getAcquiredTimeNano();
         synchronized (assignedFrames) {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
                 return false;
             }
-            added = assignedFrames.add(frame);
-        }
-        if (added) {
-            L1_processed++;
-        } else {
-            // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
-            // is re-assigned after it had been processed once (and hence moved to processedFrames).
-            CFLog.w("assignFrame() called but it already is assigned!");
+            if(!assignedFrames.add(frame)) {
+                // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
+                // is re-assigned after it had been processed once (and hence moved to processedFrames).
+                CFLog.w("assignFrame() called but it already is assigned!");
+            }
         }
         return true;
     }
@@ -172,13 +174,17 @@ public class ExposureBlock {
 
     public void clearFrame(RawCameraFrame frame) {
         synchronized (assignedFrames) {
+            if (frame.uploadRequested()) {
+                // this frame passed some trigger, so add it to the XB
+                addEvent(frame.buildEvent());
+            }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
             }
         }
     }
 	
-	public void addEvent(RecoEvent event) {
+	public void addEvent(DataProtos.Event event) {
 		// Don't keep event information during calibration... it's too much data.
 		if (daq_state == CFApplication.State.CALIBRATION) {
 			return;
@@ -187,7 +193,10 @@ public class ExposureBlock {
             events.add(event);
         }
 		
-		int npix = event.getNPix();
+		int npix = event.getPixelsCount();
+		if(npix == 0 && event.hasByteBlock()) {
+		    npix = event.getByteBlock().getXCount();
+        }
 
 		total_pixels += npix;
 		CFLog.d("addevt: Added event with " + npix + " pixels (total = " + total_pixels + ")");
@@ -212,17 +221,23 @@ public class ExposureBlock {
 	DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
-                .setL1Pass((int) L1_pass)
-                .setL1Processed((int) L1_processed)
-                .setL1Skip((int) L1_skip)
-                .setL1Thresh(L1_threshold)
-                .setL1Conf(L1_trigger_config.toString())
+
+                .setL0Pass(mL0Processor.pass)
+                .setL0Processed(mL0Processor.processed)
+                .setL0Skip(mL0Processor.skip)
+                .setL0Conf(mL0Processor.getConfig())
+
+                .setL1Pass(mL1Processor.pass)
+                .setL1Processed(mL1Processor.processed)
+                .setL1Skip(mL1Processor.skip)
+                .setL1Thresh(mL1Processor.mL1Thresh)
+                .setL1Conf(mL1Processor.getConfig())
 		
-		        .setL2Pass((int) L2_pass)
-		        .setL2Processed((int) L2_processed)
-		        .setL2Skip((int) L2_skip)
-		        .setL2Thresh(L2_threshold)
-                .setL2Conf(L2_trigger_config.toString())
+		        .setL2Pass(mL2Processor.pass)
+		        .setL2Processed(mL2Processor.processed)
+		        .setL2Skip(mL2Processor.skip)
+		        .setL2Thresh(mL2Processor.mL2Thresh)
+                .setL2Conf(mL2Processor.getConfig())
 
 				.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())
@@ -236,6 +251,7 @@ public class ExposureBlock {
                 .setEndTimeNtp(end_time.NTP)
 
                 .setRunId(run_id.getLeastSignificantBits())
+                .setRunIdHi(run_id.getMostSignificantBits())
 
                 .setBatteryTemp(batteryTemp)
                 .setBatteryEndTemp(batteryEndTemp)
@@ -260,15 +276,16 @@ public class ExposureBlock {
 
         // should be null for PRECALIBRATION
         if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
-            buf.setPrecalId(precal_id.getLeastSignificantBits());
+            buf.setPrecalId(precal_id.getLeastSignificantBits())
+                    .setPrecalIdHi(precal_id.getMostSignificantBits());
         }
 		
 		// don't output event information for calibration blocks...
 		// they're really huge.
 		if (daq_state == CFApplication.State.DATA) {
-			for (RecoEvent evt : events) {
+			for (DataProtos.Event evt : events) {
                 try {
-                    buf.addEvents(evt.buildProto());
+                    buf.addEvents(evt);
                 } catch (Exception e) {
                 }
 			}
@@ -282,20 +299,12 @@ public class ExposureBlock {
 		return buf.toByteArray();
 	}
 
-    public L1Config getL1Config() {
-        return L1_trigger_config;
-    }
-
     public int getL1Thresh() {
-        return L1_threshold;
-    }
-
-    public L2Config getL2Config() {
-        return L2_trigger_config;
+        return mL1Processor.mL1Thresh;
     }
 
     public int getL2Thresh() {
-        return L2_threshold;
+        return mL2Processor.mL2Thresh;
     }
 
     public long getStartTimeNano() {

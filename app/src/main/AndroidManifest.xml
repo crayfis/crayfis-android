@@ -72,14 +72,14 @@
             android:name=".main.DAQService"
             android:exported="false"/>
 
-        <activity android:name=".ui.UserNotificationActivity"
+        <activity android:name=".ui.usernotif.UserNotificationActivity"
                   android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".ui.UserSettingActivity"
+            android:name=".ui.settings.UserSettingActivity"
             android:screenOrientation="portrait"/>
 
-        <activity android:name=".ui.ConfigureAutostartActivity"
+        <activity android:name=".ui.settings.ConfigureAutostartActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="io.crayfis.android.ConfigureAutostartActivity"/>

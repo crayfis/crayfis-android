@@ -24,6 +24,7 @@ class ServerCommand {
     @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L1_thresh") private Integer mL1Threshold;
     @SerializedName("set_L2_thresh") private Integer mL2Threshold;
+    @SerializedName("set_L0_trig") private String mL0Trigger;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
     @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
@@ -107,6 +108,9 @@ class ServerCommand {
     Integer getL2Threshold() {
         return mL2Threshold;
     }
+
+    @Nullable
+    String getL0Trigger() { return mL0Trigger; };
 
     @Nullable
     String getL1Trigger() { return mL1Trigger; };

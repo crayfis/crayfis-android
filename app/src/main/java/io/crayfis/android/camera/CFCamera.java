@@ -6,6 +6,7 @@ import android.location.Location;
 import android.os.Build;
 import android.renderscript.RenderScript;
 
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.calibration.FrameHistory;
@@ -31,8 +32,6 @@ public abstract class CFCamera {
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
 
-    RawCameraFrame.Callback mCallback;
-
     int mCameraId = -1;
 
     int mResX;
@@ -43,6 +42,8 @@ public abstract class CFCamera {
     public int badFlatEvents;
 
     private static CFCamera sInstance;
+
+    final RawCameraFrame.Builder RCF_BUILDER = new RawCameraFrame.Builder();
 
     CFCamera() {
 
@@ -70,15 +71,14 @@ public abstract class CFCamera {
     /**
      * Instates camera, sensors, and location services
      *
-     * @param context The Application context
+     * @param app the application
      */
-    public void register(Context context) {
-        if(mCallback == null) return;
-        mApplication = (CFApplication) context;
+    public void register(CFApplication app) {
+        mApplication = app;
         mRS = mApplication.getRenderScript();
 
-        mCFSensor = new CFSensor(context, getFrameBuilder());
-        mCFLocation = new CFLocation(context, getFrameBuilder());
+        mCFSensor = new CFSensor(app, getFrameBuilder());
+        mCFLocation = new CFLocation(app, getFrameBuilder());
         changeCamera();
     }
 
@@ -162,9 +162,7 @@ public abstract class CFCamera {
         synchronized(mTimestampHistory) {
             int nframes = mTimestampHistory.size();
             if (nframes>0) {
-                double fps = ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
-                CFLog.d("fps = " + fps);
-                return fps;
+                return ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
             }
         }
 
@@ -206,10 +204,6 @@ public abstract class CFCamera {
         }
         devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
         return devtxt;
-    }
-    
-    public void setCallback(RawCameraFrame.Callback callback) {
-        mCallback = callback;
     }
 
     public abstract RawCameraFrame.Builder getFrameBuilder();

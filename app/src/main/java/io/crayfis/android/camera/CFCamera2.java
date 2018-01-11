@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
+import io.crayfis.android.exposure.frame.RawCamera2Frame;
+import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 
@@ -41,8 +43,6 @@ import io.crayfis.android.util.CFLog;
 
 @TargetApi(21)
 class CFCamera2 extends CFCamera {
-
-    private final RawCamera2Frame.Builder RCF_BUILDER;
 
     // thread for Camera callbacks
     private Handler mCameraHandler;
@@ -65,11 +65,6 @@ class CFCamera2 extends CFCamera {
     private AtomicInteger mBuffersQueued = new AtomicInteger();
     private final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
 
-
-    CFCamera2() {
-        super();
-        RCF_BUILDER = new RawCamera2Frame.Builder();
-    }
 
     /**
      * Callback for opening the camera
@@ -182,13 +177,14 @@ class CFCamera2 extends CFCamera {
                 RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
                         .setTimestamp(mQueuedTimestamps.poll());
 
-                final RawCamera2Frame frame = RCF_BUILDER.build();
+                //FIXME: RawCamera2Frame should be package-private
+                final RawCamera2Frame frame = (RawCamera2Frame) RCF_BUILDER.build();
                 mTimestampHistory.addValue(frame.getAcquiredTime());
                 mFrameHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         frame.receiveBytes();
-                        mCallback.onRawCameraFrame(frame);
+                        frame.getExposureBlock().onRawCameraFrame(frame);
                     }
                 });
                 mBuffersQueued.decrementAndGet();
