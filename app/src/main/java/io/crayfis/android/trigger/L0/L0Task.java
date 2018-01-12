@@ -52,14 +52,12 @@ class L0Task extends TriggerProcessor.Task {
         if (mConfig.random) {
             return Math.random() < 1. / mConfig.prescale;
         } else {
-            return (L0Processor.L0Count % mConfig.prescale == 0);
+            return (L0Processor.L0Count.incrementAndGet() % mConfig.prescale == 0);
         }
     }
 
     @Override
     public boolean processFrame(RawCameraFrame frame) {
-
-        L0Processor.L0Count++;
 
         if (isZeroBias()) {
             // do the zero bias things!
