@@ -55,4 +55,12 @@ public final class CFUtil {
                 .setNeutralButton("Close Application", closeListener)
                 .create();
     }
+
+    public static int getInt(String str, int defaultVal) {
+        try {
+            return Integer.parseInt(str);
+        } catch (NumberFormatException e) {
+            return defaultVal;
+        }
+    }
 }

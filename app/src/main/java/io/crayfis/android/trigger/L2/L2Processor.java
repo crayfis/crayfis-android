@@ -1,45 +1,57 @@
 package io.crayfis.android.trigger.L2;
 
-import android.os.AsyncTask;
-
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.util.CFLog;
 
-public class L2Processor {
-    final CFApplication mApplication;
-    private final L2Config mL2Config;
-    public final int mL2Thresh;
+public class L2Processor extends TriggerProcessor {
 
-    public int processed = 0;
-    public int pass = 0;
-    public int skip = 0;
     public static int L2Count = 0;
 
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    public L2Processor(CFApplication application, String configStr, int l2thresh) {
-        mApplication = application;
-        mL2Config = L2Config.makeConfig(configStr);
-        mL2Thresh = l2thresh;
+    public L2Processor(CFApplication application, String configStr) {
+        super(application, configStr, false);
     }
 
-    private Runnable makeTask(RawCameraFrame frame) {
-        return mL2Config.makeTask(this, frame);
+    @Override
+    public Config makeConfig(String configStr) {
+        String[] pieces = configStr.split(";", 2);
+
+        String name = pieces[0];
+        String cfgstr = pieces.length==2 ? pieces[1] : "";
+
+        Config cfg;
+        switch (name) {
+            case "default":
+                cfg = new L2Task.Config(name, cfgstr);
+                break;
+            case "maxn":
+                cfg = new L2TaskMaxN.Config(name, cfgstr);
+                break;
+            case "byteblock":
+                cfg = new L2TaskByteBlock.Config(name, cfgstr);
+                break;
+            default:
+                CFLog.w("No L2 implementation found for " + name + ", using default!");
+                cfg = new L2Task.Config(name, cfgstr);
+                break;
+        }
+
+        return cfg;
     }
 
+    @Override
     public void submitFrame(RawCameraFrame frame) {
-        processed++;
-        L2Count++;
+        super.submitFrame(frame);
 
         // record the frame time to calculate pass rate
         synchronized (sPassTimes) {
             sPassTimes.addValue(frame.getAcquiredTimeNano());
         }
-
-        // send it off to be processed by L2 logic
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
     }
 
     /**
@@ -55,9 +67,5 @@ public class L2Processor {
             double dtMin = dt / 1000000000. / 60.;
             return sPassTimes.size() / dtMin;
         }
-    }
-
-    public String getConfig() {
-        return mL2Config.toString();
     }
 }

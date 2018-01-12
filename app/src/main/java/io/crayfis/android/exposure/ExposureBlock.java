@@ -1,12 +1,18 @@
 package io.crayfis.android.exposure;
 
+import android.Manifest;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
+import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.crayfis.android.R;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.trigger.L0.L0Processor;
@@ -15,6 +21,9 @@ import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
+import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
+import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
@@ -35,9 +44,9 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-	public final L0Processor mL0Processor;
-    public final L1Processor mL1Processor;
-    public final L2Processor mL2Processor;
+	private final L0Processor mL0Processor;
+    private final L1Processor mL1Processor;
+    private final L2Processor mL2Processor;
 	
 	private int total_pixels;
 	
@@ -77,8 +86,8 @@ public class ExposureBlock {
         this.run_id = run_id;
         this.precal_id = precal_id;
         this.mL0Processor = new L0Processor(APPLICATION, L0_config);
-        this.mL1Processor = new L1Processor(APPLICATION, L1_config, L1_threshold);
-        this.mL2Processor = new L2Processor(APPLICATION, L2_config, L2_threshold);
+        this.mL1Processor = new L1Processor(APPLICATION, L1_config + ";thresh=" + L1_threshold);
+        this.mL2Processor = new L2Processor(APPLICATION, L2_config + ";thresh=" + L2_threshold);
         this.underflow_hist = new Histogram(L1_threshold+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -87,6 +96,8 @@ public class ExposureBlock {
         this.res_y = resy;
 
         total_pixels = 0;
+        mL0Processor.setNext(mL1Processor)
+                .setNext(mL2Processor);
     }
 
     /***
@@ -121,7 +132,7 @@ public class ExposureBlock {
      * Freeze the XB. This means that the XB will not accept any new raw
      * camera frame assignments.
      */
-    public void freeze() {
+    void freeze() {
         synchronized (assignedFrames) {
             frozen = true;
             end_time = new AcquisitionTime();
@@ -134,7 +145,7 @@ public class ExposureBlock {
      * camera frame assignments.
      * @return True if frozen.
      */
-    public boolean isFrozen() {
+    boolean isFrozen() {
         return frozen;
     }
 
@@ -157,6 +168,21 @@ public class ExposureBlock {
                 DataProtos.Event event = frame.getEvent();
                 synchronized (events) {
                     events.add(event);
+                }
+
+                // update UI
+                LayoutLiveView.addEvent(event);
+
+                if(event.getPixelsCount() >= LayoutGallery.getGalleryCount()
+                        || event.hasByteBlock() && event.getByteBlock().getXCount() >= LayoutGallery.getGalleryCount()) {
+                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(APPLICATION);
+                    if(sharedPrefs.getBoolean(APPLICATION.getString(R.string.prefEnableGallery), false)
+                            && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                            || APPLICATION.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            == PackageManager.PERMISSION_GRANTED)) {
+
+                        GalleryUtil.saveImage(event);
+                    }
                 }
 
                 // add to XB pixels
@@ -202,13 +228,13 @@ public class ExposureBlock {
                 .setL1Pass(mL1Processor.pass)
                 .setL1Processed(mL1Processor.processed)
                 .setL1Skip(mL1Processor.skip)
-                .setL1Thresh(mL1Processor.mL1Thresh)
+                .setL1Thresh(mL1Processor.getInt("thresh"))
                 .setL1Conf(mL1Processor.getConfig())
 		
 		        .setL2Pass(mL2Processor.pass)
 		        .setL2Processed(mL2Processor.processed)
 		        .setL2Skip(mL2Processor.skip)
-		        .setL2Thresh(mL2Processor.mL2Thresh)
+		        .setL2Thresh(mL2Processor.getInt("thresh"))
                 .setL2Conf(mL2Processor.getConfig())
 
 				.setGpsLat(start_loc.getLatitude())
@@ -272,11 +298,7 @@ public class ExposureBlock {
 	}
 
     public int getL1Thresh() {
-        return mL1Processor.mL1Thresh;
-    }
-
-    public int getL2Thresh() {
-        return mL2Processor.mL2Thresh;
+        return mL1Processor.getInt("thresh");
     }
 
     public long getStartTimeNano() {

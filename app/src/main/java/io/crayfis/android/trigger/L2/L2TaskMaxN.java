@@ -10,53 +10,42 @@ import java.util.Comparator;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
 import io.crayfis.android.util.CFLog;
+import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 5/16/16.
  */
-class L2TaskMaxN extends L2Task {
-    public static class Config extends L2Config {
-        static final int DEFAULT_NPIX = 25;
+class L2TaskMaxN extends TriggerProcessor.Task {
 
+    static class Config extends TriggerProcessor.Config {
+        static final int DEFAULT_NPIX = 25;
+        static final int DEFAULT_THRESH = 255;
+
+        final int thresh;
         final int npix;
         Config(String name, String cfg) {
             super(name, cfg);
 
-            // FIXME: there's probably an easier/more generic way to parse simple key-val pairs.
-            int cfg_npix = DEFAULT_NPIX;
-            for (String c : cfg.split(";")) {
-                String[] kv = c.split("=");
-                CFLog.i("parsing c='" + c + "', split len = " + kv.length);
-                if (kv.length != 2) continue;
-                String key = kv[0];
-                String value = kv[1];
-                CFLog.i("key='" + key +"', val='" + value +"'");
-
-                if (key.equals("npix")) {
-                    try {
-                        cfg_npix = Integer.parseInt(value);
-                    } catch (NumberFormatException e) {
-                        CFLog.w("Couldn't parse npix argument for L2 configuraion!");
-                    }
-                }
-            }
-
-            npix = cfg_npix;
+            thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
+            npix = CFUtil.getInt(mTaskConfig.get("npix"), DEFAULT_NPIX);
         }
 
         @Override
-        public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
-            return new L2TaskMaxN(l2Processor, frame, npix);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
+            return new L2TaskMaxN(processor, frame, this);
         }
     }
 
     private static final PixelComparator PIXEL_COMPARATOR = new PixelComparator();
 
-    private L2TaskMaxN(L2Processor l2processor, RawCameraFrame frame, int npix) {
-        super(l2processor, frame, npix);
+    private final Config mConfig;
+
+    private L2TaskMaxN(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
+        super(processor, frame);
+        mConfig = cfg;
     }
 
     private static class PixelComparator implements Comparator<DataProtos.Pixel> {
@@ -73,7 +62,9 @@ class L2TaskMaxN extends L2Task {
     }
 
     @Override
-    void buildPixels(RawCameraFrame frame) {
+    public boolean processFrame(RawCameraFrame frame) {
+
+        L2Processor.L2Count++;
 
         ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
@@ -84,9 +75,7 @@ class L2TaskMaxN extends L2Task {
         int width = grayMat.width();
         int height = grayMat.height();
 
-        ExposureBlock xb = frame.getExposureBlock();
-
-        Imgproc.threshold(grayMat, threshMat, xb.getL2Thresh(), 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, mConfig.thresh, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
@@ -118,7 +107,7 @@ class L2TaskMaxN extends L2Task {
                 grayAvg5.release();
 
                 pixels.add(pixBuilder.build());
-                prunePixels(pixels, npix);
+                prunePixels(pixels, mConfig.npix);
 
             } catch (OutOfMemoryError e) {
                 CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
@@ -127,7 +116,9 @@ class L2TaskMaxN extends L2Task {
         }
 
         l2PixelCoords.release();
-        mL2Processor.pass += pixels.size();
+        mProcessor.pass += pixels.size();
         frame.setPixels(pixels);
+
+        return true;
     }
 }

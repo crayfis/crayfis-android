@@ -1,44 +1,39 @@
 package io.crayfis.android.trigger.L0;
 
-
-import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.server.CFConfig;
-import io.fabric.sdk.android.services.concurrency.AsyncTask;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 1/4/18.
  */
 
-public class L0Processor {
-    final CFApplication mApplication;
-    private final L0Config mL0Config;
+public class L0Processor extends TriggerProcessor {
 
-    public int processed = 0;
-    public int pass = 0;
-    public int skip = 0;
-    public static int L0Count = 0;
-
-    final CFConfig CONFIG = CFConfig.getInstance();
+    public static int L0Count;
 
     public L0Processor(CFApplication application, String configString) {
-        mApplication = application;
-        mL0Config = L0Config.makeConfig(configString);
+        super(application, configString, true);
     }
 
-    private Runnable makeTask(RawCameraFrame frame) {
-        return mL0Config.makeTask(this, frame);
-    }
+    @Override
+    public Config makeConfig(String configStr) {
+        String[] pieces = configStr.split(";", 2);
 
-    public void submitFrame(RawCameraFrame frame) {
-        processed++;
-        L0Count++;
-        // Note: we use a serial_executor here so that the zerobias processor
-        // sees frames in the order in which they are received.
-        AsyncTask.SERIAL_EXECUTOR.execute(makeTask(frame));
-    }
+        String name = pieces[0];
+        String cfgstr = pieces.length==2 ? pieces[1] : "";
 
-    public String getConfig() {
-        return mL0Config.toString();
+        Config cfg;
+        switch (name) {
+            case "default":
+                cfg = new L0Task.Config(name, cfgstr);
+                break;
+            default:
+                CFLog.w("No L0 implementation found for " + name + ", using default!");
+                cfg = new L0Task.Config(name, cfgstr);
+                break;
+        }
+
+        return cfg;
     }
 }

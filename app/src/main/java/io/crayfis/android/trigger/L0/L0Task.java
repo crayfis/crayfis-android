@@ -6,82 +6,44 @@ import java.util.Random;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
+import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 1/4/18.
  */
 
-class L0Task implements Runnable {
-    public static class Config extends L0Config {
+class L0Task extends TriggerProcessor.Task {
 
-        public final int DEFAULT_PRESCALE = 1000;
-        public final boolean DEFAULT_RANDOM = true;
-        public final int DEFAULT_WINDOWSIZE = 10;
+    static class Config extends TriggerProcessor.Config {
 
-        public final int prescale;
-        public final boolean random;
-        public final int windowSize;
+        static final int DEFAULT_PRESCALE = 1000;
+        static final boolean DEFAULT_RANDOM = true;
+        static final int DEFAULT_WINDOWSIZE = 10;
+
+        final int prescale;
+        final boolean random;
+        final int windowSize;
 
         Config(String name, String cfg) {
             super(name, cfg);
 
-            // FIXME: there's probably an easier/more generic way to parse simple key-val pairs.
-            int cfg_prescale = DEFAULT_PRESCALE;
-            boolean cfg_random = DEFAULT_RANDOM;
-            int cfg_windowSize = DEFAULT_WINDOWSIZE;
-            for (String c : cfg.split(";")) {
-                String[] kv = c.split("=");
-                CFLog.i("parsing c='" + c + "', split len = " + kv.length);
-                if (kv.length != 2) continue;
-                String key = kv[0];
-                String value = kv[1];
-                CFLog.i("key='" + key +"', val='" + value +"'");
-
-                switch (key) {
-                    case "prescale":
-                        try {
-                            cfg_prescale = Integer.parseInt(value);
-                        } catch (NumberFormatException e) {
-                            CFLog.w("Couldn't parse prescale argument for L0 configuraion!");
-                        }
-                        break;
-                    case "windowsize":
-                        try {
-                            cfg_windowSize = Integer.parseInt(value);
-                        } catch (NumberFormatException e) {
-                            CFLog.w("Couldn't parse windowsize argument for L0 configuraion!");
-                        }
-                        break;
-                    case "random":
-                        cfg_random = Boolean.parseBoolean(value);
-                        break;
-
-                }
-            }
-
-            prescale = cfg_prescale;
-            random = cfg_random;
-            windowSize = cfg_windowSize;
+            prescale = CFUtil.getInt(mTaskConfig.get("prescale"), DEFAULT_PRESCALE);
+            random = mTaskConfig.containsKey("random") ? Boolean.parseBoolean(mTaskConfig.get("random")) : DEFAULT_RANDOM;
+            windowSize = CFUtil.getInt(mTaskConfig.get("windowsize"), DEFAULT_WINDOWSIZE);
         }
 
         @Override
-        public L0Task makeTask(L0Processor l0Processor, RawCameraFrame frame) {
-            return new L0Task(l0Processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
+            return new L0Task(processor, frame, this);
         }
     }
 
-    private L0Processor mL0Processor;
-    private RawCameraFrame mFrame;
-    private ExposureBlock mExposureBlock;
     private Config mConfig;
 
-    L0Task(L0Processor l0Processor, RawCameraFrame frame, Config cfg) {
-        mL0Processor = l0Processor;
-        mFrame = frame;
-        mExposureBlock = mFrame.getExposureBlock();
+    L0Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
+        super(processor, frame);
         mConfig = cfg;
     }
 
@@ -89,17 +51,19 @@ class L0Task implements Runnable {
         if (mConfig.random) {
             return Math.random() < 1. / mConfig.prescale;
         } else {
-            return (++L0Processor.L0Count % mConfig.prescale == 0);
+            return (L0Processor.L0Count % mConfig.prescale == 0);
         }
     }
 
     @Override
-    public void run() {
+    public boolean processFrame(RawCameraFrame frame) {
+
+        L0Processor.L0Count++;
 
         if (isZeroBias()) {
             // do the zero bias things!
-            mL0Processor.pass++;
-            Mat grayMat = mFrame.getGrayMat();
+            mProcessor.pass++;
+            Mat grayMat = frame.getGrayMat();
 
             // find a random pixel to be upper left corner
             Random r = new Random();
@@ -115,11 +79,10 @@ class L0Task implements Runnable {
                     zeroBiasBuilder.addVal((int)window.get(ix, iy)[0]);
                 }
             }
-            mFrame.setZeroBias(zeroBiasBuilder.build());
+            frame.setZeroBias(zeroBiasBuilder.build());
             window.release();
         }
 
-        // now hand off to the L1 processor.
-        mExposureBlock.mL1Processor.submitFrame(mFrame);
+        return true;
     }
 }

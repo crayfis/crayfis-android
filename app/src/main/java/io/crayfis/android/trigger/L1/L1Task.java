@@ -9,44 +9,57 @@ import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.server.CFConfig;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
+import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 5/12/16.
  */
-class L1Task implements Runnable {
-    public static class Config extends L1Config {
+class L1Task extends TriggerProcessor.Task {
+
+    static class Config extends TriggerProcessor.Config {
+        static final int DEFAULT_THRESH = 255;
+
+        final int thresh;
         Config(String name, String cfg) {
             super(name, cfg);
+
+            thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
         }
 
         @Override
-        public L1Task makeTask(L1Processor l1Processor, RawCameraFrame frame) {
-            return new L1Task(l1Processor, frame);
+        public TriggerProcessor.Task makeTask(TriggerProcessor l1Processor, RawCameraFrame frame) {
+            return new L1Task(l1Processor, frame, this);
         }
     }
 
-    private L1Processor mL1Processor;
-    private RawCameraFrame mFrame;
     private ExposureBlock mExposureBlock;
     private CFApplication mApplication;
+    private L1Calibrator mL1Cal;
+    private PreCalibrator mPrecal;
     private boolean mKeepFrame = false;
+    private final Config mConfig;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    L1Task(L1Processor l1processor, RawCameraFrame frame) {
-        mL1Processor = l1processor;
-        mFrame = frame;
-        mExposureBlock = mFrame.getExposureBlock();
+    L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
+        super(processor, frame);
+        mExposureBlock = frame.getExposureBlock();
 
-        mApplication = mL1Processor.mApplication;
+        mApplication = processor.mApplication;
+        mL1Cal = L1Calibrator.getInstance();
+        mPrecal = PreCalibrator.getInstance(mApplication);
+        mConfig = cfg;
     }
 
-    boolean processInitial() {
+    boolean processInitial(RawCameraFrame frame) {
         // check for quality data
-        if(!mFrame.isQuality()) {
+        if(!frame.isQuality()) {
             CFCamera camera = CFCamera.getInstance();
-            camera.changeCameraFrom(mFrame.getCameraId());
+            camera.changeCameraFrom(frame.getCameraId());
             if(!camera.isFlat()) {
                 mApplication.userErrorMessage(R.string.warning_facedown, false);
             } else {
@@ -67,12 +80,12 @@ class L1Task implements Runnable {
         return false;
     }
 
-    boolean processPreCalibration() {
+    boolean processPreCalibration(RawCameraFrame frame) {
 
-        if(mL1Processor.mPreCal.addFrame(mFrame)) {
+        if(mPrecal.addFrame(frame)) {
             mApplication.setNewestPrecalUUID();
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        } else if(mL1Processor.mPreCal.count.incrementAndGet()
+        } else if(mPrecal.count.incrementAndGet()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
             mApplication.checkBatteryStats();
         }
@@ -80,66 +93,63 @@ class L1Task implements Runnable {
         return false;
     }
 
-    boolean processCalibration() {
+    boolean processCalibration(RawCameraFrame frame) {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = mExposureBlock.count.incrementAndGet();
-        mL1Processor.mL1Cal.addFrame(mFrame);
+        mL1Cal.addFrame(frame);
 
-        if (count == mL1Processor.CONFIG.getCalibrationSampleFrames()) {
+        if (count == CONFIG.getCalibrationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.DATA);
         }
 
         return true;
     }
 
-    boolean processStabilization() {
+    boolean processStabilization(RawCameraFrame frame) {
         // If we're in stabilization mode, just drop frames until we've skipped enough
         long count = mExposureBlock.count.incrementAndGet();
-        if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
+        if (count == CONFIG.getStabilizationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
         return true;
     }
 
-    boolean processIdle() {
+    boolean processIdle(RawCameraFrame frame) {
         // Not sure why we're still acquiring frames in IDLE mode...
         CFLog.w("DAQActivity Frames still being received in IDLE mode");
         return true;
     }
 
-    boolean processData() {
+    boolean processData(RawCameraFrame frame) {
 
-        mL1Processor.mL1Cal.addFrame(mFrame);
+        mL1Cal.addFrame(frame);
         L1Processor.L1CountData++;
 
-        int max = mFrame.getPixMax();
+        int max = frame.getPixMax();
 
-        mExposureBlock.underflow_hist.fill(mFrame.getHist());
+        mExposureBlock.underflow_hist.fill(frame.getHist());
 
-        if (max > mL1Processor.mL1Thresh) {
+        if (max > mConfig.thresh) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
 
-            mL1Processor.pass++;
-
-
-
+            mProcessor.pass++;
+            
             // add a new buffer to the queue to make up for this one which
             // will not return
-            if(mFrame.claim()) {
+            if(frame.claim()) {
                 // this frame has passed the L1 threshold, put it on the
                 // L2 processing queue.
-                mExposureBlock.mL2Processor.submitFrame(mFrame);
                 mKeepFrame = true;
             } else {
                 // out of memory: skip the frame
-                mExposureBlock.mL2Processor.skip++;
+                mProcessor.mNextProcessor.skip++;
             }
 
         } else {
             // didn't pass. recycle the buffer.
-            mL1Processor.skip++;
+            mProcessor.skip++;
         }
 
         return false;
@@ -148,26 +158,30 @@ class L1Task implements Runnable {
     void processFinal() {
     }
 
-    void processFrame() {
 
-        if (processInitial()) { return; }
+    @Override
+    public boolean processFrame(RawCameraFrame frame) {
+
+        L1Processor.L1Count++;
+
+        if (processInitial(frame)) { return false; }
 
         boolean stopProcessing;
         switch (mExposureBlock.getDAQState()) {
             case PRECALIBRATION:
-                stopProcessing = processPreCalibration();
+                stopProcessing = processPreCalibration(frame);
                 break;
             case CALIBRATION:
-                stopProcessing = processCalibration();
+                stopProcessing = processCalibration(frame);
                 break;
             case STABILIZATION:
-                stopProcessing = processStabilization();
+                stopProcessing = processStabilization(frame);
                 break;
             case IDLE:
-                stopProcessing = processIdle();
+                stopProcessing = processIdle(frame);
                 break;
             case DATA:
-                stopProcessing = processData();
+                stopProcessing = processData(frame);
                 break;
             default:
                 CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
@@ -175,30 +189,19 @@ class L1Task implements Runnable {
                 break;
         }
 
-        if (stopProcessing) {
-            return;
+        if (!stopProcessing) {
+            processFinal();
         }
-
-        processFinal();
-    }
-
-    @Override
-    public void run() {
-
-        ++L1Processor.L1Count;
-
-        processFrame();
 
         if (!mKeepFrame) {
             // we are done with this frame. retire the buffer and also clear it from the XB.
-            mFrame.retire();
-            mFrame.clear();
+            frame.retire();
         }
 
-        if (mFrame.isOutstanding()) {
+        if (frame.isOutstanding()) {
             CFLog.w("Frame still outstanding after running L1Task!");
-        } else {
-            mL1Processor.mBufferBalance--;
         }
+        
+        return mKeepFrame;
     }
 }
