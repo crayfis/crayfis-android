@@ -14,11 +14,6 @@ import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
 
-import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
-
 /**
  * Created by Jeff on 8/31/2017.
  */
@@ -186,22 +181,7 @@ public abstract class CFCamera {
      * @return String
      */
     public String getStatus() {
-        String devtxt = "Camera ID: " + mCameraId + ", Mode = ";
-        switch (CONFIG.getCameraSelectMode()) {
-            case MODE_FACE_DOWN:
-                devtxt += "FACE-DOWN\n";
-                break;
-            case MODE_AUTO_DETECT:
-                devtxt += "AUTO-DETECT\n";
-                break;
-            case MODE_BACK_LOCK:
-                devtxt += "BACK LOCK\n";
-                break;
-            case MODE_FRONT_LOCK:
-                devtxt += "FRONT LOCK\n";
-                break;
-
-        }
+        String devtxt = "Camera ID: " + mCameraId;
         devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
         return devtxt;
     }

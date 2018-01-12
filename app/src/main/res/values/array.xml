@@ -69,9 +69,9 @@
         <item>@string/camera_select_front_lock</item>
     </string-array>
     <string-array name="camera_select_mode_values" translatable="false">
-        <item>0</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
+        <item>facedown</item>
+        <item>autodetect</item>
+        <item>lock</item>
+        <item>lock;backlock=false</item>
     </string-array>
 </resources>

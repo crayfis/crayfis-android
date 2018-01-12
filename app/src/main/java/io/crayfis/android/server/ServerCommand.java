@@ -22,11 +22,13 @@ class ServerCommand {
     @SerializedName("set_last_precal_time") private long[] mLastPrecalTime;
     @SerializedName("set_last_precal_res_x") private int[] mLastPrecalResX;
     @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
-    @SerializedName("set_L1_thresh") private Integer mL1Threshold;
-    @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_L0_trig") private String mL0Trigger;
+    @SerializedName("set_qual_trig") private String mQualityTrigger;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
+    @SerializedName("set_qual_orientation") private Integer mQualityOrient;
+    @SerializedName("set_L1_thresh") private Integer mL1Threshold;
+    @SerializedName("set_L2_thresh") private Integer mL2Threshold;
     @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
     @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
     @SerializedName("weighting_sample_frames") private Integer mWeightingSampleFrames;
@@ -37,10 +39,6 @@ class ServerCommand {
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
     @SerializedName("set_upload_size_max") private Integer mMaxChunkSize;
     @SerializedName("set_cache_upload_interval") private Integer mMinCacheUploadInterval;
-    @SerializedName("set_qual_pix_frac") private Float mQualityPixFrac;
-    @SerializedName("set_qual_bg_avg") private Float mQualityBgAverage;
-    @SerializedName("set_qual_bg_var") private Float mQualityBgVariance;
-    @SerializedName("set_qual_orientation") private Float mQualityOrient;
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
     @SerializedName("experiment") private String mCurrentExperiment;
     @SerializedName("nickname") private String mDeviceNickname;
@@ -49,7 +47,6 @@ class ServerCommand {
     @SerializedName("update_url") private String mUpdateURL;
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private String mTargetFPS;
-    @SerializedName("set_camera_select_mode") private String mCameraSelectModeString;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
     @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
 
@@ -89,6 +86,29 @@ class ServerCommand {
     @Nullable
     int[] getLastPrecalResX() { return mLastPrecalResX; }
 
+    @Nullable
+    String getL0Trigger() { return mL0Trigger; }
+
+    @Nullable
+    String getQualityTrigger() {
+        return mQualityTrigger;
+    }
+
+    @Nullable
+    String getL1Trigger() { return mL1Trigger; }
+
+    @Nullable
+    String getL2Trigger() { return mL2Trigger; }
+
+    /**
+     * Get cutoff for orientation (in degrees) about x and y axes before frame
+     * is flagged as "bad"
+     *
+     * @return Float or {@code null} if not set
+     */
+    @Nullable
+    Integer getQualityOrientation() { return mQualityOrient; }
+
     /**
      * Get the L1 threshold.
      *
@@ -108,15 +128,6 @@ class ServerCommand {
     Integer getL2Threshold() {
         return mL2Threshold;
     }
-
-    @Nullable
-    String getL0Trigger() { return mL0Trigger; };
-
-    @Nullable
-    String getL1Trigger() { return mL1Trigger; };
-
-    @Nullable
-    String getL2Trigger() { return mL2Trigger; };
 
     @Nullable
     Boolean getTriggerLock() { return mTriggerLock; };
@@ -191,45 +202,6 @@ class ServerCommand {
     }
 
     /**
-     * TODO What is this?
-     *
-     * @return Float or {@code null}.
-     */
-    @Nullable
-    Float getQualityPixFrac() {
-        return mQualityPixFrac;
-    }
-
-    /**
-     * Get cutoff for average pixel value in frame before flagged as "bad"
-     *
-     * @return Float or {@code null} if not set.
-     */
-    @Nullable
-    Float getQualityBgAverage() {
-        return mQualityBgAverage;
-    }
-
-    /**
-     * Get cutoff for pixel variance in frame before flagged as "bad"
-     *
-     * @return Float or {@code null} if not set.
-     */
-    @Nullable
-    Float getQualityBgVariance() {
-        return mQualityBgVariance;
-    }
-
-    /**
-     * Get cutoff for orientation (in degrees) about x and y axes before frame
-     * is flagged as "bad"
-     *
-     * @return Float or {@code null} if not set
-     */
-    @Nullable
-    Float getQualityOrientation() { return mQualityOrient; }
-
-    /**
      * Get the current experiment.
      *
      * @return String or {@code null}
@@ -257,15 +229,6 @@ class ServerCommand {
     @Nullable
     String getTargetFPS() {
         return mTargetFPS;
-    }
-
-    @Nullable
-    Integer getCameraSelectMode() {
-        try {
-            return Integer.parseInt(mCameraSelectModeString);
-        } catch(NumberFormatException e) {
-            return null;
-        }
     }
 
     @Nullable

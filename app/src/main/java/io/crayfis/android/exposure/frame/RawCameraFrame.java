@@ -20,15 +20,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
-
-import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -437,6 +431,10 @@ public abstract class RawCameraFrame {
         return mOrientation;
     }
 
+    public float getRotationZZ() {
+        return mRotationZZ;
+    }
+
     public float getPressure() { return mPressure; }
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
@@ -508,43 +506,8 @@ public abstract class RawCameraFrame {
         return mHist;
     }
 
-    /**
-     * @return false if one or more criteria for quality is not met, based on CameraSelectMode
-     */
-    public boolean isQuality() {
-        final CFConfig CONFIG = CFConfig.getInstance();
-        final int cameraSelectMode = CONFIG.getCameraSelectMode();
-        switch(cameraSelectMode) {
-            case MODE_FACE_DOWN:
-                if (mOrientation == null) {
-                    CFLog.e("Orientation not found");
-                } else {
-
-                    // use quaternion algebra to calculate cosine of angle between vertical
-                    // and phone's z axis (up to a sign that tends to have numerical instabilities)
-
-                    if(Math.abs(mRotationZZ) < CONFIG.getQualityOrientationCosine()
-                            || mFacingBack != mRotationZZ>0) {
-
-                        CFLog.w("Bad event: Orientation = " + mRotationZZ);
-                        return false;
-                    }
-                }
-            case MODE_AUTO_DETECT:
-                if (getPixAvg() > CONFIG.getQualityBgAverage()
-                        || getPixStd() > CONFIG.getQualityBgVariance()) {
-                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
-                    return false;
-                } else {
-                    return true;
-                }
-            case MODE_BACK_LOCK:
-                return mFacingBack;
-            case MODE_FRONT_LOCK:
-                return !mFacingBack;
-            default:
-                throw new RuntimeException("Invalid camera select mode");
-        }
+    public boolean isFacingBack() {
+        return mFacingBack;
     }
 
     private DataProtos.Event.Builder getEventBuilder() {

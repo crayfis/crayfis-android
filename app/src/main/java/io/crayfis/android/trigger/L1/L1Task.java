@@ -29,7 +29,7 @@ class L1Task extends TriggerProcessor.Task {
         Config(String name, HashMap<String, String> options) {
             super(name, options);
 
-            thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
+            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
         }
 
         @Override
@@ -55,31 +55,6 @@ class L1Task extends TriggerProcessor.Task {
         mL1Cal = L1Calibrator.getInstance();
         mPrecal = PreCalibrator.getInstance(mApplication);
         mConfig = cfg;
-    }
-
-    boolean processInitial(RawCameraFrame frame) {
-        // check for quality data
-        if(!frame.isQuality()) {
-            CFCamera camera = CFCamera.getInstance();
-            camera.changeCameraFrom(frame.getCameraId());
-            if(!camera.isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
-            } else {
-                camera.badFlatEvents++;
-                if(camera.badFlatEvents < 5) {
-                    mApplication.userErrorMessage(R.string.warning_bright, false);
-                } else {
-                    // gravity sensor is clearly impaired, so just determine orientation with light levels
-                    mApplication.userErrorMessage(R.string.sensor_error, false);
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-                    prefs.edit()
-                            .putString("prefCameraSelectMode", "1")
-                            .apply();
-                }
-            }
-            return true;
-        }
-        return false;
     }
 
     boolean processPreCalibration(RawCameraFrame frame) {
@@ -117,12 +92,6 @@ class L1Task extends TriggerProcessor.Task {
         return true;
     }
 
-    boolean processIdle(RawCameraFrame frame) {
-        // Not sure why we're still acquiring frames in IDLE mode...
-        CFLog.w("DAQActivity Frames still being received in IDLE mode");
-        return true;
-    }
-
     boolean processData(RawCameraFrame frame) {
 
         mL1Cal.addFrame(frame);
@@ -157,42 +126,28 @@ class L1Task extends TriggerProcessor.Task {
         return false;
     }
 
-    void processFinal() {
-    }
-
 
     @Override
     public boolean processFrame(RawCameraFrame frame) {
 
         L1Processor.L1Count++;
 
-        if (processInitial(frame)) { return false; }
-
-        boolean stopProcessing;
         switch (mExposureBlock.getDAQState()) {
             case PRECALIBRATION:
-                stopProcessing = processPreCalibration(frame);
+                processPreCalibration(frame);
                 break;
             case CALIBRATION:
-                stopProcessing = processCalibration(frame);
+                processCalibration(frame);
                 break;
             case STABILIZATION:
-                stopProcessing = processStabilization(frame);
-                break;
-            case IDLE:
-                stopProcessing = processIdle(frame);
+                processStabilization(frame);
                 break;
             case DATA:
-                stopProcessing = processData(frame);
+                processData(frame);
                 break;
             default:
                 CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
-                stopProcessing = true;
                 break;
-        }
-
-        if (!stopProcessing) {
-            processFinal();
         }
 
         if (!mKeepFrame) {

@@ -77,6 +77,8 @@ public abstract class TriggerProcessor {
         return next;
     }
 
+    public void processResult(RawCameraFrame frame, boolean pass) { }
+
     public static abstract class Config {
 
         private final String mTaskName;
@@ -116,11 +118,14 @@ public abstract class TriggerProcessor {
         @Override
         public final void run() {
 
-            if(processFrame(mFrame) && mProcessor.mNextProcessor != null) {
+            boolean pass = processFrame(mFrame);
+            if(pass && mProcessor.mNextProcessor != null) {
                 mProcessor.mNextProcessor.submitFrame(mFrame);
             } else {
                 mFrame.clear();
             }
+
+            mProcessor.processResult(mFrame, pass);
         }
     }
 }

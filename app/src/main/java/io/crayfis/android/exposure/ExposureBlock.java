@@ -21,6 +21,7 @@ import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
 import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
 import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
@@ -45,6 +46,7 @@ public class ExposureBlock {
 	private final int res_y;
 
 	private final L0Processor mL0Processor;
+	private final QualityProcessor mQualityProcessor;
     private final L1Processor mL1Processor;
     private final L2Processor mL2Processor;
 	
@@ -68,17 +70,21 @@ public class ExposureBlock {
     // list of reconstructed events to be uploaded
     private final ArrayList<DataProtos.Event> events = new ArrayList<>();
 
-    public ExposureBlock(CFApplication application,
-                         int xbn, UUID run_id,
+    ExposureBlock(CFApplication application,
+                         int xbn,
+                         UUID run_id,
                          UUID precal_id,
                          String L0_config,
+                         String quality_config,
                          String L1_config,
                          String L2_config,
-                         int L1_threshold, int L2_threshold,
+                         int L1_threshold,
+                         int L2_threshold,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
-                         int resx, int resy) {
+                         int resx,
+                         int resy) {
         start_time = new AcquisitionTime();
 
         this.APPLICATION = application;
@@ -86,6 +92,7 @@ public class ExposureBlock {
         this.run_id = run_id;
         this.precal_id = precal_id;
         this.mL0Processor = new L0Processor(APPLICATION, L0_config);
+        this.mQualityProcessor = new QualityProcessor(APPLICATION, quality_config);
         this.mL1Processor = new L1Processor(APPLICATION, L1_config + ";thresh=" + L1_threshold);
         this.mL2Processor = new L2Processor(APPLICATION, L2_config + ";thresh=" + L2_threshold);
         this.underflow_hist = new Histogram(L1_threshold+1);
@@ -96,7 +103,8 @@ public class ExposureBlock {
         this.res_y = resy;
 
         total_pixels = 0;
-        mL0Processor.setNext(mL1Processor)
+        mL0Processor.setNext(mQualityProcessor)
+                .setNext(mL1Processor)
                 .setNext(mL2Processor);
     }
 

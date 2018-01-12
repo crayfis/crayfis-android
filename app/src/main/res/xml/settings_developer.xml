@@ -8,7 +8,7 @@
         android:title="@string/settings_thresh_title" />
 
     <ListPreference
-        android:key="prefCameraSelectMode"
+        android:key="qual_trigger"
         android:defaultValue="0"
         android:summary="@string/settings_camera_select_mode_summary"
         android:title="@string/settings_camera_select_mode_title"

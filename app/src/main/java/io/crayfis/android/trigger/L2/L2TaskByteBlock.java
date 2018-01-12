@@ -33,9 +33,9 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         Config(String name, HashMap<String, String> options) {
             super(name, options);
 
-            thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
-            npix = CFUtil.getInt(mTaskConfig.get("npix"), DEFAULT_NPIX);
-            radius = CFUtil.getInt(mTaskConfig.get("radius"), DEFAULT_RADIUS);
+            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
+            npix = CFUtil.getInt(options.get("npix"), DEFAULT_NPIX);
+            radius = CFUtil.getInt(options.get("radius"), DEFAULT_RADIUS);
         }
 
         @Override

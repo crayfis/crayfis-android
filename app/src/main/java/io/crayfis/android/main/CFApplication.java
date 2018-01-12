@@ -78,7 +78,7 @@ public class CFApplication extends Application {
             if(consecutiveIdles >= 3) {
                 if(handleUnresponsive()) return;
             }
-            if(CFConfig.getInstance().getCameraSelectMode() != MODE_FACE_DOWN
+            if(CFConfig.getInstance().getQualTrigger().startsWith("facedown")
                     || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
@@ -94,8 +94,8 @@ public class CFApplication extends Application {
     //private static final String SHARED_PREFS_NAME = "global";
     private static long mStartTimeNano;
     private int mBatteryTemp = -1;
-    private final int mBatteryStartTemp = 350;
-    private final float mBatteryStartPct = .80f;
+    private static final int BATTERY_START_TEMP = 350;
+    private static final float BATTERY_START_PCT = .80f;
     private boolean mBatteryLow;
     private boolean mBatteryOverheated;
 
@@ -295,7 +295,7 @@ public class CFApplication extends Application {
 
         // check for low battery
         if (mBatteryLow) {
-            mBatteryLow = batteryPct < mBatteryStartPct;
+            mBatteryLow = batteryPct < BATTERY_START_PCT;
         } else {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
             String batteryPref = prefs.getString(getString(R.string.prefBatteryStop), "20%");
@@ -307,7 +307,7 @@ public class CFApplication extends Application {
         // check temperature for overheat
         if (mBatteryOverheated) {
             // see if temp has stabilized below overheat threshold or has reached a sufficiently low temp
-            mBatteryOverheated = (newTemp <= mBatteryTemp && newTemp > mBatteryStartTemp) || newTemp > CONFIG.getBatteryOverheatTemp();
+            mBatteryOverheated = (newTemp <= mBatteryTemp && newTemp > BATTERY_START_TEMP) || newTemp > CONFIG.getBatteryOverheatTemp();
             LayoutStatus.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
                     newTemp / 10.));
         } else {
@@ -321,7 +321,7 @@ public class CFApplication extends Application {
 
         if(mBatteryLow) {
             LayoutStatus.updateIdleStatus(String.format(getResources().getString(R.string.idle_low),
-                    (int) (batteryPct * 100), (int) (mBatteryStartPct * 100)));
+                    (int) (batteryPct * 100), (int) (BATTERY_START_PCT * 100)));
         } else if(mBatteryOverheated) {
             LayoutStatus.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
                     newTemp / 10.));
@@ -476,9 +476,4 @@ public class CFApplication extends Application {
         IDLE,
         FINISHED
     }
-
-    public static final int MODE_FACE_DOWN = 0;
-    public static final int MODE_AUTO_DETECT = 1;
-    public static final int MODE_BACK_LOCK = 2;
-    public static final int MODE_FRONT_LOCK = 3;
 }

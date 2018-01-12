@@ -30,9 +30,9 @@ class L0Task extends TriggerProcessor.Task {
         Config(String name, HashMap<String, String> options) {
             super(name, options);
 
-            prescale = CFUtil.getInt(mTaskConfig.get("prescale"), DEFAULT_PRESCALE);
-            random = mTaskConfig.containsKey("random") ? Boolean.parseBoolean(mTaskConfig.get("random")) : DEFAULT_RANDOM;
-            windowSize = CFUtil.getInt(mTaskConfig.get("windowsize"), DEFAULT_WINDOWSIZE);
+            prescale = CFUtil.getInt(options.get("prescale"), DEFAULT_PRESCALE);
+            random = options.containsKey("random") ? Boolean.parseBoolean(mTaskConfig.get("random")) : DEFAULT_RANDOM;
+            windowSize = CFUtil.getInt(options.get("windowsize"), DEFAULT_WINDOWSIZE);
         }
 
         @Override

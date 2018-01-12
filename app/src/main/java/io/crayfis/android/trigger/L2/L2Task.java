@@ -28,8 +28,8 @@ class L2Task extends TriggerProcessor.Task {
         Config(String name, HashMap<String, String> options) {
             super(name, options);
 
-            thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
-            npix = CFUtil.getInt(mTaskConfig.get("npix"), DEFAULT_NPIX);
+            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
+            npix = CFUtil.getInt(options.get("npix"), DEFAULT_NPIX);
         }
 
         @Override

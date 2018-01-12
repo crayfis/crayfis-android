@@ -151,12 +151,16 @@ public final class ExposureBlockManager {
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
                 CONFIG.getL0Trigger(),
+                CONFIG.getQualTrigger(),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
-                CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
+                CONFIG.getL1Threshold(),
+                CONFIG.getL2Threshold(),
                 camera.getLastKnownLocation(),
                 APPLICATION.getBatteryTemp(),
-                state, camera.getResX(), camera.getResY());
+                state,
+                camera.getResX(),
+                camera.getResY());
 
         // start assigning frames to new xb
         camera.getFrameBuilder().setExposureBlock(current_xb);

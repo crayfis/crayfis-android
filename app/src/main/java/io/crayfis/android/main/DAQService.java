@@ -475,6 +475,8 @@ public class DAQService extends Service {
 
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
+                    + "Qual trig: " + CONFIG.getQualTrigger()
+                    + "L1 trig: " + CONFIG.getL1Trigger()
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                     + "total frames - L1: " + L1Processor.L1Count + " (L2: " + L2Processor.L2Count + ")\n"
                     + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
