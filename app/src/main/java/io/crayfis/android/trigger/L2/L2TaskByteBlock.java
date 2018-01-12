@@ -6,6 +6,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 import io.crayfis.android.DataProtos;
@@ -29,8 +30,8 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         final int thresh;
         final int npix;
         final int radius;
-        Config(String name, String cfg) {
-            super(name, cfg);
+        Config(String name, HashMap<String, String> options) {
+            super(name, options);
 
             thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
             npix = CFUtil.getInt(mTaskConfig.get("npix"), DEFAULT_NPIX);

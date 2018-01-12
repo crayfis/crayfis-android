@@ -3,6 +3,8 @@ package io.crayfis.android.trigger.L1;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import java.util.HashMap;
+
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
@@ -24,8 +26,8 @@ class L1Task extends TriggerProcessor.Task {
         static final int DEFAULT_THRESH = 255;
 
         final int thresh;
-        Config(String name, String cfg) {
-            super(name, cfg);
+        Config(String name, HashMap<String, String> options) {
+            super(name, options);
 
             thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
         }

@@ -2,6 +2,7 @@ package io.crayfis.android.trigger.L0;
 
 import org.opencv.core.Mat;
 
+import java.util.HashMap;
 import java.util.Random;
 
 import io.crayfis.android.DataProtos;
@@ -26,8 +27,8 @@ class L0Task extends TriggerProcessor.Task {
         final boolean random;
         final int windowSize;
 
-        Config(String name, String cfg) {
-            super(name, cfg);
+        Config(String name, HashMap<String, String> options) {
+            super(name, options);
 
             prescale = CFUtil.getInt(mTaskConfig.get("prescale"), DEFAULT_PRESCALE);
             random = mTaskConfig.containsKey("random") ? Boolean.parseBoolean(mTaskConfig.get("random")) : DEFAULT_RANDOM;

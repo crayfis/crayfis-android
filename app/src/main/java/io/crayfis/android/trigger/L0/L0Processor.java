@@ -1,5 +1,7 @@
 package io.crayfis.android.trigger.L0;
 
+import java.util.HashMap;
+
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
@@ -17,23 +19,15 @@ public class L0Processor extends TriggerProcessor {
     }
 
     @Override
-    public Config makeConfig(String configStr) {
-        String[] pieces = configStr.split(";", 2);
+    public Config makeConfig(String name, HashMap<String, String> options) {
 
-        String name = pieces[0];
-        String cfgstr = pieces.length==2 ? pieces[1] : "";
-
-        Config cfg;
         switch (name) {
             case "default":
-                cfg = new L0Task.Config(name, cfgstr);
-                break;
+                return new L0Task.Config(name, options);
             default:
                 CFLog.w("No L0 implementation found for " + name + ", using default!");
-                cfg = new L0Task.Config(name, cfgstr);
-                break;
+                return new L0Task.Config(name, options);
         }
 
-        return cfg;
     }
 }

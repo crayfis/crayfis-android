@@ -7,6 +7,7 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
@@ -26,8 +27,8 @@ class L2TaskMaxN extends TriggerProcessor.Task {
 
         final int thresh;
         final int npix;
-        Config(String name, String cfg) {
-            super(name, cfg);
+        Config(String name, HashMap<String, String> options) {
+            super(name, options);
 
             thresh = CFUtil.getInt(mTaskConfig.get("thresh"), DEFAULT_THRESH);
             npix = CFUtil.getInt(mTaskConfig.get("npix"), DEFAULT_NPIX);

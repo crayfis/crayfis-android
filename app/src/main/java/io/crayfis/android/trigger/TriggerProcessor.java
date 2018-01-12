@@ -26,11 +26,27 @@ public abstract class TriggerProcessor {
 
     public TriggerProcessor(CFApplication application, String configStr, boolean serial) {
         mApplication = application;
-        mConfig = makeConfig(configStr);
+        mConfig = parseConfig(configStr);
         mExecutor = (serial) ? AsyncTask.SERIAL_EXECUTOR : AsyncTask.THREAD_POOL_EXECUTOR;
     }
 
-    public abstract Config makeConfig(String configStr);
+    public abstract Config makeConfig(String name, HashMap<String, String> options);
+
+    private Config parseConfig(String configStr) {
+        String[] pieces = configStr.split(";", 2);
+
+        String name = pieces[0];
+        String cfgstr = pieces.length==2 ? pieces[1] : "";
+        HashMap<String, String> options = new HashMap<>();
+
+        for (String c : cfgstr.split(";")) {
+            String[] kv = c.split("=");
+            if (kv.length != 2) continue;
+            options.put(kv[0], kv[1]);
+        }
+
+        return makeConfig(name, options);
+    }
 
     public void submitFrame(RawCameraFrame frame) {
         processed++;
@@ -63,17 +79,12 @@ public abstract class TriggerProcessor {
 
     public static abstract class Config {
 
-        protected final String mTaskName;
+        private final String mTaskName;
         protected final HashMap<String, String> mTaskConfig;
 
-        public Config(String taskName, String taskConfig) {
+        public Config(String taskName, HashMap<String, String> taskConfig) {
             mTaskName = taskName;
-            mTaskConfig = new HashMap<>();
-            for (String c : taskConfig.split(";")) {
-                String[] kv = c.split("=");
-                if (kv.length != 2) continue;
-                mTaskConfig.put(kv[0], kv[1]);
-            }
+            mTaskConfig = taskConfig;
         }
 
         @Override
