@@ -18,6 +18,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
@@ -74,12 +75,10 @@ public class ExposureBlock {
                          int xbn,
                          UUID run_id,
                          UUID precal_id,
-                         String L0_config,
-                         String quality_config,
-                         String L1_config,
-                         String L2_config,
-                         int L1_threshold,
-                         int L2_threshold,
+                         TriggerProcessor.Config L0_config,
+                         TriggerProcessor.Config qual_config,
+                         TriggerProcessor.Config L1_config,
+                         TriggerProcessor.Config L2_config,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
@@ -92,10 +91,10 @@ public class ExposureBlock {
         this.run_id = run_id;
         this.precal_id = precal_id;
         this.mL0Processor = new L0Processor(APPLICATION, L0_config);
-        this.mQualityProcessor = new QualityProcessor(APPLICATION, quality_config);
-        this.mL1Processor = new L1Processor(APPLICATION, L1_config + ";thresh=" + L1_threshold);
-        this.mL2Processor = new L2Processor(APPLICATION, L2_config + ";thresh=" + L2_threshold);
-        this.underflow_hist = new Histogram(L1_threshold+1);
+        this.mQualityProcessor = new QualityProcessor(APPLICATION, qual_config);
+        this.mL1Processor = new L1Processor(APPLICATION, L1_config);
+        this.mL2Processor = new L2Processor(APPLICATION, L2_config);
+        this.underflow_hist = new Histogram(mL1Processor.config.getInt("thresh")+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -231,19 +230,19 @@ public class ExposureBlock {
                 .setL0Pass(mL0Processor.pass)
                 .setL0Processed(mL0Processor.processed)
                 .setL0Skip(mL0Processor.skip)
-                .setL0Conf(mL0Processor.getConfig())
+                .setL0Conf(mL0Processor.config.toString())
 
                 .setL1Pass(mL1Processor.pass)
                 .setL1Processed(mL1Processor.processed)
                 .setL1Skip(mL1Processor.skip)
-                .setL1Thresh(mL1Processor.getInt("thresh"))
-                .setL1Conf(mL1Processor.getConfig())
+                .setL1Thresh(mL1Processor.config.getInt("thresh"))
+                .setL1Conf(mL1Processor.config.toString())
 		
 		        .setL2Pass(mL2Processor.pass)
 		        .setL2Processed(mL2Processor.processed)
 		        .setL2Skip(mL2Processor.skip)
-		        .setL2Thresh(mL2Processor.getInt("thresh"))
-                .setL2Conf(mL2Processor.getConfig())
+		        .setL2Thresh(mL2Processor.config.getInt("thresh"))
+                .setL2Conf(mL2Processor.config.toString())
 
 				.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())
@@ -305,15 +304,11 @@ public class ExposureBlock {
 		return buf.toByteArray();
 	}
 
-    public int getL1Thresh() {
-        return mL1Processor.getInt("thresh");
-    }
-
-    public long getStartTimeNano() {
+    long getStartTimeNano() {
         return start_time.Nano;
     }
 
-    public long getEndTimeNano() {
+    long getEndTimeNano() {
         return end_time.Nano;
     }
 

@@ -12,13 +12,26 @@ import io.crayfis.android.trigger.TriggerProcessor;
 class QualityTaskLock extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final boolean DEFAULT_BACKLOCK = true;
+
+        static final String NAME = "lock";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("backlock", 1);
+        }
 
         final boolean backLock;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            backLock = mTaskConfig.containsKey("backlock") ? Boolean.parseBoolean(mTaskConfig.get("backlock")) : DEFAULT_BACKLOCK;
+            backLock = mTaskConfig.get("backlock") != 0;
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return QualityProcessor.makeConfig(cfgstr);
         }
 
         @Override

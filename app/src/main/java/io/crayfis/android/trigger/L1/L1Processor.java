@@ -15,19 +15,22 @@ public class L1Processor extends TriggerProcessor {
     public static int L1Count;
     public static int L1CountData;
 
-    public L1Processor(CFApplication application, String configStr) {
-        super(application, configStr, false);
+    public L1Processor(CFApplication application, Config config) {
+        super(application, config, false);
     }
 
-    @Override
-    public Config makeConfig(String name, HashMap<String, String> options) {
+    public static Config makeConfig(String configStr) {
+
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
 
         switch (name) {
-            case "default":
-                return new L1Task.Config(name, options);
+            case L1Task.Config.NAME:
+                return new L1Task.Config(options);
             default:
                 CFLog.w("No L1 implementation found for " + name + ", using default!");
-                return new L1Task.Config(name, options);
+                return new L1Task.Config(options);
         }
 
     }

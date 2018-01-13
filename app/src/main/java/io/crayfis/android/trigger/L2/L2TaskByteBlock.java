@@ -23,19 +23,32 @@ import io.crayfis.android.util.CFUtil;
 class L2TaskByteBlock extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final int DEFAULT_NPIX = 500;
-        static final int DEFAULT_RADIUS = 2;
-        static final int DEFAULT_THRESH = 255;
+
+        static final String NAME = "byteblock";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("thresh", 255);
+            KEY_DEFAULT.put("npix", 120);
+            KEY_DEFAULT.put("radius", 2);
+        }
 
         final int thresh;
         final int npix;
         final int radius;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
-            npix = CFUtil.getInt(options.get("npix"), DEFAULT_NPIX);
-            radius = CFUtil.getInt(options.get("radius"), DEFAULT_RADIUS);
+            thresh = mTaskConfig.get("thresh");
+            npix = mTaskConfig.get("npix");
+            radius = mTaskConfig.get("radius");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L2Processor.makeConfig(cfgstr);
         }
 
         @Override

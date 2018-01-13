@@ -24,8 +24,8 @@ public final class ExposureBlockManager {
 
     // max amount of time to wait before considering an retired but un-finalized XB to be "stale";
     // after this time, it will be uploaded regardless. [ms]
-    public final int XB_STALE_TIME = 30000;
-    public final long PASS_RATE_CHECK_TIME = 5000L;
+    private static final int XB_STALE_TIME = 30000;
+    private static final long PASS_RATE_CHECK_TIME = 5000L;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication APPLICATION;
@@ -35,7 +35,6 @@ public final class ExposureBlockManager {
     public final long SAFE_TIME_BUFFER = 2500;
 
     private int mTotalXBs = 0;
-    private int mCommittedXBs = 0;
 
     private final Handler mFlushHandler;
 
@@ -154,8 +153,6 @@ public final class ExposureBlockManager {
                 CONFIG.getQualTrigger(),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
-                CONFIG.getL1Threshold(),
-                CONFIG.getL2Threshold(),
                 camera.getLastKnownLocation(),
                 APPLICATION.getBatteryTemp(),
                 state,
@@ -256,10 +253,6 @@ public final class ExposureBlockManager {
 
     public int getTotalXBs() {
         return mTotalXBs;
-    }
-
-    public int getCommittedXBs() {
-        return mCommittedXBs;
     }
 
     /**

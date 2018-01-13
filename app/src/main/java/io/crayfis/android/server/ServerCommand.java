@@ -101,15 +101,6 @@ class ServerCommand {
     String getL2Trigger() { return mL2Trigger; }
 
     /**
-     * Get cutoff for orientation (in degrees) about x and y axes before frame
-     * is flagged as "bad"
-     *
-     * @return Float or {@code null} if not set
-     */
-    @Nullable
-    Integer getQualityOrientation() { return mQualityOrient; }
-
-    /**
      * Get the L1 threshold.
      *
      * @return Integer or {@code null}.

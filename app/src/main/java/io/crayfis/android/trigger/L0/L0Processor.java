@@ -15,19 +15,22 @@ public class L0Processor extends TriggerProcessor {
 
     static AtomicInteger L0Count;
 
-    public L0Processor(CFApplication application, String configString) {
-        super(application, configString, true);
+    public L0Processor(CFApplication application, Config config) {
+        super(application, config, true);
     }
 
-    @Override
-    public Config makeConfig(String name, HashMap<String, String> options) {
+    public static Config makeConfig(String configStr) {
+
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
 
         switch (name) {
-            case "default":
-                return new L0Task.Config(name, options);
+            case L0Task.Config.NAME:
+                return new L0Task.Config(options);
             default:
                 CFLog.w("No L0 implementation found for " + name + ", using default!");
-                return new L0Task.Config(name, options);
+                return new L0Task.Config(options);
         }
 
     }

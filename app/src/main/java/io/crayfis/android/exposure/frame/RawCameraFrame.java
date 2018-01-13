@@ -534,8 +534,8 @@ public abstract class RawCameraFrame {
                     .setOrientZ(mOrientation[2])
                     .setAvg(getPixAvg())
                     .setStd(getPixStd());
-            for (int i=0; i<=mExposureBlock.getL1Thresh(); i++) {
-                mEventBuilder.addHist(mHist[i]);
+            for (int val : mHist) {
+                mEventBuilder.addHist(val);
             }
 
             mEventBuilder.setXbn(mExposureBlock.getXBN());

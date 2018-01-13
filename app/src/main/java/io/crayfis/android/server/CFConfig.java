@@ -14,6 +14,11 @@ import java.util.UUID;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
+import io.crayfis.android.trigger.L0.L0Processor;
+import io.crayfis.android.trigger.L1.L1Processor;
+import io.crayfis.android.trigger.L2.L2Processor;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -33,9 +38,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
     private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
     private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
-    private static final String KEY_QUAL_ORIENT = "qual_orient";
-    private static final String KEY_L1_THRESHOLD = "L1_thresh";
-    private static final String KEY_L2_THRESHOLD = "L2_thresh";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
     private static final String KEY_WEIGHTING_FRAMES = "weighting_sample_frames";
     private static final String KEY_HOTCELL_FRAMES = "hotcell_sample_frames";
@@ -52,7 +54,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
     private static final String KEY_TARGET_FPS = "prefFPS";
-    private static final String KEY_CAMERA_SELECT_MODE = "prefCameraSelectMode";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
     private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
 
@@ -66,9 +67,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_QUAL_TRIGGER = "facedown";
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
-    private static final int DEFAULT_ORIENT_CUT = 10;
-    private static final int DEFAULT_L1_THRESHOLD = 0;
-    private static final int DEFAULT_L2_THRESHOLD = 5;
     private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
     private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
     private static final int DEFAULT_HOTCELL_FRAMES = 10000;
@@ -90,18 +88,15 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
     private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
 
-    private String mL0Trigger;
-    private String mQualTrigger;
-    private String mL1Trigger;
-    private String mL2Trigger;
+    private TriggerProcessor.Config mL0Trigger;
+    private TriggerProcessor.Config mQualTrigger;
+    private TriggerProcessor.Config mL1Trigger;
+    private TriggerProcessor.Config mL2Trigger;
     private List<Set<String>> mHotcells;
     private String[] mPrecalWeights;
     private UUID[] mPrecalUUID;
     private long[] mLastPrecalTime;
     private int[] mLastPrecalResX;
-    private int mQualityOrientation;
-    private int mL1Threshold;
-    private int mL2Threshold;
     private int mWeightingSampleFrames;
     private int mHotcellSampleFrames;
     private float mHotcellThresh;
@@ -126,13 +121,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // FIXME: shouldn't we initialize based on the persistent config values?
         N_CAMERAS = Camera.getNumberOfCameras();
 
-        mL0Trigger = DEFAULT_L0_TRIGGER;
-        mQualTrigger = DEFAULT_QUAL_TRIGGER;
-        mL1Trigger = DEFAULT_L1_TRIGGER;
-        mL2Trigger = DEFAULT_L2_TRIGGER;
-        mQualityOrientation = DEFAULT_ORIENT_CUT;
-        mL1Threshold = DEFAULT_L1_THRESHOLD;
-        mL2Threshold = DEFAULT_L2_THRESHOLD;
+        mL0Trigger = L0Processor.makeConfig(DEFAULT_L0_TRIGGER);
+        mQualTrigger = QualityProcessor.makeConfig(DEFAULT_QUAL_TRIGGER);
+        mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
+        mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
         mWeightingSampleFrames = DEFAULT_WEIGHTING_FRAMES;
         mHotcellSampleFrames = DEFAULT_HOTCELL_FRAMES;
         mHotcellThresh = DEFAULT_HOTCELL_THRESH;
@@ -159,19 +151,19 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
     }
 
-    public String getL0Trigger() { 
+    public TriggerProcessor.Config getL0Trigger() {
         return mL0Trigger;
     }
     
-    public String getQualTrigger() {
+    public TriggerProcessor.Config getQualTrigger() {
         return mQualTrigger;
     }
 
-    public String getL1Trigger() {
+    public TriggerProcessor.Config getL1Trigger() {
         return mL1Trigger;
     }
 
-    public String getL2Trigger() {
+    public TriggerProcessor.Config getL2Trigger() {
         return mL2Trigger;
     }
 
@@ -228,7 +220,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getL1Threshold() {
-        return mL1Threshold;
+        return mL1Trigger.getInt("thresh");
     }
 
     /**
@@ -237,7 +229,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param l1Threshold The new threshold.
      */
     public void setL1Threshold(int l1Threshold) {
-        mL1Threshold = l1Threshold;
+        mL1Trigger = mL1Trigger.edit()
+                .putInt("thresh", l1Threshold)
+                .create();
     }
 
     /**
@@ -246,7 +240,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getL2Threshold() {
-        return mL2Threshold;
+        return mL2Trigger.getInt("thresh");
     }
 
     /**
@@ -255,7 +249,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param l2Threshold The new threshold.
      */
     public void setL2Threshold(int l2Threshold) {
-        mL2Threshold = l2Threshold;
+        mL2Trigger = mL2Trigger.edit()
+                .putInt("thresh", l2Threshold)
+                .create();
     }
 
     public int getWeightingSampleFrames() {
@@ -301,16 +297,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public int getExposureBlockPeriod() {
         return mExposureBlockPeriod;
-    }
-
-    /**
-     * In face-down mode, rotations along the x or y axis (in radians) greater
-     * than this angle are flagged as "bad".
-     *
-     * @return float
-     */
-    public int getQualityOrientation() {
-        return mQualityOrientation; 
     }
 
     /**
@@ -408,13 +394,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        mL0Trigger = sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER);
-        mQualTrigger = sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER);
-        mL1Trigger = sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER);
-        mL2Trigger = sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER);
-        mQualityOrientation = sharedPreferences.getInt(KEY_QUAL_ORIENT, DEFAULT_ORIENT_CUT);
-        mL1Threshold = sharedPreferences.getInt(KEY_L1_THRESHOLD, DEFAULT_L1_THRESHOLD);
-        mL2Threshold = sharedPreferences.getInt(KEY_L2_THRESHOLD, DEFAULT_L2_THRESHOLD);
+        mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
+        mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
+        mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
+        mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
         mWeightingSampleFrames = sharedPreferences.getInt(KEY_WEIGHTING_FRAMES, DEFAULT_WEIGHTING_FRAMES);
         mHotcellSampleFrames = sharedPreferences.getInt(KEY_HOTCELL_FRAMES, DEFAULT_HOTCELL_FRAMES);
         mHotcellThresh = sharedPreferences.getFloat(KEY_HOTCELL_THRESH, DEFAULT_HOTCELL_THRESH);
@@ -473,25 +456,22 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mPrecalUUID = serverCommand.getPrecalId();
         }
         if (serverCommand.getL0Trigger() != null) {
-            mL0Trigger = serverCommand.getL0Trigger();
+            mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger());
         }
         if (serverCommand.getQualityTrigger() != null) {
-            mQualTrigger = serverCommand.getQualityTrigger();
+            mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger());
         }
         if (serverCommand.getL1Trigger() != null) {
-            mL1Trigger = serverCommand.getL1Trigger();
+            mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger());
         }
         if (serverCommand.getL2Trigger() != null) {
-            mL2Trigger = serverCommand.getL2Trigger();
-        }
-        if (serverCommand.getQualityOrientation() != null) {
-            mQualityOrientation = serverCommand.getQualityOrientation();
+            mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger());
         }
         if (serverCommand.getL1Threshold() != null) {
-            mL1Threshold = serverCommand.getL1Threshold();
+            setL1Threshold(serverCommand.getL1Threshold());
         }
         if (serverCommand.getL2Threshold() != null) {
-            mL2Threshold = serverCommand.getL2Threshold();
+            setL2Threshold(serverCommand.getL2Threshold());
         }
         if (serverCommand.getEventsPerMinute() != null) {
             mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
@@ -567,13 +547,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                     .putInt(KEY_LAST_PRECAL_RES_X + i, mLastPrecalResX[i]);
         }
 
-        editor.putString(KEY_L0_TRIGGER, mL0Trigger)
-                .putString(KEY_QUAL_TRIGGER, mQualTrigger)
-                .putString(KEY_L1_TRIGGER, mL1Trigger)
-                .putString(KEY_L2_TRIGGER, mL2Trigger)
-                .putInt(KEY_QUAL_ORIENT, mQualityOrientation)
-                .putInt(KEY_L1_THRESHOLD, mL1Threshold)
-                .putInt(KEY_L2_THRESHOLD, mL2Threshold)
+        editor.putString(KEY_L0_TRIGGER, mL0Trigger.toString())
+                .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
+                .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
+                .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
                 .putInt(KEY_WEIGHTING_FRAMES, mWeightingSampleFrames)
                 .putInt(KEY_HOTCELL_FRAMES, mHotcellSampleFrames)
                 .putFloat(KEY_HOTCELL_THRESH, mHotcellThresh)

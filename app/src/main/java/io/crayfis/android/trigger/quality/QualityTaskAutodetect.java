@@ -11,19 +11,32 @@ import io.crayfis.android.util.CFUtil;
  * Created by jswaney on 1/12/18.
  */
 
-public class QualityTaskAutodetect extends TriggerProcessor.Task {
+class QualityTaskAutodetect extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final int DEFAULT_AVG_CUT = 10;
-        static final int DEFAULT_STD_CUT = 255;
+
+        static final String NAME = "autodetect";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("avg", 10);
+            KEY_DEFAULT.put("std", 255);
+        }
 
         final int avgCut;
         final int stdCut;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            avgCut = CFUtil.getInt(options.get("avg"), DEFAULT_AVG_CUT);
-            stdCut = CFUtil.getInt(options.get("std"), DEFAULT_STD_CUT);
+            avgCut = mTaskConfig.get("avg");
+            stdCut = mTaskConfig.get("std");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return QualityProcessor.makeConfig(cfgstr);
         }
 
         @Override

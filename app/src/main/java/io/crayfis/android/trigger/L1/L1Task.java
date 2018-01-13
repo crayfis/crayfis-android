@@ -1,13 +1,8 @@
 package io.crayfis.android.trigger.L1;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
 import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.R;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.server.CFConfig;
@@ -15,7 +10,6 @@ import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 5/12/16.
@@ -23,13 +17,26 @@ import io.crayfis.android.util.CFUtil;
 class L1Task extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final int DEFAULT_THRESH = 255;
+
+        static final String NAME = "default";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("thresh", 255);
+        }
 
         final int thresh;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
+            thresh = mTaskConfig.get("thresh");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L1Processor.makeConfig(cfgstr);
         }
 
         @Override

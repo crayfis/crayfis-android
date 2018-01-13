@@ -8,6 +8,7 @@ import java.util.concurrent.Executor;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.util.CFLog;
+import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by jswaney on 1/10/18.
@@ -16,7 +17,7 @@ import io.crayfis.android.util.CFLog;
 public abstract class TriggerProcessor {
 
     public final CFApplication mApplication;
-    private final Config mConfig;
+    public final Config config;
     public TriggerProcessor mNextProcessor;
     private Executor mExecutor;
 
@@ -24,20 +25,18 @@ public abstract class TriggerProcessor {
     public int pass = 0;
     public int skip = 0;
 
-    public TriggerProcessor(CFApplication application, String configStr, boolean serial) {
+    public TriggerProcessor(CFApplication application, Config config, boolean serial) {
         mApplication = application;
-        mConfig = parseConfig(configStr);
+        this.config = config;
         mExecutor = (serial) ? AsyncTask.SERIAL_EXECUTOR : AsyncTask.THREAD_POOL_EXECUTOR;
     }
 
-    public abstract Config makeConfig(String name, HashMap<String, String> options);
+    protected static HashMap<String, String> parseConfigString(String cfgStr) {
+        String[] pieces = cfgStr.split(";", 2);
 
-    private Config parseConfig(String configStr) {
-        String[] pieces = configStr.split(";", 2);
-
-        String name = pieces[0];
-        String cfgstr = pieces.length==2 ? pieces[1] : "";
         HashMap<String, String> options = new HashMap<>();
+        options.put("name", pieces[0]);
+        String cfgstr = pieces.length==2 ? pieces[1] : "";
 
         for (String c : cfgstr.split(";")) {
             String[] kv = c.split("=");
@@ -45,31 +44,12 @@ public abstract class TriggerProcessor {
             options.put(kv[0], kv[1]);
         }
 
-        return makeConfig(name, options);
+        return options;
     }
 
     public void submitFrame(RawCameraFrame frame) {
         processed++;
-        mExecutor.execute(mConfig.makeTask(this, frame));
-    }
-
-    public int getInt(String key) {
-        String val = mConfig.mTaskConfig.get(key);
-        if(val == null) {
-            CFLog.w("No value found for key: " + key);
-            return -1;
-        }
-
-        try {
-            return Integer.parseInt(val);
-        } catch (NumberFormatException e) {
-            CFLog.w("Value for not an integer for key: " + key);
-        }
-        return -1;
-    }
-
-    public final String getConfig() {
-        return mConfig.toString();
+        mExecutor.execute(config.makeTask(this, frame));
     }
 
     public TriggerProcessor setNext(TriggerProcessor next) {
@@ -82,11 +62,30 @@ public abstract class TriggerProcessor {
     public static abstract class Config {
 
         private final String mTaskName;
-        protected final HashMap<String, String> mTaskConfig;
+        protected final HashMap<String, Integer> mTaskConfig = new HashMap<>();
 
-        public Config(String taskName, HashMap<String, String> taskConfig) {
+        public Config(String taskName, HashMap<String, String> keyVal, HashMap<String, Integer> keyDefault) {
             mTaskName = taskName;
-            mTaskConfig = taskConfig;
+
+            for(String key : keyDefault.keySet()) {
+                int val;
+                try {
+                    val = Integer.parseInt(keyVal.get(key));
+                } catch (NumberFormatException e) {
+                    val = keyDefault.get(key);
+                }
+                mTaskConfig.put(key, val);
+            }
+        }
+
+        public abstract Config makeNewConfig(String configStr);
+
+        public String getName() {
+            return mTaskName;
+        }
+
+        public Integer getInt(String key) {
+            return mTaskConfig.get(key);
         }
 
         @Override
@@ -101,11 +100,39 @@ public abstract class TriggerProcessor {
         }
 
         public abstract Task makeTask(TriggerProcessor processor, RawCameraFrame frame);
+
+        public Editor edit() {
+            return new Editor();
+        }
+
+        public class Editor {
+
+            private HashMap<String, Integer> eTaskConfig;
+
+            Editor() {
+                eTaskConfig = mTaskConfig;
+            }
+
+            public Editor putInt(String key, int val) {
+                eTaskConfig.put(key, val);
+                return this;
+            }
+
+            public Config create() {
+                StringBuilder cfgBuilder = new StringBuilder(mTaskName + ";");
+                for(String key : eTaskConfig.keySet()) {
+                    cfgBuilder.append(key)
+                            .append("=")
+                            .append(eTaskConfig.get(key));
+                }
+                return Config.this.makeNewConfig(cfgBuilder.toString());
+            }
+        }
     }
 
     public static abstract class Task implements Runnable {
 
-        public final TriggerProcessor mProcessor;
+        protected final TriggerProcessor mProcessor;
         private final RawCameraFrame mFrame;
 
         public Task(TriggerProcessor processor, RawCameraFrame frame) {

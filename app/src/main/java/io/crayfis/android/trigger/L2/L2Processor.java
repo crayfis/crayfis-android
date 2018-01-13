@@ -15,23 +15,26 @@ public class L2Processor extends TriggerProcessor {
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    public L2Processor(CFApplication application, String configStr) {
-        super(application, configStr, false);
+    public L2Processor(CFApplication application, Config config) {
+        super(application, config, false);
     }
 
-    @Override
-    public Config makeConfig(String name, HashMap<String, String> options) {
+    public static Config makeConfig(String configStr) {
+
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
 
         switch (name) {
-            case "default":
-                return new L2Task.Config(name, options);
-            case "maxn":
-                return new L2TaskMaxN.Config(name, options);
-            case "byteblock":
-                return new L2TaskByteBlock.Config(name, options);
+            case L2Task.Config.NAME:
+                return new L2Task.Config(options);
+            case L2TaskMaxN.Config.NAME:
+                return new L2TaskMaxN.Config(options);
+            case L2TaskByteBlock.Config.NAME:
+                return new L2TaskByteBlock.Config(options);
             default:
                 CFLog.w("No L2 implementation found for " + name + ", using default!");
-                return new L2Task.Config(name, options);
+                return new L2Task.Config(options);
         }
     }
 

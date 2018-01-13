@@ -18,22 +18,26 @@ import io.crayfis.android.util.CFLog;
 
 public class QualityProcessor extends TriggerProcessor {
 
-    public QualityProcessor(CFApplication application, String configStr) {
-        super(application, configStr, false);
+    public QualityProcessor(CFApplication application, Config config) {
+        super(application, config, false);
     }
 
-    @Override
-    public Config makeConfig(String name, HashMap<String, String> options) {
+    public static Config makeConfig(String configStr) {
+
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
+
         switch (name) {
-            case "facedown":
-                return new QualityTaskFacedown.Config(name, options);
-            case "autodetect":
-                return new QualityTaskAutodetect.Config(name, options);
-            case "lock":
-                return new QualityTaskLock.Config(name, options);
+            case QualityTaskFacedown.Config.NAME:
+                return new QualityTaskFacedown.Config(options);
+            case QualityTaskAutodetect.Config.NAME:
+                return new QualityTaskAutodetect.Config(options);
+            case QualityTaskLock.Config.NAME:
+                return new QualityTaskLock.Config(options);
             default:
                 CFLog.w("No L0 implementation found for " + name + ", using default!");
-                return new QualityTaskFacedown.Config(name, options);
+                return new QualityTaskFacedown.Config(options);
         }
     }
 

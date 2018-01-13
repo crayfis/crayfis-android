@@ -11,22 +11,35 @@ import io.crayfis.android.util.CFUtil;
  * Created by jswaney on 1/11/18.
  */
 
-public class QualityTaskFacedown extends TriggerProcessor.Task {
+class QualityTaskFacedown extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final int DEFAULT_ORIENTATION_CUT = 10;
-        static final int DEFAULT_AVG_CUT = 10;
-        static final int DEFAULT_STD_CUT = 255;
+
+        static final String NAME = "facedown";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("orientation", 10);
+            KEY_DEFAULT.put("avg", 10);
+            KEY_DEFAULT.put("std", 255);
+        }
 
         final double orientationCosine;
         final int avgCut;
         final int stdCut;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            orientationCosine = Math.cos(Math.PI/180. * CFUtil.getInt(options.get("orientation"), DEFAULT_ORIENTATION_CUT));
-            avgCut = CFUtil.getInt(options.get("avg"), DEFAULT_AVG_CUT);
-            stdCut = CFUtil.getInt(options.get("std"), DEFAULT_STD_CUT);
+            orientationCosine = Math.cos(Math.PI/180. * mTaskConfig.get("orientation"));
+            avgCut = mTaskConfig.get("avg");
+            stdCut = mTaskConfig.get("std");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return QualityProcessor.makeConfig(cfgstr);
         }
 
         @Override

@@ -22,16 +22,29 @@ import io.crayfis.android.util.CFUtil;
 class L2TaskMaxN extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
-        static final int DEFAULT_NPIX = 25;
-        static final int DEFAULT_THRESH = 255;
+
+        static final String NAME = "maxn";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("thresh", 255);
+            KEY_DEFAULT.put("npix", 120);
+        }
 
         final int thresh;
         final int npix;
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            thresh = CFUtil.getInt(options.get("thresh"), DEFAULT_THRESH);
-            npix = CFUtil.getInt(options.get("npix"), DEFAULT_NPIX);
+            thresh = mTaskConfig.get("thresh");
+            npix = mTaskConfig.get("npix");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L2Processor.makeConfig(cfgstr);
         }
 
         @Override

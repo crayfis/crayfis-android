@@ -19,20 +19,32 @@ class L0Task extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
 
-        static final int DEFAULT_PRESCALE = 1000;
-        static final boolean DEFAULT_RANDOM = true;
-        static final int DEFAULT_WINDOWSIZE = 10;
+        static final String NAME = "default";
+
+        static final HashMap<String, Integer> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put("prescale", 1000);
+            KEY_DEFAULT.put("random", 1);
+            KEY_DEFAULT.put("windowsize", 10);
+        }
 
         final int prescale;
         final boolean random;
         final int windowSize;
 
-        Config(String name, HashMap<String, String> options) {
-            super(name, options);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            prescale = CFUtil.getInt(options.get("prescale"), DEFAULT_PRESCALE);
-            random = options.containsKey("random") ? Boolean.parseBoolean(mTaskConfig.get("random")) : DEFAULT_RANDOM;
-            windowSize = CFUtil.getInt(options.get("windowsize"), DEFAULT_WINDOWSIZE);
+            prescale = mTaskConfig.get("prescale");
+            random = mTaskConfig.get("random") != 0;
+            windowSize = mTaskConfig.get("windowsize");
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L0Processor.makeConfig(cfgstr);
         }
 
         @Override

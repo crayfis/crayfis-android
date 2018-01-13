@@ -78,7 +78,7 @@ public class CFApplication extends Application {
             if(consecutiveIdles >= 3) {
                 if(handleUnresponsive()) return;
             }
-            if(CFConfig.getInstance().getQualTrigger().startsWith("facedown")
+            if(CFConfig.getInstance().getQualTrigger().getName().equals("facedown")
                     || CFCamera.getInstance().isFlat()) {
                 mWaitingForStabilization = false;
                 setApplicationState(CFApplication.State.STABILIZATION);
