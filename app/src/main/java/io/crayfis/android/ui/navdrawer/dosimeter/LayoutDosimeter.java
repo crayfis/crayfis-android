@@ -145,8 +145,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
 
         L1Calibrator cal = L1Calibrator.getInstance();
         if (cal !=null && mGraphSeriesTime !=null) {
-            Integer[] values = new Integer[cal.getMaxPixels().size()];
-            values=cal.getMaxPixels().toArray(values);
+            Integer[] values = cal.getMaxPixels();
             mGraphSeriesTime.resetData(make_graph_data(values));
             // dosimeter average
             float mean = 0;

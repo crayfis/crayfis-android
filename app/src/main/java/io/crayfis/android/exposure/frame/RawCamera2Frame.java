@@ -81,7 +81,7 @@ class RawCamera2Frame extends RawCameraFrame {
             // use the same byte[] buffer for raw and weighted
             byte[] adjustedBytes = new byte[aRaw.getBytesSize()];
             aWeighted.copyTo(adjustedBytes);
-            weightingLock.unlock();
+            weightingLock.release();
             mat1 = new MatOfByte(adjustedBytes);
 
             mRawBytes = adjustedBytes;
@@ -97,7 +97,7 @@ class RawCamera2Frame extends RawCameraFrame {
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            weightingLock.unlock();
+            weightingLock.release();
             mRawLock.release();
             if (mat1 != null) mat1.release();
             if (mat2 != null) mat2.release();

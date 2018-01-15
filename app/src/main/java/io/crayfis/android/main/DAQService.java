@@ -22,6 +22,7 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
+import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
@@ -475,12 +476,10 @@ public class DAQService extends Service {
 
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
-                    + "Qual trig: " + CONFIG.getQualTrigger()
-                    + "L1 trig: " + CONFIG.getL1Trigger()
+                    + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
+                    + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                    + "total frames - L1: " + L1Processor.L1Count + " (L2: " + L2Processor.L2Count + ")\n"
-                    + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
-                    + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
+                    + "total frames - L1: " + L0Processor.L0Count.intValue() + " (L2: " + L2Processor.L2Count + ")\n"
                     + "fps="+String.format("%1.2f",lastFPS)
                     + ", target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
                     + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())

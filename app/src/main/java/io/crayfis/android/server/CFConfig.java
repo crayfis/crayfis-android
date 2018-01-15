@@ -72,7 +72,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final int DEFAULT_HOTCELL_FRAMES = 10000;
     private static final float DEFAULT_HOTCELL_THRESH = .002f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
-    private static final int DEFAULT_STABILIZATION_FRAMES = 45;
     private static final float DEFAULT_TARGET_EPM = 30;
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
@@ -102,7 +101,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private float mHotcellThresh;
     private int mCalibrationSampleFrames;
     private float mTargetEventsPerMinute;
-    private int mStabilizationSampleFrames;
     private int mExposureBlockPeriod;
     private int mMaxUploadInterval;
     private int mMaxChunkSize;
@@ -129,7 +127,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mHotcellSampleFrames = DEFAULT_HOTCELL_FRAMES;
         mHotcellThresh = DEFAULT_HOTCELL_THRESH;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
-        mStabilizationSampleFrames = DEFAULT_STABILIZATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
@@ -219,7 +216,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @return int
      */
-    public int getL1Threshold() {
+    public Integer getL1Threshold() {
         return mL1Trigger.getInt("thresh");
     }
 
@@ -239,7 +236,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @return int
      */
-    public int getL2Threshold() {
+    public Integer getL2Threshold() {
         return mL2Trigger.getInt("thresh");
     }
 
@@ -270,15 +267,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public int getCalibrationSampleFrames() {
         return mCalibrationSampleFrames;
-    }
-
-    /**
-     * Number of frames to pass during stabilization periods.
-     *
-     * @return int
-     */
-    public int getStabilizationSampleFrames() {
-        return mStabilizationSampleFrames;
     }
 
     /**

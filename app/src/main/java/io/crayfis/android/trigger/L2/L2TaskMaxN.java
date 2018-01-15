@@ -130,7 +130,7 @@ class L2TaskMaxN extends TriggerProcessor.Task {
         }
 
         l2PixelCoords.release();
-        mProcessor.pass += pixels.size();
+        mProcessor.pass.addAndGet(pixels.size());
         frame.setPixels(pixels);
 
         return true;

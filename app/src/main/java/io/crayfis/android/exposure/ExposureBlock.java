@@ -102,9 +102,23 @@ public class ExposureBlock {
         this.res_y = resy;
 
         total_pixels = 0;
-        mL0Processor.setNext(mQualityProcessor)
-                .setNext(mL1Processor)
-                .setNext(mL2Processor);
+
+        // set up the processors based on the DAQ state
+        switch (daq_state) {
+            case STABILIZATION:
+                mL0Processor.setNext(mQualityProcessor);
+                break;
+            case CALIBRATION:
+            case PRECALIBRATION:
+                mL0Processor.setNext(mQualityProcessor)
+                        .setNext(mL1Processor);
+                break;
+            case DATA:
+                mL0Processor.setNext(mQualityProcessor)
+                        .setNext(mL1Processor)
+                        .setNext(mL2Processor);
+
+        }
     }
 
     /***
@@ -227,24 +241,31 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
 
-                .setL0Pass(mL0Processor.pass)
-                .setL0Processed(mL0Processor.processed)
-                .setL0Skip(mL0Processor.skip)
+                .setL0Pass(mL0Processor.pass.intValue())
+                .setL0Processed(mL0Processor.processed.intValue())
+                .setL0Skip(mL0Processor.skip.intValue())
                 .setL0Conf(mL0Processor.config.toString())
 
-                .setL1Pass(mL1Processor.pass)
-                .setL1Processed(mL1Processor.processed)
-                .setL1Skip(mL1Processor.skip)
-                .setL1Thresh(mL1Processor.config.getInt("thresh"))
-                .setL1Conf(mL1Processor.config.toString())
-		
-		        .setL2Pass(mL2Processor.pass)
-		        .setL2Processed(mL2Processor.processed)
-		        .setL2Skip(mL2Processor.skip)
-		        .setL2Thresh(mL2Processor.config.getInt("thresh"))
-                .setL2Conf(mL2Processor.config.toString())
+                .setL1Pass(mL1Processor.pass.intValue())
+                .setL1Processed(mL1Processor.processed.intValue())
+                .setL1Skip(mL1Processor.skip.intValue())
+                .setL1Conf(mL1Processor.config.toString());
+        Integer l1Thresh = mL1Processor.config.getInt("thresh");
+        if(l1Thresh != null) {
+            buf.setL1Thresh(l1Thresh);
+        }
 
-				.setGpsLat(start_loc.getLatitude())
+		
+        buf.setL2Pass(mL2Processor.pass.intValue())
+		        .setL2Processed(mL2Processor.processed.intValue())
+		        .setL2Skip(mL2Processor.skip.intValue())
+                .setL1Conf(mL2Processor.config.toString());
+        Integer l2Thresh = mL2Processor.config.getInt("thresh");
+        if(l2Thresh != null) {
+            buf.setL2Thresh(l2Thresh);
+        }
+
+        buf.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())
                 .setGpsFixtime(start_loc.getTime())
 

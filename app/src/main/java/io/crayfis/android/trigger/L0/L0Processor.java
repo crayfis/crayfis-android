@@ -13,7 +13,7 @@ import io.crayfis.android.util.CFLog;
 
 public class L0Processor extends TriggerProcessor {
 
-    static AtomicInteger L0Count;
+    public static AtomicInteger L0Count = new AtomicInteger();
 
     public L0Processor(CFApplication application, Config config) {
         super(application, config, true);

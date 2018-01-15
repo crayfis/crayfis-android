@@ -78,7 +78,7 @@ class L2Task extends TriggerProcessor.Task {
         threshMat.release();
 
         long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
-        mProcessor.pass += pixN;
+        mProcessor.pass.addAndGet((int)pixN);
 
         for(int i=0; i<pixN; i++) {
 

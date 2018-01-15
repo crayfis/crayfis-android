@@ -90,15 +90,6 @@ class L1Task extends TriggerProcessor.Task {
         return true;
     }
 
-    boolean processStabilization(RawCameraFrame frame) {
-        // If we're in stabilization mode, just drop frames until we've skipped enough
-        long count = mExposureBlock.count.incrementAndGet();
-        if (count == CONFIG.getStabilizationSampleFrames()) {
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        }
-        return true;
-    }
-
     boolean processData(RawCameraFrame frame) {
 
         mL1Cal.addFrame(frame);
@@ -112,7 +103,7 @@ class L1Task extends TriggerProcessor.Task {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
 
-            mProcessor.pass++;
+            mProcessor.pass.incrementAndGet();
             
             // add a new buffer to the queue to make up for this one which
             // will not return
@@ -122,12 +113,12 @@ class L1Task extends TriggerProcessor.Task {
                 mKeepFrame = true;
             } else {
                 // out of memory: skip the frame
-                mProcessor.mNextProcessor.skip++;
+                mProcessor.mNextProcessor.skip.incrementAndGet();
             }
 
         } else {
             // didn't pass. recycle the buffer.
-            mProcessor.skip++;
+            mProcessor.skip.incrementAndGet();
         }
 
         return false;
@@ -146,9 +137,6 @@ class L1Task extends TriggerProcessor.Task {
             case CALIBRATION:
                 processCalibration(frame);
                 break;
-            case STABILIZATION:
-                processStabilization(frame);
-                break;
             case DATA:
                 processData(frame);
                 break;
@@ -157,14 +145,7 @@ class L1Task extends TriggerProcessor.Task {
                 break;
         }
 
-        if (!mKeepFrame) {
-            // we are done with this frame. retire the buffer and also clear it from the XB.
-            frame.retire();
-        }
-
-        if (frame.isOutstanding()) {
-            CFLog.w("Frame still outstanding after running L1Task!");
-        }
+        //if(!mKeepFrame) frame.retire();
         
         return mKeepFrame;
     }

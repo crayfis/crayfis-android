@@ -42,15 +42,15 @@ public class QualityProcessor extends TriggerProcessor {
     }
 
     @Override
-    public void processResult(RawCameraFrame frame, boolean pass) {
+    public void onFrameResult(RawCameraFrame frame, boolean pass) {
         if(!pass) {
             CFCamera camera = CFCamera.getInstance();
             camera.changeCameraFrom(frame.getCameraId());
-            if(!camera.isFlat()) {
+            if (!camera.isFlat()) {
                 mApplication.userErrorMessage(R.string.warning_facedown, false);
             } else {
                 camera.badFlatEvents++;
-                if(camera.badFlatEvents < 5) {
+                if (camera.badFlatEvents < 5) {
                     mApplication.userErrorMessage(R.string.warning_bright, false);
                 } else {
                     // gravity sensor is clearly impaired, so just determine orientation with light levels
@@ -65,6 +65,12 @@ public class QualityProcessor extends TriggerProcessor {
 
     }
 
-
+    @Override
+    public void onMaxReached() {
+        // we have a sufficient number of good frames, so switch to CALIBRATION from STABILIZATION
+        if(mApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
+            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+        }
+    }
 
 }

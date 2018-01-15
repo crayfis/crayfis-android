@@ -1,9 +1,11 @@
 package io.crayfis.android.trigger;
 
 import android.os.AsyncTask;
+import android.support.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
@@ -21,9 +23,9 @@ public abstract class TriggerProcessor {
     public TriggerProcessor mNextProcessor;
     private Executor mExecutor;
 
-    public int processed = 0;
-    public int pass = 0;
-    public int skip = 0;
+    public AtomicInteger processed = new AtomicInteger();
+    public AtomicInteger pass = new AtomicInteger();
+    public AtomicInteger skip = new AtomicInteger();
 
     public TriggerProcessor(CFApplication application, Config config, boolean serial) {
         mApplication = application;
@@ -48,7 +50,7 @@ public abstract class TriggerProcessor {
     }
 
     public void submitFrame(RawCameraFrame frame) {
-        processed++;
+        processed.incrementAndGet();
         mExecutor.execute(config.makeTask(this, frame));
     }
 
@@ -57,7 +59,9 @@ public abstract class TriggerProcessor {
         return next;
     }
 
-    public void processResult(RawCameraFrame frame, boolean pass) { }
+    public void onFrameResult(RawCameraFrame frame, boolean pass) { }
+
+    public void onMaxReached() { }
 
     public static abstract class Config {
 
@@ -84,6 +88,7 @@ public abstract class TriggerProcessor {
             return mTaskName;
         }
 
+        @Nullable
         public Integer getInt(String key) {
             return mTaskConfig.get(key);
         }
@@ -94,7 +99,8 @@ public abstract class TriggerProcessor {
             for(String key : mTaskConfig.keySet()) {
                 cfgBuilder.append(key)
                         .append("=")
-                        .append(mTaskConfig.get(key));
+                        .append(mTaskConfig.get(key))
+                        .append(";");
             }
             return cfgBuilder.toString();
         }
@@ -149,10 +155,15 @@ public abstract class TriggerProcessor {
             if(pass && mProcessor.mNextProcessor != null) {
                 mProcessor.mNextProcessor.submitFrame(mFrame);
             } else {
+                mProcessor.onFrameResult(mFrame, pass);
                 mFrame.clear();
             }
 
-            mProcessor.processResult(mFrame, pass);
+            Integer maxFrames = mProcessor.config.getInt("maxframes");
+            CFLog.d(this.getClass().getSimpleName() + " " + mProcessor.processed  + "/" + maxFrames);
+            if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
+                mProcessor.onMaxReached();
+            }
         }
     }
 }

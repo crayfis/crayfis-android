@@ -114,7 +114,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
             builder.addVal(frame.getRawByteAt(pairXY.first, pairXY.second));
         }
 
-        mProcessor.pass += l2PixelCoords.total();
+        mProcessor.pass.addAndGet((int)l2PixelCoords.total());
         l2PixelCoords.release();
 
         frame.setByteBlock(builder.build());

@@ -3,6 +3,7 @@ package io.crayfis.android.trigger.quality;
 import java.util.HashMap;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -20,6 +21,7 @@ class QualityTaskLock extends TriggerProcessor.Task {
         static {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put("backlock", 1);
+            KEY_DEFAULT.put("maxframes", 45);
         }
 
         final boolean backLock;

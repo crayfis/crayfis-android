@@ -16,6 +16,7 @@ import android.renderscript.Type;
 import org.opencv.core.Mat;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
@@ -67,7 +68,8 @@ public abstract class RawCameraFrame {
     private Allocation aout;
 
     // lock to make sure allocation doesn't change as we're performing weighting
-    static final ReentrantLock weightingLock = new ReentrantLock();
+    static final Semaphore weightingLock = new Semaphore(1);
+    private boolean mIsWeighted = false;
 
     private enum FrameType {
         DEPRECATED,
@@ -303,9 +305,10 @@ public abstract class RawCameraFrame {
      * @return allocation of bytes
      */
     public synchronized Allocation getWeightedAllocation() {
-        if(!weightingLock.isHeldByCurrentThread()) {
+        if(!mIsWeighted) {
             // weighting has already been done
-            weightingLock.lock();
+            mIsWeighted = true;
+            weightingLock.tryAcquire();
             weightAllocation();
         }
         return aWeighted;
@@ -344,9 +347,7 @@ public abstract class RawCameraFrame {
      * Return the image buffer to be used by the camera, and free all locks
      */
     public void retire() {
-        if(weightingLock.isHeldByCurrentThread()) {
-            weightingLock.unlock();
-        }
+        weightingLock.release();
     }
 
     /**
@@ -364,6 +365,8 @@ public abstract class RawCameraFrame {
      * Notify the ExposureBlock we are done with this frame, and free all memory
      */
     public void clear() {
+        if(!mBufferClaimed) retire();
+
         mExposureBlock.clearFrame(this);
         // make sure we null the image buffer so that its memory can be freed.
         if (mGrayMat != null) {
@@ -375,7 +378,7 @@ public abstract class RawCameraFrame {
         mRawBytes = null;
     }
 
-    public boolean isOutstanding() {
+    private boolean isOutstanding() {
         synchronized (mBufferClaimed) {
             return !(mGrayMat == null || mBufferClaimed);
         }

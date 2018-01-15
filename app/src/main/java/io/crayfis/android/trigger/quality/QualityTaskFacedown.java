@@ -3,6 +3,7 @@ package io.crayfis.android.trigger.quality;
 import java.util.HashMap;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 import io.crayfis.android.util.CFUtil;
@@ -24,6 +25,7 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
             KEY_DEFAULT.put("orientation", 10);
             KEY_DEFAULT.put("avg", 10);
             KEY_DEFAULT.put("std", 255);
+            KEY_DEFAULT.put("maxframes", 45);
         }
 
         final double orientationCosine;
