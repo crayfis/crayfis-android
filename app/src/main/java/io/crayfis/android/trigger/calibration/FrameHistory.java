@@ -41,7 +41,7 @@ public class FrameHistory<E extends Number> {
     }
 
     public E[] toArray(E in[]) {
-        return (E[]) values.toArray(in);
+        return values.toArray(in);
     }
 
     public E getOldest() {

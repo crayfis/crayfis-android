@@ -6,12 +6,13 @@ import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 public class L1Calibrator {
-    private final FrameHistogram maxPixels;
 
-    private int n_frames = 1000;
+    private final FrameHistogram maxPixels;
+    private Integer[] mPixArray;
 
     private L1Calibrator() {
-        maxPixels = new FrameHistogram(n_frames);
+        maxPixels = new FrameHistogram(CFConfig.getInstance().getCalibrationSampleFrames());
+        mPixArray = new Integer[maxPixels.size()];
     }
 
     private static L1Calibrator sInstance;
@@ -23,7 +24,7 @@ public class L1Calibrator {
         return sInstance;
     }
 
-    public FrameHistory<Integer> getMaxPixels() { return maxPixels; }
+    public Integer[] getMaxPixels() { return maxPixels.toArray(mPixArray); }
 
     public void clear() {
         synchronized (maxPixels) {
@@ -83,8 +84,8 @@ public class L1Calibrator {
     }
 
     public void resize(int n) {
-        n_frames = n;
         maxPixels.resize(n);
+        mPixArray = new Integer[n];
     }
 
     public void destroy() {
