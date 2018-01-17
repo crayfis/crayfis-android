@@ -181,8 +181,7 @@ class CFCamera2 extends CFCamera {
                 mFrameHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        frame.callLocks();
-                        frame.assign();
+                        frame.commit();
                     }
                 });
                 mBuffersQueued.decrementAndGet();

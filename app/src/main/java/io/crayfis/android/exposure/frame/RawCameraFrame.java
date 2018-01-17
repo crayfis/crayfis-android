@@ -336,12 +336,12 @@ public abstract class RawCameraFrame {
         return mUploadRequested;
     }
 
-    // FIXME: this is a hack
-    public abstract void callLocks();
-
-    public final void assign() {
+    public final void commit() {
+        callLocks();
         mExposureBlock.tryAssignFrame(this);
     }
+
+    void callLocks() { }
 
     /**
      * Return the image buffer to be used by the camera, and free all locks

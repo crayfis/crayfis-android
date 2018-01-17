@@ -53,7 +53,7 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public void callLocks() {
+    void callLocks() {
         mRawLock.acquireUninterruptibly();
         aRaw.ioReceive();
     }

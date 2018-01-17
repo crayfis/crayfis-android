@@ -51,12 +51,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
     }
 
     @Override
-    public void callLocks() {
-
-    }
-
-
-    @Override
     protected synchronized void weightAllocation() {
         super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
