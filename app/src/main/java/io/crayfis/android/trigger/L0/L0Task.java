@@ -69,7 +69,7 @@ class L0Task extends TriggerProcessor.Task {
     }
 
     @Override
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
 
         L0Processor.L0Count.incrementAndGet();
 

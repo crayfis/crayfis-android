@@ -10,6 +10,7 @@ import java.util.LinkedList;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
+import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
@@ -148,11 +149,7 @@ public final class ExposureBlockManager {
                 mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
-                CONFIG.getL0Trigger(),
-                CONFIG.getQualTrigger(),
-                CONFIG.getPrecalTrigger(),
-                CONFIG.getL1Trigger(),
-                CONFIG.getL2Trigger(),
+                TriggerChain.makeChain(APPLICATION),
                 camera.getLastKnownLocation(),
                 APPLICATION.getBatteryTemp(),
                 state,

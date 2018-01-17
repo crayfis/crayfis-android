@@ -50,7 +50,7 @@ public class PreCalibrator extends TriggerProcessor {
 
     private final static int INTER = Imgproc.INTER_CUBIC;
 
-    public PreCalibrator(CFApplication app, List<TriggerProcessor.Config> configs) {
+    public PreCalibrator(CFApplication app, List<Config> configs) {
         super(app, configs.get(sConfigStep), false);
 
         CONFIG = CFConfig.getInstance();
@@ -62,10 +62,10 @@ public class PreCalibrator extends TriggerProcessor {
         }
     }
 
-    public static List<TriggerProcessor.Config> makeConfig(String configStr) {
+    public static List<Config> makeConfig(String configStr) {
 
         String[] configStrings = configStr.split("->");
-        List<TriggerProcessor.Config> configs = new ArrayList<>();
+        List<Config> configs = new ArrayList<>();
 
         for(String str : configStrings) {
             HashMap<String, String> options = TriggerProcessor.parseConfigString(str);
@@ -101,7 +101,6 @@ public class PreCalibrator extends TriggerProcessor {
 
     @Override
     public void onMaxReached() {
-        mTask.onFinished();
         sConfigStep++;
         if(sConfigStep >= sConfigList.size()) {
             submitPrecalibrationResult();

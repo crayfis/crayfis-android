@@ -98,7 +98,7 @@ class L1Task extends TriggerProcessor.Task {
 
 
     @Override
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
 
         mL1Cal.addFrame(frame);
 

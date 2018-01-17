@@ -98,7 +98,7 @@ class HotCellTask extends TriggerProcessor.Task {
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
         mScriptCFindSecond.forEach_order(frame.getWeightedAllocation());
         if(frame.getExposureBlock().count.intValue()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
@@ -108,7 +108,7 @@ class HotCellTask extends TriggerProcessor.Task {
     }
 
     @Override
-    public void onFinished() {
+    protected void onFinished() {
         int cameraId = CAMERA.getCameraId();
 
         // set up Allocations for histogram

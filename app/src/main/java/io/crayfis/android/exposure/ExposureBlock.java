@@ -17,9 +17,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import io.crayfis.android.R;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
+import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
@@ -49,11 +51,7 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-	private final L0Processor mL0Processor;
-	private final QualityProcessor mQualityProcessor;
-	private final PreCalibrator mPrecalibrator;
-    private final L1Processor mL1Processor;
-    private final L2Processor mL2Processor;
+	private final TriggerChain triggerChain;
 	
 	private int total_pixels;
 	
@@ -79,11 +77,7 @@ public class ExposureBlock {
                          int xbn,
                          UUID run_id,
                          UUID precal_id,
-                         TriggerProcessor.Config L0_config,
-                         TriggerProcessor.Config qual_config,
-                         List<TriggerProcessor.Config> precal_config,
-                         TriggerProcessor.Config L1_config,
-                         TriggerProcessor.Config L2_config,
+                         TriggerChain triggerChain,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
@@ -95,13 +89,8 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.mL0Processor = new L0Processor(APPLICATION, L0_config);
-        this.mQualityProcessor = new QualityProcessor(APPLICATION, qual_config);
-        this.mPrecalibrator = (daq_state == CFApplication.State.PRECALIBRATION)
-                ? new PreCalibrator(APPLICATION, precal_config) : null;
-        this.mL1Processor = new L1Processor(APPLICATION, L1_config);
-        this.mL2Processor = new L2Processor(APPLICATION, L2_config);
-        this.underflow_hist = new Histogram(mL1Processor.config.getInt("thresh")+1);
+        this.triggerChain = triggerChain;
+        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Trigger().getInt("thresh")+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -110,25 +99,6 @@ public class ExposureBlock {
 
         total_pixels = 0;
 
-        // set up the processors based on the DAQ state
-        switch (daq_state) {
-            case STABILIZATION:
-                mL0Processor.setNext(mQualityProcessor);
-                break;
-            case PRECALIBRATION:
-                mL0Processor.setNext(mQualityProcessor)
-                        .setNext(mPrecalibrator);
-                break;
-            case CALIBRATION:
-                mL0Processor.setNext(mQualityProcessor)
-                        .setNext(mL1Processor);
-                break;
-            case DATA:
-                mL0Processor.setNext(mQualityProcessor)
-                        .setNext(mL1Processor)
-                        .setNext(mL2Processor);
-
-        }
     }
 
     /***
@@ -158,7 +128,7 @@ public class ExposureBlock {
         // If we made it here, we can submit the XB to the L1Processor.
         // It will pop the assigned frame from the XB's internal list, and will also handle
         // recycling the buffers.
-        mL0Processor.submitFrame(frame);
+        triggerChain.submitFrame(frame);
     }
 
     /**
@@ -251,31 +221,37 @@ public class ExposureBlock {
 	
 	DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
-                .setDaqState(translateState(daq_state))
+                .setDaqState(translateState(daq_state));
 
-                .setL0Pass(mL0Processor.getPasses())
-                .setL0Processed(mL0Processor.getProcessed())
-                .setL0Skip(mL0Processor.getSkips())
-                .setL0Conf(mL0Processor.config.toString())
+        TriggerProcessor L0 = triggerChain.getProcessor(L0Processor.class);
 
-                .setL1Pass(mL1Processor.getPasses())
-                .setL1Processed(mL1Processor.getProcessed())
-                .setL1Skip(mL1Processor.getSkips())
-                .setL1Conf(mL1Processor.config.toString());
-        Integer l1Thresh = mL1Processor.config.getInt("thresh");
-        if(l1Thresh != null) {
-            buf.setL1Thresh(l1Thresh);
+        if(L0 != null) {
+            buf.setL0Pass(L0.getPasses())
+                    .setL0Processed(L0.getProcessed())
+                    .setL0Skip(L0.getSkips())
+                    .setL0Conf(L0.config.toString());
         }
 
-		
-        buf.setL2Pass(mL2Processor.getPasses())
-		        .setL2Processed(mL2Processor.getProcessed())
-		        .setL2Skip(mL2Processor.getSkips())
-                .setL1Conf(mL2Processor.config.toString());
-        Integer l2Thresh = mL2Processor.config.getInt("thresh");
-        if(l2Thresh != null) {
-            buf.setL2Thresh(l2Thresh);
+        TriggerProcessor L1 = triggerChain.getProcessor(L1Processor.class);
+
+        if(L1 != null) {
+            buf.setL1Pass(L1.getPasses())
+                    .setL0Processed(L1.getProcessed())
+                    .setL0Skip(L1.getSkips())
+                    .setL0Conf(L1.config.toString())
+                    .setL1Thresh(L1.config.getInt("thresh"));
         }
+
+        TriggerProcessor L2 = triggerChain.getProcessor(L2Processor.class);
+
+        if(L2 != null) {
+            buf.setL1Pass(L2.getPasses())
+                    .setL0Processed(L2.getProcessed())
+                    .setL0Skip(L2.getSkips())
+                    .setL0Conf(L2.config.toString())
+                    .setL1Thresh(L2.config.getInt("thresh"));
+        }
+
 
         buf.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())

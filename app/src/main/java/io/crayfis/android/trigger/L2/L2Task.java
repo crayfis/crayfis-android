@@ -59,7 +59,7 @@ class L2Task extends TriggerProcessor.Task {
     }
 
 
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
 
         L2Processor.L2Count++;
 

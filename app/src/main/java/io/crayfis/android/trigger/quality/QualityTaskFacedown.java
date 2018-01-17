@@ -58,7 +58,7 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
     }
 
     @Override
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
         if (frame.getOrientation() == null) {
             CFLog.e("Orientation not found");
         } else {

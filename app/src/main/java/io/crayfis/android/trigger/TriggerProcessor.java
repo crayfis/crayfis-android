@@ -20,18 +20,19 @@ public abstract class TriggerProcessor {
 
     public final CFApplication mApplication;
     public final Config config;
-    public TriggerProcessor mNextProcessor;
+    TriggerProcessor mNextProcessor;
     private Executor mExecutor;
-    protected Task mTask;
+    private final Task mTask;
 
     private AtomicInteger processed = new AtomicInteger();
     private AtomicInteger pass = new AtomicInteger();
     private AtomicInteger skip = new AtomicInteger();
 
-    public TriggerProcessor(CFApplication application, Config config, boolean serial) {
+    protected TriggerProcessor(CFApplication application, Config config, boolean serial) {
         mApplication = application;
         this.config = config;
         mExecutor = (serial) ? AsyncTask.SERIAL_EXECUTOR : AsyncTask.THREAD_POOL_EXECUTOR;
+        mTask = config.makeTask(this, null);
     }
 
     protected static HashMap<String, String> parseConfigString(String cfgStr) {
@@ -50,27 +51,19 @@ public abstract class TriggerProcessor {
         return options;
     }
 
-    public void submitFrame(RawCameraFrame frame) {
-        mExecutor.execute(makeTask(frame));
+    protected void submitFrame(RawCameraFrame frame) {
+        mTask.setFrame(frame);
+        mExecutor.execute(mTask);
     }
 
-    private Task makeTask(RawCameraFrame frame) {
-        if (mTask == null) {
-            mTask = config.makeTask(this, frame);
-        } else {
-            mTask.setFrame(frame);
-        }
-        return mTask;
-    }
-
-    public TriggerProcessor setNext(TriggerProcessor next) {
+    TriggerProcessor setNext(TriggerProcessor next) {
         mNextProcessor = next;
         return next;
     }
 
-    public void onFrameResult(RawCameraFrame frame, boolean pass) { }
+    protected void onFrameResult(RawCameraFrame frame, boolean pass) { }
 
-    public void onMaxReached() { }
+    protected void onMaxReached() { }
 
     public int getProcessed() {
         return processed.intValue();
@@ -168,17 +161,16 @@ public abstract class TriggerProcessor {
 
         public Task(TriggerProcessor processor, RawCameraFrame frame) {
             mProcessor = processor;
-            mProcessor.mTask = this;
             mFrame = frame;
         }
 
-        public void setFrame(RawCameraFrame frame) {
+        private void setFrame(RawCameraFrame frame) {
             mFrame = frame;
         }
 
-        public abstract int processFrame(RawCameraFrame frame);
+        protected abstract int processFrame(RawCameraFrame frame);
 
-        public void onFinished() { }
+        protected void onFinished() { }
 
         @Override
         public final void run() {
@@ -200,6 +192,7 @@ public abstract class TriggerProcessor {
                 }
                 if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
                     mProcessor.onMaxReached();
+                    onFinished();
                 }
             } catch (OutOfMemoryError e) {
                 mProcessor.skip.incrementAndGet();

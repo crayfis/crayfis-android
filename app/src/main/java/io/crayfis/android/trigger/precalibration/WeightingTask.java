@@ -91,7 +91,7 @@ class WeightingTask extends TriggerProcessor.Task {
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    public int processFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
         mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
         return 1;
     }
@@ -101,7 +101,7 @@ class WeightingTask extends TriggerProcessor.Task {
      * and in the SharedPreferences
      */
     @Override
-    public void onFinished() {
+    protected void onFinished() {
 
         final int MAX_SAMPLE_SIZE = 1500;
 
