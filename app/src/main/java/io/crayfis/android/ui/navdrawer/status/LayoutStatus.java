@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.ExposureBlockManager;
@@ -209,8 +210,8 @@ public class LayoutStatus extends NavDrawerFragment {
             case CALIBRATION:
                 final int count, total;
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
-                    count = PreCalibrator.getInstance(application).count.intValue();
-                    total = config.getHotcellSampleFrames() + config.getWeightingSampleFrames();
+                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
+                    total = PreCalibrator.getCurrentConfig().getInt("maxframes");
                 } else {
                     count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();

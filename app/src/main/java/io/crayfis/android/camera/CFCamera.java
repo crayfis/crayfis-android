@@ -120,7 +120,6 @@ public abstract class CFCamera {
                 }
                 break;
             case PRECALIBRATION:
-                PreCalibrator.getInstance(mApplication).clear();
             case CALIBRATION:
             case DATA:
             case IDLE:

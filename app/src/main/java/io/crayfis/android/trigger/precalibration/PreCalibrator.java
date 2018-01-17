@@ -1,12 +1,10 @@
 package io.crayfis.android.trigger.precalibration;
 
-import android.content.Context;
 import android.hardware.Camera;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
-import android.support.annotation.NonNull;
 import android.util.Base64;
 
 import org.opencv.core.CvType;
@@ -17,11 +15,16 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
@@ -29,68 +32,84 @@ import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.server.UploadExposureService;
+import io.crayfis.android.trigger.TriggerProcessor;
 
 
 /**
  * Created by Jeff on 4/24/2017.
  */
 
-public class PreCalibrator {
+public class PreCalibrator extends TriggerProcessor {
 
-    private final CFApplication APPLICATION;
-    private RenderScript RS;
-    private final ScriptC_weight SCRIPT_C_WEIGHT;
-
-    private PrecalComponent mActiveComponent;
     private final CFConfig CONFIG;
     private final CFCamera CAMERA;
 
-    public AtomicInteger count = new AtomicInteger(0);
+    private static List<Config> sConfigList;
+    private static int sConfigStep = 0;
+    static final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
 
-    private final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER;
+    private final static int INTER = Imgproc.INTER_CUBIC;
 
-    private final int INTER = Imgproc.INTER_CUBIC;
-
-    private static PreCalibrator sInstance;
-
-    public static PreCalibrator getInstance(@NonNull final CFApplication app) {
-        if(sInstance == null) {
-            sInstance = new PreCalibrator(app);
-        }
-        return sInstance;
-    }
-
-    private PreCalibrator(CFApplication app) {
-        APPLICATION = app;
-        RS = APPLICATION.getRenderScript();
-        SCRIPT_C_WEIGHT = new ScriptC_weight(RS);
-        PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
+    public PreCalibrator(CFApplication app, List<TriggerProcessor.Config> configs) {
+        super(app, configs.get(sConfigStep), false);
 
         CONFIG = CFConfig.getInstance();
         CAMERA = CFCamera.getInstance();
+
+        if(sConfigList == null || sConfigList != configs) {
+            sConfigList = configs;
+            clear();
+        }
     }
 
-    /**
-     * Passes frame to the appropriate PrecalComponent
-     *
-     * @param frame RawCameraFrame
-     * @return true if ready to switch to CALIBRATION, false otherwise
-     */
-    public boolean addFrame(RawCameraFrame frame) {
-        if(mActiveComponent == null) {
-            mActiveComponent = new HotCellKiller(RS, PRECAL_BUILDER);
-        }
-        if(mActiveComponent.addFrame(frame)) {
-            if(mActiveComponent instanceof HotCellKiller) {
-                mActiveComponent = new WeightFinder(RS, PRECAL_BUILDER);
-            } else if(mActiveComponent instanceof WeightFinder) {
-                submitPrecalibrationResult();
-                return true;
+    public static List<TriggerProcessor.Config> makeConfig(String configStr) {
+
+        String[] configStrings = configStr.split("->");
+        List<TriggerProcessor.Config> configs = new ArrayList<>();
+
+        for(String str : configStrings) {
+            HashMap<String, String> options = TriggerProcessor.parseConfigString(str);
+            String name = options.get("name");
+            options.remove("name");
+
+            switch (name) {
+                case HotCellTask.Config.NAME:
+                    configs.add(new HotCellTask.Config(options));
+                    break;
+                case WeightingTask.Config.NAME:
+                    configs.add(new WeightingTask.Config(options));
             }
         }
-        return false;
+
+        if(configs.isEmpty()) {
+            // no valid names: just use default
+            configs.add(new HotCellTask.Config(new HashMap<String, String>()));
+            configs.add(new WeightingTask.Config(new HashMap<String, String>()));
+        }
+
+        /*
+        int nFrames = 0;
+        for(TriggerProcessor.Config config : configs) {
+            nFrames += config.getInt("maxframes");
+        }
+        totalFrames = nFrames;
+
+        */
+
+        return configs;
     }
 
+    @Override
+    public void onMaxReached() {
+        mTask.onFinished();
+        sConfigStep++;
+        if(sConfigStep >= sConfigList.size()) {
+            submitPrecalibrationResult();
+            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+        } else {
+            ExposureBlockManager.getInstance(mApplication).newExposureBlock(CFApplication.State.PRECALIBRATION);
+        }
+    }
 
     /**
      * Normalizes weights, downsamples, kills hotcells, and uploads the PreCalibrationResult
@@ -102,17 +121,17 @@ public class PreCalibrator {
         CONFIG.setLastPrecalResX(cameraId, CAMERA.getResX());
         CONFIG.setPrecalId(cameraId, UUID.randomUUID());
 
-        PRECAL_BUILDER.setRunId(APPLICATION.getBuildInformation().getRunId().getLeastSignificantBits())
-                .setRunIdHi(APPLICATION.getBuildInformation().getRunId().getMostSignificantBits())
+        PRECAL_BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
+                .setRunIdHi(mApplication.getBuildInformation().getRunId().getMostSignificantBits())
                 .setPrecalId(CONFIG.getPrecalId(cameraId).getLeastSignificantBits())
                 .setPrecalIdHi(CONFIG.getPrecalId(cameraId).getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis())
-                .setBatteryTemp(APPLICATION.getBatteryTemp())
+                .setBatteryTemp(mApplication.getBatteryTemp())
                 .setInterpolation(INTER);
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitPreCalibrationResult(APPLICATION, PRECAL_BUILDER.build());
+        UploadExposureService.submitPreCalibrationResult(mApplication, PRECAL_BUILDER.build());
 
     }
 
@@ -124,9 +143,12 @@ public class PreCalibrator {
      *                 index of the String ID found in CameraManager.getCameraIdList()
      * @return RenderScript ScriptC with a forEach(ain, aout) method.
      */
-    public ScriptC_weight getScriptCWeight(int cameraId) {
+    public static void updateWeights(RenderScript RS, int cameraId) {
 
-        byte[] bytes = Base64.decode(CONFIG.getPrecalWeights(cameraId), Base64.DEFAULT);
+        CFConfig config = CFConfig.getInstance();
+        CFCamera camera = CFCamera.getInstance();
+
+        byte[] bytes = Base64.decode(config.getPrecalWeights(cameraId), Base64.DEFAULT);
 
         MatOfByte compressedMat = new MatOfByte(bytes);
         Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
@@ -137,8 +159,8 @@ public class PreCalibrator {
 
         Mat resampledMat2D = new Mat();
 
-        int resX = CAMERA.getResX();
-        int resY = CAMERA.getResY();
+        int resX = camera.getResX();
+        int resY = camera.getResY();
 
         Imgproc.resize(downsampleFloat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
         Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
@@ -147,7 +169,7 @@ public class PreCalibrator {
         float[] resampledArray = resampledFloat.toArray();
 
         // kill hotcells in resampled frame
-        Set<Integer> hotcells = CONFIG.getHotcells(cameraId);
+        Set<Integer> hotcells = config.getHotcells(cameraId);
         if(hotcells != null) {
             for (Integer pos : hotcells) {
                 resampledArray[pos] = 0f;
@@ -160,7 +182,9 @@ public class PreCalibrator {
                 .create();
         Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
         weights.copyFrom(resampledArray);
-        SCRIPT_C_WEIGHT.set_gWeights(weights);
+        ScriptC_weight scriptCWeight = new ScriptC_weight(RS);
+        scriptCWeight.set_gWeights(weights);
+        CFCamera.getInstance().getFrameBuilder().setWeights(scriptCWeight);
 
         compressedMat.release();
         downsampleMat.release();
@@ -170,17 +194,15 @@ public class PreCalibrator {
         resampledMat.release();
         resampledMat2D.release();
         resampledFloat.release();
-
-        return SCRIPT_C_WEIGHT;
     }
 
     /**
      * Resets the Precalibration info for this camera
      */
-    public void clear() {
+    private void clear() {
         int cameraId = CAMERA.getCameraId();
-        mActiveComponent = null;
 
+        PRECAL_BUILDER.clear();
         CONFIG.setPrecalWeights(cameraId, null);
         CONFIG.setHotcells(cameraId, new HashSet<Integer>(Camera.getNumberOfCameras()));
     }
@@ -192,21 +214,18 @@ public class PreCalibrator {
      *                 index of the String ID found in CameraManager.getCameraIdList()
      * @return true if it has been at least a week since the camera in question has been precalibrated
      */
-    public boolean dueForPreCalibration(int cameraId) {
+    public static boolean dueForPreCalibration(int cameraId) {
 
-        if(CONFIG.getPrecalResetTime() == null) return false;
-        boolean expired = (System.currentTimeMillis() - CONFIG.getLastPrecalTime(cameraId)) > CONFIG.getPrecalResetTime();
-        if(CONFIG.getPrecalWeights(cameraId) == null || CAMERA.getResX() != CONFIG.getLastPrecalResX(cameraId) || expired) {
-            PRECAL_BUILDER.setStartTime(System.currentTimeMillis());
-            return true;
-        }
-        return false;
+        CFConfig config = CFConfig.getInstance();
+        CFCamera camera = CFCamera.getInstance();
+
+        if(config.getPrecalResetTime() == null) return false;
+        boolean expired = (System.currentTimeMillis() - config.getLastPrecalTime(cameraId)) > config.getPrecalResetTime();
+        return config.getPrecalWeights(cameraId) == null || camera.getResX() != config.getLastPrecalResX(cameraId) || expired;
     }
 
-    /**
-     * Make sure we create a new instance in future runs
-     */
-    public void destroy() {
-        sInstance = null;
+    public static TriggerProcessor.Config getCurrentConfig() {
+        return sConfigList.get(sConfigStep);
     }
+
 }

@@ -66,7 +66,6 @@ public class DAQService extends Service {
     private ExposureBlockManager xbManager;
 
     private L1Calibrator L1cal;
-    private PreCalibrator mPreCal;
 
     @Override
     public void onCreate() {
@@ -175,7 +174,6 @@ public class DAQService extends Service {
 
                 // Frame Processing
 
-                mPreCal = PreCalibrator.getInstance(mApplication);
                 L1cal = L1Calibrator.getInstance();
 
 
@@ -262,7 +260,6 @@ public class DAQService extends Service {
         switch (previousState) {
             case CALIBRATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                mPreCal.clear();
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -281,7 +278,7 @@ public class DAQService extends Service {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(mPreCal.dueForPreCalibration(mCFCamera.getCameraId())) {
+        if(PreCalibrator.dueForPreCalibration(mCFCamera.getCameraId())) {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
@@ -291,7 +288,7 @@ public class DAQService extends Service {
                 L1cal.clear();
                 mCFCamera.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
+                PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -352,7 +349,6 @@ public class DAQService extends Service {
                 mCFCamera.changeCamera();
             case IDLE:
                 mCFCamera.unregister();
-                mPreCal.destroy();
                 L1cal.destroy();
                 xbManager.destroy();
 
@@ -477,6 +473,7 @@ public class DAQService extends Service {
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
                     + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
+                    + "Precal trig: " + CONFIG.getPrecalTrigger() + "\n"
                     + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                     + "total frames - L1: " + L0Processor.L0Count.intValue() + " (L2: " + L2Processor.L2Count + ")\n"

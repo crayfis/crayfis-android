@@ -58,7 +58,7 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
     }
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
         if (frame.getOrientation() == null) {
             CFLog.e("Orientation not found");
         } else {
@@ -70,15 +70,15 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
                     || frame.isFacingBack() != frame.getRotationZZ()>0) {
 
                 CFLog.w("Bad event: Orientation = " + frame.getRotationZZ());
-                return false;
+                return 0;
             }
         }
         if (frame.getPixAvg() > mConfig.avgCut
                 || frame.getPixStd() > mConfig.stdCut) {
             CFLog.w("Bad event: Pix avg = " + frame.getPixAvg() + ">" + mConfig.avgCut);
-            return false;
+            return 0;
         } else {
-            return true;
+            return 1;
         }
     }
 }

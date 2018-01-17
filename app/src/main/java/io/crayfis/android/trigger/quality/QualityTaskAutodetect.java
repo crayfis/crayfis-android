@@ -55,13 +55,13 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
     }
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
         if (frame.getPixAvg() > mConfig.avgCut
                 || frame.getPixStd() > mConfig.stdCut) {
             CFLog.w("Bad event: Pix avg = " + frame.getPixAvg() + ">" + mConfig.avgCut);
-            return false;
+            return 0;
         } else {
-            return true;
+            return 1;
         }
     }
 

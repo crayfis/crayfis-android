@@ -24,6 +24,7 @@ class ServerCommand {
     @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
     @SerializedName("set_L0_trig") private String mL0Trigger;
     @SerializedName("set_qual_trig") private String mQualityTrigger;
+    @SerializedName("set_precal_trig") private String mPrecalTrigger;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
     @SerializedName("set_qual_orientation") private Integer mQualityOrient;
@@ -95,6 +96,11 @@ class ServerCommand {
     }
 
     @Nullable
+    String getPrecalTrigger() {
+        return mPrecalTrigger;
+    }
+
+    @Nullable
     String getL1Trigger() { return mL1Trigger; }
 
     @Nullable
@@ -133,11 +139,6 @@ class ServerCommand {
         return mEventsPerMinute;
     }
 
-    @Nullable
-    Integer getWeightingSampleFrames() { return mWeightingSampleFrames; }
-
-    @Nullable
-    Integer getHotcellSampleFrames() { return mHotcellSampleFrames; }
 
     @Nullable
     Float getHotcellThresh() { return mHotcellThresh; }

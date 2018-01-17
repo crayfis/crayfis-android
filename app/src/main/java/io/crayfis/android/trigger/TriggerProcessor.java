@@ -22,10 +22,11 @@ public abstract class TriggerProcessor {
     public final Config config;
     public TriggerProcessor mNextProcessor;
     private Executor mExecutor;
+    protected Task mTask;
 
-    public AtomicInteger processed = new AtomicInteger();
-    public AtomicInteger pass = new AtomicInteger();
-    public AtomicInteger skip = new AtomicInteger();
+    private AtomicInteger processed = new AtomicInteger();
+    private AtomicInteger pass = new AtomicInteger();
+    private AtomicInteger skip = new AtomicInteger();
 
     public TriggerProcessor(CFApplication application, Config config, boolean serial) {
         mApplication = application;
@@ -50,8 +51,16 @@ public abstract class TriggerProcessor {
     }
 
     public void submitFrame(RawCameraFrame frame) {
-        processed.incrementAndGet();
-        mExecutor.execute(config.makeTask(this, frame));
+        mExecutor.execute(makeTask(frame));
+    }
+
+    private Task makeTask(RawCameraFrame frame) {
+        if (mTask == null) {
+            mTask = config.makeTask(this, frame);
+        } else {
+            mTask.setFrame(frame);
+        }
+        return mTask;
     }
 
     public TriggerProcessor setNext(TriggerProcessor next) {
@@ -62,6 +71,22 @@ public abstract class TriggerProcessor {
     public void onFrameResult(RawCameraFrame frame, boolean pass) { }
 
     public void onMaxReached() { }
+
+    public int getProcessed() {
+        return processed.intValue();
+    }
+
+    public int getPasses() {
+        return pass.intValue();
+    }
+
+    public int getSkips() {
+        return skip.intValue();
+    }
+
+
+
+
 
     public static abstract class Config {
 
@@ -139,30 +164,45 @@ public abstract class TriggerProcessor {
     public static abstract class Task implements Runnable {
 
         protected final TriggerProcessor mProcessor;
-        private final RawCameraFrame mFrame;
+        private RawCameraFrame mFrame;
 
         public Task(TriggerProcessor processor, RawCameraFrame frame) {
             mProcessor = processor;
+            mProcessor.mTask = this;
             mFrame = frame;
         }
 
-        public abstract boolean processFrame(RawCameraFrame frame);
+        public void setFrame(RawCameraFrame frame) {
+            mFrame = frame;
+        }
+
+        public abstract int processFrame(RawCameraFrame frame);
+
+        public void onFinished() { }
 
         @Override
         public final void run() {
 
-            boolean pass = processFrame(mFrame);
-            if(pass && mProcessor.mNextProcessor != null) {
-                mProcessor.mNextProcessor.submitFrame(mFrame);
-            } else {
-                mProcessor.onFrameResult(mFrame, pass);
-                mFrame.clear();
-            }
+            mProcessor.processed.incrementAndGet();
+            try {
+                int passes = processFrame(mFrame);
+                mProcessor.pass.addAndGet(passes);
+                if(passes > 0 && mProcessor.mNextProcessor != null) {
+                    mProcessor.mNextProcessor.submitFrame(mFrame);
+                } else {
+                    mProcessor.onFrameResult(mFrame, passes > 0);
+                    mFrame.clear();
+                }
 
-            Integer maxFrames = mProcessor.config.getInt("maxframes");
-            CFLog.d(this.getClass().getSimpleName() + " " + mProcessor.processed  + "/" + maxFrames);
-            if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
-                mProcessor.onMaxReached();
+                Integer maxFrames = mProcessor.config.getInt("maxframes");
+                if(mProcessor.mNextProcessor == null) {
+                    CFLog.d(this.getClass().getSimpleName() + " " + mProcessor.processed  + "/" + maxFrames);
+                }
+                if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
+                    mProcessor.onMaxReached();
+                }
+            } catch (OutOfMemoryError e) {
+                mProcessor.skip.incrementAndGet();
             }
         }
     }

@@ -1,7 +1,6 @@
 package io.crayfis.android.exposure;
 
 import java.util.ArrayList;
-import android.content.Context;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -151,6 +150,7 @@ public final class ExposureBlockManager {
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
                 CONFIG.getL0Trigger(),
                 CONFIG.getQualTrigger(),
+                CONFIG.getPrecalTrigger(),
                 CONFIG.getL1Trigger(),
                 CONFIG.getL2Trigger(),
                 camera.getLastKnownLocation(),

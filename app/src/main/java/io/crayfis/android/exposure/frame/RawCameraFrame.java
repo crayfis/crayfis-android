@@ -461,6 +461,7 @@ public abstract class RawCameraFrame {
 
         mScriptIntrinsicHistogram.forEach(getWeightedAllocation());
         aout.copyTo(mHist);
+        mExposureBlock.underflow_hist.fill(mHist);
 
         // find max first, so sums are easier
         while(mHist[max] == 0 && max > 0) {
@@ -503,10 +504,6 @@ public abstract class RawCameraFrame {
             calculateStatistics();
         }
         return mPixStd;
-    }
-
-    public int[] getHist() {
-        return mHist;
     }
 
     public boolean isFacingBack() {

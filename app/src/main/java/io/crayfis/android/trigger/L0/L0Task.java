@@ -69,14 +69,12 @@ class L0Task extends TriggerProcessor.Task {
     }
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
 
         L0Processor.L0Count.incrementAndGet();
 
         if (isZeroBias()) {
-            CFLog.d("Yay!");
             // do the zero bias things!
-            mProcessor.pass.incrementAndGet();
             Mat grayMat = frame.getGrayMat();
 
             // find a random pixel to be upper left corner
@@ -97,6 +95,6 @@ class L0Task extends TriggerProcessor.Task {
             window.release();
         }
 
-        return true;
+        return 1;
     }
 }

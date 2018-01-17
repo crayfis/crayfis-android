@@ -59,7 +59,7 @@ class L2Task extends TriggerProcessor.Task {
     }
 
 
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
 
         L2Processor.L2Count++;
 
@@ -78,7 +78,6 @@ class L2Task extends TriggerProcessor.Task {
         threshMat.release();
 
         long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
-        mProcessor.pass.addAndGet((int)pixN);
 
         for(int i=0; i<pixN; i++) {
 
@@ -90,39 +89,34 @@ class L2Task extends TriggerProcessor.Task {
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
             LayoutData.appendData(val);
-            try {
 
-                Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
-                        Math.max(ix-1,0), Math.min(ix+2,width));
-                Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
-                        Math.max(ix-2,0), Math.min(ix+3,width));
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                    Math.max(ix-1,0), Math.min(ix+2,width));
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                    Math.max(ix-2,0), Math.min(ix+3,width));
 
-                DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
+            DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
 
-                pixBuilder.setX(ix)
-                        .setY(iy)
-                        .setVal(val)
-                        .setAdjustedVal(adjustedVal)
-                        .setAvg3((float)Core.mean(grayAvg3).val[0])
-                        .setAvg5((float)Core.mean(grayAvg5).val[0])
-                        .setNearMax((int)Core.minMaxLoc(grayAvg3).maxVal);
+            pixBuilder.setX(ix)
+                    .setY(iy)
+                    .setVal(val)
+                    .setAdjustedVal(adjustedVal)
+                    .setAvg3((float)Core.mean(grayAvg3).val[0])
+                    .setAvg5((float)Core.mean(grayAvg5).val[0])
+                    .setNearMax((int)Core.minMaxLoc(grayAvg3).maxVal);
 
-                grayAvg3.release();
-                grayAvg5.release();
+            grayAvg3.release();
+            grayAvg5.release();
 
-                pixels.add(pixBuilder.build());
+            pixels.add(pixBuilder.build());
 
-
-            } catch (OutOfMemoryError e) {
-                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-            }
 
         }
         l2PixelCoords.release();
 
         frame.setPixels(pixels);
 
-        return true;
+        return (int)l2PixelCoords.total();
     }
 
 }

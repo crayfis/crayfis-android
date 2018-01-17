@@ -67,7 +67,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
     }
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
 
         L2Processor.L2Count++;
 
@@ -97,15 +97,10 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
 
             LayoutData.appendData(val);
 
-            try {
-                for(int dy=Math.max(0,iy-mConfig.radius); dy<=Math.min(height-1, iy+mConfig.radius); dy++) {
-                    for(int dx=Math.max(0,ix-mConfig.radius); dx<=Math.min(width-1, ix+mConfig.radius); dx++) {
-                        blockXY.add(Pair.create(dx, dy));
-                    }
+            for(int dy=Math.max(0,iy-mConfig.radius); dy<=Math.min(height-1, iy+mConfig.radius); dy++) {
+                for(int dx=Math.max(0,ix-mConfig.radius); dx<=Math.min(width-1, ix+mConfig.radius); dx++) {
+                    blockXY.add(Pair.create(dx, dy));
                 }
-
-            } catch (OutOfMemoryError e) {
-                    CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
             }
 
         }
@@ -114,11 +109,10 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
             builder.addVal(frame.getRawByteAt(pairXY.first, pairXY.second));
         }
 
-        mProcessor.pass.addAndGet((int)l2PixelCoords.total());
         l2PixelCoords.release();
 
         frame.setByteBlock(builder.build());
 
-        return true;
+        return (int)l2PixelCoords.total();
     }
 }

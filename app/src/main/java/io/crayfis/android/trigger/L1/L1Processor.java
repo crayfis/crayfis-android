@@ -12,7 +12,6 @@ import io.crayfis.android.util.CFLog;
 
 public class L1Processor extends TriggerProcessor {
 
-    public static int L1Count;
     public static int L1CountData;
 
     public L1Processor(CFApplication application, Config config) {

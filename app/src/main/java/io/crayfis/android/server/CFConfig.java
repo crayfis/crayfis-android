@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,6 +19,7 @@ import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -30,6 +32,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private static final String KEY_L0_TRIGGER = "L0_trigger";
     private static final String KEY_QUAL_TRIGGER = "qual_trigger";
+    private static final String KEY_PRECAL_TRIGGER = "precal_trigger";
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
     private static final String KEY_WEIGHTS = "precal_weights_";
@@ -39,9 +42,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
     private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
-    private static final String KEY_WEIGHTING_FRAMES = "weighting_sample_frames";
-    private static final String KEY_HOTCELL_FRAMES = "hotcell_sample_frames";
-    private static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
     private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
@@ -65,12 +65,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private final int N_CAMERAS;
     private static final String DEFAULT_L0_TRIGGER = "default";
     private static final String DEFAULT_QUAL_TRIGGER = "facedown";
+    private static final String DEFAULT_PRECAL_TRIGGER = "hotcell->weight";
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
-    private static final int DEFAULT_WEIGHTING_FRAMES = 1000;
-    private static final int DEFAULT_HOTCELL_FRAMES = 10000;
-    private static final float DEFAULT_HOTCELL_THRESH = .002f;
     private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final float DEFAULT_TARGET_EPM = 30;
     private static final int DEFAULT_XB_PERIOD = 120;
@@ -89,6 +87,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private TriggerProcessor.Config mL0Trigger;
     private TriggerProcessor.Config mQualTrigger;
+    private List<TriggerProcessor.Config> mPrecalTriggers;
     private TriggerProcessor.Config mL1Trigger;
     private TriggerProcessor.Config mL2Trigger;
     private List<Set<String>> mHotcells;
@@ -96,9 +95,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private UUID[] mPrecalUUID;
     private long[] mLastPrecalTime;
     private int[] mLastPrecalResX;
-    private int mWeightingSampleFrames;
-    private int mHotcellSampleFrames;
-    private float mHotcellThresh;
     private int mCalibrationSampleFrames;
     private float mTargetEventsPerMinute;
     private int mExposureBlockPeriod;
@@ -121,11 +117,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
         mL0Trigger = L0Processor.makeConfig(DEFAULT_L0_TRIGGER);
         mQualTrigger = QualityProcessor.makeConfig(DEFAULT_QUAL_TRIGGER);
+        mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
-        mWeightingSampleFrames = DEFAULT_WEIGHTING_FRAMES;
-        mHotcellSampleFrames = DEFAULT_HOTCELL_FRAMES;
-        mHotcellThresh = DEFAULT_HOTCELL_THRESH;
         mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
@@ -154,6 +148,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     
     public TriggerProcessor.Config getQualTrigger() {
         return mQualTrigger;
+    }
+
+    public List<TriggerProcessor.Config> getPrecalTrigger() {
+        return mPrecalTriggers;
     }
 
     public TriggerProcessor.Config getL1Trigger() {
@@ -250,14 +248,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt("thresh", l2Threshold)
                 .create();
     }
-
-    public int getWeightingSampleFrames() {
-        return mWeightingSampleFrames;
-    }
-
-    public int getHotcellSampleFrames() { return mHotcellSampleFrames; }
-
-    public float getHotcellThresh() { return mHotcellThresh; }
 
     /**
      * How many frames to sample during calibration.  More frames is longer but gives better
@@ -384,11 +374,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
         mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
+        mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
         mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
         mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mWeightingSampleFrames = sharedPreferences.getInt(KEY_WEIGHTING_FRAMES, DEFAULT_WEIGHTING_FRAMES);
-        mHotcellSampleFrames = sharedPreferences.getInt(KEY_HOTCELL_FRAMES, DEFAULT_HOTCELL_FRAMES);
-        mHotcellThresh = sharedPreferences.getFloat(KEY_HOTCELL_THRESH, DEFAULT_HOTCELL_THRESH);
         mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
         mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
@@ -449,6 +437,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getQualityTrigger() != null) {
             mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger());
         }
+        if (serverCommand.getPrecalTrigger() != null) {
+            mPrecalTriggers = PreCalibrator.makeConfig(serverCommand.getPrecalTrigger());
+        }
         if (serverCommand.getL1Trigger() != null) {
             mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger());
         }
@@ -463,15 +454,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getEventsPerMinute() != null) {
             mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
-        }
-        if (serverCommand.getWeightingSampleFrames() != null) {
-            mWeightingSampleFrames = serverCommand.getWeightingSampleFrames();
-        }
-        if (serverCommand.getHotcellSampleFrames() != null) {
-            mHotcellSampleFrames = serverCommand.getHotcellSampleFrames();
-        }
-        if (serverCommand.getHotcellThresh() != null) {
-            mHotcellThresh = serverCommand.getHotcellThresh();
         }
         if (serverCommand.getCalibrationSampleFrames() != null) {
             mCalibrationSampleFrames = serverCommand.getCalibrationSampleFrames();
@@ -539,9 +521,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
                 .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
                 .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
-                .putInt(KEY_WEIGHTING_FRAMES, mWeightingSampleFrames)
-                .putInt(KEY_HOTCELL_FRAMES, mHotcellSampleFrames)
-                .putFloat(KEY_HOTCELL_THRESH, mHotcellThresh)
                 .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
                 .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)

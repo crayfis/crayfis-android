@@ -60,50 +60,28 @@ class L1Task extends TriggerProcessor.Task {
 
         mApplication = processor.mApplication;
         mL1Cal = L1Calibrator.getInstance();
-        mPrecal = PreCalibrator.getInstance(mApplication);
         mConfig = cfg;
     }
 
-    boolean processPreCalibration(RawCameraFrame frame) {
-
-        if(mPrecal.addFrame(frame)) {
-            mApplication.setNewestPrecalUUID();
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        } else if(mPrecal.count.incrementAndGet()
-                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
-            mApplication.checkBatteryStats();
-        }
-
-        return false;
-    }
-
-    boolean processCalibration(RawCameraFrame frame) {
+    void processCalibration(RawCameraFrame frame) {
         // if we are in (L1) calibration mode, there's no need to do anything else with this
         // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
         long count = mExposureBlock.count.incrementAndGet();
-        mL1Cal.addFrame(frame);
 
         if (count == CONFIG.getCalibrationSampleFrames()) {
             mApplication.setApplicationState(CFApplication.State.DATA);
         }
-
-        return true;
     }
 
-    boolean processData(RawCameraFrame frame) {
+    void processData(RawCameraFrame frame) {
 
-        mL1Cal.addFrame(frame);
         L1Processor.L1CountData++;
 
         int max = frame.getPixMax();
 
-        mExposureBlock.underflow_hist.fill(frame.getHist());
-
         if (max > mConfig.thresh) {
             // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
             // have changed.
-
-            mProcessor.pass.incrementAndGet();
             
             // add a new buffer to the queue to make up for this one which
             // will not return
@@ -112,28 +90,19 @@ class L1Task extends TriggerProcessor.Task {
                 // L2 processing queue.
                 mKeepFrame = true;
             } else {
-                // out of memory: skip the frame
-                mProcessor.mNextProcessor.skip.incrementAndGet();
+                throw new OutOfMemoryError();
             }
 
-        } else {
-            // didn't pass. recycle the buffer.
-            mProcessor.skip.incrementAndGet();
         }
-
-        return false;
     }
 
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
 
-        L1Processor.L1Count++;
+        mL1Cal.addFrame(frame);
 
         switch (mExposureBlock.getDAQState()) {
-            case PRECALIBRATION:
-                processPreCalibration(frame);
-                break;
             case CALIBRATION:
                 processCalibration(frame);
                 break;
@@ -144,9 +113,7 @@ class L1Task extends TriggerProcessor.Task {
                 CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
                 break;
         }
-
-        //if(!mKeepFrame) frame.retire();
         
-        return mKeepFrame;
+        return mKeepFrame ? 1 : 0;
     }
 }

@@ -76,7 +76,7 @@ class L2TaskMaxN extends TriggerProcessor.Task {
     }
 
     @Override
-    public boolean processFrame(RawCameraFrame frame) {
+    public int processFrame(RawCameraFrame frame) {
 
         L2Processor.L2Count++;
 
@@ -102,37 +102,33 @@ class L2TaskMaxN extends TriggerProcessor.Task {
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
             LayoutData.appendData(val);
-            try {
-                DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
-                Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
-                        Math.max(ix-1,0), Math.min(ix+2,width));
-                Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
-                        Math.max(ix-2,0), Math.min(ix+3,width));
 
-                pixBuilder.setX(ix)
-                        .setY(iy)
-                        .setVal(val)
-                        .setAdjustedVal(adjustedVal)
-                        .setAvg3((float)Core.mean(grayAvg3).val[0])
-                        .setAvg5((float)Core.mean(grayAvg5).val[0])
-                        .setAvg5((int)Core.minMaxLoc(grayAvg3).maxVal);
+            DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                    Math.max(ix-1,0), Math.min(ix+2,width));
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                    Math.max(ix-2,0), Math.min(ix+3,width));
 
-                grayAvg3.release();
-                grayAvg5.release();
+            pixBuilder.setX(ix)
+                    .setY(iy)
+                    .setVal(val)
+                    .setAdjustedVal(adjustedVal)
+                    .setAvg3((float)Core.mean(grayAvg3).val[0])
+                    .setAvg5((float)Core.mean(grayAvg5).val[0])
+                    .setAvg5((int)Core.minMaxLoc(grayAvg3).maxVal);
 
-                pixels.add(pixBuilder.build());
-                prunePixels(pixels, mConfig.npix);
+            grayAvg3.release();
+            grayAvg5.release();
 
-            } catch (OutOfMemoryError e) {
-                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-            }
+            pixels.add(pixBuilder.build());
+            prunePixels(pixels, mConfig.npix);
+
 
         }
 
         l2PixelCoords.release();
-        mProcessor.pass.addAndGet(pixels.size());
         frame.setPixels(pixels);
 
-        return true;
+        return pixels.size();
     }
 }

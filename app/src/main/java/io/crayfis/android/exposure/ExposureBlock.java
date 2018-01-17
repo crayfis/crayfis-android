@@ -9,6 +9,8 @@ import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +24,7 @@ import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
 import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
@@ -48,6 +51,7 @@ public class ExposureBlock {
 
 	private final L0Processor mL0Processor;
 	private final QualityProcessor mQualityProcessor;
+	private final PreCalibrator mPrecalibrator;
     private final L1Processor mL1Processor;
     private final L2Processor mL2Processor;
 	
@@ -77,6 +81,7 @@ public class ExposureBlock {
                          UUID precal_id,
                          TriggerProcessor.Config L0_config,
                          TriggerProcessor.Config qual_config,
+                         List<TriggerProcessor.Config> precal_config,
                          TriggerProcessor.Config L1_config,
                          TriggerProcessor.Config L2_config,
                          Location start_loc,
@@ -92,6 +97,8 @@ public class ExposureBlock {
         this.precal_id = precal_id;
         this.mL0Processor = new L0Processor(APPLICATION, L0_config);
         this.mQualityProcessor = new QualityProcessor(APPLICATION, qual_config);
+        this.mPrecalibrator = (daq_state == CFApplication.State.PRECALIBRATION)
+                ? new PreCalibrator(APPLICATION, precal_config) : null;
         this.mL1Processor = new L1Processor(APPLICATION, L1_config);
         this.mL2Processor = new L2Processor(APPLICATION, L2_config);
         this.underflow_hist = new Histogram(mL1Processor.config.getInt("thresh")+1);
@@ -108,8 +115,11 @@ public class ExposureBlock {
             case STABILIZATION:
                 mL0Processor.setNext(mQualityProcessor);
                 break;
-            case CALIBRATION:
             case PRECALIBRATION:
+                mL0Processor.setNext(mQualityProcessor)
+                        .setNext(mPrecalibrator);
+                break;
+            case CALIBRATION:
                 mL0Processor.setNext(mQualityProcessor)
                         .setNext(mL1Processor);
                 break;
@@ -129,6 +139,8 @@ public class ExposureBlock {
      * @return True if successfully assigned; false if the
      */
     public void tryAssignFrame(RawCameraFrame frame) {
+
+        count.incrementAndGet();
 
         long frame_time = frame.getAcquiredTimeNano();
         synchronized (assignedFrames) {
@@ -241,14 +253,14 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state))
 
-                .setL0Pass(mL0Processor.pass.intValue())
-                .setL0Processed(mL0Processor.processed.intValue())
-                .setL0Skip(mL0Processor.skip.intValue())
+                .setL0Pass(mL0Processor.getPasses())
+                .setL0Processed(mL0Processor.getProcessed())
+                .setL0Skip(mL0Processor.getSkips())
                 .setL0Conf(mL0Processor.config.toString())
 
-                .setL1Pass(mL1Processor.pass.intValue())
-                .setL1Processed(mL1Processor.processed.intValue())
-                .setL1Skip(mL1Processor.skip.intValue())
+                .setL1Pass(mL1Processor.getPasses())
+                .setL1Processed(mL1Processor.getProcessed())
+                .setL1Skip(mL1Processor.getSkips())
                 .setL1Conf(mL1Processor.config.toString());
         Integer l1Thresh = mL1Processor.config.getInt("thresh");
         if(l1Thresh != null) {
@@ -256,9 +268,9 @@ public class ExposureBlock {
         }
 
 		
-        buf.setL2Pass(mL2Processor.pass.intValue())
-		        .setL2Processed(mL2Processor.processed.intValue())
-		        .setL2Skip(mL2Processor.skip.intValue())
+        buf.setL2Pass(mL2Processor.getPasses())
+		        .setL2Processed(mL2Processor.getProcessed())
+		        .setL2Skip(mL2Processor.getSkips())
                 .setL1Conf(mL2Processor.config.toString());
         Integer l2Thresh = mL2Processor.config.getInt("thresh");
         if(l2Thresh != null) {
