@@ -4,11 +4,11 @@ package io.crayfis.android.trigger.calibration;
  * Created by Jeff on 4/21/2017.
  */
 
-class FrameHistogram extends FrameHistory<Integer> {
+public class FrameHistogram extends FrameHistory<Integer> {
 
     private Histogram h = new Histogram(256);
 
-    FrameHistogram(int n) {
+    public FrameHistogram(int n) {
         super(n);
     }
 

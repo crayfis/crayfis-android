@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -15,8 +16,12 @@ public class L0Processor extends TriggerProcessor {
 
     public static AtomicInteger L0Count = new AtomicInteger();
 
-    public L0Processor(CFApplication application, Config config) {
+    private L0Processor(CFApplication application, Config config) {
         super(application, config, true);
+    }
+
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        return new L0Processor(application, CFConfig.getInstance().getL0Trigger());
     }
 
     public static Config makeConfig(String configStr) {

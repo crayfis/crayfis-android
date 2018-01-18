@@ -4,7 +4,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
-import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.L1.L1Calibrator;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -144,7 +144,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
     public void update() {
 
         L1Calibrator cal = L1Calibrator.getInstance();
-        if (cal !=null && mGraphSeriesTime !=null) {
+        if (mGraphSeriesTime !=null) {
             Integer[] values = cal.getMaxPixels();
             mGraphSeriesTime.resetData(make_graph_data(values));
             // dosimeter average

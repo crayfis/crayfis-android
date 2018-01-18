@@ -5,11 +5,7 @@ import java.util.HashMap;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
-import io.crayfis.android.trigger.precalibration.PreCalibrator;
-import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 5/12/16.
@@ -48,7 +44,6 @@ class L1Task extends TriggerProcessor.Task {
 
     private ExposureBlock mExposureBlock;
     private L1Calibrator mL1Cal;
-    private boolean mKeepFrame = false;
     private final Config mConfig;
 
     L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
@@ -62,12 +57,11 @@ class L1Task extends TriggerProcessor.Task {
     @Override
     protected int processFrame(RawCameraFrame frame) {
 
-        mL1Cal.addFrame(frame);
+        int max = frame.getPixMax();
+        mL1Cal.addStatistic(max);
 
         if(mExposureBlock.getDAQState() == CFApplication.State.DATA) {
             L1Processor.L1CountData++;
-
-            int max = frame.getPixMax();
 
             if (max > mConfig.thresh) {
                 // NB: we compare to the XB's L1_thresh, as the global L1 thresh may

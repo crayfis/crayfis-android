@@ -3,6 +3,7 @@ package io.crayfis.android.trigger.L1;
 import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -14,8 +15,13 @@ public class L1Processor extends TriggerProcessor {
 
     public static int L1CountData;
 
-    public L1Processor(CFApplication application, Config config) {
+    private L1Processor(CFApplication application, Config config) {
         super(application, config, false);
+    }
+
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        L1Calibrator.getInstance().updateThresholds();
+        return new L1Processor(application, CFConfig.getInstance().getL1Trigger());
     }
 
     public static Config makeConfig(String configStr) {

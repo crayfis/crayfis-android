@@ -11,7 +11,6 @@ import java.util.LinkedList;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerChain;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L2.L2Processor;
@@ -136,10 +135,6 @@ public final class ExposureBlockManager {
         if(state == CFApplication.State.DATA) {
             mXBExpirationTimer = new XBExpirationTimer();
             mXBExpirationTimer.start();
-            if(!CONFIG.getTriggerLock()) {
-                // re-evaluate thresholds for new XB
-                L1Calibrator.getInstance().updateThresholds();
-            }
         }
 
         int cameraId = camera.getCameraId();
@@ -149,7 +144,7 @@ public final class ExposureBlockManager {
                 mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
-                TriggerChain.makeChain(APPLICATION),
+                new TriggerChain(APPLICATION, state),
                 camera.getLastKnownLocation(),
                 APPLICATION.getBatteryTemp(),
                 state,

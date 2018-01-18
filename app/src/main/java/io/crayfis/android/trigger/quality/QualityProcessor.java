@@ -9,6 +9,7 @@ import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -18,8 +19,12 @@ import io.crayfis.android.util.CFLog;
 
 public class QualityProcessor extends TriggerProcessor {
 
-    public QualityProcessor(CFApplication application, Config config) {
+    private QualityProcessor(CFApplication application, Config config) {
         super(application, config, false);
+    }
+
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        return new QualityProcessor(application, CFConfig.getInstance().getQualTrigger());
     }
 
     public static Config makeConfig(String configStr) {

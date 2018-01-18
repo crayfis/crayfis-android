@@ -50,7 +50,7 @@ public class PreCalibrator extends TriggerProcessor {
 
     private final static int INTER = Imgproc.INTER_CUBIC;
 
-    public PreCalibrator(CFApplication app, List<Config> configs) {
+    private PreCalibrator(CFApplication app, List<Config> configs) {
         super(app, configs.get(sConfigStep), false);
 
         CONFIG = CFConfig.getInstance();
@@ -60,6 +60,10 @@ public class PreCalibrator extends TriggerProcessor {
             sConfigList = configs;
             clear();
         }
+    }
+
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        return new PreCalibrator(application, CFConfig.getInstance().getPrecalTrigger());
     }
 
     public static List<Config> makeConfig(String configStr) {

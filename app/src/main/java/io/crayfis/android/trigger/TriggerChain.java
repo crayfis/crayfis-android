@@ -2,7 +2,6 @@ package io.crayfis.android.trigger;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
@@ -15,42 +14,34 @@ import io.crayfis.android.trigger.quality.QualityProcessor;
 
 public class TriggerChain {
 
-    private TriggerChain(TriggerProcessor processor) {
-        mFirst = processor;
-    }
-
     private final TriggerProcessor mFirst;
 
-    public static TriggerChain makeChain(CFApplication application) {
-        CFConfig config = CFConfig.getInstance();
+    public TriggerChain(CFApplication application, CFApplication.State state) {
 
-        TriggerProcessor first;
-        switch (application.getApplicationState()) {
+        switch (state) {
             case STABILIZATION:
-                first = new L0Processor(application, config.getL0Trigger());
-                first.setNext(new QualityProcessor(application, config.getQualTrigger()));
+                mFirst = L0Processor.makeProcessor(application)
+                        .setNext(QualityProcessor.makeProcessor(application));
                 break;
             case PRECALIBRATION:
-                first = new L0Processor(application, config.getL0Trigger());
-                first.setNext(new QualityProcessor(application, config.getQualTrigger()))
-                        .setNext(new PreCalibrator(application, config.getPrecalTrigger()));
+                mFirst = L0Processor.makeProcessor(application)
+                        .setNext(QualityProcessor.makeProcessor(application))
+                        .setNext(PreCalibrator.makeProcessor(application));
                 break;
             case CALIBRATION:
-                first = new L0Processor(application, config.getL0Trigger());
-                first.setNext(new QualityProcessor(application, config.getQualTrigger()))
-                        .setNext(new L1Processor(application, config.getL1Trigger()));
+                mFirst = L0Processor.makeProcessor(application)
+                        .setNext(QualityProcessor.makeProcessor(application))
+                        .setNext(L1Processor.makeProcessor(application));
                 break;
             case DATA:
-                first = new L0Processor(application, config.getL0Trigger());
-                first.setNext(new QualityProcessor(application, config.getQualTrigger()))
-                        .setNext(new L1Processor(application, config.getL1Trigger()))
-                        .setNext(new L2Processor(application, config.getL2Trigger()));
+                mFirst = L0Processor.makeProcessor(application)
+                        .setNext(QualityProcessor.makeProcessor(application))
+                        .setNext(L1Processor.makeProcessor(application))
+                        .setNext(L2Processor.makeProcessor(application));
                 break;
             default:
-                first = new L0Processor(application, config.getL0Trigger());
+                mFirst = L0Processor.makeProcessor(application);
         }
-
-        return new TriggerChain(first);
     }
 
     public final void submitFrame(RawCameraFrame frame) {

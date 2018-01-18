@@ -1,8 +1,10 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.trigger.L1;
 
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.calibration.FrameHistogram;
+import io.crayfis.android.trigger.calibration.Histogram;
 import io.crayfis.android.util.CFLog;
 
 public class L1Calibrator {
@@ -28,10 +30,9 @@ public class L1Calibrator {
 
     public Histogram getHistogram() { return maxPixels.getHistogram(); }
 
-    public void addFrame(RawCameraFrame frame) {
-        int frameMax = frame.getPixMax();
+    void addStatistic(int stat) {
         synchronized (maxPixels) {
-            maxPixels.addValue(frameMax);
+            maxPixels.addValue(stat);
         }
     }
 
@@ -39,10 +40,11 @@ public class L1Calibrator {
      *  Find an integer L1 threshold s.t. the average L1 rate is less than
      *  or equal to the specified value and write to CFConfig
      */
-    public void updateThresholds() {
+    void updateThresholds() {
 
         // first, find the target L1 efficiency
         final CFConfig CONFIG = CFConfig.getInstance();
+        if(CONFIG.getTriggerLock()) return;
         double fps = CFCamera.getInstance().getFPS();
 
         if (fps == 0) {

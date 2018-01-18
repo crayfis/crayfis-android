@@ -3,6 +3,7 @@ package io.crayfis.android.trigger.L2;
 import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.calibration.FrameHistory;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
@@ -15,8 +16,12 @@ public class L2Processor extends TriggerProcessor {
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    public L2Processor(CFApplication application, Config config) {
+    private L2Processor(CFApplication application, Config config) {
         super(application, config, false);
+    }
+
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        return new L2Processor(application, CFConfig.getInstance().getL2Trigger());
     }
 
     public static Config makeConfig(String configStr) {
