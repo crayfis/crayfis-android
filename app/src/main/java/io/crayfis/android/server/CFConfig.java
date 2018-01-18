@@ -8,11 +8,9 @@ import android.support.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
-import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
 import io.crayfis.android.trigger.L0.L0Processor;
@@ -42,7 +40,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
     private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
     private static final String KEY_TARGET_EPM = "target_events_per_minute";
-    private static final String KEY_CALIBRATION = "calibration_sample_frames";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
     private static final String KEY_MAX_CHUNK_SIZE = "max_chunk_size";
@@ -69,7 +66,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_L1_TRIGGER = "default";
     private static final String DEFAULT_L2_TRIGGER = "default";
     private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
-    private static final int DEFAULT_CALIBRATION_FRAMES = 1000;
     private static final float DEFAULT_TARGET_EPM = 30;
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
@@ -95,7 +91,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private UUID[] mPrecalUUID;
     private long[] mLastPrecalTime;
     private int[] mLastPrecalResX;
-    private int mCalibrationSampleFrames;
     private float mTargetEventsPerMinute;
     private int mExposureBlockPeriod;
     private int mMaxUploadInterval;
@@ -120,7 +115,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
-        mCalibrationSampleFrames = DEFAULT_CALIBRATION_FRAMES;
         mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
@@ -256,7 +250,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getCalibrationSampleFrames() {
-        return mCalibrationSampleFrames;
+        return mL1Trigger.getInt("maxframes");
     }
 
     /**
@@ -377,7 +371,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
         mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
         mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mCalibrationSampleFrames = sharedPreferences.getInt(KEY_CALIBRATION, DEFAULT_CALIBRATION_FRAMES);
         mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
@@ -456,7 +449,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
         }
         if (serverCommand.getCalibrationSampleFrames() != null) {
-            mCalibrationSampleFrames = serverCommand.getCalibrationSampleFrames();
+            mL1Trigger.edit()
+                    .putInt("maxframes", serverCommand.getCalibrationSampleFrames())
+                    .create();
         }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
             mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
@@ -521,7 +516,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
                 .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
                 .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
-                .putInt(KEY_CALIBRATION, mCalibrationSampleFrames)
                 .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
                 .putInt(KEY_MAX_UPLOAD_INTERVAL, mMaxUploadInterval)

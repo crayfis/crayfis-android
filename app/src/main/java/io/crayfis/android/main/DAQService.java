@@ -285,7 +285,6 @@ public class DAQService extends Service {
         switch (previousState) {
             case STABILIZATION:
             case PRECALIBRATION:
-                L1cal.clear();
                 mCFCamera.badFlatEvents = 0;
                 xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
@@ -312,8 +311,6 @@ public class DAQService extends Service {
                 break;
             */
             case CALIBRATION:
-                L1cal.updateThresholds();
-
                 // build the calibration result object
                 DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
                         .setRunId(run_config.getIdLo())
@@ -345,9 +342,8 @@ public class DAQService extends Service {
             case CALIBRATION:
             case PRECALIBRATION:
             case DATA:
-                xbManager.newExposureBlock(CFApplication.State.FINISHED);
-                mCFCamera.changeCamera();
             case IDLE:
+                xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 mCFCamera.unregister();
                 L1cal.destroy();
                 xbManager.destroy();

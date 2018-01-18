@@ -26,12 +26,6 @@ public class L1Calibrator {
 
     public Integer[] getMaxPixels() { return maxPixels.toArray(mPixArray); }
 
-    public void clear() {
-        synchronized (maxPixels) {
-            maxPixels.clear();
-        }
-    }
-
     public Histogram getHistogram() { return maxPixels.getHistogram(); }
 
     public void addFrame(RawCameraFrame frame) {
@@ -81,11 +75,6 @@ public class L1Calibrator {
             // set the L2thresh any lower, else event frames will be huge.
             CONFIG.setL2Threshold(thresh);
         }
-    }
-
-    public void resize(int n) {
-        maxPixels.resize(n);
-        mPixArray = new Integer[n];
     }
 
     public void destroy() {

@@ -33,4 +33,11 @@ public class L1Processor extends TriggerProcessor {
         }
 
     }
+
+    @Override
+    public void onMaxReached() {
+        if(mApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
+            mApplication.setApplicationState(CFApplication.State.DATA);
+        }
+    }
 }

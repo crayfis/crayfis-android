@@ -25,6 +25,7 @@ class L1Task extends TriggerProcessor.Task {
         static {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put("thresh", 255);
+            KEY_DEFAULT.put("maxframes", 1000);
         }
 
         final int thresh;
@@ -46,54 +47,15 @@ class L1Task extends TriggerProcessor.Task {
     }
 
     private ExposureBlock mExposureBlock;
-    private CFApplication mApplication;
     private L1Calibrator mL1Cal;
-    private PreCalibrator mPrecal;
     private boolean mKeepFrame = false;
     private final Config mConfig;
-
-    private final CFConfig CONFIG = CFConfig.getInstance();
 
     L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
         super(processor, frame);
         mExposureBlock = frame.getExposureBlock();
-
-        mApplication = processor.mApplication;
         mL1Cal = L1Calibrator.getInstance();
         mConfig = cfg;
-    }
-
-    void processCalibration(RawCameraFrame frame) {
-        // if we are in (L1) calibration mode, there's no need to do anything else with this
-        // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-        long count = mExposureBlock.count.incrementAndGet();
-
-        if (count == CONFIG.getCalibrationSampleFrames()) {
-            mApplication.setApplicationState(CFApplication.State.DATA);
-        }
-    }
-
-    void processData(RawCameraFrame frame) {
-
-        L1Processor.L1CountData++;
-
-        int max = frame.getPixMax();
-
-        if (max > mConfig.thresh) {
-            // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-            // have changed.
-            
-            // add a new buffer to the queue to make up for this one which
-            // will not return
-            if(frame.claim()) {
-                // this frame has passed the L1 threshold, put it on the
-                // L2 processing queue.
-                mKeepFrame = true;
-            } else {
-                throw new OutOfMemoryError();
-            }
-
-        }
     }
 
 
@@ -102,18 +64,28 @@ class L1Task extends TriggerProcessor.Task {
 
         mL1Cal.addFrame(frame);
 
-        switch (mExposureBlock.getDAQState()) {
-            case CALIBRATION:
-                processCalibration(frame);
-                break;
-            case DATA:
-                processData(frame);
-                break;
-            default:
-                CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
-                break;
+        if(mExposureBlock.getDAQState() == CFApplication.State.DATA) {
+            L1Processor.L1CountData++;
+
+            int max = frame.getPixMax();
+
+            if (max > mConfig.thresh) {
+                // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
+                // have changed.
+
+                // add a new buffer to the queue to make up for this one which
+                // will not return
+                if(frame.claim()) {
+                    // this frame has passed the L1 threshold, put it on the
+                    // L2 processing queue.
+                    return 1;
+                } else {
+                    throw new OutOfMemoryError();
+                }
+
+            }
         }
-        
-        return mKeepFrame ? 1 : 0;
+
+        return 0;
     }
 }
