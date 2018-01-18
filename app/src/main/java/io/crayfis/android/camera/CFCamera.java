@@ -1,6 +1,5 @@
 package io.crayfis.android.camera;
 
-import android.content.Context;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
@@ -9,9 +8,8 @@ import android.renderscript.RenderScript;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.calibration.FrameHistory;
+import io.crayfis.android.util.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
-import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
 
 /**

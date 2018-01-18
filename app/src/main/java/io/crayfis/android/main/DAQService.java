@@ -65,8 +65,6 @@ public class DAQService extends Service {
 
     private ExposureBlockManager xbManager;
 
-    private L1Calibrator L1cal;
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -171,11 +169,6 @@ public class DAQService extends Service {
                 }
 
                 startForeground(FOREGROUND_ID, mNotificationBuilder.build());
-
-                // Frame Processing
-
-                L1cal = L1Calibrator.getInstance();
-
 
                 xbManager = ExposureBlockManager.getInstance(mApplication);
 
@@ -303,28 +296,7 @@ public class DAQService extends Service {
     private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         switch (previousState) {
-            /*
-            case INIT:
-                //l2thread.setFixedThreshold(true);
-                xbManager.newExposureBlock(CFApplication.State.DATA);
-
-                break;
-            */
             case CALIBRATION:
-                // build the calibration result object
-                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
-                        .setRunId(run_config.getIdLo())
-                        .setRunIdHi(run_config.getIdHi())
-                        .setEndTime(System.currentTimeMillis());
-
-                for (long v : L1cal.getHistogram()) {
-                    cal.addHistMaxpixel((int)v);
-                }
-
-                // and commit it to the output stream
-                CFLog.i("DAQService Committing new calibration result.");
-                UploadExposureService.submitCalibrationResult(this, cal.build());
-
                 // Finally, set the state and start a new xb
                 xbManager.newExposureBlock(CFApplication.State.DATA);
 
@@ -345,7 +317,6 @@ public class DAQService extends Service {
             case IDLE:
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 mCFCamera.unregister();
-                L1cal.destroy();
                 xbManager.destroy();
 
                 xbManager.flushCommittedBlocks(true);
@@ -486,7 +457,7 @@ public class DAQService extends Service {
             if(xb != null) {
                 devtxt += xb.underflow_hist.toString();
             }
-            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n";
+            devtxt += "L1 hist = "+ L1Calibrator.getHistogram().toString()+"\n";
             return devtxt;
 
         }

@@ -14,13 +14,15 @@ import io.crayfis.android.util.CFLog;
 public class L1Processor extends TriggerProcessor {
 
     public static int L1CountData;
+    private final L1Calibrator mL1Cal;
 
     private L1Processor(CFApplication application, Config config) {
         super(application, config, false);
+        mL1Cal = new L1Calibrator(application, config);
     }
 
     public static TriggerProcessor makeProcessor(CFApplication application) {
-        L1Calibrator.getInstance().updateThresholds();
+        L1Calibrator.updateThresholds();
         return new L1Processor(application, CFConfig.getInstance().getL1Trigger());
     }
 
@@ -43,6 +45,7 @@ public class L1Processor extends TriggerProcessor {
     @Override
     public void onMaxReached() {
         if(mApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
+            mL1Cal.submitCalibrationResult();
             mApplication.setApplicationState(CFApplication.State.DATA);
         }
     }

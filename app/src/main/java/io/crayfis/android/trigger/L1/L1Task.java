@@ -22,6 +22,7 @@ class L1Task extends TriggerProcessor.Task {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put("thresh", 255);
             KEY_DEFAULT.put("maxframes", 1000);
+            KEY_DEFAULT.put("target_epm", 30);
         }
 
         final int thresh;
@@ -43,13 +44,11 @@ class L1Task extends TriggerProcessor.Task {
     }
 
     private ExposureBlock mExposureBlock;
-    private L1Calibrator mL1Cal;
     private final Config mConfig;
 
     L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
         super(processor, frame);
         mExposureBlock = frame.getExposureBlock();
-        mL1Cal = L1Calibrator.getInstance();
         mConfig = cfg;
     }
 
@@ -58,7 +57,7 @@ class L1Task extends TriggerProcessor.Task {
     protected int processFrame(RawCameraFrame frame) {
 
         int max = frame.getPixMax();
-        mL1Cal.addStatistic(max);
+        L1Calibrator.addStatistic(max);
 
         if(mExposureBlock.getDAQState() == CFApplication.State.DATA) {
             L1Processor.L1CountData++;

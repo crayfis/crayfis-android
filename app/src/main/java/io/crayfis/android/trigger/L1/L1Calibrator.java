@@ -1,46 +1,55 @@
 package io.crayfis.android.trigger.L1;
 
+import java.util.UUID;
+
+import io.crayfis.android.DataProtos;
+import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.trigger.calibration.FrameHistogram;
-import io.crayfis.android.trigger.calibration.Histogram;
+import io.crayfis.android.server.UploadExposureService;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.FrameHistogram;
+import io.crayfis.android.util.Histogram;
 import io.crayfis.android.util.CFLog;
 
 public class L1Calibrator {
 
-    private final FrameHistogram maxPixels;
-    private Integer[] mPixArray;
+    private final CFApplication mApplication;
+    private static String sTaskName = "default";
+    private static final FrameHistogram sFrameStatistics = new FrameHistogram(1000);
+    private static Integer[] sPixArray = new Integer[1000];
 
-    private L1Calibrator() {
-        maxPixels = new FrameHistogram(CFConfig.getInstance().getCalibrationSampleFrames());
-        mPixArray = new Integer[maxPixels.size()];
+    L1Calibrator(CFApplication application, TriggerProcessor.Config config) {
+        mApplication = application;
+        if(!config.getName().equals(sTaskName)
+                || config.getInt("maxframes") != sFrameStatistics.size()) {
+            synchronized (sFrameStatistics) {
+                sTaskName = config.getName();
+                sFrameStatistics.resize(config.getInt("maxframes"));
+            }
+            if(mApplication.getApplicationState() != CFApplication.State.CALIBRATION) {
+                mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+            }
+        }
     }
 
-    private static L1Calibrator sInstance;
+    public static Integer[] getFrameStatistics() { return sFrameStatistics.toArray(sPixArray); }
 
-    public static synchronized L1Calibrator getInstance() {
-        if (sInstance == null) {
-            sInstance = new L1Calibrator();
+    static void addStatistic(int stat) {
+        synchronized (sFrameStatistics) {
+            sFrameStatistics.addValue(stat);
         }
-        return sInstance;
     }
 
-    public Integer[] getMaxPixels() { return maxPixels.toArray(mPixArray); }
-
-    public Histogram getHistogram() { return maxPixels.getHistogram(); }
-
-    void addStatistic(int stat) {
-        synchronized (maxPixels) {
-            maxPixels.addValue(stat);
-        }
+    public static Histogram getHistogram() {
+        return sFrameStatistics.getHistogram();
     }
 
     /**
      *  Find an integer L1 threshold s.t. the average L1 rate is less than
      *  or equal to the specified value and write to CFConfig
      */
-    void updateThresholds() {
+    static void updateThresholds() {
 
         // first, find the target L1 efficiency
         final CFConfig CONFIG = CFConfig.getInstance();
@@ -52,7 +61,7 @@ public class L1Calibrator {
         }
         double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / fps;
 
-        Histogram h = maxPixels.getHistogram();
+        Histogram h = sFrameStatistics.getHistogram();
         long[] histValues = h.getValues();
         long nTotal = h.getEntries();
         int nTarget = (int) (nTotal * targetL1Rate);
@@ -79,8 +88,22 @@ public class L1Calibrator {
         }
     }
 
-    public void destroy() {
-        sInstance = null;
+    void submitCalibrationResult() {
+        // build the calibration result object
+        UUID runId = mApplication.getBuildInformation().getRunId();
+
+        DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
+                .setRunId(runId.getLeastSignificantBits())
+                .setRunIdHi(runId.getMostSignificantBits())
+                .setEndTime(System.currentTimeMillis());
+
+        for (long v : sFrameStatistics.getHistogram()) {
+            cal.addHistMaxpixel((int)v);
+        }
+
+        // and commit it to the output stream
+        CFLog.i("DAQService Committing new calibration result.");
+        UploadExposureService.submitCalibrationResult(mApplication, cal.build());
     }
 
 }

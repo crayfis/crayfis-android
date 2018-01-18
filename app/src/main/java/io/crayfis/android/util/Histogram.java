@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.util;
 
 import android.support.annotation.NonNull;
 

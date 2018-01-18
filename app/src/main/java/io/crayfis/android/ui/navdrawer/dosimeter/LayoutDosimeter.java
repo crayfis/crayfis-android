@@ -35,7 +35,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
 
     private static final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
 
-    public static DataPoint[] make_graph_data(Integer values[])
+    public DataPoint[] makeGraphData(Integer values[])
     {
         //CFLog.i(" Making graph data for nbins ="+values.length);
         int max_bin = values.length;
@@ -143,10 +143,9 @@ public class LayoutDosimeter extends NavDrawerFragment {
     @Override
     public void update() {
 
-        L1Calibrator cal = L1Calibrator.getInstance();
         if (mGraphSeriesTime !=null) {
-            Integer[] values = cal.getMaxPixels();
-            mGraphSeriesTime.resetData(make_graph_data(values));
+            Integer[] values = L1Calibrator.getFrameStatistics();
+            mGraphSeriesTime.resetData(makeGraphData(values));
             // dosimeter average
             float mean = 0;
             for(int val : values)

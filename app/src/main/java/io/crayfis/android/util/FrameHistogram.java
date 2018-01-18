@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.util;
 
 /**
  * Created by Jeff on 4/21/2017.
