@@ -190,6 +190,7 @@ public class DAQService extends Service {
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
+        CONFIG.setL1Threshold(255);
         switch (previousState) {
             case IDLE:
                 mCFCamera.changeCamera();
@@ -275,16 +276,18 @@ public class DAQService extends Service {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
+
         switch (previousState) {
             case STABILIZATION:
             case PRECALIBRATION:
                 mCFCamera.badFlatEvents = 0;
-                xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
                 PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
         }
+
+        xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
     }
 
     /**

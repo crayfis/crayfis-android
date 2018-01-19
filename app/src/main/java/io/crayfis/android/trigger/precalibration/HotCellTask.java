@@ -32,19 +32,19 @@ class HotCellTask extends TriggerProcessor.Task {
 
         static final String NAME = "hotcell";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put("maxframes", 10000);
-            KEY_DEFAULT.put("total_hotcells", 200);
+            KEY_DEFAULT.put("hotcell_thresh", .0002f);
         }
 
-        final int totalHotcells;
+        final float hotcellThresh;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            totalHotcells = mTaskConfig.get("total_hotcells");
+            hotcellThresh = getFloat("hotcell_thresh");
         }
 
         @Override
@@ -128,7 +128,7 @@ class HotCellTask extends TriggerProcessor.Task {
 
         // find minimum value in aSecond considered as "hot"
         int area = aMax.getType().getX() * aMax.getType().getY();
-        int target = mConfig.totalHotcells;
+        int target = (int) (mConfig.hotcellThresh * area);
         int pixRemaining = area;
 
         int cutoff=0;

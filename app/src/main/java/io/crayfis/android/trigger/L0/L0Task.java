@@ -1,5 +1,7 @@
 package io.crayfis.android.trigger.L0;
 
+import android.util.Pair;
+
 import org.opencv.core.Mat;
 
 import java.util.HashMap;
@@ -21,25 +23,25 @@ class L0Task extends TriggerProcessor.Task {
 
         static final String NAME = "default";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("prescale", 1000);
-            KEY_DEFAULT.put("random", 1);
+            KEY_DEFAULT.put("prescale", .001f);
+            KEY_DEFAULT.put("random", true);
             KEY_DEFAULT.put("windowsize", 10);
         }
 
-        final int prescale;
+        final double prescale;
         final boolean random;
         final int windowSize;
 
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            prescale = mTaskConfig.get("prescale");
-            random = mTaskConfig.get("random") != 0;
-            windowSize = mTaskConfig.get("windowsize");
+            prescale = getFloat("prescale");
+            random = getBoolean("random");
+            windowSize = getInt("windowsize");
         }
 
         @Override
@@ -62,9 +64,9 @@ class L0Task extends TriggerProcessor.Task {
 
     boolean isZeroBias() {
         if (mConfig.random) {
-            return Math.random() < 1. / mConfig.prescale;
+            return Math.random() < mConfig.prescale;
         } else {
-            return (L0Processor.L0Count.incrementAndGet() % mConfig.prescale == 0);
+            return (L0Processor.L0Count.incrementAndGet() % (int)(1/mConfig.prescale) == 0);
         }
     }
 

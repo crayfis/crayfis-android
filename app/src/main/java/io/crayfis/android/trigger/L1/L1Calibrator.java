@@ -68,7 +68,7 @@ public class L1Calibrator {
 
         int thresh;
 
-        for (thresh = 0; thresh < 256; thresh++) {
+        for (thresh = 0; thresh < 255; thresh++) {
             nTotal -= histValues[thresh];
             //if (thresh<20) CFLog.d(" L1Calibrator. Thresh="+thresh+" integral="+h.getIntegral(thresh, 256)+" rate="+rate+" compare to "+target_eff);
             if (nTotal < nTarget) {

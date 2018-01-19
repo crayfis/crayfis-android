@@ -34,7 +34,7 @@ class WeightingTask extends TriggerProcessor.Task {
 
         static final String NAME = "weight";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();

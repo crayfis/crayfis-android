@@ -25,19 +25,19 @@ public class TriggerChain {
                 break;
             case PRECALIBRATION:
                 mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application))
-                        .setNext(PreCalibrator.makeProcessor(application));
+                        .setNext(QualityProcessor.makeProcessor(application)
+                        .setNext(PreCalibrator.makeProcessor(application)));
                 break;
             case CALIBRATION:
                 mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application))
-                        .setNext(L1Processor.makeProcessor(application));
+                        .setNext(QualityProcessor.makeProcessor(application)
+                        .setNext(L1Processor.makeProcessor(application)));
                 break;
             case DATA:
                 mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application))
-                        .setNext(L1Processor.makeProcessor(application))
-                        .setNext(L2Processor.makeProcessor(application));
+                        .setNext(QualityProcessor.makeProcessor(application)
+                        .setNext(L1Processor.makeProcessor(application)
+                        .setNext(L2Processor.makeProcessor(application))));
                 break;
             default:
                 mFirst = L0Processor.makeProcessor(application);

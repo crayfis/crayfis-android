@@ -41,7 +41,7 @@ public class QualityProcessor extends TriggerProcessor {
             case QualityTaskLock.Config.NAME:
                 return new QualityTaskLock.Config(options);
             default:
-                CFLog.w("No L0 implementation found for " + name + ", using default!");
+                CFLog.w("No Quality implementation found for " + name + ", using default!");
                 return new QualityTaskFacedown.Config(options);
         }
     }

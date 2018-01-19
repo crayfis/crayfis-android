@@ -195,6 +195,7 @@ public class ExposureBlock {
             }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
+                CFLog.d("assigned frames: " + assignedFrames.size());
             }
         }
     }

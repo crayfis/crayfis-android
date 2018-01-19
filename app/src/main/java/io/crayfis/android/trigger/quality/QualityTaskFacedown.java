@@ -18,25 +18,25 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
 
         static final String NAME = "facedown";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("orientation", 10);
-            KEY_DEFAULT.put("avg", 10);
-            KEY_DEFAULT.put("std", 255);
+            KEY_DEFAULT.put("orientation", 10f);
+            KEY_DEFAULT.put("avg", 10f);
+            KEY_DEFAULT.put("std", 255f);
             KEY_DEFAULT.put("maxframes", 45);
         }
 
         final double orientationCosine;
-        final int avgCut;
-        final int stdCut;
+        final double avgCut;
+        final double stdCut;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            orientationCosine = Math.cos(Math.PI/180. * mTaskConfig.get("orientation"));
-            avgCut = mTaskConfig.get("avg");
-            stdCut = mTaskConfig.get("std");
+            orientationCosine = Math.cos(Math.PI/180. * getFloat("orientation"));
+            avgCut = getFloat("avg");
+            stdCut = getFloat("std");
         }
 
         @Override

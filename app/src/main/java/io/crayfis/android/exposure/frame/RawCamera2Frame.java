@@ -14,6 +14,7 @@ import java.util.concurrent.Semaphore;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 9/2/2017.
@@ -25,7 +26,7 @@ class RawCamera2Frame extends RawCameraFrame {
     private Allocation aRaw;
 
     // lock for buffers entering aRaw
-    private static Semaphore mRawLock = new Semaphore(1);
+    private static final Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
@@ -54,7 +55,7 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     void callLocks() {
-        mRawLock.acquireUninterruptibly();
+        mRawLock.drainPermits();
         aRaw.ioReceive();
     }
 

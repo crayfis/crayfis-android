@@ -4,7 +4,6 @@ import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -16,7 +15,7 @@ class L1Task extends TriggerProcessor.Task {
 
         static final String NAME = "default";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
@@ -29,7 +28,7 @@ class L1Task extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = mTaskConfig.get("thresh");
+            thresh = getInt("thresh");
         }
 
         @Override
@@ -43,12 +42,10 @@ class L1Task extends TriggerProcessor.Task {
         }
     }
 
-    private ExposureBlock mExposureBlock;
     private final Config mConfig;
 
     L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
         super(processor, frame);
-        mExposureBlock = frame.getExposureBlock();
         mConfig = cfg;
     }
 
@@ -59,7 +56,7 @@ class L1Task extends TriggerProcessor.Task {
         int max = frame.getPixMax();
         L1Calibrator.addStatistic(max);
 
-        if(mExposureBlock.getDAQState() == CFApplication.State.DATA) {
+        if(frame.getExposureBlock().getDAQState() == CFApplication.State.DATA) {
             L1Processor.L1CountData++;
 
             if (max > mConfig.thresh) {

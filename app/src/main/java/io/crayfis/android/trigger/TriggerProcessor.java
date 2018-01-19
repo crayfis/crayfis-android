@@ -2,6 +2,7 @@ package io.crayfis.android.trigger;
 
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
+import android.util.Pair;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -58,7 +59,7 @@ public abstract class TriggerProcessor {
 
     TriggerProcessor setNext(TriggerProcessor next) {
         mNextProcessor = next;
-        return next;
+        return this;
     }
 
     protected void onFrameResult(RawCameraFrame frame, boolean pass) { }
@@ -84,19 +85,44 @@ public abstract class TriggerProcessor {
     public static abstract class Config {
 
         private final String mTaskName;
-        protected final HashMap<String, Integer> mTaskConfig = new HashMap<>();
+        private final HashMap<String, Integer> mTaskConfigInt = new HashMap<>();
+        private final HashMap<String, Float> mTaskConfigFloat = new HashMap<>();
+        private final HashMap<String, Boolean> mTaskConfigBool = new HashMap<>();
+        private final HashMap<String, String> mTaskConfigStr = new HashMap<>();
 
-        public Config(String taskName, HashMap<String, String> keyVal, HashMap<String, Integer> keyDefault) {
+        public Config(String taskName, HashMap<String, String> keyVal, HashMap<String, Object> keyDefault) {
             mTaskName = taskName;
 
             for(String key : keyDefault.keySet()) {
-                int val;
-                try {
-                    val = Integer.parseInt(keyVal.get(key));
-                } catch (NumberFormatException e) {
-                    val = keyDefault.get(key);
+
+                String valString = keyVal.get(key);
+                Object def = keyDefault.get(key);
+
+                if(def instanceof Integer) {
+                    try {
+                        mTaskConfigInt.put(key, Integer.parseInt(valString));
+                    } catch (Exception e) {
+                        mTaskConfigInt.put(key, (Integer) def);
+                    }
+                } else if(def instanceof Float) {
+                    try {
+                        mTaskConfigFloat.put(key, Float.parseFloat(valString));
+                    } catch (Exception e) {
+                        mTaskConfigFloat.put(key, (Float) def);
+                    }
+                } else if(def instanceof Boolean) {
+                    if(valString != null && (valString.equals("true") || valString.equals("false"))) {
+                        mTaskConfigBool.put(key, Boolean.parseBoolean(valString));
+                    } else {
+                        mTaskConfigBool.put(key, (Boolean) def);
+                    }
+                } else if(def instanceof String) {
+                    if(valString != null) {
+                        mTaskConfigStr.put(key, valString);
+                    } else {
+                        mTaskConfigStr.put(key, (String) def);
+                    }
                 }
-                mTaskConfig.put(key, val);
             }
         }
 
@@ -108,17 +134,33 @@ public abstract class TriggerProcessor {
 
         @Nullable
         public Integer getInt(String key) {
-            return mTaskConfig.get(key);
+            return mTaskConfigInt.get(key);
+        }
+
+        @Nullable
+        public Float getFloat(String key) {
+            return mTaskConfigFloat.get(key);
+        }
+
+        @Nullable
+        public Boolean getBoolean(String key) {
+            return mTaskConfigBool.get(key);
+        }
+
+        @Nullable String getString(String key) {
+            return mTaskConfigStr.get(key);
         }
 
         @Override
         public final String toString() {
             StringBuilder cfgBuilder = new StringBuilder(mTaskName + ";");
-            for(String key : mTaskConfig.keySet()) {
-                cfgBuilder.append(key)
-                        .append("=")
-                        .append(mTaskConfig.get(key))
-                        .append(";");
+            for(HashMap<String, ?> hm : new HashMap[] {mTaskConfigInt, mTaskConfigFloat, mTaskConfigBool, mTaskConfigStr}) {
+                for (String key : hm.keySet()) {
+                    cfgBuilder.append(key)
+                            .append("=")
+                            .append(hm.get(key))
+                            .append(";");
+                }
             }
             return cfgBuilder.toString();
         }
@@ -131,23 +173,49 @@ public abstract class TriggerProcessor {
 
         public class Editor {
 
-            private HashMap<String, Integer> eTaskConfig;
+            private final HashMap<String, Integer> eTaskConfigInt;
+            private final HashMap<String, Float> eTaskConfigFloat;
+            private final HashMap<String, Boolean> eTaskConfigBool;
+            private final HashMap<String, String> eTaskConfigStr;
+
 
             Editor() {
-                eTaskConfig = mTaskConfig;
+                eTaskConfigInt = mTaskConfigInt;
+                eTaskConfigFloat = mTaskConfigFloat;
+                eTaskConfigBool = mTaskConfigBool;
+                eTaskConfigStr = mTaskConfigStr;
+
             }
 
             public Editor putInt(String key, int val) {
-                eTaskConfig.put(key, val);
+                if(eTaskConfigInt.containsKey(key)) eTaskConfigInt.put(key, val);
+                return this;
+            }
+
+            public Editor putFloat(String key, float val) {
+                if(eTaskConfigFloat.containsKey(key)) eTaskConfigFloat.put(key, val);
+                return this;
+            }
+
+            public Editor putBoolean(String key, boolean val) {
+                if(eTaskConfigBool.containsKey(key)) eTaskConfigBool.put(key, val);
+                return this;
+            }
+
+            public Editor putString(String key, String val) {
+                if(eTaskConfigStr.containsKey(key)) eTaskConfigStr.put(key, val);
                 return this;
             }
 
             public Config create() {
+
                 StringBuilder cfgBuilder = new StringBuilder(mTaskName + ";");
-                for(String key : eTaskConfig.keySet()) {
+                for(HashMap<String, Object> hm : new HashMap[] {eTaskConfigInt, eTaskConfigFloat, eTaskConfigBool, eTaskConfigStr})
+                for(String key : hm.keySet()) {
                     cfgBuilder.append(key)
                             .append("=")
-                            .append(eTaskConfig.get(key));
+                            .append(hm.get(key))
+                            .append(";");
                 }
                 return Config.this.makeNewConfig(cfgBuilder.toString());
             }
@@ -187,12 +255,9 @@ public abstract class TriggerProcessor {
                 }
 
                 Integer maxFrames = mProcessor.config.getInt("maxframes");
-                if(mProcessor.mNextProcessor == null) {
-                    CFLog.d(this.getClass().getSimpleName() + " " + mProcessor.processed  + "/" + maxFrames);
-                }
                 if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
-                    mProcessor.onMaxReached();
                     onFinished();
+                    mProcessor.onMaxReached();
                 }
             } catch (OutOfMemoryError e) {
                 mProcessor.skip.incrementAndGet();

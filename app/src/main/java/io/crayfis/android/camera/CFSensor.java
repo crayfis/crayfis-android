@@ -95,7 +95,7 @@ class CFSensor implements SensorEventListener {
     }
 
     boolean isFlat() {
-        Integer orientCutoff = CFConfig.getInstance().getQualTrigger().getInt("orientation");
+        Float orientCutoff = CFConfig.getInstance().getQualTrigger().getFloat("orientation");
         return orientCutoff == null || Math.abs(rotationMatrix[8]) >= orientCutoff;
     }
 

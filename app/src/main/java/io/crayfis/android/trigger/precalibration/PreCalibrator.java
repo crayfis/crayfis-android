@@ -33,6 +33,7 @@ import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 
 /**
@@ -50,20 +51,19 @@ public class PreCalibrator extends TriggerProcessor {
 
     private final static int INTER = Imgproc.INTER_CUBIC;
 
-    private PreCalibrator(CFApplication app, List<Config> configs) {
-        super(app, configs.get(sConfigStep), false);
+    private PreCalibrator(CFApplication app, Config config) {
+        super(app, config, false);
 
         CONFIG = CFConfig.getInstance();
         CAMERA = CFCamera.getInstance();
-
-        if(sConfigList == null || sConfigList != configs) {
-            sConfigList = configs;
-            clear();
-        }
     }
 
     public static TriggerProcessor makeProcessor(CFApplication application) {
-        return new PreCalibrator(application, CFConfig.getInstance().getPrecalTrigger());
+        if(sConfigStep == 0) {
+            sConfigList = CFConfig.getInstance().getPrecalTrigger();
+        }
+
+        return new PreCalibrator(application, sConfigList.get(sConfigStep));
     }
 
     public static List<Config> makeConfig(String configStr) {
@@ -91,26 +91,18 @@ public class PreCalibrator extends TriggerProcessor {
             configs.add(new WeightingTask.Config(new HashMap<String, String>()));
         }
 
-        /*
-        int nFrames = 0;
-        for(TriggerProcessor.Config config : configs) {
-            nFrames += config.getInt("maxframes");
-        }
-        totalFrames = nFrames;
-
-        */
-
         return configs;
     }
 
     @Override
     public void onMaxReached() {
-        sConfigStep++;
-        if(sConfigStep >= sConfigList.size()) {
-            submitPrecalibrationResult();
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        } else {
+        if(sConfigStep < sConfigList.size()-1) {
+            sConfigStep++;
             ExposureBlockManager.getInstance(mApplication).newExposureBlock(CFApplication.State.PRECALIBRATION);
+        } else {
+            submitPrecalibrationResult();
+            sConfigStep = 0;
+            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
     }
 
@@ -199,16 +191,6 @@ public class PreCalibrator extends TriggerProcessor {
         resampledFloat.release();
     }
 
-    /**
-     * Resets the Precalibration info for this camera
-     */
-    private void clear() {
-        int cameraId = CAMERA.getCameraId();
-
-        PRECAL_BUILDER.clear();
-        CONFIG.setPrecalWeights(cameraId, null);
-        CONFIG.setHotcells(cameraId, new HashSet<Integer>(Camera.getNumberOfCameras()));
-    }
 
     /**
      * Determines whether it has been sufficiently long to warrant a new PreCalibration
@@ -224,7 +206,20 @@ public class PreCalibrator extends TriggerProcessor {
 
         if(config.getPrecalResetTime() == null) return false;
         boolean expired = (System.currentTimeMillis() - config.getLastPrecalTime(cameraId)) > config.getPrecalResetTime();
-        return config.getPrecalWeights(cameraId) == null || camera.getResX() != config.getLastPrecalResX(cameraId) || expired;
+        boolean hasWeights = config.getPrecalWeights(cameraId) == null;
+        boolean sameRes = camera.getResX() == config.getLastPrecalResX(cameraId);
+
+        if(expired || hasWeights || !sameRes) {
+            // clear everything in preparation
+            sConfigStep = 0;
+            sConfigList = null;
+            PRECAL_BUILDER.clear();
+            CFConfig.getInstance().setPrecalWeights(cameraId, null);
+            CFConfig.getInstance().setHotcells(cameraId, new HashSet<Integer>(Camera.getNumberOfCameras()));
+            return true;
+        }
+
+        return false;
     }
 
     public static TriggerProcessor.Config getCurrentConfig() {

@@ -18,22 +18,22 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
 
         static final String NAME = "autodetect";
 
-        static final HashMap<String, Integer> KEY_DEFAULT;
+        static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("avg", 10);
-            KEY_DEFAULT.put("std", 255);
+            KEY_DEFAULT.put("avg", 10f);
+            KEY_DEFAULT.put("std", 255f);
             KEY_DEFAULT.put("maxframes", 45);
         }
 
-        final int avgCut;
-        final int stdCut;
+        final double avgCut;
+        final double stdCut;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            avgCut = mTaskConfig.get("avg");
-            stdCut = mTaskConfig.get("std");
+            avgCut = getFloat("avg");
+            stdCut = getFloat("std");
         }
 
         @Override
