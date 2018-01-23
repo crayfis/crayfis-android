@@ -20,6 +20,7 @@ import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.ExposureBlockManager;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
@@ -211,7 +212,7 @@ public class LayoutStatus extends NavDrawerFragment {
                 final int count, total;
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
                     count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
-                    total = PreCalibrator.getCurrentConfig().getInt("maxframes");
+                    total = PreCalibrator.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
                 } else {
                     count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();

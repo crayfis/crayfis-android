@@ -19,6 +19,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
@@ -42,8 +43,27 @@ import io.crayfis.android.util.CFLog;
 
 public class PreCalibrator extends TriggerProcessor {
 
+    static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
+
     private final CFConfig CONFIG;
     private final CFCamera CAMERA;
+
+    public static class ConfigList extends ArrayList<Config> {
+
+        @Override
+        public String toString() {
+            if(size() == 0) return "";
+            StringBuilder sb = new StringBuilder();
+            Config firstConfig = get(0);
+            sb.append(firstConfig);
+            remove(0);
+            for(Config config : this) {
+                sb.append(" -> ")
+                        .append(config);
+            }
+            return sb.toString();
+        }
+    }
 
     private static List<Config> sConfigList;
     private static int sConfigStep = 0;
@@ -66,10 +86,10 @@ public class PreCalibrator extends TriggerProcessor {
         return new PreCalibrator(application, sConfigList.get(sConfigStep));
     }
 
-    public static List<Config> makeConfig(String configStr) {
+    public static ConfigList makeConfig(String configStr) {
 
         String[] configStrings = configStr.split("->");
-        List<Config> configs = new ArrayList<>();
+        ConfigList configs = new ConfigList();
 
         for(String str : configStrings) {
             HashMap<String, String> options = TriggerProcessor.parseConfigString(str);

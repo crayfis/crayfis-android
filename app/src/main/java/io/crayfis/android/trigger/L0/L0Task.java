@@ -1,7 +1,5 @@
 package io.crayfis.android.trigger.L0;
 
-import android.util.Pair;
-
 import org.opencv.core.Mat;
 
 import java.util.HashMap;
@@ -11,7 +9,6 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 1/4/18.
@@ -22,14 +19,13 @@ class L0Task extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "default";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("prescale", .001f);
-            KEY_DEFAULT.put("random", true);
-            KEY_DEFAULT.put("windowsize", 10);
+            KEY_DEFAULT.put(L0Processor.KEY_PRESCALE, .001f);
+            KEY_DEFAULT.put(L0Processor.KEY_RANDOM, true);
+            KEY_DEFAULT.put(L0Processor.KEY_WINDOWSIZE, 10);
         }
 
         final double prescale;
@@ -39,9 +35,9 @@ class L0Task extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            prescale = getFloat("prescale");
-            random = getBoolean("random");
-            windowSize = getInt("windowsize");
+            prescale = getFloat(L0Processor.KEY_PRESCALE);
+            random = getBoolean(L0Processor.KEY_RANDOM);
+            windowSize = getInt(L0Processor.KEY_WINDOWSIZE);
         }
 
         @Override

@@ -14,6 +14,10 @@ import io.crayfis.android.util.CFLog;
 
 public class L0Processor extends TriggerProcessor {
 
+    public static final String KEY_PRESCALE = "prescale";
+    public static final String KEY_RANDOM = "random";
+    public static final String KEY_WINDOWSIZE = "windowsize";
+
     public static AtomicInteger L0Count = new AtomicInteger();
 
     private L0Processor(CFApplication application, Config config) {

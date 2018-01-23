@@ -13,6 +13,10 @@ import io.crayfis.android.util.CFLog;
 
 public class L1Processor extends TriggerProcessor {
 
+    public static final String KEY_TARGET_EPM = "target_epm";
+    public static final String KEY_TRIGGER_LOCK = "trig_lock";
+    public static final String KEY_L1_THRESH = "l1thresh";
+
     public static int L1CountData;
     private final L1Calibrator mL1Cal;
 

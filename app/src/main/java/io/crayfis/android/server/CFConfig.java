@@ -39,7 +39,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
     private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
     private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
-    private static final String KEY_TARGET_EPM = "target_events_per_minute";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_MAX_UPLOAD_INTERVAL = "max_upload_interval";
     private static final String KEY_MAX_CHUNK_SIZE = "max_chunk_size";
@@ -48,7 +47,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_ACCOUNT_SCORE = "account_score";
-    private static final String KEY_TRIGGER_LOCK = "prefTriggerLock";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
     private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
@@ -56,17 +54,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
 
 
-
-    // FIXME: not sure if it makes sense to store the L1/L2 thresholds; they are always
-    // either determined via calibration, or are set by the server (until the next calibration).
     private final int N_CAMERAS;
-    private static final String DEFAULT_L0_TRIGGER = "default";
-    private static final String DEFAULT_QUAL_TRIGGER = "facedown";
-    private static final String DEFAULT_PRECAL_TRIGGER = "hotcell->weight";
-    private static final String DEFAULT_L1_TRIGGER = "default";
-    private static final String DEFAULT_L2_TRIGGER = "default";
+    private static final String DEFAULT_L0_TRIGGER = "";
+    private static final String DEFAULT_QUAL_TRIGGER = "";
+    private static final String DEFAULT_PRECAL_TRIGGER = "";
+    private static final String DEFAULT_L1_TRIGGER = "";
+    private static final String DEFAULT_L2_TRIGGER = "";
     private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
-    private static final float DEFAULT_TARGET_EPM = 30;
     private static final int DEFAULT_XB_PERIOD = 120;
     private static final int DEFAULT_MAX_UPLOAD_INTERVAL = 180;
     private static final int DEFAULT_MAX_CHUNK_SIZE = 250000;
@@ -75,7 +69,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
-    private static final boolean DEFAULT_TRIGGER_LOCK = false;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final String DEFAULT_TARGET_FPS = "15";
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
@@ -83,7 +76,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     private TriggerProcessor.Config mL0Trigger;
     private TriggerProcessor.Config mQualTrigger;
-    private List<TriggerProcessor.Config> mPrecalTriggers;
+    private PreCalibrator.ConfigList mPrecalTriggers;
     private TriggerProcessor.Config mL1Trigger;
     private TriggerProcessor.Config mL2Trigger;
     private List<Set<String>> mHotcells;
@@ -91,7 +84,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private UUID[] mPrecalUUID;
     private long[] mLastPrecalTime;
     private int[] mLastPrecalResX;
-    private float mTargetEventsPerMinute;
     private int mExposureBlockPeriod;
     private int mMaxUploadInterval;
     private int mMaxChunkSize;
@@ -100,7 +92,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
-    private boolean mTriggerLock;
     private String mTargetResolutionStr;
     private String mTargetFPS;
     private int mBatteryOverheatTemp;
@@ -115,7 +106,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
-        mTargetEventsPerMinute = DEFAULT_TARGET_EPM;
         mExposureBlockPeriod = DEFAULT_XB_PERIOD;
         mMaxUploadInterval = DEFAULT_MAX_UPLOAD_INTERVAL;
         mMaxChunkSize = DEFAULT_MAX_CHUNK_SIZE;
@@ -124,7 +114,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
-        mTriggerLock = DEFAULT_TRIGGER_LOCK;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mTargetFPS = DEFAULT_TARGET_FPS;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
@@ -144,7 +133,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mQualTrigger;
     }
 
-    public List<TriggerProcessor.Config> getPrecalTrigger() {
+    public PreCalibrator.ConfigList getPrecalTrigger() {
         return mPrecalTriggers;
     }
 
@@ -209,7 +198,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public Integer getL1Threshold() {
-        return mL1Trigger.getInt("thresh");
+        return mL1Trigger.getInt(L1Processor.KEY_L1_THRESH);
     }
 
     /**
@@ -219,7 +208,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public void setL1Threshold(int l1Threshold) {
         mL1Trigger = mL1Trigger.edit()
-                .putInt("thresh", l1Threshold)
+                .putInt(L1Processor.KEY_L1_THRESH, l1Threshold)
                 .create();
     }
 
@@ -229,7 +218,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public Integer getL2Threshold() {
-        return mL2Trigger.getInt("thresh");
+        return mL2Trigger.getInt(L2Processor.KEY_L2_THRESH);
     }
 
     /**
@@ -239,7 +228,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      */
     public void setL2Threshold(int l2Threshold) {
         mL2Trigger = mL2Trigger.edit()
-                .putInt("thresh", l2Threshold)
+                .putInt(L2Processor.KEY_L2_THRESH, l2Threshold)
                 .create();
     }
 
@@ -250,7 +239,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getCalibrationSampleFrames() {
-        return mL1Trigger.getInt("maxframes");
+        return mL1Trigger.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
     }
 
     /**
@@ -259,7 +248,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return float
      */
     public float getTargetEventsPerMinute() {
-        return mTargetEventsPerMinute;
+        return mL1Trigger.getInt(L1Processor.KEY_TARGET_EPM);
     }
 
     /**
@@ -338,12 +327,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public float getAccountScore() { return mAccountScore; }
 
-    /***
-     * Ask whether the trigger lock is engaged.
-     * @return True if the trigger is locked, else false.
-     */
-    public boolean getTriggerLock() { return mTriggerLock; }
-
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
@@ -371,7 +354,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
         mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
         mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mTargetEventsPerMinute = sharedPreferences.getFloat(KEY_TARGET_EPM, DEFAULT_TARGET_EPM);
         mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
         mMaxUploadInterval = sharedPreferences.getInt(KEY_MAX_UPLOAD_INTERVAL, DEFAULT_MAX_UPLOAD_INTERVAL);
         mMaxChunkSize = sharedPreferences.getInt(KEY_MAX_CHUNK_SIZE, DEFAULT_MAX_CHUNK_SIZE);
@@ -380,7 +362,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
-        mTriggerLock = sharedPreferences.getBoolean(KEY_TRIGGER_LOCK, DEFAULT_TRIGGER_LOCK);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
         mTargetFPS = sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS);
         mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
@@ -445,14 +426,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getL2Threshold() != null) {
             setL2Threshold(serverCommand.getL2Threshold());
         }
-        if (serverCommand.getEventsPerMinute() != null) {
-            mTargetEventsPerMinute = serverCommand.getEventsPerMinute();
-        }
-        if (serverCommand.getCalibrationSampleFrames() != null) {
-            mL1Trigger.edit()
-                    .putInt("maxframes", serverCommand.getCalibrationSampleFrames())
-                    .create();
-        }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
             mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
         }
@@ -474,10 +447,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getAccountScore() != null) {
             mAccountScore = serverCommand.getAccountScore();
         }
-        if (serverCommand.getTriggerLock() != null) {
-            mTriggerLock = serverCommand.getTriggerLock();
-        }
-
         // if we're changing the camera settings, reconfigure it
         if (serverCommand.getResolution() != null) {
             mTargetResolutionStr = serverCommand.getResolution();
@@ -514,9 +483,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
         editor.putString(KEY_L0_TRIGGER, mL0Trigger.toString())
                 .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
+                .putString(KEY_PRECAL_TRIGGER, mPrecalTriggers.toString())
                 .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
                 .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
-                .putFloat(KEY_TARGET_EPM, mTargetEventsPerMinute)
                 .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
                 .putInt(KEY_MAX_UPLOAD_INTERVAL, mMaxUploadInterval)
                 .putInt(KEY_MAX_CHUNK_SIZE, mMaxChunkSize)
@@ -524,7 +493,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
-                .putBoolean(KEY_TRIGGER_LOCK,mTriggerLock)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
                 .putString(KEY_TARGET_FPS, mTargetFPS)
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)

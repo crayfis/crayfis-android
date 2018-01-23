@@ -33,12 +33,11 @@ class WeightingTask extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "weight";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("maxframes", 1000);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
         }
 
         Config(HashMap<String, String> options) {
@@ -113,7 +112,7 @@ class WeightingTask extends TriggerProcessor.Task {
 
         int sampleStep = getSampleStep(width, height, MAX_SAMPLE_SIZE);
 
-        int totalFrames = mConfig.getInt("maxframes");
+        int totalFrames = mConfig.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
         ScriptC_downsample scriptCDownsample = new ScriptC_downsample(RS);
 
         scriptCDownsample.set_gSum(mSumAlloc);

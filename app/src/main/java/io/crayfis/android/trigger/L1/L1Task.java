@@ -14,21 +14,21 @@ class L1Task extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "default";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("thresh", 255);
-            KEY_DEFAULT.put("maxframes", 1000);
-            KEY_DEFAULT.put("target_epm", 30);
+            KEY_DEFAULT.put(L1Processor.KEY_L1_THRESH, 255);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
+            KEY_DEFAULT.put(L1Processor.KEY_TARGET_EPM, 30);
+            KEY_DEFAULT.put(L1Processor.KEY_TRIGGER_LOCK, false);
         }
 
         final int thresh;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = getInt("thresh");
+            thresh = getInt(L1Processor.KEY_L1_THRESH);
         }
 
         @Override

@@ -22,13 +22,12 @@ class L2Task extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "default";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("thresh", 255);
-            KEY_DEFAULT.put("npix", 120);
+            KEY_DEFAULT.put(L2Processor.KEY_L2_THRESH, 255);
+            KEY_DEFAULT.put(L2Processor.KEY_NPIX, 120);
         }
 
         final int thresh;
@@ -36,8 +35,8 @@ class L2Task extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = getInt("thresh");
-            npix = getInt("npix");
+            thresh = getInt(L2Processor.KEY_L2_THRESH);
+            npix = getInt(L2Processor.KEY_NPIX);
         }
 
         @Override

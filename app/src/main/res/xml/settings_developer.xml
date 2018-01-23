@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:key="prefTriggerLock"
-        android:summary="@string/settings_thresh_summary"
-        android:title="@string/settings_thresh_title" />
+    <EditTextPreference
+        android:title="@string/settings_l0_trigger_title"
+        android:summary="@string/settings_l0_trigger_summary"
+        android:key="@string/L0_trigger" />
 
-    <ListPreference
-        android:key="qual_trigger"
-        android:defaultValue="0"
-        android:summary="@string/settings_camera_select_mode_summary"
-        android:title="@string/settings_camera_select_mode_title"
-        android:entries="@array/camera_select_mode_entries"
-        android:entryValues="@array/camera_select_mode_values" />
+    <EditTextPreference
+        android:title="@string/settings_qual_trigger_title"
+        android:summary="@string/settings_qual_trigger_summary"
+        android:key="@string/qual_trigger" />
+
+    <EditTextPreference
+        android:title="@string/settings_precal_trigger_title"
+        android:summary="@string/settings_precal_trigger_summary"
+        android:key="@string/precal_trigger" />
+
+    <EditTextPreference
+        android:title="@string/settings_l1_trigger_title"
+        android:summary="@string/settings_l1_trigger_summary"
+        android:key="@string/L1_trigger" />
+
+    <EditTextPreference
+        android:title="@string/settings_l2_trigger_title"
+        android:summary="@string/settings_l2_trigger_summary"
+        android:key="@string/L2_trigger" />
 
     <CheckBoxPreference
         android:key="@string/prefStorePublic"

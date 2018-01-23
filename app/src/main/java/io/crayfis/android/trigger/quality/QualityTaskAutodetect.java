@@ -17,14 +17,13 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "autodetect";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("avg", 10f);
-            KEY_DEFAULT.put("std", 255f);
-            KEY_DEFAULT.put("maxframes", 45);
+            KEY_DEFAULT.put(QualityProcessor.KEY_MEAN_THRESH, 10f);
+            KEY_DEFAULT.put(QualityProcessor.KEY_ST_DEV_THRESH, 255f);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 45);
         }
 
         final double avgCut;
@@ -32,8 +31,8 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            avgCut = getFloat("avg");
-            stdCut = getFloat("std");
+            avgCut = getFloat(QualityProcessor.KEY_MEAN_THRESH);
+            stdCut = getFloat(QualityProcessor.KEY_ST_DEV_THRESH);
         }
 
         @Override

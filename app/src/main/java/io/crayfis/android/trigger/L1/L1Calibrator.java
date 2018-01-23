@@ -15,17 +15,17 @@ import io.crayfis.android.util.CFLog;
 public class L1Calibrator {
 
     private final CFApplication mApplication;
-    private static String sTaskName = "default";
+    private static String sTaskName;
     private static final FrameHistogram sFrameStatistics = new FrameHistogram(1000);
     private static Integer[] sPixArray = new Integer[1000];
 
     L1Calibrator(CFApplication application, TriggerProcessor.Config config) {
         mApplication = application;
         if(!config.getName().equals(sTaskName)
-                || config.getInt("maxframes") != sFrameStatistics.size()) {
+                || config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES) != sFrameStatistics.size()) {
             synchronized (sFrameStatistics) {
                 sTaskName = config.getName();
-                sFrameStatistics.resize(config.getInt("maxframes"));
+                sFrameStatistics.resize(config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES));
             }
             if(mApplication.getApplicationState() != CFApplication.State.CALIBRATION) {
                 mApplication.setApplicationState(CFApplication.State.CALIBRATION);
@@ -52,14 +52,14 @@ public class L1Calibrator {
     static void updateThresholds() {
 
         // first, find the target L1 efficiency
-        final CFConfig CONFIG = CFConfig.getInstance();
-        if(CONFIG.getTriggerLock()) return;
+        TriggerProcessor.Config L1Config = CFConfig.getInstance().getL1Trigger();
+        if(L1Config.getBoolean(L1Processor.KEY_TRIGGER_LOCK)) return;
         double fps = CFCamera.getInstance().getFPS();
 
         if (fps == 0) {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
-        double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / fps;
+        double targetL1Rate = L1Config.getInt(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
 
         Histogram h = sFrameStatistics.getHistogram();
         long[] histValues = h.getValues();
@@ -76,8 +76,9 @@ public class L1Calibrator {
             }
         }
 
-        CFLog.i("Setting new L1 threshold: {" + CONFIG.getL1Threshold() + "} -> {" + thresh + "}");
+        CFLog.i("Setting new L1 threshold: {" + L1Config.getInt(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
 
+        CFConfig CONFIG = CFConfig.getInstance();
         CONFIG.setL1Threshold(thresh);
         if (thresh > 2) {
             CONFIG.setL2Threshold(thresh - 1);

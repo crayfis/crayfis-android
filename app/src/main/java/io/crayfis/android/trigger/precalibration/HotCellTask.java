@@ -31,20 +31,19 @@ class HotCellTask extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "hotcell";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("maxframes", 10000);
-            KEY_DEFAULT.put("hotcell_thresh", .0002f);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 10000);
+            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_THRESH, .0002f);
         }
 
         final float hotcellThresh;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            hotcellThresh = getFloat("hotcell_thresh");
+            hotcellThresh = getFloat(PreCalibrator.KEY_HOTCELL_THRESH);
         }
 
         @Override

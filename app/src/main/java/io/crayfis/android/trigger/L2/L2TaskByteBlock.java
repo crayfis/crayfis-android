@@ -25,14 +25,13 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "byteblock";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("thresh", 255);
-            KEY_DEFAULT.put("npix", 120);
-            KEY_DEFAULT.put("radius", 2);
+            KEY_DEFAULT.put(L2Processor.KEY_L2_THRESH, 255);
+            KEY_DEFAULT.put(L2Processor.KEY_NPIX, 120);
+            KEY_DEFAULT.put(L2Processor.KEY_RADIUS, 2);
         }
 
         final int thresh;
@@ -41,9 +40,9 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = getInt("thresh");
-            npix = getInt("npix");
-            radius = getInt("radius");
+            thresh = getInt(L2Processor.KEY_L2_THRESH);
+            npix = getInt(L2Processor.KEY_NPIX);
+            radius = getInt(L2Processor.KEY_RADIUS);
         }
 
         @Override

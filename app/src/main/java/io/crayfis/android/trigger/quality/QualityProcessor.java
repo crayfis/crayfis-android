@@ -19,6 +19,11 @@ import io.crayfis.android.util.CFLog;
 
 public class QualityProcessor extends TriggerProcessor {
 
+    static final String KEY_MEAN_THRESH = "mean";
+    static final String KEY_ST_DEV_THRESH = "std";
+    static final String KEY_ORIENT_THRESH = "orient";
+    static final String KEY_BACKLOCK = "back";
+
     private QualityProcessor(CFApplication application, Config config) {
         super(application, config, false);
     }

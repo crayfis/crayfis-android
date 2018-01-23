@@ -17,15 +17,14 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "facedown";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("orientation", 10f);
-            KEY_DEFAULT.put("avg", 10f);
-            KEY_DEFAULT.put("std", 255f);
-            KEY_DEFAULT.put("maxframes", 45);
+            KEY_DEFAULT.put(QualityProcessor.KEY_ORIENT_THRESH, 10f);
+            KEY_DEFAULT.put(QualityProcessor.KEY_MEAN_THRESH, 10f);
+            KEY_DEFAULT.put(QualityProcessor.KEY_ST_DEV_THRESH, 255f);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 45);
         }
 
         final double orientationCosine;
@@ -34,9 +33,9 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            orientationCosine = Math.cos(Math.PI/180. * getFloat("orientation"));
-            avgCut = getFloat("avg");
-            stdCut = getFloat("std");
+            orientationCosine = Math.cos(Math.PI/180. * getFloat(QualityProcessor.KEY_ORIENT_THRESH));
+            avgCut = getFloat(QualityProcessor.KEY_MEAN_THRESH);
+            stdCut = getFloat(QualityProcessor.KEY_ST_DEV_THRESH);
         }
 
         @Override

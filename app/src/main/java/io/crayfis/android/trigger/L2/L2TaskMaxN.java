@@ -24,13 +24,14 @@ class L2TaskMaxN extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "maxn";
-
         static final HashMap<String, Object> KEY_DEFAULT;
+        static final String KEY_THRESH = "thresh";
+        static final String KEY_NPIX = "npix";
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("thresh", 255);
-            KEY_DEFAULT.put("npix", 120);
+            KEY_DEFAULT.put(KEY_THRESH, 255);
+            KEY_DEFAULT.put(KEY_NPIX, 120);
         }
 
         final int thresh;
@@ -38,8 +39,8 @@ class L2TaskMaxN extends TriggerProcessor.Task {
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = getInt("thresh");
-            npix = getInt("npix");
+            thresh = getInt(KEY_THRESH);
+            npix = getInt(KEY_NPIX);
         }
 
         @Override

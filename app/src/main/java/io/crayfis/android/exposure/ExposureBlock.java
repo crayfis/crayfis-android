@@ -86,7 +86,7 @@ public class ExposureBlock {
         this.run_id = run_id;
         this.precal_id = precal_id;
         this.triggerChain = triggerChain;
-        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Trigger().getInt("thresh")+1);
+        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -236,7 +236,7 @@ public class ExposureBlock {
                     .setL0Processed(L1.getProcessed())
                     .setL0Skip(L1.getSkips())
                     .setL0Conf(L1.config.toString())
-                    .setL1Thresh(L1.config.getInt("thresh"));
+                    .setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
         }
 
         TriggerProcessor L2 = triggerChain.getProcessor(L2Processor.class);
@@ -246,7 +246,7 @@ public class ExposureBlock {
                     .setL0Processed(L2.getProcessed())
                     .setL0Skip(L2.getSkips())
                     .setL0Conf(L2.config.toString())
-                    .setL1Thresh(L2.config.getInt("thresh"));
+                    .setL1Thresh(L2.config.getInt(L2Processor.KEY_L2_THRESH));
         }
 
 

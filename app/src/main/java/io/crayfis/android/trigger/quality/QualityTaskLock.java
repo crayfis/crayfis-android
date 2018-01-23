@@ -15,20 +15,19 @@ class QualityTaskLock extends TriggerProcessor.Task {
     static class Config extends TriggerProcessor.Config {
 
         static final String NAME = "lock";
-
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put("backlock", true);
-            KEY_DEFAULT.put("maxframes", 45);
+            KEY_DEFAULT.put(QualityProcessor.KEY_BACKLOCK, true);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 45);
         }
 
         final boolean backLock;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            backLock = getBoolean("backlock");
+            backLock = getBoolean(QualityProcessor.KEY_BACKLOCK);
         }
 
         @Override

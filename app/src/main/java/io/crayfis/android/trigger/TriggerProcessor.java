@@ -37,6 +37,10 @@ public abstract class TriggerProcessor {
     }
 
     protected static HashMap<String, String> parseConfigString(String cfgStr) {
+        if(cfgStr == null) return new HashMap<>();
+
+        // remove spaces and split by semicolons
+        cfgStr =  cfgStr.replaceAll("\\s", "");
         String[] pieces = cfgStr.split(";", 2);
 
         HashMap<String, String> options = new HashMap<>();
@@ -83,6 +87,8 @@ public abstract class TriggerProcessor {
 
 
     public static abstract class Config {
+
+        public static final String KEY_MAXFRAMES = "maxframes";
 
         private final String mTaskName;
         private final HashMap<String, Integer> mTaskConfigInt = new HashMap<>();
@@ -153,13 +159,13 @@ public abstract class TriggerProcessor {
 
         @Override
         public final String toString() {
-            StringBuilder cfgBuilder = new StringBuilder(mTaskName + ";");
+            StringBuilder cfgBuilder = new StringBuilder(mTaskName + "; ");
             for(HashMap<String, ?> hm : new HashMap[] {mTaskConfigInt, mTaskConfigFloat, mTaskConfigBool, mTaskConfigStr}) {
                 for (String key : hm.keySet()) {
                     cfgBuilder.append(key)
-                            .append("=")
+                            .append(" = ")
                             .append(hm.get(key))
-                            .append(";");
+                            .append("; ");
                 }
             }
             return cfgBuilder.toString();
@@ -254,7 +260,7 @@ public abstract class TriggerProcessor {
                     mFrame.clear();
                 }
 
-                Integer maxFrames = mProcessor.config.getInt("maxframes");
+                Integer maxFrames = mProcessor.config.getInt(Config.KEY_MAXFRAMES);
                 if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
                     onFinished();
                     mProcessor.onMaxReached();

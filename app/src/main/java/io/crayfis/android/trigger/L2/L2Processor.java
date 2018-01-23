@@ -11,6 +11,10 @@ import io.crayfis.android.util.CFLog;
 
 public class L2Processor extends TriggerProcessor {
 
+    public static final String KEY_NPIX = "npix";
+    public static final String KEY_RADIUS = "radius";
+    public static final String KEY_L2_THRESH = "l2thresh";
+
     public static int L2Count = 0;
 
     private static final int PASS_TIME_CAPACITY = 25;
