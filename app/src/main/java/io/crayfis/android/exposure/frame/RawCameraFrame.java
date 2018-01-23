@@ -308,7 +308,7 @@ public abstract class RawCameraFrame {
         if(!mIsWeighted) {
             // weighting has already been done
             mIsWeighted = true;
-            weightingLock.tryAcquire();
+            weightingLock.acquireUninterruptibly();
             weightAllocation();
         }
         return aWeighted;

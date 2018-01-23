@@ -14,6 +14,7 @@ import java.util.concurrent.Semaphore;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -55,7 +56,7 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     void callLocks() {
-        mRawLock.drainPermits();
+        mRawLock.acquireUninterruptibly();
         aRaw.ioReceive();
     }
 
@@ -113,6 +114,7 @@ class RawCamera2Frame extends RawCameraFrame {
         super.retire();
         if(!mBufferClaimed) {
             mRawLock.release();
+            mBufferClaimed = true;
         }
     }
 

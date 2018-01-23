@@ -168,7 +168,8 @@ public abstract class TriggerProcessor {
                             .append("; ");
                 }
             }
-            return cfgBuilder.toString();
+            String cfgStr = cfgBuilder.toString();
+            return cfgStr.substring(0, cfgStr.length()-2);
         }
 
         public abstract Task makeTask(TriggerProcessor processor, RawCameraFrame frame);

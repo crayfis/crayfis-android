@@ -113,6 +113,7 @@ public class ExposureBlock {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
                 frame.retire();
+                return;
             }
             if(!assignedFrames.add(frame)) {
                 // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame

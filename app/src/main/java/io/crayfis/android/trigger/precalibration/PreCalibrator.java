@@ -54,14 +54,12 @@ public class PreCalibrator extends TriggerProcessor {
         public String toString() {
             if(size() == 0) return "";
             StringBuilder sb = new StringBuilder();
-            Config firstConfig = get(0);
-            sb.append(firstConfig);
-            remove(0);
             for(Config config : this) {
-                sb.append(" -> ")
-                        .append(config);
+                sb.append(config)
+                        .append(" -> ");
             }
-            return sb.toString();
+            String cfgStr = sb.toString();
+            return cfgStr.substring(0, cfgStr.length()-4);
         }
     }
 
