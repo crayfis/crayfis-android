@@ -27,15 +27,6 @@ class ServerCommand {
     @SerializedName("set_precal_trig") private String mPrecalTrigger;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
-    @SerializedName("set_qual_orientation") private Integer mQualityOrient;
-    @SerializedName("set_L1_thresh") private Integer mL1Threshold;
-    @SerializedName("set_L2_thresh") private Integer mL2Threshold;
-    @SerializedName("set_trigger_lock") private Boolean mTriggerLock;
-    @SerializedName("set_target_L2_rate") private Float mEventsPerMinute;
-    @SerializedName("weighting_sample_frames") private Integer mWeightingSampleFrames;
-    @SerializedName("hotcell_sample_frames") private Integer mHotcellSampleFrames;
-    @SerializedName("hotcell_thresh") private Float mHotcellThresh;
-    @SerializedName("calibration_sample_frames") private Integer mCalibrationSampleFrames;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
     @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
     @SerializedName("set_upload_size_max") private Integer mMaxChunkSize;
@@ -45,7 +36,6 @@ class ServerCommand {
     @SerializedName("nickname") private String mDeviceNickname;
     @SerializedName("account_name") private String mAccountName;
     @SerializedName("account_score") private Float mAccountScore;
-    @SerializedName("update_url") private String mUpdateURL;
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private String mTargetFPS;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
@@ -105,53 +95,6 @@ class ServerCommand {
 
     @Nullable
     String getL2Trigger() { return mL2Trigger; }
-
-    /**
-     * Get the L1 threshold.
-     *
-     * @return Integer or {@code null}.
-     */
-    @Nullable
-    Integer getL1Threshold() {
-        return mL1Threshold;
-    }
-
-    /**
-     * Get the L2 threshold.
-     *
-     * @return Integer or {@code null}.
-     */
-    @Nullable
-    Integer getL2Threshold() {
-        return mL2Threshold;
-    }
-
-    @Nullable
-    Boolean getTriggerLock() { return mTriggerLock; };
-
-    /**
-     * Get the events per minute.
-     *
-     * @return Float or {@code null}.
-     */
-    @Nullable
-    Float getEventsPerMinute() {
-        return mEventsPerMinute;
-    }
-
-
-    @Nullable
-    Float getHotcellThresh() { return mHotcellThresh; }
-
-    /**
-     * Get the calibration sample frames.
-     *
-     * @return Integer or {@code null}.
-     */
-    @Nullable
-    Integer getCalibrationSampleFrames() {
-        return mCalibrationSampleFrames;
-    }
 
     /**
      * Get the target exposure block period.

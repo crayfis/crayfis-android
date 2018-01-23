@@ -420,12 +420,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getL2Trigger() != null) {
             mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger());
         }
-        if (serverCommand.getL1Threshold() != null) {
-            setL1Threshold(serverCommand.getL1Threshold());
-        }
-        if (serverCommand.getL2Threshold() != null) {
-            setL2Threshold(serverCommand.getL2Threshold());
-        }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
             mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
         }
