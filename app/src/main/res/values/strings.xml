@@ -60,8 +60,10 @@
 
     <string name="resolution_low" translatable="false">Low</string>
     <string name="resolution_medium" translatable="false">Medium</string>
-    <string name="resolution_720p" translatable="false">720p</string>
-    <string name="resolution_1080p" translatable="false">1080p</string>
+    <string name="resolution_hd" translatable="false">HD (720p)</string>
+    <string name="resolution_fhd" translatable="false">FHD (1080p)</string>
+    <string name="resolution_qhd" translatable="false">QHD (1440p)</string>
+    <string name="resolution_uhd" translatable="false">UHD (2160p)</string>
     <string name="long_exposure" translatable="false">Long exposure</string>
     <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
 

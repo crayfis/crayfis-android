@@ -31,8 +31,18 @@
     <string-array name="pref_resolution" translatable="false">
         <item>@string/resolution_low</item>
         <item>@string/resolution_medium</item>
-        <item>@string/resolution_720p</item>
-        <item>@string/resolution_1080p</item>
+        <item>@string/resolution_hd</item>
+        <item>@string/resolution_fhd</item>
+        <item>@string/resolution_qhd</item>
+        <item>@string/resolution_uhd</item>
+    </string-array>
+    <string-array name="pref_resolution_vals" translatable="false">
+        <item>low</item>
+        <item>medium</item>
+        <item>720p</item>
+        <item>1080p</item>
+        <item>1440p</item>
+        <item>2160p</item>
     </string-array>
     <string-array name="pref_fps_vals" translatable="false">
         <item>@string/long_exposure</item>

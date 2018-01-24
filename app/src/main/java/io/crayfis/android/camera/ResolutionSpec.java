@@ -38,6 +38,10 @@ public class ResolutionSpec {
                 return new ResolutionSpec(1280, 720, "720p");
             case "1080p":
                 return new ResolutionSpec(1920, 1080, "1080p");
+            case "1440p":
+                return new ResolutionSpec(2560, 1440, "1440p");
+            case "2160p":
+                return new ResolutionSpec(3840, 2160, "2160p");
             default:
                 break;
         }
