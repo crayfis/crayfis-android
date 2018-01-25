@@ -178,7 +178,7 @@ public abstract class CFCamera {
      * @return String
      */
     public String getStatus() {
-        String devtxt = "Camera ID: " + mCameraId;
+        String devtxt = "Camera ID: " + mCameraId + ", FPS = " + String.format("%.02f", getFPS()) + "\n";
         devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
         return devtxt;
     }

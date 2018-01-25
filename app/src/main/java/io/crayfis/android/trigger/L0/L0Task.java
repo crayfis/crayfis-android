@@ -46,15 +46,15 @@ class L0Task extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new L0Task(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new L0Task(processor, this);
         }
     }
 
     private Config mConfig;
 
-    L0Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
-        super(processor, frame);
+    L0Task(TriggerProcessor processor, Config cfg) {
+        super(processor);
         mConfig = cfg;
     }
 

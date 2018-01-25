@@ -37,15 +37,15 @@ class L1Task extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor l1Processor, RawCameraFrame frame) {
-            return new L1Task(l1Processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor l1Processor) {
+            return new L1Task(l1Processor, this);
         }
     }
 
     private final Config mConfig;
 
-    L1Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
-        super(processor, frame);
+    L1Task(TriggerProcessor processor, Config cfg) {
+        super(processor);
         mConfig = cfg;
     }
 

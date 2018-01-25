@@ -111,7 +111,8 @@
     <string name="calibration">Measuring levels</string>
     <string name="taking_data">Taking data!</string>
     <string name="idle" translatable="false">Idle</string>
-    <string name="status_pct" translatable="false">%d%% complete, %d:%02d remaining</string>
+    <string name="status_step" translatable="false">Step %d/%d</string>
+    <string name="status_pct" translatable="false">%d%% complete\n%d:%02d remaining</string>
 
     <string name="bad_user_code">Invalid user code.</string>
     <string name="server_overload">Server overloaded</string>

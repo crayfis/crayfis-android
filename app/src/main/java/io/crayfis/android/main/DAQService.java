@@ -442,20 +442,22 @@ public class DAQService extends Service {
 
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
-                    + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
-                    + "Precal trig: " + CONFIG.getPrecalTrigger() + "\n"
-                    + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
-                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
                     + "total frames - L1: " + L0Processor.L0Count.intValue() + " (L2: " + L2Processor.L2Count + ")\n"
-                    + "fps="+String.format("%1.2f",lastFPS)
-                    + ", target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
+                    + "target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
                     + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())
                     + ", target=" + String.format("%1.2f",CONFIG.getTargetEventsPerMinute())+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", mApplication.getBatteryTemp()/10.) + "C\n"
                     + "\n";
 
-            devtxt += mCFCamera.getStatus();
+            devtxt += mCFCamera.getStatus() + "\n";
+
+            devtxt += "L0 trig: " + CONFIG.getL0Trigger() + "\n"
+                    + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
+                    + "Precal trig: " + CONFIG.getPrecalTrigger() + "\n"
+                    + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
+                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n";
+
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             if(xb != null) {
                 devtxt += xb.underflow_hist.toString();

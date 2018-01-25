@@ -53,8 +53,8 @@ class HotCellTask extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new HotCellTask(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new HotCellTask(processor, this);
         }
     }
 
@@ -70,8 +70,8 @@ class HotCellTask extends TriggerProcessor.Task {
 
     private Config mConfig;
 
-    HotCellTask(TriggerProcessor processor, RawCameraFrame frame, Config config) {
-        super(processor, frame);
+    HotCellTask(TriggerProcessor processor, Config config) {
+        super(processor);
 
         mConfig = config;
 
@@ -107,7 +107,7 @@ class HotCellTask extends TriggerProcessor.Task {
     }
 
     @Override
-    protected void onFinished() {
+    protected void onMaxReached() {
         int cameraId = CAMERA.getCameraId();
 
         // set up Allocations for histogram

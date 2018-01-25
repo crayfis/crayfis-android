@@ -36,15 +36,15 @@ class QualityTaskLock extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new QualityTaskLock(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new QualityTaskLock(processor, this);
         }
     }
 
     private final Config mConfig;
 
-    QualityTaskLock(TriggerProcessor processor, RawCameraFrame frame, Config config) {
-        super(processor, frame);
+    QualityTaskLock(TriggerProcessor processor, Config config) {
+        super(processor);
         mConfig = config;
     }
 

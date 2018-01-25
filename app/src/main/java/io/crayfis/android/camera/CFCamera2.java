@@ -411,14 +411,14 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public String getStatus() {
-        String devtxt = "Camera API: Camera2 \n" + super.getStatus();
+        String devtxt = "Camera API: Camera2 \n";
         if (mPreviewSize != null) {
             ResolutionSpec targetRes = CONFIG.getTargetResolution();
 
             devtxt += "Image dimensions = " + mPreviewSize.toString()
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
-        return devtxt;
+        return devtxt + super.getStatus();
     }
 
 }

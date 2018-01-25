@@ -17,6 +17,9 @@ import io.crayfis.android.util.CFUtil;
  * Created by jswaney on 1/10/18.
  */
 
+/**
+ * Class representing a single link in the TriggerChain
+ */
 public abstract class TriggerProcessor {
 
     public final CFApplication mApplication;
@@ -29,13 +32,27 @@ public abstract class TriggerProcessor {
     private AtomicInteger pass = new AtomicInteger();
     private AtomicInteger skip = new AtomicInteger();
 
+    /**
+     * Constructor
+     *
+     * @param application The Application instance
+     * @param config The TriggerProcessor.Config to be implemented
+     * @param serial Determines the type of AsyncTask Executor to use: SERIAL_EXECUTOR if true,
+     *               THREAD_POOL_EXECUTOR if false
+     */
     protected TriggerProcessor(CFApplication application, Config config, boolean serial) {
         mApplication = application;
         this.config = config;
         mExecutor = (serial) ? AsyncTask.SERIAL_EXECUTOR : AsyncTask.THREAD_POOL_EXECUTOR;
-        mTask = config.makeTask(this, null);
+        mTask = config.makeTask(this);
     }
 
+    /**
+     * Parses a string into a HashMap of field/value pairs to be interpreted by the TriggerProcessor
+     *
+     * @param cfgStr A string of the form "TaskName(; field1=value1; field2=value2; ...)
+     * @return A HashMap with pairs: ("name", "TaskName"), ("field1, "value1"), ...
+     */
     protected static HashMap<String, String> parseConfigString(String cfgStr) {
         if(cfgStr == null) return new HashMap<>();
 
@@ -56,36 +73,72 @@ public abstract class TriggerProcessor {
         return options;
     }
 
+    /**
+     * Hands frame to the Task to be executed
+     *
+     * @param frame RawCameraFrame to be processed
+     */
     protected void submitFrame(RawCameraFrame frame) {
         mTask.setFrame(frame);
         mExecutor.execute(mTask);
     }
 
+    /**
+     * Adds a link after this TriggerProcessor in the TriggerChain
+     *
+     * @param next TriggerProcessor that follows this one in the TriggerChain
+     * @return self
+     */
     TriggerProcessor setNext(TriggerProcessor next) {
         mNextProcessor = next;
         return this;
     }
 
+    /**
+     * Callback after frame is processed by this TriggerProcessor
+     *
+     * @param frame RawCameraFrame processed
+     * @param pass Whether the Task returned true or false
+     */
     protected void onFrameResult(RawCameraFrame frame, boolean pass) { }
 
+    /**
+     * Callback after the TriggerProcessor has processed the number of frames given by
+     * Config.getInt(KEY_MAXFRAMES)
+     */
     protected void onMaxReached() { }
 
+    /**
+     * Get the number of frames supplied to the TriggerProcessor
+     *
+     * @return int
+     */
     public int getProcessed() {
         return processed.intValue();
     }
 
+    /**
+     * Get the total number of passes assigned by the Task
+     *
+     * @return int
+     */
     public int getPasses() {
         return pass.intValue();
     }
 
+    /**
+     * Get the number of times an OOM error occurred in this processor's Task
+     *
+     * @return int
+     */
     public int getSkips() {
         return skip.intValue();
     }
 
 
-
-
-
+    /**
+     * Configuration class to be applied by the TriggerProcessor in creating a Task to run
+     */
     public static abstract class Config {
 
         public static final String KEY_MAXFRAMES = "maxframes";
@@ -96,6 +149,15 @@ public abstract class TriggerProcessor {
         private final HashMap<String, Boolean> mTaskConfigBool = new HashMap<>();
         private final HashMap<String, String> mTaskConfigStr = new HashMap<>();
 
+        /**
+         * Constructor
+         *
+         * @param taskName String name of the Task to be created
+         * @param keyVal (String, String) HashMap of fields and values supplied by the parsed
+         *               config String
+         * @param keyDefault (String, Object) HashMap of fields for the requested Task, plus their
+         *                   default values if not supplied in keyVal
+         */
         public Config(String taskName, HashMap<String, String> keyVal, HashMap<String, Object> keyDefault) {
             mTaskName = taskName;
 
@@ -172,12 +234,21 @@ public abstract class TriggerProcessor {
             return cfgStr.substring(0, cfgStr.length()-2);
         }
 
-        public abstract Task makeTask(TriggerProcessor processor, RawCameraFrame frame);
+        /**
+         * Map the Config's taskName to an existing Task and instantiate it in a TriggerProcessor
+         *
+         * @param processor TriggerProcessor to manage the task
+         * @return
+         */
+        public abstract Task makeTask(TriggerProcessor processor);
 
         public Editor edit() {
             return new Editor();
         }
 
+        /**
+         * A class for making changes to Config fields
+         */
         public class Editor {
 
             private final HashMap<String, Integer> eTaskConfigInt;
@@ -229,23 +300,40 @@ public abstract class TriggerProcessor {
         }
     }
 
+    /**
+     * Runnable executed by the TriggerProcessor
+     */
     public static abstract class Task implements Runnable {
 
         protected final TriggerProcessor mProcessor;
         private RawCameraFrame mFrame;
 
-        public Task(TriggerProcessor processor, RawCameraFrame frame) {
+        /**
+         * Constructor
+         *
+         * @param processor TriggerProcessor executing this Task
+         */
+        public Task(TriggerProcessor processor) {
             mProcessor = processor;
-            mFrame = frame;
         }
 
         private void setFrame(RawCameraFrame frame) {
             mFrame = frame;
         }
 
+        /**
+         * Method assigning the number of "passes" to associate with this frame
+         *
+         * @param frame RawCameraFrame to be processed
+         * @return integer number of "passes"
+         */
         protected abstract int processFrame(RawCameraFrame frame);
 
-        protected void onFinished() { }
+        /**
+         * Callback after the TriggerProcessor has processed the number of frames given by
+         * Config.getInt(KEY_MAXFRAMES).  Executes before TriggerProcessor.onMaxReached()
+         */
+        protected void onMaxReached() { }
 
         @Override
         public final void run() {
@@ -263,7 +351,7 @@ public abstract class TriggerProcessor {
 
                 Integer maxFrames = mProcessor.config.getInt(Config.KEY_MAXFRAMES);
                 if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
-                    onFinished();
+                    onMaxReached();
                     mProcessor.onMaxReached();
                 }
             } catch (OutOfMemoryError e) {

@@ -49,8 +49,8 @@ class L2TaskMaxN extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new L2TaskMaxN(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new L2TaskMaxN(processor, this);
         }
     }
 
@@ -58,8 +58,8 @@ class L2TaskMaxN extends TriggerProcessor.Task {
 
     private final Config mConfig;
 
-    private L2TaskMaxN(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
-        super(processor, frame);
+    private L2TaskMaxN(TriggerProcessor processor, Config cfg) {
+        super(processor);
         mConfig = cfg;
     }
 

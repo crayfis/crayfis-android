@@ -51,16 +51,15 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new L2TaskByteBlock(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new L2TaskByteBlock(processor, this);
         }
     }
 
     private final Config mConfig;
 
-    L2TaskByteBlock(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
-
-        super(processor, frame);
+    L2TaskByteBlock(TriggerProcessor processor, Config cfg) {
+        super(processor);
         mConfig = cfg;
 
     }

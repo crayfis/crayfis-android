@@ -41,15 +41,15 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new QualityTaskAutodetect(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new QualityTaskAutodetect(processor, this);
         }
     }
 
     private final Config mConfig;
 
-    QualityTaskAutodetect(TriggerProcessor processor, RawCameraFrame frame, Config config) {
-        super(processor, frame);
+    QualityTaskAutodetect(TriggerProcessor processor, Config config) {
+        super(processor);
         mConfig = config;
     }
 

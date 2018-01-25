@@ -45,15 +45,15 @@ class L2Task extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new L2Task(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new L2Task(processor, this);
         }
     }
 
     private final Config mConfig;
 
-    L2Task(TriggerProcessor processor, RawCameraFrame frame, Config cfg) {
-        super(processor, frame);
+    L2Task(TriggerProcessor processor, Config cfg) {
+        super(processor);
         mConfig = cfg;
     }
 

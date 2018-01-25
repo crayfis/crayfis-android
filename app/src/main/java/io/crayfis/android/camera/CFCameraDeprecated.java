@@ -176,14 +176,14 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public String getStatus() {
-        String devtxt = "Camera API: Deprecated \n" + super.getStatus();
+        String devtxt = "Camera API: Deprecated \n";
         if (previewSize != null) {
             ResolutionSpec targetRes = CONFIG.getTargetResolution();
 
             devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
-        return devtxt;
+        return devtxt + super.getStatus();
     }
 
 }

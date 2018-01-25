@@ -44,15 +44,15 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new QualityTaskFacedown(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new QualityTaskFacedown(processor, this);
         }
     }
 
     private final Config mConfig;
 
-    QualityTaskFacedown(TriggerProcessor processor, RawCameraFrame frame, Config config) {
-        super(processor, frame);
+    QualityTaskFacedown(TriggerProcessor processor, Config config) {
+        super(processor);
         mConfig = config;
     }
 

@@ -51,8 +51,8 @@ class WeightingTask extends TriggerProcessor.Task {
         }
 
         @Override
-        public TriggerProcessor.Task makeTask(TriggerProcessor processor, RawCameraFrame frame) {
-            return new WeightingTask(processor, frame, this);
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new WeightingTask(processor, this);
         }
     }
 
@@ -65,8 +65,8 @@ class WeightingTask extends TriggerProcessor.Task {
     private final CFCamera CAMERA = CFCamera.getInstance();
     private static final String FORMAT = ".jpeg";
 
-    WeightingTask(TriggerProcessor processor, RawCameraFrame frame, Config config) {
-        super(processor, frame);
+    WeightingTask(TriggerProcessor processor, Config config) {
+        super(processor);
 
         mConfig = config;
         RS = processor.mApplication.getRenderScript();
@@ -100,7 +100,7 @@ class WeightingTask extends TriggerProcessor.Task {
      * and in the SharedPreferences
      */
     @Override
-    protected void onFinished() {
+    protected void onMaxReached() {
 
         final int MAX_SAMPLE_SIZE = 1500;
 
