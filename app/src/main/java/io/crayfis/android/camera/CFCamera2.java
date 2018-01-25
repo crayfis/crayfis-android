@@ -226,7 +226,7 @@ class CFCamera2 extends CFCamera {
             if(availableFpsRanges != null) {
 
                 // find closest number in given ranges to target
-                long targetDuration = CONFIG.getTargetFPS() == 0 ? 5000000000L : 1000000000L / CONFIG.getTargetFPS();
+                long targetDuration = CONFIG.getTargetFPS() == 0 ? 5000000000L : (long)(1000000000L / CONFIG.getTargetFPS());
                 for (Range<Integer> r : availableFpsRanges) {
                     long maxDuration = 1000000000L / r.getLower();
                     long minDuration = 1000000000L / r.getUpper();

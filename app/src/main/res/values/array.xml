@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-     <string-array name="pref_threshold">
-        <item>-1</item>
-        <item>5</item>
-        <item>10</item>
-        <item>20</item>
-        <item>25</item>
-        <item>30</item>
-        <item>35</item>
-        <item>40</item>   
-    </string-array>
+
     <string-array name="hist_bins" translatable="false">
         <item>Cand. Pix</item>
         <item>Good Cand.</item>
@@ -44,7 +35,8 @@
         <item>1440p</item>
         <item>2160p</item>
     </string-array>
-    <string-array name="pref_fps_vals" translatable="false">
+
+    <string-array name="pref_fps_entries">
         <item>@string/long_exposure</item>
         <item>10</item>
         <item>15</item>
@@ -52,6 +44,16 @@
         <item>24</item>
         <item>30</item>
     </string-array>
+
+    <string-array name="pref_fps_vals" translatable="false">
+        <item>0</item>
+        <item>10</item>
+        <item>15</item>
+        <item>20</item>
+        <item>24</item>
+        <item>30</item>
+    </string-array>
+
     <string-array name="pref_startwait">
         <item>0 </item>
         <item>10 </item>

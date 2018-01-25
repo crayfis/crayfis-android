@@ -76,7 +76,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             param.setExposureCompensation(0);
 
             // Try to pick the highest FPS range up to target FPS
-            int frameRateMs = 1000 * CONFIG.getTargetFPS();
+            double frameRateMs = 1000 * CONFIG.getTargetFPS();
             List<int[]> validRanges = param.getSupportedPreviewFpsRange();
 
             String rngtxt = "Supported FPS ranges:";

@@ -37,7 +37,7 @@ class ServerCommand {
     @SerializedName("account_name") private String mAccountName;
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("set_target_resolution") private String mResolution;
-    @SerializedName("set_target_fps") private String mTargetFPS;
+    @SerializedName("set_target_fps") private Float mTargetFPS;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
     @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
 
@@ -162,7 +162,7 @@ class ServerCommand {
     }
 
     @Nullable
-    String getTargetFPS() {
+    Float getTargetFPS() {
         return mTargetFPS;
     }
 

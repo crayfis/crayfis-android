@@ -52,8 +52,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
     private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
 
-
-
     private final int N_CAMERAS;
     private static final String DEFAULT_L0_TRIGGER = "";
     private static final String DEFAULT_QUAL_TRIGGER = "";
@@ -70,7 +68,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
-    private static final String DEFAULT_TARGET_FPS = "15";
+    private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
     private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
 
@@ -93,7 +91,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mAccountName;
     private float mAccountScore;
     private String mTargetResolutionStr;
-    private String mTargetFPS;
+    private Float mTargetFPS;
     private int mBatteryOverheatTemp;
     private Long mPrecalResetTime; // ms
 
@@ -330,13 +328,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
-    public int getTargetFPS() {
-        try {
-            return Integer.parseInt(mTargetFPS);
-        } catch(NumberFormatException e) {
-            // FIXME: should be a better way to check for long exposure
-            return 0;
-        }
+    public double getTargetFPS() {
+        return mTargetFPS;
     }
 
     public int getBatteryOverheatTemp() {
@@ -363,7 +356,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
-        mTargetFPS = sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS);
+        try {
+            mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
+        } catch (NumberFormatException e) {
+            mTargetFPS = DEFAULT_TARGET_FPS;
+        }
         mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
 
         mPrecalWeights = new String[N_CAMERAS];
@@ -488,7 +485,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
-                .putString(KEY_TARGET_FPS, mTargetFPS)
+                .putString(KEY_TARGET_FPS, mTargetFPS.toString())
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
                 .apply();
     }
