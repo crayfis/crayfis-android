@@ -51,6 +51,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
     private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
+    private static final String KEY_MEMORY_SAVER = "prefMemorySaver";
 
     private final int N_CAMERAS;
     private static final String DEFAULT_L0_TRIGGER = "";
@@ -71,6 +72,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
     private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
+    private static final boolean DEFAULT_MEMORY_SAVER = false;
 
     private TriggerProcessor.Config mL0Trigger;
     private TriggerProcessor.Config mQualTrigger;
@@ -94,6 +96,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private Float mTargetFPS;
     private int mBatteryOverheatTemp;
     private Long mPrecalResetTime; // ms
+    private boolean mMemorySaver;
 
     private CFConfig() {
         // FIXME: shouldn't we initialize based on the persistent config values?
@@ -116,6 +119,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTargetFPS = DEFAULT_TARGET_FPS;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
         mPrecalResetTime = DEFAULT_PRECAL_RESET_TIME;
+        mMemorySaver = DEFAULT_MEMORY_SAVER;
 
         mHotcells = new ArrayList<>(N_CAMERAS);
         for(int i=0; i<N_CAMERAS; i++) {
@@ -340,6 +344,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mPrecalResetTime;
     }
 
+    public boolean getMemorySaver() {
+        return mMemorySaver;
+    }
+
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
         mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
@@ -361,6 +369,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         } catch (NumberFormatException e) {
             mTargetFPS = DEFAULT_TARGET_FPS;
         }
+        mMemorySaver = sharedPreferences.getBoolean(KEY_MEMORY_SAVER, DEFAULT_MEMORY_SAVER);
+
         mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
 
         mPrecalWeights = new String[N_CAMERAS];
@@ -458,6 +468,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 mPrecalResetTime = null;
             }
         }
+        if (serverCommand.getMemorySaver() != null) {
+            mMemorySaver = serverCommand.getMemorySaver();
+        }
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
@@ -487,6 +500,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
                 .putString(KEY_TARGET_FPS, mTargetFPS.toString())
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
+                .putBoolean(KEY_MEMORY_SAVER, mMemorySaver)
                 .apply();
     }
 }

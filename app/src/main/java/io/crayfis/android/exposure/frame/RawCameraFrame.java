@@ -188,6 +188,7 @@ public abstract class RawCameraFrame {
                     .create();
 
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            if(bWeighted != null) bWeighted.destroy();
             bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bOut = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bOut);

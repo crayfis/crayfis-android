@@ -40,6 +40,7 @@ class ServerCommand {
     @SerializedName("set_target_fps") private Float mTargetFPS;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
     @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
+    @SerializedName("set_memory_saver") private Boolean mMemorySaver;
 
 
     /**
@@ -174,5 +175,10 @@ class ServerCommand {
     @Nullable
     Long getPrecalResetTime() {
         return mPrecalResetTime;
+    }
+
+    @Nullable
+    Boolean getMemorySaver() {
+        return mMemorySaver;
     }
 }
