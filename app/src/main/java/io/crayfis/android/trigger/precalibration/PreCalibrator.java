@@ -188,7 +188,7 @@ public class PreCalibrator extends TriggerProcessor {
             Set<Integer> hotcells = config.getHotcells(cameraId);
             if(hotcells != null) {
                 for (Integer pos : hotcells) {
-                    resampledArray[pos] = Byte.MIN_VALUE;
+                    resampledArray[pos] = (byte) 0;
                 }
             }
 
