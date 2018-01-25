@@ -14,7 +14,7 @@ public class AcquisitionTime {
     public final long Sys;
     public AcquisitionTime() {
         // fetch timestamps in order of decreasing precision
-        Nano = System.nanoTime() - CFApplication.getStartTimeNano();
+        Nano = System.nanoTime();
         NTP = SntpClient.getInstance().getNtpTime();
         Sys = System.currentTimeMillis();
     }

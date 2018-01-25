@@ -343,12 +343,9 @@ public class DAQService extends Service {
     DataProtos.RunConfig run_config;
 
     private void generateRunConfig() {
-        long run_start_time = System.currentTimeMillis();
-        long run_start_time_nano = System.nanoTime() - 1000000 * run_start_time; // reference start time to unix epoch
-
-        CFApplication.setStartTimeNano(run_start_time_nano);
 
         DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
+        b.setStartTime(System.currentTimeMillis());
 
         mApplication.generateAppBuild();
         CFApplication.AppBuild build = mApplication.getBuildInformation();
@@ -357,7 +354,6 @@ public class DAQService extends Service {
         b.setIdHi(runId.getMostSignificantBits());
         b.setIdLo(runId.getLeastSignificantBits());
         b.setCrayfisBuild(build.getBuildVersion());
-        b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
         b.setCameraId(mCFCamera.getCameraId());
@@ -381,7 +377,6 @@ public class DAQService extends Service {
         hw_params += "build-model=" + Build.MODEL + ";";
         hw_params += "build-radio=" + Build.RADIO + ";";
         hw_params += "build-serial=" + Build.SERIAL + ";";
-        hw_params += "build-board=" + Build.BOARD + ";";
         hw_params += "build-tags=" + Build.TAGS + ";";
         hw_params += "build-time=" + Build.TIME + ";";
         hw_params += "build-type=" + Build.TYPE + ";";

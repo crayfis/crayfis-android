@@ -349,9 +349,6 @@ public class CFApplication extends Application {
         return mBatteryTemp;
     }
 
-    public static long getStartTimeNano() { return mStartTimeNano; }
-    public static void setStartTimeNano(long startTimeNano) { mStartTimeNano = startTimeNano; }
-
     public RenderScript getRenderScript() {
         return mRS;
     }

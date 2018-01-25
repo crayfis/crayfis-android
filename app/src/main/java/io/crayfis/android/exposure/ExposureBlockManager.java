@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import io.crayfis.android.main.CFApplication;
@@ -44,7 +45,7 @@ public final class ExposureBlockManager {
     // We keep a list of retired blocks, which have been closed but
     // may not be ready to commit yet (e.g. events belonging to this block
     // might be sequested in a queue somewhere, still)
-    private LinkedList<ExposureBlock> retired_blocks = new LinkedList<ExposureBlock>();
+    private final LinkedHashSet<ExposureBlock> retired_blocks = new LinkedHashSet<>();
 
     private long safe_time = 0;
 
@@ -195,13 +196,13 @@ public final class ExposureBlockManager {
         retired_blocks.add(xb);
     }
 
-    public void updateSafeTime(long time) {
+    private void updateSafeTime(long time) {
         // this time should be monotonically increasing
         assert time >= safe_time;
         safe_time = time;
     }
 
-    public void flushCommittedBlocks() {
+    private void flushCommittedBlocks() {
         // Try to flush out any committed exposure blocks that
         // have no new events coming.
         if (retired_blocks.size() == 0) {
@@ -210,21 +211,18 @@ public final class ExposureBlockManager {
         }
 
         ArrayList<ExposureBlock> toRemove = new ArrayList<>();
-        long current_time = System.nanoTime() - CFApplication.getStartTimeNano();
+        long current_time = System.nanoTime();
         synchronized (retired_blocks) {
-            for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
-                ExposureBlock xb = it.next();
+            for (ExposureBlock xb : retired_blocks) {
                 /*if (xb.end_time.Nano < (safe_time - SAFE_TIME_BUFFER*1000000L)) {*/
                 if (xb.isFinalized()) {
                     // okay, it's safe to commit this block now. add it to the list of XBs
                     // to dispatch, and then do that outside the synch block.
                     toRemove.add(xb);
-                    it.remove();
                 } else if ( (current_time - xb.getEndTimeNano()) > XB_STALE_TIME * 1000000L) {
                     // this XB has gone stale! we should upload it anyways.
                     CFLog.w("Stale XB detected! Uploading even though not finalized.");
                     toRemove.add(xb);
-                    it.remove();
                 }
             }
         }
@@ -238,7 +236,7 @@ public final class ExposureBlockManager {
     public void flushCommittedBlocks(boolean force) {
         // If force == true, immediately flush all blocks.
         if (force) {
-            updateSafeTime(System.nanoTime()-APPLICATION.getStartTimeNano());
+            updateSafeTime(System.nanoTime());
         }
         flushCommittedBlocks();
     }

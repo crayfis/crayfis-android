@@ -66,7 +66,7 @@ public class L2Processor extends TriggerProcessor {
             if (sPassTimes.size() < PASS_TIME_CAPACITY) {
                 return 0.0;
             }
-            long dt = System.nanoTime() - CFApplication.getStartTimeNano() - sPassTimes.getOldest();
+            long dt = System.nanoTime() - sPassTimes.getOldest();
             double dtMin = dt / 1000000000. / 60.;
             return sPassTimes.size() / dtMin;
         }
