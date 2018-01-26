@@ -170,78 +170,40 @@ public class PreCalibrator extends TriggerProcessor {
         Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
         compressedMat.release();
 
-        Allocation weights;
         Mat resampledMat2D = new Mat();
+        Imgproc.resize(downsampleMat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
+        downsampleMat.release();
 
-        boolean memorySaver = config.getMemorySaver();
+        Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
+        MatOfByte resampledByte = new MatOfByte(resampledMat);
+        resampledMat2D.release();
+        resampledMat.release();
 
-        if(memorySaver) {
+        byte[] resampledArray = resampledByte.toArray();
+        resampledByte.release();
 
-            // use bytes instead of floats
-            Imgproc.resize(downsampleMat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
-            Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
-            MatOfByte resampledByte = new MatOfByte(resampledMat);
-
-            byte[] resampledArray = resampledByte.toArray();
-
-            // kill hotcells in resampled frame
-            Set<Integer> hotcells = config.getHotcells(cameraId);
-            if(hotcells != null) {
-                for (Integer pos : hotcells) {
-                    resampledArray[pos] = (byte) 0;
-                }
+        // kill hotcells in resampled frame
+        Set<Integer> hotcells = config.getHotcells(cameraId);
+        if(hotcells != null) {
+            for (Integer pos : hotcells) {
+                resampledArray[pos] = (byte) 0;
             }
-
-            Type weightType = new Type.Builder(RS, Element.U8(RS))
-                    .setX(resX)
-                    .setY(resY)
-                    .create();
-            weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
-            weights.copyFrom(resampledArray);
-
-            resampledMat.release();
-            resampledByte.release();
-
-        } else {
-
-            // use float weights and save the CPU from extra computation
-            Mat downsampleFloat = new Mat();
-            downsampleMat.convertTo(downsampleFloat, CvType.CV_32F, 1. / 255);
-
-            Imgproc.resize(downsampleFloat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
-            Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
-            MatOfFloat resampledFloat = new MatOfFloat(resampledMat);
-
-            float[] resampledArray = resampledFloat.toArray();
-
-            // kill hotcells in resampled frame
-            Set<Integer> hotcells = config.getHotcells(cameraId);
-            if(hotcells != null) {
-                for (Integer pos : hotcells) {
-                    resampledArray[pos] = 0f;
-                }
-            }
-
-            Type weightType = new Type.Builder(RS, Element.F32(RS))
-                    .setX(resX)
-                    .setY(resY)
-                    .create();
-            weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
-            weights.copyFrom(resampledArray);
-
-            downsampleFloat.release();
-            resampledMat.release();
-            resampledFloat.release();
         }
+
+        Type weightType = new Type.Builder(RS, Element.U8(RS))
+                .setX(resX)
+                .setY(resY)
+                .create();
+        Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
+        weights.copyFrom(resampledArray);
+
+        resampledMat.release();
+        resampledByte.release();
 
         ScriptC_weight scriptCWeight = new ScriptC_weight(RS);
 
         scriptCWeight.set_gWeights(weights);
-        scriptCWeight.set_memorySaver(memorySaver);
         CFCamera.getInstance().getFrameBuilder().setWeights(scriptCWeight);
-
-        downsampleMat.release();
-        resampledMat2D.release();
 
     }
 

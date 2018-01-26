@@ -64,11 +64,7 @@ class RawCamera2Frame extends RawCameraFrame {
     protected synchronized void weightAllocation() {
         if(mScriptCWeight != null) {
             mScriptCWeight.set_gInYuv(aRaw);
-            if(mScriptCWeight.get_memorySaver()) {
-                mScriptCWeight.forEach_weightYuv_memorySaver(aWeighted);
-            } else {
-                mScriptCWeight.forEach_weightYuv(aWeighted);
-            }
+            mScriptCWeight.forEach_weightYuv(aWeighted);
         } else {
             aWeighted = aRaw;
         }

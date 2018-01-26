@@ -139,9 +139,13 @@ class HotCellTask extends TriggerProcessor.Task {
 
         // copy to OpenCV to locate hot pixels
         byte[] maxArray = new byte[area];
-        byte[] secondArray = new byte[area];
         aMax.copyTo(maxArray);
+        aMax.destroy();
+
+        byte[] secondArray = new byte[area];
         aSecond.copyTo(secondArray);
+        aSecond.destroy();
+
         MatOfByte secondMat = new MatOfByte(secondArray);
 
         Mat threshMat = new Mat();

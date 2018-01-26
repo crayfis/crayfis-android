@@ -55,11 +55,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
         super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
         if(mScriptCWeight != null) {
-            if(mScriptCWeight.get_memorySaver()) {
-                mScriptCWeight.forEach_weight_memorySaver(aWeighted, aWeighted);
-            } else {
-                mScriptCWeight.forEach_weight(aWeighted, aWeighted);
-            }
+            mScriptCWeight.forEach_weight(aWeighted, aWeighted);
         }
     }
 

@@ -53,8 +53,6 @@
     <string name="settings_l1_trigger_title" translatable="false">L1 Trigger</string>
     <string name="settings_l2_trigger_summary" translatable="false">Options: default, maxn, byteblock</string>
     <string name="settings_l2_trigger_title" translatable="false">L2 Trigger</string>
-    <string name="settings_memory_saver_summary" translatable="false">Perform extra steps in frame weighting to conserve RAM space</string>
-    <string name="settings_memory_saver_title" translatable="false">Memory Saver Mode</string>
     <string name="settings_public_summary" translatable="false">Save files in DCIM instead of uploading</string>
     <string name="settings_public_title" translatable="false">Store files publicly</string>
 

@@ -27,11 +27,6 @@
         android:key="@string/L2_trigger" />
 
     <CheckBoxPreference
-        android:title="@string/settings_memory_saver_title"
-        android:summary="@string/settings_memory_saver_summary"
-        android:key="@string/prefMemorySaver" />
-
-    <CheckBoxPreference
         android:key="@string/prefStorePublic"
         android:defaultValue="false"
         android:title="@string/settings_public_title"

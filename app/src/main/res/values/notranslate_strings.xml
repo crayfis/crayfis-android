@@ -10,7 +10,6 @@
     <string name="prefResolution" translatable="false">prefResolution</string>
     <string name="prefFPS" translatable="false">prefFPS</string>
     <string name="prefBatteryStop" translatable="false">prefBatteryStop</string>
-    <string name="prefMemorySaver" translatable="false">prefMemorySaver</string>
 
     <string name="L0_trigger" translatable="false">L0_trigger</string>
     <string name="qual_trigger" translatable="false">qual_trigger</string>
