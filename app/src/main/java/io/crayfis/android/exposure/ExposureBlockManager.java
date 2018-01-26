@@ -230,6 +230,7 @@ public final class ExposureBlockManager {
         for (ExposureBlock xb : toRemove) {
             // submit the retired XB's to be uploaded.
             UploadExposureService.submitExposureBlock(APPLICATION, xb.buildProto());
+            retired_blocks.remove(xb);
         }
     }
 
