@@ -10,4 +10,11 @@
     <string name="prefResolution" translatable="false">prefResolution</string>
     <string name="prefFPS" translatable="false">prefFPS</string>
     <string name="prefBatteryStop" translatable="false">prefBatteryStop</string>
+
+    <string name="L0_trigger" translatable="false">L0_trigger</string>
+    <string name="qual_trigger" translatable="false">qual_trigger</string>
+    <string name="precal_trigger" translatable="false">precal_trigger</string>
+    <string name="L1_trigger" translatable="false">L1_trigger</string>
+    <string name="L2_trigger" translatable="false">L2_trigger</string>
+
 </resources>

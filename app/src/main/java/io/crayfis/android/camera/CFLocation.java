@@ -235,18 +235,21 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
     }
 
     String getStatus() {
-        return (mLastLocation != null ? "Current google location: (long=" + mLastLocation.getLongitude()
-                + ", lat=" + mLastLocation.getLatitude()
-                + ") accuracy = " + mLastLocation.getAccuracy()
-                + " provider = " + mLastLocation.getProvider()
-                + " time=" + mLastLocation.getTime() : "") + "\n"
-                + (mLastLocationDeprecated != null ? "Current android location: (long=" + mLastLocationDeprecated.getLongitude()
-                + ", lat=" + mLastLocationDeprecated.getLatitude()
-                + ") accuracy = " + mLastLocationDeprecated.getAccuracy()
-                + " provider = " + mLastLocationDeprecated.getProvider()
-                + " time=" + mLastLocationDeprecated.getTime() : "") + "\n"
-                + (currentLocation != null ? " Official location = (long=" + currentLocation.getLongitude()
-                +" lat="+currentLocation.getLatitude() : "") + ")\n";
+        return (mLastLocation != null ? "Google location:\n"
+                + "(" + mLastLocation.getLongitude() + "\n"
+                + ", " + mLastLocation.getLatitude() + ")\n"
+                + "provider = " + mLastLocation.getProvider() + "\n"
+                + "accuracy = " + mLastLocation.getAccuracy()
+                + ", time=" + mLastLocation.getTime() : "") + "\n"
+                + (mLastLocationDeprecated != null ? "Android location: \n"
+                + "(" + mLastLocationDeprecated.getLongitude()
+                + ", " + mLastLocationDeprecated.getLatitude() + ")\n"
+                + "provider = " + mLastLocationDeprecated.getProvider() + "\n"
+                + "accuracy = " + mLastLocationDeprecated.getAccuracy()
+                + ", time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+                + (currentLocation != null ? "Official location:\n"
+                + "(" + currentLocation.getLongitude()
+                + ", " + currentLocation.getLatitude() + ")" : "") + "\n";
 
     }
 

@@ -14,33 +14,65 @@ import org.opencv.core.MatOfInt;
 import org.opencv.imgcodecs.Imgcodecs;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_downsample;
 import io.crayfis.android.ScriptC_sumFrames;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 7/18/2017.
  */
 
-class WeightFinder extends PrecalComponent {
+class WeightingTask extends TriggerProcessor.Task {
+
+    static class Config extends TriggerProcessor.Config {
+
+        static final String NAME = "weight";
+        static final HashMap<String, Object> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
+        }
+
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            //FIXME: what to do with this?
+            return null;
+        }
+
+        @Override
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new WeightingTask(processor, this);
+        }
+    }
 
     private Allocation mSumAlloc;
     private ScriptC_sumFrames mScriptCSumFrames;
+    private final RenderScript RS;
+    private final Config mConfig;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private final CFCamera CAMERA = CFCamera.getInstance();
-    private final String FORMAT = ".jpeg";
+    private static final String FORMAT = ".jpeg";
 
-    WeightFinder(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
-        super(rs, b);
-        CFLog.i("WeightFinder created");
+    WeightingTask(TriggerProcessor processor, Config config) {
+        super(processor);
+
+        mConfig = config;
+        RS = processor.mApplication.getRenderScript();
+
+        CFLog.i("WeightingTask created");
         mScriptCSumFrames = new ScriptC_sumFrames(RS);
-        sampleFrames = CONFIG.getWeightingSampleFrames();
 
         Type type = new Type.Builder(RS, Element.I32(RS))
                 .setX(CAMERA.getResX())
@@ -58,9 +90,9 @@ class WeightFinder extends PrecalComponent {
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    boolean addFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
         mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
-        return super.addFrame(frame);
+        return 1;
     }
 
     /**
@@ -68,7 +100,7 @@ class WeightFinder extends PrecalComponent {
      * and in the SharedPreferences
      */
     @Override
-    void process() {
+    protected void onMaxReached() {
 
         final int MAX_SAMPLE_SIZE = 1500;
 
@@ -80,7 +112,7 @@ class WeightFinder extends PrecalComponent {
 
         int sampleStep = getSampleStep(width, height, MAX_SAMPLE_SIZE);
 
-        int totalFrames = CONFIG.getWeightingSampleFrames();
+        int totalFrames = mConfig.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
         ScriptC_downsample scriptCDownsample = new ScriptC_downsample(RS);
 
         scriptCDownsample.set_gSum(mSumAlloc);
@@ -157,7 +189,7 @@ class WeightFinder extends PrecalComponent {
         buf.release();
         params.release();
 
-        PRECAL_BUILDER.setSampleResX(sampleResX)
+        PreCalibrator.PRECAL_BUILDER.setSampleResX(sampleResX)
                 .setSampleResY(sampleResY)
                 .setCompressedWeights(ByteString.copyFrom(bytes))
                 .setCompressedFormat(FORMAT)

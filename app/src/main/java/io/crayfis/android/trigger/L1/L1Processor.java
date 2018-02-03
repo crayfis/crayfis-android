@@ -1,55 +1,56 @@
 package io.crayfis.android.trigger.L1;
 
-import android.os.AsyncTask;
+import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
-import io.crayfis.android.trigger.precalibration.PreCalibrator;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 5/4/16.
  */
 
-public class L1Processor {
+public class L1Processor extends TriggerProcessor {
 
-    final CFApplication mApplication;
-    private final L1Config mL1Config;
-    public final int mL1Thresh;
+    public static final String KEY_TARGET_EPM = "target_epm";
+    public static final String KEY_TRIGGER_LOCK = "trig_lock";
+    public static final String KEY_L1_THRESH = "l1thresh";
 
-    public int processed = 0;
-    public int pass = 0;
-    public int skip = 0;
-    public static int L1Count = 0;
     public static int L1CountData;
+    private final L1Calibrator mL1Cal;
 
-    L1Calibrator mL1Cal;
-    PreCalibrator mPreCal;
-
-    int mBufferBalance = 0;
-
-    final CFConfig CONFIG = CFConfig.getInstance();
-
-    public L1Processor(CFApplication application, String configStr, int l1thresh) {
-        mApplication = application;
-        mL1Config = L1Config.makeConfig(configStr);
-        mL1Thresh = l1thresh;
-        mL1Cal = L1Calibrator.getInstance();
-        mPreCal = PreCalibrator.getInstance(application);
+    private L1Processor(CFApplication application, Config config) {
+        super(application, config, false);
+        mL1Cal = new L1Calibrator(application, config);
     }
 
-    private Runnable makeTask(RawCameraFrame frame) {
-        return mL1Config.makeTask(this, frame);
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        L1Calibrator.updateThresholds();
+        return new L1Processor(application, CFConfig.getInstance().getL1Trigger());
     }
 
-    public void submitFrame(RawCameraFrame frame) {
-        mBufferBalance++;
-        processed++;
-        AsyncTask.THREAD_POOL_EXECUTOR.execute(makeTask(frame));
+    public static Config makeConfig(String configStr) {
+
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
+
+        switch (name) {
+            case L1Task.Config.NAME:
+                return new L1Task.Config(options);
+            default:
+                CFLog.w("No L1 implementation found for " + name + ", using default!");
+                return new L1Task.Config(options);
+        }
+
     }
 
-    public String getConfig() {
-        return mL1Config.toString();
+    @Override
+    public void onMaxReached() {
+        if(mApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
+            mL1Cal.submitCalibrationResult();
+            mApplication.setApplicationState(CFApplication.State.DATA);
+        }
     }
 }

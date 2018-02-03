@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.util;
 
 import java.util.ArrayDeque;
 import java.util.Queue;
@@ -41,7 +41,7 @@ public class FrameHistory<E extends Number> {
     }
 
     public E[] toArray(E in[]) {
-        return (E[]) values.toArray(in);
+        return values.toArray(in);
     }
 
     public E getOldest() {

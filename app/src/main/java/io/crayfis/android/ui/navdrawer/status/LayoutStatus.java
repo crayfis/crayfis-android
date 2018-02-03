@@ -16,9 +16,11 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.ExposureBlockManager;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
@@ -208,16 +210,20 @@ public class LayoutStatus extends NavDrawerFragment {
             case PRECALIBRATION:
             case CALIBRATION:
                 final int count, total;
+                String statusMessage = "";
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
-                    count = PreCalibrator.getInstance(application).count.intValue();
-                    total = config.getHotcellSampleFrames() + config.getWeightingSampleFrames();
+                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
+                    total = PreCalibrator.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
+                    statusMessage += String.format(getString(R.string.status_step),
+                            PreCalibrator.getStepNumber()+1, PreCalibrator.getTotalSteps()) + "\n";
                 } else {
                     count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;
                 int sLeft = (int)((total-count)/CFCamera.getInstance().getFPS());
-                setStatusMessage(String.format(getString(R.string.status_pct), pct, sLeft/60, sLeft%60));
+                statusMessage += String.format(getString(R.string.status_pct), pct, sLeft/60, sLeft%60);
+                setStatusMessage(statusMessage);
 
         }
 

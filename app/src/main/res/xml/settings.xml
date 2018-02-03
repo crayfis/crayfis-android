@@ -44,16 +44,16 @@
 
     <ListPreference
         android:key="@string/prefResolution"
-        android:defaultValue="@string/resolution_1080p"
+        android:defaultValue="1080p"
         android:entries="@array/pref_resolution"
         android:summary="@string/settings_pref_resolution_summary"
-        android:entryValues="@array/pref_resolution"
+        android:entryValues="@array/pref_resolution_vals"
         android:title="@string/settings_pref_resolution_title" />
 
     <ListPreference
         android:key="@string/prefFPS"
-        android:defaultValue="15"
-        android:entries="@array/pref_fps_vals"
+        android:defaultValue="30"
+        android:entries="@array/pref_fps_entries"
         android:entryValues="@array/pref_fps_vals"
         android:summary="@string/settings_pref_fps_summary"
         android:title="@string/settings_pref_fps_title" />

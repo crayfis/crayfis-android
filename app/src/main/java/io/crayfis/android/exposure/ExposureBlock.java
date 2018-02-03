@@ -1,20 +1,32 @@
 package io.crayfis.android.exposure;
 
+import android.Manifest;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
+import android.preference.PreferenceManager;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.crayfis.android.R;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
-import io.crayfis.android.trigger.calibration.Histogram;
+import io.crayfis.android.trigger.TriggerChain;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
+import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
+import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
 import io.crayfis.android.util.CFLog;
 
 public class ExposureBlock {
@@ -35,9 +47,7 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-	public final L0Processor mL0Processor;
-    public final L1Processor mL1Processor;
-    public final L2Processor mL2Processor;
+	private final TriggerChain triggerChain;
 	
 	private int total_pixels;
 	
@@ -59,27 +69,24 @@ public class ExposureBlock {
     // list of reconstructed events to be uploaded
     private final ArrayList<DataProtos.Event> events = new ArrayList<>();
 
-    public ExposureBlock(CFApplication application,
-                         int xbn, UUID run_id,
+    ExposureBlock(CFApplication application,
+                         int xbn,
+                         UUID run_id,
                          UUID precal_id,
-                         String L0_config,
-                         String L1_config,
-                         String L2_config,
-                         int L1_threshold, int L2_threshold,
+                         TriggerChain triggerChain,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
-                         int resx, int resy) {
+                         int resx,
+                         int resy) {
         start_time = new AcquisitionTime();
 
         this.APPLICATION = application;
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.mL0Processor = new L0Processor(APPLICATION, L0_config);
-        this.mL1Processor = new L1Processor(APPLICATION, L1_config, L1_threshold);
-        this.mL2Processor = new L2Processor(APPLICATION, L2_config, L2_threshold);
-        this.underflow_hist = new Histogram(L1_threshold+1);
+        this.triggerChain = triggerChain;
+        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -87,6 +94,7 @@ public class ExposureBlock {
         this.res_y = resy;
 
         total_pixels = 0;
+
     }
 
     /***
@@ -98,11 +106,14 @@ public class ExposureBlock {
      */
     public void tryAssignFrame(RawCameraFrame frame) {
 
+        count.incrementAndGet();
+
         long frame_time = frame.getAcquiredTimeNano();
         synchronized (assignedFrames) {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
                 frame.retire();
+                return;
             }
             if(!assignedFrames.add(frame)) {
                 // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
@@ -114,14 +125,14 @@ public class ExposureBlock {
         // If we made it here, we can submit the XB to the L1Processor.
         // It will pop the assigned frame from the XB's internal list, and will also handle
         // recycling the buffers.
-        mL0Processor.submitFrame(frame);
+        triggerChain.submitFrame(frame);
     }
 
     /**
      * Freeze the XB. This means that the XB will not accept any new raw
      * camera frame assignments.
      */
-    public void freeze() {
+    void freeze() {
         synchronized (assignedFrames) {
             frozen = true;
             end_time = new AcquisitionTime();
@@ -134,7 +145,7 @@ public class ExposureBlock {
      * camera frame assignments.
      * @return True if frozen.
      */
-    public boolean isFrozen() {
+    boolean isFrozen() {
         return frozen;
     }
 
@@ -159,6 +170,21 @@ public class ExposureBlock {
                     events.add(event);
                 }
 
+                // update UI
+                LayoutLiveView.addEvent(event);
+
+                if(event.getPixelsCount() >= LayoutGallery.getGalleryCount()
+                        || event.hasByteBlock() && event.getByteBlock().getXCount() >= LayoutGallery.getGalleryCount()) {
+                    SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(APPLICATION);
+                    if(sharedPrefs.getBoolean(APPLICATION.getString(R.string.prefEnableGallery), false)
+                            && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
+                            || APPLICATION.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            == PackageManager.PERMISSION_GRANTED)) {
+
+                        GalleryUtil.saveImage(event);
+                    }
+                }
+
                 // add to XB pixels
                 int npix = event.getPixelsCount();
                 if(event.hasByteBlock()) {
@@ -170,6 +196,7 @@ public class ExposureBlock {
             }
             if(!assignedFrames.remove(frame)) {
                 CFLog.e("clearFrame() called but frame was not assigned.");
+                CFLog.d("assigned frames: " + assignedFrames.size());
             }
         }
     }
@@ -192,26 +219,39 @@ public class ExposureBlock {
 	
 	DataProtos.ExposureBlock buildProto() {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
-                .setDaqState(translateState(daq_state))
+                .setDaqState(translateState(daq_state));
 
-                .setL0Pass(mL0Processor.pass)
-                .setL0Processed(mL0Processor.processed)
-                .setL0Skip(mL0Processor.skip)
-                .setL0Conf(mL0Processor.getConfig())
+        TriggerProcessor L0 = triggerChain.getProcessor(L0Processor.class);
 
-                .setL1Pass(mL1Processor.pass)
-                .setL1Processed(mL1Processor.processed)
-                .setL1Skip(mL1Processor.skip)
-                .setL1Thresh(mL1Processor.mL1Thresh)
-                .setL1Conf(mL1Processor.getConfig())
-		
-		        .setL2Pass(mL2Processor.pass)
-		        .setL2Processed(mL2Processor.processed)
-		        .setL2Skip(mL2Processor.skip)
-		        .setL2Thresh(mL2Processor.mL2Thresh)
-                .setL2Conf(mL2Processor.getConfig())
+        if(L0 != null) {
+            buf.setL0Pass(L0.getPasses())
+                    .setL0Processed(L0.getProcessed())
+                    .setL0Skip(L0.getSkips())
+                    .setL0Conf(L0.config.toString());
+        }
 
-				.setGpsLat(start_loc.getLatitude())
+        TriggerProcessor L1 = triggerChain.getProcessor(L1Processor.class);
+
+        if(L1 != null) {
+            buf.setL1Pass(L1.getPasses())
+                    .setL0Processed(L1.getProcessed())
+                    .setL0Skip(L1.getSkips())
+                    .setL0Conf(L1.config.toString())
+                    .setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
+        }
+
+        TriggerProcessor L2 = triggerChain.getProcessor(L2Processor.class);
+
+        if(L2 != null) {
+            buf.setL1Pass(L2.getPasses())
+                    .setL0Processed(L2.getProcessed())
+                    .setL0Skip(L2.getSkips())
+                    .setL0Conf(L2.config.toString())
+                    .setL1Thresh(L2.config.getInt(L2Processor.KEY_L2_THRESH));
+        }
+
+
+        buf.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())
                 .setGpsFixtime(start_loc.getTime())
 
@@ -271,19 +311,11 @@ public class ExposureBlock {
 		return buf.toByteArray();
 	}
 
-    public int getL1Thresh() {
-        return mL1Processor.mL1Thresh;
-    }
-
-    public int getL2Thresh() {
-        return mL2Processor.mL2Thresh;
-    }
-
-    public long getStartTimeNano() {
+    long getStartTimeNano() {
         return start_time.Nano;
     }
 
-    public long getEndTimeNano() {
+    long getEndTimeNano() {
         return end_time.Nano;
     }
 

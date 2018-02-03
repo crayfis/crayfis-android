@@ -1,44 +1,46 @@
 package io.crayfis.android.trigger.L0;
 
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.fabric.sdk.android.services.concurrency.AsyncTask;
+import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 1/4/18.
  */
 
-public class L0Processor {
-    final CFApplication mApplication;
-    private final L0Config mL0Config;
+public class L0Processor extends TriggerProcessor {
 
-    public int processed = 0;
-    public int pass = 0;
-    public int skip = 0;
-    public static int L0Count = 0;
+    public static final String KEY_PRESCALE = "prescale";
+    public static final String KEY_RANDOM = "random";
+    public static final String KEY_WINDOWSIZE = "windowsize";
 
-    final CFConfig CONFIG = CFConfig.getInstance();
+    public static AtomicInteger L0Count = new AtomicInteger();
 
-    public L0Processor(CFApplication application, String configString) {
-        mApplication = application;
-        mL0Config = L0Config.makeConfig(configString);
+    private L0Processor(CFApplication application, Config config) {
+        super(application, config, true);
     }
 
-    private Runnable makeTask(RawCameraFrame frame) {
-        return mL0Config.makeTask(this, frame);
+    public static TriggerProcessor makeProcessor(CFApplication application) {
+        return new L0Processor(application, CFConfig.getInstance().getL0Trigger());
     }
 
-    public void submitFrame(RawCameraFrame frame) {
-        processed++;
-        L0Count++;
-        // Note: we use a serial_executor here so that the zerobias processor
-        // sees frames in the order in which they are received.
-        AsyncTask.SERIAL_EXECUTOR.execute(makeTask(frame));
-    }
+    public static Config makeConfig(String configStr) {
 
-    public String getConfig() {
-        return mL0Config.toString();
+        HashMap<String, String> options = TriggerProcessor.parseConfigString(configStr);
+        String name = options.get("name");
+        options.remove("name");
+
+        switch (name) {
+            case L0Task.Config.NAME:
+                return new L0Task.Config(options);
+            default:
+                CFLog.w("No L0 implementation found for " + name + ", using default!");
+                return new L0Task.Config(options);
+        }
+
     }
 }

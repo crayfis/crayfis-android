@@ -1,4 +1,4 @@
-package io.crayfis.android.trigger.calibration;
+package io.crayfis.android.util;
 
 import android.support.annotation.NonNull;
 
@@ -259,6 +259,10 @@ public class Histogram implements Iterable<Long> {
 
     // get the raw number of entries filled.
     public long getEntries() { return entries; }
+
+    public int size() {
+        return nbins;
+    }
 
     // get an iterator over the bin contents. iterator does not include overflow/underflow bins.
     @NonNull

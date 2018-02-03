@@ -1,17 +1,17 @@
 package io.crayfis.android.exposure;
 
 import java.util.ArrayList;
-import android.content.Context;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L2.L2Processor;
@@ -24,8 +24,8 @@ public final class ExposureBlockManager {
 
     // max amount of time to wait before considering an retired but un-finalized XB to be "stale";
     // after this time, it will be uploaded regardless. [ms]
-    public final int XB_STALE_TIME = 30000;
-    public final long PASS_RATE_CHECK_TIME = 5000L;
+    private static final int XB_STALE_TIME = 30000;
+    private static final long PASS_RATE_CHECK_TIME = 5000L;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private final CFApplication APPLICATION;
@@ -35,7 +35,6 @@ public final class ExposureBlockManager {
     public final long SAFE_TIME_BUFFER = 2500;
 
     private int mTotalXBs = 0;
-    private int mCommittedXBs = 0;
 
     private final Handler mFlushHandler;
 
@@ -46,7 +45,7 @@ public final class ExposureBlockManager {
     // We keep a list of retired blocks, which have been closed but
     // may not be ready to commit yet (e.g. events belonging to this block
     // might be sequested in a queue somewhere, still)
-    private LinkedList<ExposureBlock> retired_blocks = new LinkedList<ExposureBlock>();
+    private final LinkedHashSet<ExposureBlock> retired_blocks = new LinkedHashSet<>();
 
     private long safe_time = 0;
 
@@ -137,10 +136,6 @@ public final class ExposureBlockManager {
         if(state == CFApplication.State.DATA) {
             mXBExpirationTimer = new XBExpirationTimer();
             mXBExpirationTimer.start();
-            if(!CONFIG.getTriggerLock()) {
-                // re-evaluate thresholds for new XB
-                L1Calibrator.getInstance().updateThresholds();
-            }
         }
 
         int cameraId = camera.getCameraId();
@@ -150,13 +145,12 @@ public final class ExposureBlockManager {
                 mTotalXBs,
                 APPLICATION.getBuildInformation().getRunId(),
                 cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
-                CONFIG.getL0Trigger(),
-                CONFIG.getL1Trigger(),
-                CONFIG.getL2Trigger(),
-                CONFIG.getL1Threshold(), CONFIG.getL2Threshold(),
+                new TriggerChain(APPLICATION, state),
                 camera.getLastKnownLocation(),
                 APPLICATION.getBatteryTemp(),
-                state, camera.getResX(), camera.getResY());
+                state,
+                camera.getResX(),
+                camera.getResY());
 
         // start assigning frames to new xb
         camera.getFrameBuilder().setExposureBlock(current_xb);
@@ -202,13 +196,13 @@ public final class ExposureBlockManager {
         retired_blocks.add(xb);
     }
 
-    public void updateSafeTime(long time) {
+    private void updateSafeTime(long time) {
         // this time should be monotonically increasing
         assert time >= safe_time;
         safe_time = time;
     }
 
-    public void flushCommittedBlocks() {
+    private void flushCommittedBlocks() {
         // Try to flush out any committed exposure blocks that
         // have no new events coming.
         if (retired_blocks.size() == 0) {
@@ -217,21 +211,18 @@ public final class ExposureBlockManager {
         }
 
         ArrayList<ExposureBlock> toRemove = new ArrayList<>();
-        long current_time = System.nanoTime() - CFApplication.getStartTimeNano();
+        long current_time = System.nanoTime();
         synchronized (retired_blocks) {
-            for (Iterator<ExposureBlock> it = retired_blocks.iterator(); it.hasNext(); ) {
-                ExposureBlock xb = it.next();
+            for (ExposureBlock xb : retired_blocks) {
                 /*if (xb.end_time.Nano < (safe_time - SAFE_TIME_BUFFER*1000000L)) {*/
                 if (xb.isFinalized()) {
                     // okay, it's safe to commit this block now. add it to the list of XBs
                     // to dispatch, and then do that outside the synch block.
                     toRemove.add(xb);
-                    it.remove();
                 } else if ( (current_time - xb.getEndTimeNano()) > XB_STALE_TIME * 1000000L) {
                     // this XB has gone stale! we should upload it anyways.
                     CFLog.w("Stale XB detected! Uploading even though not finalized.");
                     toRemove.add(xb);
-                    it.remove();
                 }
             }
         }
@@ -239,23 +230,20 @@ public final class ExposureBlockManager {
         for (ExposureBlock xb : toRemove) {
             // submit the retired XB's to be uploaded.
             UploadExposureService.submitExposureBlock(APPLICATION, xb.buildProto());
+            retired_blocks.remove(xb);
         }
     }
 
     public void flushCommittedBlocks(boolean force) {
         // If force == true, immediately flush all blocks.
         if (force) {
-            updateSafeTime(System.nanoTime()-APPLICATION.getStartTimeNano());
+            updateSafeTime(System.nanoTime());
         }
         flushCommittedBlocks();
     }
 
     public int getTotalXBs() {
         return mTotalXBs;
-    }
-
-    public int getCommittedXBs() {
-        return mCommittedXBs;
     }
 
     /**

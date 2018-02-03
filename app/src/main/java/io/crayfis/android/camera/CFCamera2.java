@@ -181,8 +181,7 @@ class CFCamera2 extends CFCamera {
                 mFrameHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        frame.callLocks();
-                        frame.assign();
+                        frame.commit();
                     }
                 });
                 mBuffersQueued.decrementAndGet();
@@ -227,7 +226,7 @@ class CFCamera2 extends CFCamera {
             if(availableFpsRanges != null) {
 
                 // find closest number in given ranges to target
-                long targetDuration = CONFIG.getTargetFPS() == 0 ? 5000000000L : 1000000000L / CONFIG.getTargetFPS();
+                long targetDuration = CONFIG.getTargetFPS() == 0 ? 5000000000L : (long)(1000000000L / CONFIG.getTargetFPS());
                 for (Range<Integer> r : availableFpsRanges) {
                     long maxDuration = 1000000000L / r.getLower();
                     long minDuration = 1000000000L / r.getUpper();
@@ -412,14 +411,14 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public String getStatus() {
-        String devtxt = "Camera API: Camera2 \n" + super.getStatus();
+        String devtxt = "Camera API: Camera2 \n";
         if (mPreviewSize != null) {
             ResolutionSpec targetRes = CONFIG.getTargetResolution();
 
             devtxt += "Image dimensions = " + mPreviewSize.toString()
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
-        return devtxt;
+        return devtxt + super.getStatus();
     }
 
 }

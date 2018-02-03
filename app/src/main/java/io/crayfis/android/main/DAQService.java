@@ -22,7 +22,8 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.calibration.L1Calibrator;
+import io.crayfis.android.trigger.L0.L0Processor;
+import io.crayfis.android.trigger.L1.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exception.IllegalFsmStateException;
@@ -63,9 +64,6 @@ public class DAQService extends Service {
     private CFCamera mCFCamera;
 
     private ExposureBlockManager xbManager;
-
-    private L1Calibrator L1cal;
-    private PreCalibrator mPreCal;
 
     @Override
     public void onCreate() {
@@ -172,12 +170,6 @@ public class DAQService extends Service {
 
                 startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
-                // Frame Processing
-
-                mPreCal = PreCalibrator.getInstance(mApplication);
-                L1cal = L1Calibrator.getInstance();
-
-
                 xbManager = ExposureBlockManager.getInstance(mApplication);
 
                 // start camera
@@ -198,6 +190,7 @@ public class DAQService extends Service {
      */
     private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
+        CONFIG.setL1Threshold(255);
         switch (previousState) {
             case IDLE:
                 mCFCamera.changeCamera();
@@ -261,7 +254,6 @@ public class DAQService extends Service {
         switch (previousState) {
             case CALIBRATION:
                 xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                mPreCal.clear();
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -280,21 +272,22 @@ public class DAQService extends Service {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(mPreCal.dueForPreCalibration(mCFCamera.getCameraId())) {
+        if(PreCalibrator.dueForPreCalibration(mCFCamera.getCameraId())) {
             mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
             return;
         }
+
         switch (previousState) {
             case STABILIZATION:
             case PRECALIBRATION:
-                L1cal.clear();
                 mCFCamera.badFlatEvents = 0;
-                xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
-                mCFCamera.getFrameBuilder().setWeights(mPreCal.getScriptCWeight(mCFCamera.getCameraId()));
+                PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
         }
+
+        xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
     }
 
     /**
@@ -306,30 +299,7 @@ public class DAQService extends Service {
     private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         switch (previousState) {
-            /*
-            case INIT:
-                //l2thread.setFixedThreshold(true);
-                xbManager.newExposureBlock(CFApplication.State.DATA);
-
-                break;
-            */
             case CALIBRATION:
-                L1cal.updateThresholds();
-
-                // build the calibration result object
-                DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
-                        .setRunId(run_config.getIdLo())
-                        .setRunIdHi(run_config.getIdHi())
-                        .setEndTime(System.currentTimeMillis());
-
-                for (long v : L1cal.getHistogram()) {
-                    cal.addHistMaxpixel((int)v);
-                }
-
-                // and commit it to the output stream
-                CFLog.i("DAQService Committing new calibration result.");
-                UploadExposureService.submitCalibrationResult(this, cal.build());
-
                 // Finally, set the state and start a new xb
                 xbManager.newExposureBlock(CFApplication.State.DATA);
 
@@ -347,12 +317,9 @@ public class DAQService extends Service {
             case CALIBRATION:
             case PRECALIBRATION:
             case DATA:
-                xbManager.newExposureBlock(CFApplication.State.FINISHED);
-                mCFCamera.changeCamera();
             case IDLE:
+                xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 mCFCamera.unregister();
-                mPreCal.destroy();
-                L1cal.destroy();
                 xbManager.destroy();
 
                 xbManager.flushCommittedBlocks(true);
@@ -376,12 +343,9 @@ public class DAQService extends Service {
     DataProtos.RunConfig run_config;
 
     private void generateRunConfig() {
-        long run_start_time = System.currentTimeMillis();
-        long run_start_time_nano = System.nanoTime() - 1000000 * run_start_time; // reference start time to unix epoch
-
-        CFApplication.setStartTimeNano(run_start_time_nano);
 
         DataProtos.RunConfig.Builder b = DataProtos.RunConfig.newBuilder();
+        b.setStartTime(System.currentTimeMillis());
 
         mApplication.generateAppBuild();
         CFApplication.AppBuild build = mApplication.getBuildInformation();
@@ -390,7 +354,6 @@ public class DAQService extends Service {
         b.setIdHi(runId.getMostSignificantBits());
         b.setIdLo(runId.getLeastSignificantBits());
         b.setCrayfisBuild(build.getBuildVersion());
-        b.setStartTime(run_start_time);
 
         /* get a bunch of camera info */
         b.setCameraId(mCFCamera.getCameraId());
@@ -414,7 +377,6 @@ public class DAQService extends Service {
         hw_params += "build-model=" + Build.MODEL + ";";
         hw_params += "build-radio=" + Build.RADIO + ";";
         hw_params += "build-serial=" + Build.SERIAL + ";";
-        hw_params += "build-board=" + Build.BOARD + ";";
         hw_params += "build-tags=" + Build.TAGS + ";";
         hw_params += "build-time=" + Build.TIME + ";";
         hw_params += "build-type=" + Build.TYPE + ";";
@@ -475,24 +437,27 @@ public class DAQService extends Service {
 
             String devtxt = "@@ Developer View @@\n"
                     + "State: " + mApplication.getApplicationState() + "\n"
-                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n"
-                    + "total frames - L1: " + L1Processor.L1Count + " (L2: " + L2Processor.L2Count + ")\n"
-                    + "L1 Threshold:" + CONFIG.getL1Threshold() + (CONFIG.getTriggerLock() ? "*" : "")
-                    + ", L2 Threshold:" + CONFIG.getL2Threshold() + "\n"
-                    + "fps="+String.format("%1.2f",lastFPS)
-                    + ", target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
+                    + "total frames - L1: " + L0Processor.L0Count.intValue() + " (L2: " + L2Processor.L2Count + ")\n"
+                    + "target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
                     + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())
                     + ", target=" + String.format("%1.2f",CONFIG.getTargetEventsPerMinute())+"\n"
                     + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", mApplication.getBatteryTemp()/10.) + "C\n"
                     + "\n";
 
-            devtxt += mCFCamera.getStatus();
+            devtxt += mCFCamera.getStatus() + "\n";
+
+            devtxt += "L0 trig: " + CONFIG.getL0Trigger() + "\n"
+                    + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
+                    + "Precal trig: " + CONFIG.getPrecalTrigger() + "\n"
+                    + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
+                    + "L2 trig: " + CONFIG.getL2Trigger() + "\n";
+
             ExposureBlock xb = xbManager.getCurrentExposureBlock();
             if(xb != null) {
                 devtxt += xb.underflow_hist.toString();
             }
-            devtxt += "L1 hist = "+L1cal.getHistogram().toString()+"\n";
+            devtxt += "L1 hist = "+ L1Calibrator.getHistogram().toString()+"\n";
             return devtxt;
 
         }

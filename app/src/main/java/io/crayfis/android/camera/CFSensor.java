@@ -87,7 +87,7 @@ class CFSensor implements SensorEventListener {
             case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
             case Sensor.TYPE_ROTATION_VECTOR:
                 if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_HIGH
-                        && CFConfig.getInstance().getCameraSelectMode() == CFApplication.MODE_FACE_DOWN) {
+                        && CFConfig.getInstance().getQualTrigger().getName().equals("facedown")) {
                     LayoutStatus.updateIdleStatus(APPLICATION.getResources().getString(R.string.idle_sensors));
                     APPLICATION.setApplicationState(CFApplication.State.IDLE);
                 }
@@ -95,7 +95,8 @@ class CFSensor implements SensorEventListener {
     }
 
     boolean isFlat() {
-        return Math.abs(rotationMatrix[8]) >= CFConfig.getInstance().getQualityOrientationCosine();
+        Float orientCutoff = CFConfig.getInstance().getQualTrigger().getFloat("orientation");
+        return orientCutoff == null || Math.abs(rotationMatrix[8]) >= orientCutoff;
     }
 
     String getStatus() {

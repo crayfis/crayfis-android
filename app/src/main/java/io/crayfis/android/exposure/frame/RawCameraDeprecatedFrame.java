@@ -51,12 +51,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
     }
 
     @Override
-    public void callLocks() {
-
-    }
-
-
-    @Override
     protected synchronized void weightAllocation() {
         super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
@@ -82,7 +76,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
             // update with weighted pixels
             aWeighted.copyTo(adjustedBytes);
 
-            weightingLock.unlock();
+            weightingLock.release();
 
 
             // probably a better way to do this, but this
@@ -97,7 +91,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            weightingLock.unlock();
+            weightingLock.release();
             if (mat1 != null) mat1.release();
             if (mat2 != null) mat2.release();
             if (mGrayMat != null) mGrayMat.release();

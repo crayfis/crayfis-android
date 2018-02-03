@@ -76,7 +76,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             param.setExposureCompensation(0);
 
             // Try to pick the highest FPS range up to target FPS
-            int frameRateMs = 1000 * CONFIG.getTargetFPS();
+            double frameRateMs = 1000 * CONFIG.getTargetFPS();
             List<int[]> validRanges = param.getSupportedPreviewFpsRange();
 
             String rngtxt = "Supported FPS ranges:";
@@ -158,7 +158,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
         RawCameraFrame frame = RCF_BUILDER.build();
         mTimestampHistory.addValue(frame.getAcquiredTime());
-        frame.assign();
+        frame.commit();
 
     }
 
@@ -176,14 +176,14 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public String getStatus() {
-        String devtxt = "Camera API: Deprecated \n" + super.getStatus();
+        String devtxt = "Camera API: Deprecated \n";
         if (previewSize != null) {
             ResolutionSpec targetRes = CONFIG.getTargetResolution();
 
             devtxt += "Image dimensions = " + previewSize.width + "x" + previewSize.height
                     + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
         }
-        return devtxt;
+        return devtxt + super.getStatus();
     }
 
 }

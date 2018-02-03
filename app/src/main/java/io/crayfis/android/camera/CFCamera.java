@@ -1,6 +1,5 @@
 package io.crayfis.android.camera;
 
-import android.content.Context;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
@@ -9,15 +8,9 @@ import android.renderscript.RenderScript;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.calibration.FrameHistory;
+import io.crayfis.android.util.FrameHistory;
 import io.crayfis.android.exposure.ExposureBlockManager;
-import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.util.CFLog;
-
-import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Created by Jeff on 8/31/2017.
@@ -125,7 +118,6 @@ public abstract class CFCamera {
                 }
                 break;
             case PRECALIBRATION:
-                PreCalibrator.getInstance(mApplication).clear();
             case CALIBRATION:
             case DATA:
             case IDLE:
@@ -186,22 +178,7 @@ public abstract class CFCamera {
      * @return String
      */
     public String getStatus() {
-        String devtxt = "Camera ID: " + mCameraId + ", Mode = ";
-        switch (CONFIG.getCameraSelectMode()) {
-            case MODE_FACE_DOWN:
-                devtxt += "FACE-DOWN\n";
-                break;
-            case MODE_AUTO_DETECT:
-                devtxt += "AUTO-DETECT\n";
-                break;
-            case MODE_BACK_LOCK:
-                devtxt += "BACK LOCK\n";
-                break;
-            case MODE_FRONT_LOCK:
-                devtxt += "FRONT LOCK\n";
-                break;
-
-        }
+        String devtxt = "Camera ID: " + mCameraId + ", FPS = " + String.format("%.02f", getFPS()) + "\n";
         devtxt += mCFSensor.getStatus() + mCFLocation.getStatus();
         return devtxt;
     }

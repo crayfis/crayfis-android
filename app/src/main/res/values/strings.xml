@@ -43,15 +43,25 @@
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_pref_fps_summary" translatable="false">Decrease frame rate if temperature is too high</string>
     <string name="settings_pref_fps_title" translatable="false">Camera frame rate</string>
-    <string name="settings_camera_select_mode_summary" translatable="false">Choose method of determining frame quality</string>
-    <string name="settings_camera_select_mode_title" translatable="false">Camera select mode</string>
+    <string name="settings_l0_trigger_summary" translatable="false">Options: default</string>
+    <string name="settings_l0_trigger_title" translatable="false">L0 Trigger</string>
+    <string name="settings_qual_trigger_summary" translatable="false">Options: facedown, autodetect, lock</string>
+    <string name="settings_qual_trigger_title" translatable="false">Quality Trigger</string>
+    <string name="settings_precal_trigger_summary" translatable="false">Options: hotcell, weight (steps delimited with ->)</string>
+    <string name="settings_precal_trigger_title" translatable="false">Precalibration Trigger</string>
+    <string name="settings_l1_trigger_summary" translatable="false">Options: default</string>
+    <string name="settings_l1_trigger_title" translatable="false">L1 Trigger</string>
+    <string name="settings_l2_trigger_summary" translatable="false">Options: default, maxn, byteblock</string>
+    <string name="settings_l2_trigger_title" translatable="false">L2 Trigger</string>
     <string name="settings_public_summary" translatable="false">Save files in DCIM instead of uploading</string>
     <string name="settings_public_title" translatable="false">Store files publicly</string>
 
     <string name="resolution_low" translatable="false">Low</string>
     <string name="resolution_medium" translatable="false">Medium</string>
-    <string name="resolution_720p" translatable="false">720p</string>
-    <string name="resolution_1080p" translatable="false">1080p</string>
+    <string name="resolution_hd" translatable="false">HD (720p)</string>
+    <string name="resolution_fhd" translatable="false">FHD (1080p)</string>
+    <string name="resolution_qhd" translatable="false">QHD (1440p)</string>
+    <string name="resolution_uhd" translatable="false">UHD (2160p)</string>
     <string name="long_exposure" translatable="false">Long exposure</string>
     <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
 
@@ -101,7 +111,8 @@
     <string name="calibration">Measuring levels</string>
     <string name="taking_data">Taking data!</string>
     <string name="idle" translatable="false">Idle</string>
-    <string name="status_pct" translatable="false">%d%% complete, %d:%02d remaining</string>
+    <string name="status_step" translatable="false">Step %d/%d</string>
+    <string name="status_pct" translatable="false">%d%% complete\n%d:%02d remaining</string>
 
     <string name="bad_user_code">Invalid user code.</string>
     <string name="server_overload">Server overloaded</string>

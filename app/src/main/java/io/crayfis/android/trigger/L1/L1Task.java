@@ -1,204 +1,81 @@
 package io.crayfis.android.trigger.L1;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
+import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.R;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.util.CFLog;
+import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
  * Created by cshimmin on 5/12/16.
  */
-class L1Task implements Runnable {
-    public static class Config extends L1Config {
-        Config(String name, String cfg) {
-            super(name, cfg);
+class L1Task extends TriggerProcessor.Task {
+
+    static class Config extends TriggerProcessor.Config {
+
+        static final String NAME = "default";
+        static final HashMap<String, Object> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put(L1Processor.KEY_L1_THRESH, 255);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
+            KEY_DEFAULT.put(L1Processor.KEY_TARGET_EPM, 30);
+            KEY_DEFAULT.put(L1Processor.KEY_TRIGGER_LOCK, false);
+        }
+
+        final int thresh;
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
+
+            thresh = getInt(L1Processor.KEY_L1_THRESH);
         }
 
         @Override
-        public L1Task makeTask(L1Processor l1Processor, RawCameraFrame frame) {
-            return new L1Task(l1Processor, frame);
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L1Processor.makeConfig(cfgstr);
+        }
+
+        @Override
+        public TriggerProcessor.Task makeTask(TriggerProcessor l1Processor) {
+            return new L1Task(l1Processor, this);
         }
     }
 
-    private L1Processor mL1Processor;
-    private RawCameraFrame mFrame;
-    private ExposureBlock mExposureBlock;
-    private CFApplication mApplication;
-    private boolean mKeepFrame = false;
+    private final Config mConfig;
 
-    private final CFConfig CONFIG = CFConfig.getInstance();
-
-    L1Task(L1Processor l1processor, RawCameraFrame frame) {
-        mL1Processor = l1processor;
-        mFrame = frame;
-        mExposureBlock = mFrame.getExposureBlock();
-
-        mApplication = mL1Processor.mApplication;
+    L1Task(TriggerProcessor processor, Config cfg) {
+        super(processor);
+        mConfig = cfg;
     }
 
-    boolean processInitial() {
-        // check for quality data
-        if(!mFrame.isQuality()) {
-            CFCamera camera = CFCamera.getInstance();
-            camera.changeCameraFrom(mFrame.getCameraId());
-            if(!camera.isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
-            } else {
-                camera.badFlatEvents++;
-                if(camera.badFlatEvents < 5) {
-                    mApplication.userErrorMessage(R.string.warning_bright, false);
-                } else {
-                    // gravity sensor is clearly impaired, so just determine orientation with light levels
-                    mApplication.userErrorMessage(R.string.sensor_error, false);
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-                    prefs.edit()
-                            .putString("prefCameraSelectMode", "1")
-                            .apply();
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    boolean processPreCalibration() {
-
-        if(mL1Processor.mPreCal.addFrame(mFrame)) {
-            mApplication.setNewestPrecalUUID();
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        } else if(mL1Processor.mPreCal.count.incrementAndGet()
-                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
-            mApplication.checkBatteryStats();
-        }
-
-        return false;
-    }
-
-    boolean processCalibration() {
-        // if we are in (L1) calibration mode, there's no need to do anything else with this
-        // frame; the L1 calibrator already saw it. Just check to see if we're done calibrating.
-        long count = mExposureBlock.count.incrementAndGet();
-        mL1Processor.mL1Cal.addFrame(mFrame);
-
-        if (count == mL1Processor.CONFIG.getCalibrationSampleFrames()) {
-            mApplication.setApplicationState(CFApplication.State.DATA);
-        }
-
-        return true;
-    }
-
-    boolean processStabilization() {
-        // If we're in stabilization mode, just drop frames until we've skipped enough
-        long count = mExposureBlock.count.incrementAndGet();
-        if (count == mL1Processor.CONFIG.getStabilizationSampleFrames()) {
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-        }
-        return true;
-    }
-
-    boolean processIdle() {
-        // Not sure why we're still acquiring frames in IDLE mode...
-        CFLog.w("DAQActivity Frames still being received in IDLE mode");
-        return true;
-    }
-
-    boolean processData() {
-
-        mL1Processor.mL1Cal.addFrame(mFrame);
-        L1Processor.L1CountData++;
-
-        int max = mFrame.getPixMax();
-
-        mExposureBlock.underflow_hist.fill(mFrame.getHist());
-
-        if (max > mL1Processor.mL1Thresh) {
-            // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-            // have changed.
-
-            mL1Processor.pass++;
-
-
-
-            // add a new buffer to the queue to make up for this one which
-            // will not return
-            if(mFrame.claim()) {
-                // this frame has passed the L1 threshold, put it on the
-                // L2 processing queue.
-                mExposureBlock.mL2Processor.submitFrame(mFrame);
-                mKeepFrame = true;
-            } else {
-                // out of memory: skip the frame
-                mExposureBlock.mL2Processor.skip++;
-            }
-
-        } else {
-            // didn't pass. recycle the buffer.
-            mL1Processor.skip++;
-        }
-
-        return false;
-    }
-
-    void processFinal() {
-    }
-
-    void processFrame() {
-
-        if (processInitial()) { return; }
-
-        boolean stopProcessing;
-        switch (mExposureBlock.getDAQState()) {
-            case PRECALIBRATION:
-                stopProcessing = processPreCalibration();
-                break;
-            case CALIBRATION:
-                stopProcessing = processCalibration();
-                break;
-            case STABILIZATION:
-                stopProcessing = processStabilization();
-                break;
-            case IDLE:
-                stopProcessing = processIdle();
-                break;
-            case DATA:
-                stopProcessing = processData();
-                break;
-            default:
-                CFLog.w("Unimplemented state encountered in processFrame()! Dropping frame.");
-                stopProcessing = true;
-                break;
-        }
-
-        if (stopProcessing) {
-            return;
-        }
-
-        processFinal();
-    }
 
     @Override
-    public void run() {
+    protected int processFrame(RawCameraFrame frame) {
 
-        ++L1Processor.L1Count;
+        int max = frame.getPixMax();
+        L1Calibrator.addStatistic(max);
 
-        processFrame();
+        if(frame.getExposureBlock().getDAQState() == CFApplication.State.DATA) {
+            L1Processor.L1CountData++;
 
-        if (!mKeepFrame) {
-            // we are done with this frame. retire the buffer and also clear it from the XB.
-            mFrame.retire();
-            mFrame.clear();
+            if (max > mConfig.thresh) {
+                // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
+                // have changed.
+
+                // add a new buffer to the queue to make up for this one which
+                // will not return
+                if(frame.claim()) {
+                    // this frame has passed the L1 threshold, put it on the
+                    // L2 processing queue.
+                    return 1;
+                } else {
+                    throw new OutOfMemoryError();
+                }
+
+            }
         }
 
-        if (mFrame.isOutstanding()) {
-            CFLog.w("Frame still outstanding after running L1Task!");
-        } else {
-            mL1Processor.mBufferBalance--;
-        }
+        return 0;
     }
 }

@@ -16,19 +16,14 @@ import android.renderscript.Type;
 import org.opencv.core.Mat;
 
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
-
-import static io.crayfis.android.main.CFApplication.MODE_AUTO_DETECT;
-import static io.crayfis.android.main.CFApplication.MODE_BACK_LOCK;
-import static io.crayfis.android.main.CFApplication.MODE_FACE_DOWN;
-import static io.crayfis.android.main.CFApplication.MODE_FRONT_LOCK;
 
 /**
  * Representation of a single frame from the camera.  This tracks the image data along with the
@@ -73,7 +68,8 @@ public abstract class RawCameraFrame {
     private Allocation aout;
 
     // lock to make sure allocation doesn't change as we're performing weighting
-    static final ReentrantLock weightingLock = new ReentrantLock();
+    static final Semaphore weightingLock = new Semaphore(1);
+    private boolean mIsWeighted = false;
 
     private enum FrameType {
         DEPRECATED,
@@ -192,6 +188,7 @@ public abstract class RawCameraFrame {
                     .create();
 
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            if(bWeighted != null) bWeighted.destroy();
             bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bOut = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bOut);
@@ -309,9 +306,10 @@ public abstract class RawCameraFrame {
      * @return allocation of bytes
      */
     public synchronized Allocation getWeightedAllocation() {
-        if(!weightingLock.isHeldByCurrentThread()) {
+        if(!mIsWeighted) {
             // weighting has already been done
-            weightingLock.lock();
+            mIsWeighted = true;
+            weightingLock.acquireUninterruptibly();
             weightAllocation();
         }
         return aWeighted;
@@ -339,20 +337,18 @@ public abstract class RawCameraFrame {
         return mUploadRequested;
     }
 
-    // FIXME: this is a hack
-    public abstract void callLocks();
-
-    public final void assign() {
+    public final void commit() {
+        callLocks();
         mExposureBlock.tryAssignFrame(this);
     }
+
+    void callLocks() { }
 
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
     public void retire() {
-        if(weightingLock.isHeldByCurrentThread()) {
-            weightingLock.unlock();
-        }
+        weightingLock.release();
     }
 
     /**
@@ -370,6 +366,8 @@ public abstract class RawCameraFrame {
      * Notify the ExposureBlock we are done with this frame, and free all memory
      */
     public void clear() {
+        if(!mBufferClaimed) retire();
+
         mExposureBlock.clearFrame(this);
         // make sure we null the image buffer so that its memory can be freed.
         if (mGrayMat != null) {
@@ -381,7 +379,7 @@ public abstract class RawCameraFrame {
         mRawBytes = null;
     }
 
-    public boolean isOutstanding() {
+    private boolean isOutstanding() {
         synchronized (mBufferClaimed) {
             return !(mGrayMat == null || mBufferClaimed);
         }
@@ -437,6 +435,10 @@ public abstract class RawCameraFrame {
         return mOrientation;
     }
 
+    public float getRotationZZ() {
+        return mRotationZZ;
+    }
+
     public float getPressure() { return mPressure; }
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
@@ -460,6 +462,7 @@ public abstract class RawCameraFrame {
 
         mScriptIntrinsicHistogram.forEach(getWeightedAllocation());
         aout.copyTo(mHist);
+        mExposureBlock.underflow_hist.fill(mHist);
 
         // find max first, so sums are easier
         while(mHist[max] == 0 && max > 0) {
@@ -504,47 +507,8 @@ public abstract class RawCameraFrame {
         return mPixStd;
     }
 
-    public int[] getHist() {
-        return mHist;
-    }
-
-    /**
-     * @return false if one or more criteria for quality is not met, based on CameraSelectMode
-     */
-    public boolean isQuality() {
-        final CFConfig CONFIG = CFConfig.getInstance();
-        final int cameraSelectMode = CONFIG.getCameraSelectMode();
-        switch(cameraSelectMode) {
-            case MODE_FACE_DOWN:
-                if (mOrientation == null) {
-                    CFLog.e("Orientation not found");
-                } else {
-
-                    // use quaternion algebra to calculate cosine of angle between vertical
-                    // and phone's z axis (up to a sign that tends to have numerical instabilities)
-
-                    if(Math.abs(mRotationZZ) < CONFIG.getQualityOrientationCosine()
-                            || mFacingBack != mRotationZZ>0) {
-
-                        CFLog.w("Bad event: Orientation = " + mRotationZZ);
-                        return false;
-                    }
-                }
-            case MODE_AUTO_DETECT:
-                if (getPixAvg() > CONFIG.getQualityBgAverage()
-                        || getPixStd() > CONFIG.getQualityBgVariance()) {
-                    CFLog.w("Bad event: Pix avg = " + mPixAvg + ">" + CONFIG.getQualityBgAverage());
-                    return false;
-                } else {
-                    return true;
-                }
-            case MODE_BACK_LOCK:
-                return mFacingBack;
-            case MODE_FRONT_LOCK:
-                return !mFacingBack;
-            default:
-                throw new RuntimeException("Invalid camera select mode");
-        }
+    public boolean isFacingBack() {
+        return mFacingBack;
     }
 
     private DataProtos.Event.Builder getEventBuilder() {
@@ -571,8 +535,8 @@ public abstract class RawCameraFrame {
                     .setOrientZ(mOrientation[2])
                     .setAvg(getPixAvg())
                     .setStd(getPixStd());
-            for (int i=0; i<=mExposureBlock.getL1Thresh(); i++) {
-                mEventBuilder.addHist(mHist[i]);
+            for (int val=0; val < mExposureBlock.underflow_hist.size(); val++) {
+                mEventBuilder.addHist(mHist[val]);
             }
 
             mEventBuilder.setXbn(mExposureBlock.getXBN());

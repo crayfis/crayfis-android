@@ -1,82 +1,66 @@
 package io.crayfis.android.trigger.L2;
 
-import android.Manifest;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.preference.PreferenceManager;
-
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
-import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.R;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
-import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
-import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
 import io.crayfis.android.util.CFLog;
+import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 5/12/16.
  */
-class L2Task implements Runnable {
+class L2Task extends TriggerProcessor.Task {
 
-    final CFApplication mApplication;
+    static class Config extends TriggerProcessor.Config {
 
-    public static class Config extends L2Config {
-        static final int DEFAULT_NPIX = 500;
+        static final String NAME = "default";
+        static final HashMap<String, Object> KEY_DEFAULT;
 
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put(L2Processor.KEY_L2_THRESH, 255);
+            KEY_DEFAULT.put(L2Processor.KEY_NPIX, 120);
+        }
+
+        final int thresh;
         final int npix;
-        Config(String name, String cfg) {
-            super(name, cfg);
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
 
-            // FIXME: there's probably an easier/more generic way to parse simple key-val pairs.
-            int cfg_npix = DEFAULT_NPIX;
-            for (String c : cfg.split(";")) {
-                String[] kv = c.split("=");
-                if (kv.length != 2) continue;
-                String key = kv[0];
-                String value = kv[1];
-
-                if (key.equals("npix")) {
-                    try {
-                        cfg_npix = Integer.parseInt(value);
-                    } catch (NumberFormatException e) {
-                        CFLog.w("Couldn't parse npix argument for L2 configuraion!");
-                    }
-                }
-            }
-
-            npix = cfg_npix;
+            thresh = getInt(L2Processor.KEY_L2_THRESH);
+            npix = getInt(L2Processor.KEY_NPIX);
         }
 
         @Override
-        public L2Task makeTask(L2Processor l2Processor, RawCameraFrame frame) {
-            return new L2Task(l2Processor, frame, npix);
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            return L2Processor.makeConfig(cfgstr);
+        }
+
+        @Override
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new L2Task(processor, this);
         }
     }
 
-    final RawCameraFrame mFrame;
-    final L2Processor mL2Processor;
+    private final Config mConfig;
 
-    final int npix;
-
-    L2Task(L2Processor processor, RawCameraFrame frame, int npix) {
-        mFrame = frame;
-        mL2Processor = processor;
-        mApplication = mL2Processor.mApplication;
-        this.npix = npix;
+    L2Task(TriggerProcessor processor, Config cfg) {
+        super(processor);
+        mConfig = cfg;
     }
 
 
-    void buildPixels(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
+
+        L2Processor.L2Count++;
 
         ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
@@ -87,16 +71,12 @@ class L2Task implements Runnable {
         int width = grayMat.width();
         int height = grayMat.height();
 
-
-        ExposureBlock xb = frame.getExposureBlock();
-
         // set everything below threshold to zero
-        Imgproc.threshold(grayMat, threshMat, xb.getL2Thresh(), 0, Imgproc.THRESH_TOZERO);
+        Imgproc.threshold(grayMat, threshMat, mConfig.thresh, 0, Imgproc.THRESH_TOZERO);
         Core.findNonZero(threshMat, l2PixelCoords);
         threshMat.release();
 
-        long pixN = Math.min(l2PixelCoords.total(), npix);
-        mL2Processor.pass += pixN;
+        long pixN = Math.min(l2PixelCoords.total(), mConfig.npix);
 
         for(int i=0; i<pixN; i++) {
 
@@ -108,62 +88,34 @@ class L2Task implements Runnable {
             CFLog.d("val = " + val + ", adjusted = " + adjustedVal + " at (" + ix + "," + iy +")");
 
             LayoutData.appendData(val);
-            try {
 
-                Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
-                        Math.max(ix-1,0), Math.min(ix+2,width));
-                Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
-                        Math.max(ix-2,0), Math.min(ix+3,width));
+            Mat grayAvg3 = grayMat.submat(Math.max(iy-1,0), Math.min(iy+2,height),
+                    Math.max(ix-1,0), Math.min(ix+2,width));
+            Mat grayAvg5 = grayMat.submat(Math.max(iy-2,0), Math.min(iy+3,height),
+                    Math.max(ix-2,0), Math.min(ix+3,width));
 
-                DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
+            DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
 
-                pixBuilder.setX(ix)
-                        .setY(iy)
-                        .setVal(val)
-                        .setAdjustedVal(adjustedVal)
-                        .setAvg3((float)Core.mean(grayAvg3).val[0])
-                        .setAvg5((float)Core.mean(grayAvg5).val[0])
-                        .setNearMax((int)Core.minMaxLoc(grayAvg3).maxVal);
+            pixBuilder.setX(ix)
+                    .setY(iy)
+                    .setVal(val)
+                    .setAdjustedVal(adjustedVal)
+                    .setAvg3((float)Core.mean(grayAvg3).val[0])
+                    .setAvg5((float)Core.mean(grayAvg5).val[0])
+                    .setNearMax((int)Core.minMaxLoc(grayAvg3).maxVal);
 
-                grayAvg3.release();
-                grayAvg5.release();
+            grayAvg3.release();
+            grayAvg5.release();
 
-                pixels.add(pixBuilder.build());
+            pixels.add(pixBuilder.build());
 
-
-            } catch (OutOfMemoryError e) {
-                CFLog.e("Cannot allocate anymore L2 pixels: out of memory!!!");
-            }
 
         }
         l2PixelCoords.release();
 
         frame.setPixels(pixels);
+
+        return (int)l2PixelCoords.total();
     }
 
-    @Override
-    public void run() {
-
-        // add pixel information to the protobuf builder
-        buildPixels(mFrame);
-
-        DataProtos.Event event = mFrame.getEvent();
-
-        LayoutLiveView.addEvent(event);
-
-        if(event.getPixelsCount() >= LayoutGallery.getGalleryCount()
-                || event.hasByteBlock() && event.getByteBlock().getXCount() >= LayoutGallery.getGalleryCount()) {
-            SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
-            if(sharedPrefs.getBoolean(mApplication.getString(R.string.prefEnableGallery), false)
-                    && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                    || mApplication.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                        == PackageManager.PERMISSION_GRANTED)) {
-
-                GalleryUtil.saveImage(event);
-            }
-        }
-
-        // And notify the XB that we are done processing this frame.
-        mFrame.clear();
-    }
 }

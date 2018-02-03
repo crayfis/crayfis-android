@@ -11,36 +11,73 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_findSecond;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 6/6/2017.
  */
 
-class HotCellKiller extends PrecalComponent {
+class HotCellTask extends TriggerProcessor.Task {
+
+    static class Config extends TriggerProcessor.Config {
+
+        static final String NAME = "hotcell";
+        static final HashMap<String, Object> KEY_DEFAULT;
+
+        static {
+            KEY_DEFAULT = new HashMap<>();
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 10000);
+            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_THRESH, .0002f);
+        }
+
+        final float hotcellThresh;
+        Config(HashMap<String, String> options) {
+            super(NAME, options, KEY_DEFAULT);
+
+            hotcellThresh = getFloat(PreCalibrator.KEY_HOTCELL_THRESH);
+        }
+
+        @Override
+        public TriggerProcessor.Config makeNewConfig(String cfgstr) {
+            //FIXME: what to do with this?
+            return null;
+        }
+
+        @Override
+        public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
+            return new HotCellTask(processor, this);
+        }
+    }
 
     private final Set<Integer> HOTCELL_COORDS;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private final CFCamera CAMERA = CFCamera.getInstance();
 
+    private final RenderScript RS;
     private ScriptC_findSecond mScriptCFindSecond;
     private Allocation aMax;
     private Allocation aSecond;
 
-    HotCellKiller(RenderScript rs, DataProtos.PreCalibrationResult.Builder b) {
-        super(rs, b);
-        CFLog.i("HotCellKiller created");
+    private Config mConfig;
+
+    HotCellTask(TriggerProcessor processor, Config config) {
+        super(processor);
+
+        mConfig = config;
+
+        RS = mProcessor.mApplication.getRenderScript();
+        CFLog.i("HotCellTask created");
         mScriptCFindSecond = new ScriptC_findSecond(RS);
-        sampleFrames = CONFIG.getHotcellSampleFrames();
 
         Type type = new Type.Builder(RS, Element.U8(RS))
                 .setX(CAMERA.getResX())
@@ -60,16 +97,17 @@ class HotCellKiller extends PrecalComponent {
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    boolean addFrame(RawCameraFrame frame) {
+    protected int processFrame(RawCameraFrame frame) {
         mScriptCFindSecond.forEach_order(frame.getWeightedAllocation());
-        return super.addFrame(frame);
+        if(frame.getExposureBlock().count.intValue()
+                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
+            mProcessor.mApplication.checkBatteryStats();
+        }
+        return 1;
     }
 
-    /**
-     *
-     */
     @Override
-    void process() {
+    protected void onMaxReached() {
         int cameraId = CAMERA.getCameraId();
 
         // set up Allocations for histogram
@@ -89,7 +127,7 @@ class HotCellKiller extends PrecalComponent {
 
         // find minimum value in aSecond considered as "hot"
         int area = aMax.getType().getX() * aMax.getType().getY();
-        int target = (int) (CONFIG.getHotcellThresh() * area);
+        int target = (int) (mConfig.hotcellThresh * area);
         int pixRemaining = area;
 
         int cutoff=0;
@@ -101,9 +139,13 @@ class HotCellKiller extends PrecalComponent {
 
         // copy to OpenCV to locate hot pixels
         byte[] maxArray = new byte[area];
-        byte[] secondArray = new byte[area];
         aMax.copyTo(maxArray);
+        aMax.destroy();
+
+        byte[] secondArray = new byte[area];
         aSecond.copyTo(secondArray);
+        aSecond.destroy();
+
         MatOfByte secondMat = new MatOfByte(secondArray);
 
         Mat threshMat = new Mat();
@@ -143,7 +185,7 @@ class HotCellKiller extends PrecalComponent {
         CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
         for(Integer pos: HOTCELL_COORDS) {
-            PRECAL_BUILDER.addHotcell(pos);
+            PreCalibrator.PRECAL_BUILDER.addHotcell(pos);
         }
 
         int maxNonZero = 255;
@@ -151,7 +193,8 @@ class HotCellKiller extends PrecalComponent {
             maxNonZero--;
         }
         for (int i = 0; i <= maxNonZero; i++) {
-            PRECAL_BUILDER.addSecondHist(secondHist[i]);
+            PreCalibrator.PRECAL_BUILDER.addSecondHist(secondHist[i]);
         }
     }
 }
+

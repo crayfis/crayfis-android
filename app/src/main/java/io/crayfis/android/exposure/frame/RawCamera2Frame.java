@@ -14,6 +14,8 @@ import java.util.concurrent.Semaphore;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.server.CFConfig;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 9/2/2017.
@@ -25,7 +27,7 @@ class RawCamera2Frame extends RawCameraFrame {
     private Allocation aRaw;
 
     // lock for buffers entering aRaw
-    private static Semaphore mRawLock = new Semaphore(1);
+    private static final Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
@@ -53,7 +55,7 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public void callLocks() {
+    void callLocks() {
         mRawLock.acquireUninterruptibly();
         aRaw.ioReceive();
     }
@@ -81,7 +83,7 @@ class RawCamera2Frame extends RawCameraFrame {
             // use the same byte[] buffer for raw and weighted
             byte[] adjustedBytes = new byte[aRaw.getBytesSize()];
             aWeighted.copyTo(adjustedBytes);
-            weightingLock.unlock();
+            weightingLock.release();
             mat1 = new MatOfByte(adjustedBytes);
 
             mRawBytes = adjustedBytes;
@@ -97,7 +99,7 @@ class RawCamera2Frame extends RawCameraFrame {
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            weightingLock.unlock();
+            weightingLock.release();
             mRawLock.release();
             if (mat1 != null) mat1.release();
             if (mat2 != null) mat2.release();
@@ -112,6 +114,7 @@ class RawCamera2Frame extends RawCameraFrame {
         super.retire();
         if(!mBufferClaimed) {
             mRawLock.release();
+            mBufferClaimed = true;
         }
     }
 

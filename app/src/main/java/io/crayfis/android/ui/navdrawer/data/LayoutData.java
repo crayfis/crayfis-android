@@ -25,7 +25,7 @@ import com.jjoe64.graphview.series.DataPoint;
 
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
-import io.crayfis.android.trigger.calibration.Histogram;
+import io.crayfis.android.util.Histogram;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 public class LayoutData extends NavDrawerFragment {
@@ -92,7 +92,7 @@ public class LayoutData extends NavDrawerFragment {
         histL2Pixels.fill(val);
     }
 
-    public DataPoint[] make_graph_data() {
+    public DataPoint[] makeGraphData() {
         long[] values = histL2Pixels.getValues();
 
         // include an overflow bin if necessary
@@ -225,7 +225,7 @@ public class LayoutData extends NavDrawerFragment {
             }
             mIdealCutoff = i;
 
-            mGraphSeries.resetData(make_graph_data());
+            mGraphSeries.resetData(makeGraphData());
 
             if(mViewport != null) {
                 final double maxY = 1.2 * mGraphSeries.getHighestValueY();
