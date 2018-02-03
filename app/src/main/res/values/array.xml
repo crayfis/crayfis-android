@@ -37,7 +37,7 @@
     </string-array>
 
     <string-array name="pref_fps_entries">
-        <item>@string/long_exposure</item>
+        <item>1</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>
@@ -46,7 +46,7 @@
     </string-array>
 
     <string-array name="pref_fps_vals" translatable="false">
-        <item>0</item>
+        <item>1</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>

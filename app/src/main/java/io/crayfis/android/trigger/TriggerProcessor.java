@@ -247,6 +247,7 @@ public abstract class TriggerProcessor {
             for(HashMap<String, ?> hm : new HashMap[] {mTaskConfigInt, mTaskConfigFloat, mTaskConfigBool, mTaskConfigStr}) {
                 for (String key : hm.keySet()) {
                     cfgBuilder.append(key)
+                            .append(" = ")
                             .append(hm.get(key))
                             .append("; ");
                 }
