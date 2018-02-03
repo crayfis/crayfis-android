@@ -522,19 +522,21 @@ public abstract class RawCameraFrame {
                     .setPressure(mPressure)
                     .setGpsLat(mLocation.getLatitude())
                     .setGpsLon(mLocation.getLongitude())
-                    .setGpsFixtime(mLocation.getTime());
+                    .setGpsFixtime(mLocation.getTime())
+                    .setAvg(getPixAvg())
+                    .setStd(getPixStd());
             if (mLocation.hasAccuracy()) {
                 mEventBuilder.setGpsAccuracy(mLocation.getAccuracy());
             }
             if (mLocation.hasAltitude()) {
                 mEventBuilder.setGpsAltitude(mLocation.getAltitude());
             }
+            if(mOrientation != null) {
+                mEventBuilder.setOrientX(mOrientation[0])
+                        .setOrientY(mOrientation[1])
+                        .setOrientZ(mOrientation[2]);
+            }
 
-            mEventBuilder.setOrientX(mOrientation[0])
-                    .setOrientY(mOrientation[1])
-                    .setOrientZ(mOrientation[2])
-                    .setAvg(getPixAvg())
-                    .setStd(getPixStd());
             for (int val=0; val < mExposureBlock.underflow_hist.size(); val++) {
                 mEventBuilder.addHist(mHist[val]);
             }
