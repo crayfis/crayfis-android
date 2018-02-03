@@ -3661,6 +3661,64 @@ public final class DataProtos {
     int getL2Skip();
 
     /**
+     * <code>repeated string config = 42;</code>
+     */
+    java.util.List<java.lang.String>
+        getConfigList();
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    int getConfigCount();
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    java.lang.String getConfig(int index);
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    com.google.protobuf.ByteString
+        getConfigBytes(int index);
+
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    java.util.List<java.lang.Integer> getProcessedList();
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    int getProcessedCount();
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    int getProcessed(int index);
+
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    java.util.List<java.lang.Integer> getPassList();
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    int getPassCount();
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    int getPass(int index);
+
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    java.util.List<java.lang.Integer> getSkipList();
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    int getSkipCount();
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    int getSkip(int index);
+
+    /**
      * <code>optional uint32 frames_dropped = 12;</code>
      */
     boolean hasFramesDropped();
@@ -3749,6 +3807,10 @@ public final class DataProtos {
       l0Skip_ = 0;
       l1Skip_ = 0;
       l2Skip_ = 0;
+      config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      processed_ = java.util.Collections.emptyList();
+      pass_ = java.util.Collections.emptyList();
+      skip_ = java.util.Collections.emptyList();
       framesDropped_ = 0;
       hist_ = java.util.Collections.emptyList();
       xbn_ = 0;
@@ -3965,9 +4027,9 @@ public final class DataProtos {
               break;
             }
             case 280: {
-              if (!((mutable_bitField1_ & 0x00000020) == 0x00000020)) {
+              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
                 hist_ = new java.util.ArrayList<java.lang.Long>();
-                mutable_bitField1_ |= 0x00000020;
+                mutable_bitField1_ |= 0x00000200;
               }
               hist_.add(input.readUInt64());
               break;
@@ -3975,9 +4037,9 @@ public final class DataProtos {
             case 282: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField1_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
                 hist_ = new java.util.ArrayList<java.lang.Long>();
-                mutable_bitField1_ |= 0x00000020;
+                mutable_bitField1_ |= 0x00000200;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hist_.add(input.readUInt64());
@@ -4016,6 +4078,78 @@ public final class DataProtos {
               l0Skip_ = input.readUInt32();
               break;
             }
+            case 338: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              if (!((mutable_bitField1_ & 0x00000010) == 0x00000010)) {
+                config_ = new com.google.protobuf.LazyStringArrayList();
+                mutable_bitField1_ |= 0x00000010;
+              }
+              config_.add(bs);
+              break;
+            }
+            case 344: {
+              if (!((mutable_bitField1_ & 0x00000020) == 0x00000020)) {
+                processed_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000020;
+              }
+              processed_.add(input.readUInt32());
+              break;
+            }
+            case 346: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField1_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
+                processed_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000020;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                processed_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 352: {
+              if (!((mutable_bitField1_ & 0x00000040) == 0x00000040)) {
+                pass_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000040;
+              }
+              pass_.add(input.readUInt32());
+              break;
+            }
+            case 354: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField1_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+                pass_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000040;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                pass_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 360: {
+              if (!((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
+                skip_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000080;
+              }
+              skip_.add(input.readUInt32());
+              break;
+            }
+            case 362: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField1_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
+                skip_ = new java.util.ArrayList<java.lang.Integer>();
+                mutable_bitField1_ |= 0x00000080;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                skip_.add(input.readUInt32());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4027,8 +4161,20 @@ public final class DataProtos {
         if (((mutable_bitField0_ & 0x00200000) == 0x00200000)) {
           events_ = java.util.Collections.unmodifiableList(events_);
         }
-        if (((mutable_bitField1_ & 0x00000020) == 0x00000020)) {
+        if (((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
           hist_ = java.util.Collections.unmodifiableList(hist_);
+        }
+        if (((mutable_bitField1_ & 0x00000010) == 0x00000010)) {
+          config_ = config_.getUnmodifiableView();
+        }
+        if (((mutable_bitField1_ & 0x00000020) == 0x00000020)) {
+          processed_ = java.util.Collections.unmodifiableList(processed_);
+        }
+        if (((mutable_bitField1_ & 0x00000040) == 0x00000040)) {
+          pass_ = java.util.Collections.unmodifiableList(pass_);
+        }
+        if (((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
+          skip_ = java.util.Collections.unmodifiableList(skip_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -4814,6 +4960,101 @@ public final class DataProtos {
       return l2Skip_;
     }
 
+    public static final int CONFIG_FIELD_NUMBER = 42;
+    private com.google.protobuf.LazyStringList config_;
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    public com.google.protobuf.ProtocolStringList
+        getConfigList() {
+      return config_;
+    }
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    public int getConfigCount() {
+      return config_.size();
+    }
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    public java.lang.String getConfig(int index) {
+      return config_.get(index);
+    }
+    /**
+     * <code>repeated string config = 42;</code>
+     */
+    public com.google.protobuf.ByteString
+        getConfigBytes(int index) {
+      return config_.getByteString(index);
+    }
+
+    public static final int PROCESSED_FIELD_NUMBER = 43;
+    private java.util.List<java.lang.Integer> processed_;
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getProcessedList() {
+      return processed_;
+    }
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    public int getProcessedCount() {
+      return processed_.size();
+    }
+    /**
+     * <code>repeated uint32 processed = 43;</code>
+     */
+    public int getProcessed(int index) {
+      return processed_.get(index);
+    }
+
+    public static final int PASS_FIELD_NUMBER = 44;
+    private java.util.List<java.lang.Integer> pass_;
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getPassList() {
+      return pass_;
+    }
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    public int getPassCount() {
+      return pass_.size();
+    }
+    /**
+     * <code>repeated uint32 pass = 44;</code>
+     */
+    public int getPass(int index) {
+      return pass_.get(index);
+    }
+
+    public static final int SKIP_FIELD_NUMBER = 45;
+    private java.util.List<java.lang.Integer> skip_;
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    public java.util.List<java.lang.Integer>
+        getSkipList() {
+      return skip_;
+    }
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    public int getSkipCount() {
+      return skip_.size();
+    }
+    /**
+     * <code>repeated uint32 skip = 45;</code>
+     */
+    public int getSkip(int index) {
+      return skip_.get(index);
+    }
+
     public static final int FRAMES_DROPPED_FIELD_NUMBER = 12;
     private int framesDropped_;
     /**
@@ -5013,6 +5254,18 @@ public final class DataProtos {
       if (((bitField1_ & 0x00000001) == 0x00000001)) {
         output.writeUInt32(41, l0Skip_);
       }
+      for (int i = 0; i < config_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 42, config_.getRaw(i));
+      }
+      for (int i = 0; i < processed_.size(); i++) {
+        output.writeUInt32(43, processed_.get(i));
+      }
+      for (int i = 0; i < pass_.size(); i++) {
+        output.writeUInt32(44, pass_.get(i));
+      }
+      for (int i = 0; i < skip_.size(); i++) {
+        output.writeUInt32(45, skip_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5182,6 +5435,41 @@ public final class DataProtos {
       if (((bitField1_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(41, l0Skip_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < config_.size(); i++) {
+          dataSize += computeStringSizeNoTag(config_.getRaw(i));
+        }
+        size += dataSize;
+        size += 2 * getConfigList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < processed_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(processed_.get(i));
+        }
+        size += dataSize;
+        size += 2 * getProcessedList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < pass_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(pass_.get(i));
+        }
+        size += dataSize;
+        size += 2 * getPassList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < skip_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt32SizeNoTag(skip_.get(i));
+        }
+        size += dataSize;
+        size += 2 * getSkipList().size();
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5383,6 +5671,14 @@ public final class DataProtos {
         result = result && (getL2Skip()
             == other.getL2Skip());
       }
+      result = result && getConfigList()
+          .equals(other.getConfigList());
+      result = result && getProcessedList()
+          .equals(other.getProcessedList());
+      result = result && getPassList()
+          .equals(other.getPassList());
+      result = result && getSkipList()
+          .equals(other.getSkipList());
       result = result && (hasFramesDropped() == other.hasFramesDropped());
       if (hasFramesDropped()) {
         result = result && (getFramesDropped()
@@ -5570,6 +5866,22 @@ public final class DataProtos {
       if (hasL2Skip()) {
         hash = (37 * hash) + L2_SKIP_FIELD_NUMBER;
         hash = (53 * hash) + getL2Skip();
+      }
+      if (getConfigCount() > 0) {
+        hash = (37 * hash) + CONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getConfigList().hashCode();
+      }
+      if (getProcessedCount() > 0) {
+        hash = (37 * hash) + PROCESSED_FIELD_NUMBER;
+        hash = (53 * hash) + getProcessedList().hashCode();
+      }
+      if (getPassCount() > 0) {
+        hash = (37 * hash) + PASS_FIELD_NUMBER;
+        hash = (53 * hash) + getPassList().hashCode();
+      }
+      if (getSkipCount() > 0) {
+        hash = (37 * hash) + SKIP_FIELD_NUMBER;
+        hash = (53 * hash) + getSkipList().hashCode();
       }
       if (hasFramesDropped()) {
         hash = (37 * hash) + FRAMES_DROPPED_FIELD_NUMBER;
@@ -5794,14 +6106,22 @@ public final class DataProtos {
         bitField1_ = (bitField1_ & ~0x00000004);
         l2Skip_ = 0;
         bitField1_ = (bitField1_ & ~0x00000008);
-        framesDropped_ = 0;
+        config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField1_ = (bitField1_ & ~0x00000010);
-        hist_ = java.util.Collections.emptyList();
+        processed_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000020);
-        xbn_ = 0;
+        pass_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000040);
-        aborted_ = false;
+        skip_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000080);
+        framesDropped_ = 0;
+        bitField1_ = (bitField1_ & ~0x00000100);
+        hist_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000200);
+        xbn_ = 0;
+        bitField1_ = (bitField1_ & ~0x00000400);
+        aborted_ = false;
+        bitField1_ = (bitField1_ & ~0x00000800);
         return this;
       }
 
@@ -5977,20 +6297,40 @@ public final class DataProtos {
           to_bitField1_ |= 0x00000004;
         }
         result.l2Skip_ = l2Skip_;
-        if (((from_bitField1_ & 0x00000010) == 0x00000010)) {
+        if (((bitField1_ & 0x00000010) == 0x00000010)) {
+          config_ = config_.getUnmodifiableView();
+          bitField1_ = (bitField1_ & ~0x00000010);
+        }
+        result.config_ = config_;
+        if (((bitField1_ & 0x00000020) == 0x00000020)) {
+          processed_ = java.util.Collections.unmodifiableList(processed_);
+          bitField1_ = (bitField1_ & ~0x00000020);
+        }
+        result.processed_ = processed_;
+        if (((bitField1_ & 0x00000040) == 0x00000040)) {
+          pass_ = java.util.Collections.unmodifiableList(pass_);
+          bitField1_ = (bitField1_ & ~0x00000040);
+        }
+        result.pass_ = pass_;
+        if (((bitField1_ & 0x00000080) == 0x00000080)) {
+          skip_ = java.util.Collections.unmodifiableList(skip_);
+          bitField1_ = (bitField1_ & ~0x00000080);
+        }
+        result.skip_ = skip_;
+        if (((from_bitField1_ & 0x00000100) == 0x00000100)) {
           to_bitField1_ |= 0x00000008;
         }
         result.framesDropped_ = framesDropped_;
-        if (((bitField1_ & 0x00000020) == 0x00000020)) {
+        if (((bitField1_ & 0x00000200) == 0x00000200)) {
           hist_ = java.util.Collections.unmodifiableList(hist_);
-          bitField1_ = (bitField1_ & ~0x00000020);
+          bitField1_ = (bitField1_ & ~0x00000200);
         }
         result.hist_ = hist_;
-        if (((from_bitField1_ & 0x00000040) == 0x00000040)) {
+        if (((from_bitField1_ & 0x00000400) == 0x00000400)) {
           to_bitField1_ |= 0x00000010;
         }
         result.xbn_ = xbn_;
-        if (((from_bitField1_ & 0x00000080) == 0x00000080)) {
+        if (((from_bitField1_ & 0x00000800) == 0x00000800)) {
           to_bitField1_ |= 0x00000020;
         }
         result.aborted_ = aborted_;
@@ -6174,13 +6514,53 @@ public final class DataProtos {
         if (other.hasL2Skip()) {
           setL2Skip(other.getL2Skip());
         }
+        if (!other.config_.isEmpty()) {
+          if (config_.isEmpty()) {
+            config_ = other.config_;
+            bitField1_ = (bitField1_ & ~0x00000010);
+          } else {
+            ensureConfigIsMutable();
+            config_.addAll(other.config_);
+          }
+          onChanged();
+        }
+        if (!other.processed_.isEmpty()) {
+          if (processed_.isEmpty()) {
+            processed_ = other.processed_;
+            bitField1_ = (bitField1_ & ~0x00000020);
+          } else {
+            ensureProcessedIsMutable();
+            processed_.addAll(other.processed_);
+          }
+          onChanged();
+        }
+        if (!other.pass_.isEmpty()) {
+          if (pass_.isEmpty()) {
+            pass_ = other.pass_;
+            bitField1_ = (bitField1_ & ~0x00000040);
+          } else {
+            ensurePassIsMutable();
+            pass_.addAll(other.pass_);
+          }
+          onChanged();
+        }
+        if (!other.skip_.isEmpty()) {
+          if (skip_.isEmpty()) {
+            skip_ = other.skip_;
+            bitField1_ = (bitField1_ & ~0x00000080);
+          } else {
+            ensureSkipIsMutable();
+            skip_.addAll(other.skip_);
+          }
+          onChanged();
+        }
         if (other.hasFramesDropped()) {
           setFramesDropped(other.getFramesDropped());
         }
         if (!other.hist_.isEmpty()) {
           if (hist_.isEmpty()) {
             hist_ = other.hist_;
-            bitField1_ = (bitField1_ & ~0x00000020);
+            bitField1_ = (bitField1_ & ~0x00000200);
           } else {
             ensureHistIsMutable();
             hist_.addAll(other.hist_);
@@ -7750,12 +8130,303 @@ public final class DataProtos {
         return this;
       }
 
+      private com.google.protobuf.LazyStringList config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private void ensureConfigIsMutable() {
+        if (!((bitField1_ & 0x00000010) == 0x00000010)) {
+          config_ = new com.google.protobuf.LazyStringArrayList(config_);
+          bitField1_ |= 0x00000010;
+         }
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public com.google.protobuf.ProtocolStringList
+          getConfigList() {
+        return config_.getUnmodifiableView();
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public int getConfigCount() {
+        return config_.size();
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public java.lang.String getConfig(int index) {
+        return config_.get(index);
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public com.google.protobuf.ByteString
+          getConfigBytes(int index) {
+        return config_.getByteString(index);
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public Builder setConfig(
+          int index, java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigIsMutable();
+        config_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public Builder addConfig(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigIsMutable();
+        config_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public Builder addAllConfig(
+          java.lang.Iterable<java.lang.String> values) {
+        ensureConfigIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, config_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public Builder clearConfig() {
+        config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        bitField1_ = (bitField1_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string config = 42;</code>
+       */
+      public Builder addConfigBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureConfigIsMutable();
+        config_.add(value);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> processed_ = java.util.Collections.emptyList();
+      private void ensureProcessedIsMutable() {
+        if (!((bitField1_ & 0x00000020) == 0x00000020)) {
+          processed_ = new java.util.ArrayList<java.lang.Integer>(processed_);
+          bitField1_ |= 0x00000020;
+         }
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getProcessedList() {
+        return java.util.Collections.unmodifiableList(processed_);
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public int getProcessedCount() {
+        return processed_.size();
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public int getProcessed(int index) {
+        return processed_.get(index);
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public Builder setProcessed(
+          int index, int value) {
+        ensureProcessedIsMutable();
+        processed_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public Builder addProcessed(int value) {
+        ensureProcessedIsMutable();
+        processed_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public Builder addAllProcessed(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureProcessedIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, processed_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 processed = 43;</code>
+       */
+      public Builder clearProcessed() {
+        processed_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000020);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> pass_ = java.util.Collections.emptyList();
+      private void ensurePassIsMutable() {
+        if (!((bitField1_ & 0x00000040) == 0x00000040)) {
+          pass_ = new java.util.ArrayList<java.lang.Integer>(pass_);
+          bitField1_ |= 0x00000040;
+         }
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getPassList() {
+        return java.util.Collections.unmodifiableList(pass_);
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public int getPassCount() {
+        return pass_.size();
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public int getPass(int index) {
+        return pass_.get(index);
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public Builder setPass(
+          int index, int value) {
+        ensurePassIsMutable();
+        pass_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public Builder addPass(int value) {
+        ensurePassIsMutable();
+        pass_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public Builder addAllPass(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensurePassIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, pass_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 pass = 44;</code>
+       */
+      public Builder clearPass() {
+        pass_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000040);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Integer> skip_ = java.util.Collections.emptyList();
+      private void ensureSkipIsMutable() {
+        if (!((bitField1_ & 0x00000080) == 0x00000080)) {
+          skip_ = new java.util.ArrayList<java.lang.Integer>(skip_);
+          bitField1_ |= 0x00000080;
+         }
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public java.util.List<java.lang.Integer>
+          getSkipList() {
+        return java.util.Collections.unmodifiableList(skip_);
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public int getSkipCount() {
+        return skip_.size();
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public int getSkip(int index) {
+        return skip_.get(index);
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public Builder setSkip(
+          int index, int value) {
+        ensureSkipIsMutable();
+        skip_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public Builder addSkip(int value) {
+        ensureSkipIsMutable();
+        skip_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public Builder addAllSkip(
+          java.lang.Iterable<? extends java.lang.Integer> values) {
+        ensureSkipIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, skip_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint32 skip = 45;</code>
+       */
+      public Builder clearSkip() {
+        skip_ = java.util.Collections.emptyList();
+        bitField1_ = (bitField1_ & ~0x00000080);
+        onChanged();
+        return this;
+      }
+
       private int framesDropped_ ;
       /**
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public boolean hasFramesDropped() {
-        return ((bitField1_ & 0x00000010) == 0x00000010);
+        return ((bitField1_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional uint32 frames_dropped = 12;</code>
@@ -7767,7 +8438,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder setFramesDropped(int value) {
-        bitField1_ |= 0x00000010;
+        bitField1_ |= 0x00000100;
         framesDropped_ = value;
         onChanged();
         return this;
@@ -7776,7 +8447,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder clearFramesDropped() {
-        bitField1_ = (bitField1_ & ~0x00000010);
+        bitField1_ = (bitField1_ & ~0x00000100);
         framesDropped_ = 0;
         onChanged();
         return this;
@@ -7784,9 +8455,9 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Long> hist_ = java.util.Collections.emptyList();
       private void ensureHistIsMutable() {
-        if (!((bitField1_ & 0x00000020) == 0x00000020)) {
+        if (!((bitField1_ & 0x00000200) == 0x00000200)) {
           hist_ = new java.util.ArrayList<java.lang.Long>(hist_);
-          bitField1_ |= 0x00000020;
+          bitField1_ |= 0x00000200;
          }
       }
       /**
@@ -7843,7 +8514,7 @@ public final class DataProtos {
        */
       public Builder clearHist() {
         hist_ = java.util.Collections.emptyList();
-        bitField1_ = (bitField1_ & ~0x00000020);
+        bitField1_ = (bitField1_ & ~0x00000200);
         onChanged();
         return this;
       }
@@ -7853,7 +8524,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public boolean hasXbn() {
-        return ((bitField1_ & 0x00000040) == 0x00000040);
+        return ((bitField1_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional uint32 xbn = 17;</code>
@@ -7865,7 +8536,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder setXbn(int value) {
-        bitField1_ |= 0x00000040;
+        bitField1_ |= 0x00000400;
         xbn_ = value;
         onChanged();
         return this;
@@ -7874,7 +8545,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder clearXbn() {
-        bitField1_ = (bitField1_ & ~0x00000040);
+        bitField1_ = (bitField1_ & ~0x00000400);
         xbn_ = 0;
         onChanged();
         return this;
@@ -7885,7 +8556,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public boolean hasAborted() {
-        return ((bitField1_ & 0x00000080) == 0x00000080);
+        return ((bitField1_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional bool aborted = 18;</code>
@@ -7897,7 +8568,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder setAborted(boolean value) {
-        bitField1_ |= 0x00000080;
+        bitField1_ |= 0x00000800;
         aborted_ = value;
         onChanged();
         return this;
@@ -7906,7 +8577,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder clearAborted() {
-        bitField1_ = (bitField1_ & ~0x00000080);
+        bitField1_ = (bitField1_ & ~0x00000800);
         aborted_ = false;
         onChanged();
         return this;
@@ -15133,6 +15804,20 @@ public final class DataProtos {
      * <code>optional uint32 res_x = 17;</code>
      */
     int getResX();
+
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    boolean hasPrecalConfig();
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    java.lang.String getPrecalConfig();
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    com.google.protobuf.ByteString
+        getPrecalConfigBytes();
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationResult}
@@ -15163,6 +15848,7 @@ public final class DataProtos {
       secondHist_ = java.util.Collections.emptyList();
       hotcell_ = java.util.Collections.emptyList();
       resX_ = 0;
+      precalConfig_ = "";
     }
 
     @java.lang.Override
@@ -15323,6 +16009,12 @@ public final class DataProtos {
             case 160: {
               bitField0_ |= 0x00000008;
               precalIdHi_ = input.readUInt64();
+              break;
+            }
+            case 170: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00002000;
+              precalConfig_ = bs;
               break;
             }
           }
@@ -15647,6 +16339,48 @@ public final class DataProtos {
       return resX_;
     }
 
+    public static final int PRECAL_CONFIG_FIELD_NUMBER = 21;
+    private volatile java.lang.Object precalConfig_;
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    public boolean hasPrecalConfig() {
+      return ((bitField0_ & 0x00002000) == 0x00002000);
+    }
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    public java.lang.String getPrecalConfig() {
+      java.lang.Object ref = precalConfig_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          precalConfig_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string precal_config = 21;</code>
+     */
+    public com.google.protobuf.ByteString
+        getPrecalConfigBytes() {
+      java.lang.Object ref = precalConfig_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        precalConfig_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -15706,6 +16440,9 @@ public final class DataProtos {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeUInt64(20, precalIdHi_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 21, precalConfig_);
       }
       unknownFields.writeTo(output);
     }
@@ -15789,6 +16526,9 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(20, precalIdHi_);
+      }
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(21, precalConfig_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -15877,6 +16617,11 @@ public final class DataProtos {
         result = result && (getResX()
             == other.getResX());
       }
+      result = result && (hasPrecalConfig() == other.hasPrecalConfig());
+      if (hasPrecalConfig()) {
+        result = result && getPrecalConfig()
+            .equals(other.getPrecalConfig());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -15957,6 +16702,10 @@ public final class DataProtos {
       if (hasResX()) {
         hash = (37 * hash) + RES_X_FIELD_NUMBER;
         hash = (53 * hash) + getResX();
+      }
+      if (hasPrecalConfig()) {
+        hash = (37 * hash) + PRECAL_CONFIG_FIELD_NUMBER;
+        hash = (53 * hash) + getPrecalConfig().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -16119,6 +16868,8 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00004000);
         resX_ = 0;
         bitField0_ = (bitField0_ & ~0x00008000);
+        precalConfig_ = "";
+        bitField0_ = (bitField0_ & ~0x00010000);
         return this;
       }
 
@@ -16210,6 +16961,10 @@ public final class DataProtos {
           to_bitField0_ |= 0x00001000;
         }
         result.resX_ = resX_;
+        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+          to_bitField0_ |= 0x00002000;
+        }
+        result.precalConfig_ = precalConfig_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -16322,6 +17077,11 @@ public final class DataProtos {
         }
         if (other.hasResX()) {
           setResX(other.getResX());
+        }
+        if (other.hasPrecalConfig()) {
+          bitField0_ |= 0x00010000;
+          precalConfig_ = other.precalConfig_;
+          onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -17008,6 +17768,82 @@ public final class DataProtos {
       public Builder clearResX() {
         bitField0_ = (bitField0_ & ~0x00008000);
         resX_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object precalConfig_ = "";
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public boolean hasPrecalConfig() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public java.lang.String getPrecalConfig() {
+        java.lang.Object ref = precalConfig_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            precalConfig_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public com.google.protobuf.ByteString
+          getPrecalConfigBytes() {
+        java.lang.Object ref = precalConfig_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          precalConfig_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public Builder setPrecalConfig(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00010000;
+        precalConfig_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public Builder clearPrecalConfig() {
+        bitField0_ = (bitField0_ & ~0x00010000);
+        precalConfig_ = getDefaultInstance().getPrecalConfig();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string precal_config = 21;</code>
+       */
+      public Builder setPrecalConfigBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00010000;
+        precalConfig_ = value;
         onChanged();
         return this;
       }
@@ -18446,7 +19282,7 @@ public final class DataProtos {
       "(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nstart_time\030\003 \001(\004\022\025\n" +
       "\rcrayfis_build\030\004 \001(\t\022\021\n\thw_params\030\005 \001(\t\022" +
       "\021\n\tos_params\030\006 \001(\t\022\025\n\rcamera_params\030\007 \001(" +
-      "\t\022\021\n\tcamera_id\030\010 \001(\r\"\220\007\n\rExposureBlock\022\016" +
+      "\t\022\021\n\tcamera_id\030\010 \001(\r\"\317\007\n\rExposureBlock\022\016" +
       "\n\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030% \001(\004\022\021\n\tpre" +
       "cal_id\030! \001(\004\022\024\n\014precal_id_hi\030& \001(\004\022\022\n\nst" +
       "art_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\027\n\017star" +
@@ -18465,48 +19301,50 @@ public final class DataProtos {
       "\r\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2_processed\030" +
       "\013 \001(\r\022\017\n\007L0_pass\030( \001(\r\022\017\n\007L1_pass\030\r \001(\r\022" +
       "\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L0_skip\030) \001(\r\022\017\n\007L1_" +
-      "skip\030\016 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\026\n\016frames_dr" +
-      "opped\030\014 \001(\r\022\014\n\004hist\030# \003(\004\022\013\n\003xbn\030\021 \001(\r\022\017" +
-      "\n\007aborted\030\022 \001(\010\"@\n\005State\022\010\n\004INIT\020\000\022\017\n\013CA" +
-      "LIBRATION\020\001\022\010\n\004DATA\020\002\022\022\n\016PRECALIBRATION\020" +
-      "\003J\004\010\037\020 R\006bg_avg\"\345\003\n\005Event\022\021\n\ttimestamp\030\001" +
-      " \001(\004\022\026\n\016timestamp_nano\030\016 \001(\004\022\025\n\rtimestam" +
-      "p_ntp\030\017 \001(\004\022\030\n\020timestamp_target\030\023 \001(\004\022\017\n" +
-      "\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\024\n\014gps_a" +
-      "ltitude\030\013 \001(\001\022\024\n\014gps_accuracy\030\014 \001(\002\022\023\n\013g" +
-      "ps_fixtime\030\r \001(\004\022\030\n\020gps_fixtime_nano\030\020 \001" +
-      "(\004\022*\n\tzero_bias\030\025 \001(\0132\027.crayfis.ZeroBias" +
-      "Square\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel\022&" +
-      "\n\nbyte_block\030\026 \001(\0132\022.crayfis.ByteBlock\022\013" +
-      "\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\014\n\004hist\030\024 \003(\r\022\013" +
-      "\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020\n\010orient_" +
-      "y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\022\020\n\010pressure\030\022 " +
-      "\001(\002J\004\010\021\020\022R\014battery_temp\"p\n\005Pixel\022\t\n\001x\030\001 " +
-      "\001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adjusted_" +
-      "val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001" +
-      "(\002\022\r\n\005avg_5\030\006 \001(\002\"C\n\tByteBlock\022\t\n\001x\030\001 \003(" +
-      "\r\022\t\n\001y\030\002 \003(\r\022\013\n\003val\030\003 \003(\r\022\023\n\013side_length" +
-      "\030\004 \001(\r\"Q\n\016ZeroBiasSquare\022\r\n\005x_min\030\001 \001(\r\022" +
-      "\r\n\005y_min\030\002 \001(\r\022\013\n\003val\030\003 \003(\r\022\024\n\014frame_num" +
-      "ber\030\004 \001(\r\"\264\001\n\021CalibrationResult\022\016\n\006run_i" +
-      "d\030\001 \001(\004\022\021\n\trun_id_hi\030\010 \001(\004\022\022\n\nstart_time" +
-      "\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel\030\004" +
-      " \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_maxpi" +
-      "xel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\352\002\n\024Pre" +
-      "CalibrationResult\022\016\n\006run_id\030\001 \001(\004\022\021\n\trun" +
-      "_id_hi\030\022 \001(\004\022\021\n\tprecal_id\030\023 \001(\004\022\024\n\014preca" +
-      "l_id_hi\030\024 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end" +
-      "_time\030\003 \001(\004\022\017\n\007weights\030\006 \003(\002\022\024\n\014sample_r" +
-      "es_x\030\007 \001(\r\022\024\n\014sample_res_y\030\010 \001(\r\022\025\n\rinte" +
-      "rpolation\030\013 \001(\r\022\024\n\014battery_temp\030\014 \001(\r\022\032\n" +
-      "\022compressed_weights\030\r \001(\014\022\031\n\021compressed_" +
-      "format\030\016 \001(\t\022\023\n\013second_hist\030\017 \003(\r\022\017\n\007hot" +
-      "cell\030\020 \003(\r\022\r\n\005res_x\030\021 \001(\rJ\004\010\004\020\005J\004\010\005\020\006\"\220\001" +
-      "\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_" +
-      "id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004" +
-      " \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 " +
-      "\001(\t\022\023\n\013submit_time\030\007 \001(\rB \n\022io.crayfis.a" +
-      "ndroidB\nDataProtos"
+      "skip\030\016 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\016\n\006config\030* " +
+      "\003(\t\022\021\n\tprocessed\030+ \003(\r\022\014\n\004pass\030, \003(\r\022\014\n\004" +
+      "skip\030- \003(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\014\n\004hi" +
+      "st\030# \003(\004\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\"@" +
+      "\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DA" +
+      "TA\020\002\022\022\n\016PRECALIBRATION\020\003J\004\010\037\020 R\006bg_avg\"\345" +
+      "\003\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\026\n\016timestamp" +
+      "_nano\030\016 \001(\004\022\025\n\rtimestamp_ntp\030\017 \001(\004\022\030\n\020ti" +
+      "mestamp_target\030\023 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n" +
+      "\007gps_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014" +
+      "gps_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022" +
+      "\030\n\020gps_fixtime_nano\030\020 \001(\004\022*\n\tzero_bias\030\025" +
+      " \001(\0132\027.crayfis.ZeroBiasSquare\022\036\n\006pixels\030" +
+      "\004 \003(\0132\016.crayfis.Pixel\022&\n\nbyte_block\030\026 \001(" +
+      "\0132\022.crayfis.ByteBlock\022\013\n\003avg\030\005 \001(\001\022\013\n\003st" +
+      "d\030\006 \001(\001\022\014\n\004hist\030\024 \003(\r\022\013\n\003xbn\030\007 \001(\r\022\020\n\010or" +
+      "ient_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orient" +
+      "_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002J\004\010\021\020\022R\014batter" +
+      "y_temp\"p\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n" +
+      "\003val\030\003 \001(\r\022\024\n\014adjusted_val\030\007 \001(\r\022\020\n\010near" +
+      "_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002" +
+      "\"C\n\tByteBlock\022\t\n\001x\030\001 \003(\r\022\t\n\001y\030\002 \003(\r\022\013\n\003v" +
+      "al\030\003 \003(\r\022\023\n\013side_length\030\004 \001(\r\"Q\n\016ZeroBia" +
+      "sSquare\022\r\n\005x_min\030\001 \001(\r\022\r\n\005y_min\030\002 \001(\r\022\013\n" +
+      "\003val\030\003 \003(\r\022\024\n\014frame_number\030\004 \001(\r\"\264\001\n\021Cal" +
+      "ibrationResult\022\016\n\006run_id\030\001 \001(\004\022\021\n\trun_id" +
+      "_hi\030\010 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_tim" +
+      "e\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pi" +
+      "xel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist" +
+      "_numpixel\030\007 \003(\r\"\201\003\n\024PreCalibrationResult" +
+      "\022\016\n\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030\022 \001(\004\022\021\n\tp" +
+      "recal_id\030\023 \001(\004\022\024\n\014precal_id_hi\030\024 \001(\004\022\022\n\n" +
+      "start_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\017\n\007we" +
+      "ights\030\006 \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sam" +
+      "ple_res_y\030\010 \001(\r\022\025\n\rinterpolation\030\013 \001(\r\022\024" +
+      "\n\014battery_temp\030\014 \001(\r\022\032\n\022compressed_weigh" +
+      "ts\030\r \001(\014\022\031\n\021compressed_format\030\016 \001(\t\022\023\n\013s" +
+      "econd_hist\030\017 \003(\r\022\017\n\007hotcell\030\020 \003(\r\022\r\n\005res" +
+      "_x\030\021 \001(\r\022\025\n\rprecal_config\030\025 \001(\tJ\004\010\004\020\005J\004\010" +
+      "\005\020\006\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014\022\016" +
+      "\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007use" +
+      "r_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote_a" +
+      "ddr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB \n\022io.cra" +
+      "yfis.androidB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18537,7 +19375,7 @@ public final class DataProtos {
     internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_ExposureBlock_descriptor,
-        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "BatteryTemp", "BatteryEndTemp", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L0Conf", "L1Conf", "L2Conf", "L0Processed", "L1Processed", "L2Processed", "L0Pass", "L1Pass", "L2Pass", "L0Skip", "L1Skip", "L2Skip", "FramesDropped", "Hist", "Xbn", "Aborted", });
+        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "BatteryTemp", "BatteryEndTemp", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L0Conf", "L1Conf", "L2Conf", "L0Processed", "L1Processed", "L2Processed", "L0Pass", "L1Pass", "L2Pass", "L0Skip", "L1Skip", "L2Skip", "Config", "Processed", "Pass", "Skip", "FramesDropped", "Hist", "Xbn", "Aborted", });
     internal_static_crayfis_Event_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_crayfis_Event_fieldAccessorTable = new
@@ -18573,7 +19411,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationResult_descriptor,
-        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "StartTime", "EndTime", "Weights", "SampleResX", "SampleResY", "Interpolation", "BatteryTemp", "CompressedWeights", "CompressedFormat", "SecondHist", "Hotcell", "ResX", });
+        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "StartTime", "EndTime", "Weights", "SampleResX", "SampleResY", "Interpolation", "BatteryTemp", "CompressedWeights", "CompressedFormat", "SecondHist", "Hotcell", "ResX", "PrecalConfig", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new

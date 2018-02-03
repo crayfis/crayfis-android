@@ -221,35 +221,24 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state));
 
-        TriggerProcessor L0 = triggerChain.getProcessor(L0Processor.class);
-
-        if(L0 != null) {
-            buf.setL0Pass(L0.getPasses())
-                    .setL0Processed(L0.getProcessed())
-                    .setL0Skip(L0.getSkips())
-                    .setL0Conf(L0.config.toString());
+		for(TriggerProcessor processor : triggerChain) {
+		    buf.addConfig(processor.getClass().getSimpleName() + ": " + processor.config.toString())
+                    .addProcessed(processor.getProcessed())
+                    .addPass(processor.getPasses())
+                    .addSkip(processor.getSkips());
         }
 
         TriggerProcessor L1 = triggerChain.getProcessor(L1Processor.class);
 
         if(L1 != null) {
-            buf.setL1Pass(L1.getPasses())
-                    .setL0Processed(L1.getProcessed())
-                    .setL0Skip(L1.getSkips())
-                    .setL0Conf(L1.config.toString())
-                    .setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
+            buf.setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
         }
 
         TriggerProcessor L2 = triggerChain.getProcessor(L2Processor.class);
 
         if(L2 != null) {
-            buf.setL1Pass(L2.getPasses())
-                    .setL0Processed(L2.getProcessed())
-                    .setL0Skip(L2.getSkips())
-                    .setL0Conf(L2.config.toString())
-                    .setL1Thresh(L2.config.getInt(L2Processor.KEY_L2_THRESH));
+            buf.setL2Thresh(L2.config.getInt(L2Processor.KEY_L2_THRESH));
         }
-
 
         buf.setGpsLat(start_loc.getLatitude())
 		        .setGpsLon(start_loc.getLongitude())

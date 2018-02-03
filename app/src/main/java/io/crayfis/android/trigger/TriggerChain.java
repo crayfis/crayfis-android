@@ -1,5 +1,9 @@
 package io.crayfis.android.trigger;
 
+import android.support.annotation.NonNull;
+
+import java.util.Iterator;
+
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.trigger.L0.L0Processor;
@@ -17,7 +21,7 @@ import io.crayfis.android.trigger.quality.QualityProcessor;
  * Class for submitting frames through a pipeline of processors.  Configures the chain of processors
  * according to the application state and the trigger configurations
  */
-public class TriggerChain {
+public class TriggerChain implements Iterable<TriggerProcessor> {
 
     private final TriggerProcessor mFirst;
 
@@ -78,6 +82,41 @@ public class TriggerChain {
         }
 
         return processor;
+    }
+
+    /**
+     * Required method to make TriggerChain Iterable.
+     *
+     * @return Iterator object
+     */
+    @NonNull
+    @Override
+    public Iterator<TriggerProcessor> iterator() {
+
+        return new Iterator<TriggerProcessor>() {
+
+            private TriggerProcessor mCurrentProcessor = mFirst;
+            private boolean mUsedFirst = false;
+
+            @Override
+            public boolean hasNext() {
+                return (!mUsedFirst && mFirst != null) || mCurrentProcessor.mNextProcessor != null;
+            }
+
+            @Override
+            public TriggerProcessor next() {
+                if(!mUsedFirst) {
+                    mUsedFirst = true;
+                    return mFirst;
+                }
+                if(hasNext()) {
+                    mCurrentProcessor = mCurrentProcessor.mNextProcessor;
+                    return mCurrentProcessor;
+                } else {
+                    return null;
+                }
+            }
+        };
     }
 
 }

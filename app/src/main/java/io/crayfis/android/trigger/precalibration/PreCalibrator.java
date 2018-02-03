@@ -7,21 +7,16 @@ import android.renderscript.RenderScript;
 import android.renderscript.Type;
 import android.util.Base64;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfFloat;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
 import java.util.Set;
 import java.util.UUID;
 
@@ -31,7 +26,6 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
@@ -140,7 +134,8 @@ public class PreCalibrator extends TriggerProcessor {
                 .setPrecalIdHi(CONFIG.getPrecalId(cameraId).getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(mApplication.getBatteryTemp())
-                .setInterpolation(INTER);
+                .setInterpolation(INTER)
+                .setPrecalConfig(sConfigList.toString());
 
         // submit the PreCalibrationResult object
 
