@@ -78,9 +78,31 @@ public abstract class TriggerProcessor {
      *
      * @param frame RawCameraFrame to be processed
      */
-    protected void submitFrame(RawCameraFrame frame) {
-        mTask.setFrame(frame);
-        mExecutor.execute(mTask);
+    protected void submitFrame(final RawCameraFrame frame) {
+        mExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                processed.incrementAndGet();
+                try {
+                    int passes = mTask.processFrame(frame);
+                    pass.addAndGet(passes);
+                    if(passes > 0 && mNextProcessor != null) {
+                        mNextProcessor.submitFrame(frame);
+                    } else {
+                        onFrameResult(frame, passes > 0);
+                        frame.clear();
+                    }
+
+                    Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
+                    if(maxFrames != null && processed.intValue() == maxFrames) {
+                        mTask.onMaxReached();
+                        onMaxReached();
+                    }
+                } catch (OutOfMemoryError e) {
+                    skip.incrementAndGet();
+                }
+            }
+        });
     }
 
     /**
@@ -303,10 +325,9 @@ public abstract class TriggerProcessor {
     /**
      * Runnable executed by the TriggerProcessor
      */
-    public static abstract class Task implements Runnable {
+    public static abstract class Task {
 
         protected final TriggerProcessor mProcessor;
-        private RawCameraFrame mFrame;
 
         /**
          * Constructor
@@ -315,10 +336,6 @@ public abstract class TriggerProcessor {
          */
         public Task(TriggerProcessor processor) {
             mProcessor = processor;
-        }
-
-        private void setFrame(RawCameraFrame frame) {
-            mFrame = frame;
         }
 
         /**
@@ -334,29 +351,5 @@ public abstract class TriggerProcessor {
          * Config.getInt(KEY_MAXFRAMES).  Executes before TriggerProcessor.onMaxReached()
          */
         protected void onMaxReached() { }
-
-        @Override
-        public final void run() {
-
-            mProcessor.processed.incrementAndGet();
-            try {
-                int passes = processFrame(mFrame);
-                mProcessor.pass.addAndGet(passes);
-                if(passes > 0 && mProcessor.mNextProcessor != null) {
-                    mProcessor.mNextProcessor.submitFrame(mFrame);
-                } else {
-                    mProcessor.onFrameResult(mFrame, passes > 0);
-                    mFrame.clear();
-                }
-
-                Integer maxFrames = mProcessor.config.getInt(Config.KEY_MAXFRAMES);
-                if(maxFrames != null && mProcessor.processed.intValue() == maxFrames) {
-                    onMaxReached();
-                    mProcessor.onMaxReached();
-                }
-            } catch (OutOfMemoryError e) {
-                mProcessor.skip.incrementAndGet();
-            }
-        }
     }
 }
