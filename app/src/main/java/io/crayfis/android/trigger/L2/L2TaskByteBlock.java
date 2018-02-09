@@ -70,6 +70,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         L2Processor.L2Count++;
 
         DataProtos.ByteBlock.Builder builder = DataProtos.ByteBlock.newBuilder();
+        builder.setSideLength(2*mConfig.radius + 1);
 
         Mat grayMat = frame.getGrayMat();
         Mat threshMat = new Mat();
@@ -104,7 +105,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         }
 
         for(Pair<Integer, Integer> pairXY : blockXY) {
-            builder.addVal(frame.getRawByteAt(pairXY.first, pairXY.second));
+            builder.addVal(frame.getRawByteAt(pairXY.first, pairXY.second) & 0xFF);
         }
 
         l2PixelCoords.release();

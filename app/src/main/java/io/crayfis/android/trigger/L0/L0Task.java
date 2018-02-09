@@ -84,6 +84,8 @@ class L0Task extends TriggerProcessor.Task {
 
             // save block to the frame
             DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
+            zeroBiasBuilder.setXMin(xMin);
+            zeroBiasBuilder.setYMin(yMin);
             for(int iy=0; iy<window.width(); iy++) {
                 for(int ix=0; ix<window.height(); ix++) {
                     zeroBiasBuilder.addVal((int)window.get(ix, iy)[0]);

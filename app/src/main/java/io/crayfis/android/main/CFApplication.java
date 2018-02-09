@@ -447,10 +447,6 @@ public class CFApplication extends Application {
         }
     }
 
-    public void setNewestPrecalUUID() {
-        CONFIG.setPrecalId(CFCamera.getInstance().getCameraId(), mAppBuild.getRunId());
-    }
-
     public void startStabilizationTimer() {
         setApplicationState(State.IDLE);
         mStabilizationTimer.start();

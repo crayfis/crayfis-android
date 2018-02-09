@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.main.DAQService;
+import io.crayfis.android.main.MainActivity;
 import io.crayfis.android.util.CFLog;
 
 public class AutostartReceiver extends BroadcastReceiver {
@@ -24,7 +25,8 @@ public class AutostartReceiver extends BroadcastReceiver {
 
         CFLog.d("receiver: got action=" + intent.getAction());
 
-		// wait between power connected and charging
+        if(!MainActivity.hasPermissions(context)) return;
+
 
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
