@@ -36,7 +36,7 @@
         <item>2160p</item>
     </string-array>
 
-    <string-array name="pref_fps_entries">
+    <string-array name="pref_fps_entries" translatable="false">
         <item>1</item>
         <item>10</item>
         <item>15</item>
