@@ -3,6 +3,8 @@ package io.crayfis.android.camera;
 import android.hardware.Camera;
 import android.location.Location;
 import android.os.Build;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.renderscript.RenderScript;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
@@ -21,6 +23,14 @@ public abstract class CFCamera {
     CFApplication mApplication;
     final CFConfig CONFIG;
     RenderScript mRS;
+
+    // thread for Camera callbacks
+    protected Handler mCameraHandler;
+    protected HandlerThread mCameraThread;
+
+    // thread for posting jobs handling frames
+    protected Handler mFrameHandler;
+    protected HandlerThread mFrameThread;
 
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
@@ -72,6 +82,19 @@ public abstract class CFCamera {
 
         mCFSensor = new CFSensor(app, getFrameBuilder());
         mCFLocation = new CFLocation(app, getFrameBuilder());
+
+        // start new threads if necessary
+        if(mCameraHandler == null) {
+
+            mCameraThread = new HandlerThread("CFCamera2");
+            mCameraThread.start();
+            mCameraHandler = new Handler(mCameraThread.getLooper());
+
+            mFrameThread = new HandlerThread("RawCamera2Frame");
+            mFrameThread.start();
+            mFrameHandler = new Handler(mFrameThread.getLooper());
+        }
+
         changeCamera();
     }
 
@@ -80,11 +103,36 @@ public abstract class CFCamera {
      */
     public void unregister() {
         mCameraId = -1;
+
         changeCamera();
+
+        // quit the existing camera thread
+        if(mCameraThread != null) {
+            mCameraThread.quitSafely();
+            try {
+                mCameraThread.join();
+                mCameraThread = null;
+                mCameraHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            mFrameThread.quitSafely();
+            try {
+                mFrameThread.join();
+                mFrameThread = null;
+                mFrameHandler = null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
         mCFSensor.unregister();
         mCFLocation.unregister();
         sInstance = null;
     }
+
+    abstract void configure();
 
     /**
      * Tear down camera and, if appropriate, start a new stream.
@@ -99,50 +147,58 @@ public abstract class CFCamera {
      *
      * @param currentId The cameraId of the bad frame
      */
-    public void changeCameraFrom(int currentId) {
-        if(currentId != mCameraId) {
-            return;
-        }
+    public void changeCameraFrom(final int currentId) {
 
-        int nextId = -1;
-        CFApplication.State state = mApplication.getApplicationState();
-        switch(state) {
-            case INIT:
-                nextId = 0;
-                break;
-            case STABILIZATION:
-                // switch cameras and try again
-                nextId = currentId + 1;
-                if(nextId >= Camera.getNumberOfCameras()) {
-                    nextId = -1;
+        if(currentId != mCameraId || mCameraHandler == null) return;
+
+        mCameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
+
+                // find next camera based on DAQ state
+                int nextId = -1;
+                CFApplication.State state = mApplication.getApplicationState();
+                switch(state) {
+                    case INIT:
+                        nextId = 0;
+                        break;
+                    case STABILIZATION:
+                        // switch cameras and try again
+                        nextId = currentId + 1;
+                        if(nextId >= Camera.getNumberOfCameras()) {
+                            nextId = -1;
+                        }
+                        break;
+                    case PRECALIBRATION:
+                    case CALIBRATION:
+                    case DATA:
+                    case IDLE:
+                        // take a break for a while
+                        nextId = -1;
                 }
-                break;
-            case PRECALIBRATION:
-            case CALIBRATION:
-            case DATA:
-            case IDLE:
-                // take a break for a while
-                nextId = -1;
-        }
 
-        mCameraId = nextId;
+                mCameraId = nextId;
 
-        if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
-            mApplication.startStabilizationTimer();
-        }
+                if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
+                    mApplication.startStabilizationTimer();
+                }
 
-        ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
-        xbManager.abortExposureBlock();
+                ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
+                xbManager.abortExposureBlock();
 
-        CFLog.i("cameraId:" + currentId + " -> "+ nextId);
+                CFLog.i("cameraId:" + currentId + " -> "+ nextId);
 
-        if(state == CFApplication.State.INIT) {
-            mApplication.setApplicationState(CFApplication.State.STABILIZATION);
-        }
+                configure();
 
-        synchronized (mTimestampHistory) {
-            mTimestampHistory.clear();
-        }
+                synchronized (mTimestampHistory) {
+                    mTimestampHistory.clear();
+                }
+
+                if(state == CFApplication.State.INIT) {
+                    mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+                }
+            }
+        });
 
     }
 

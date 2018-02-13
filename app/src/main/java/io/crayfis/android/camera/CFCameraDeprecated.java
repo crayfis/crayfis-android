@@ -21,6 +21,8 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
     private Camera.Size previewSize;
     private SurfaceTexture mTexture;
 
+    private static final int N_CYCLE_BUFFERS = 3;
+
     CFCameraDeprecated() {
         super();
 
@@ -39,9 +41,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
      * Sets up the camera if it is not already setup.
      */
     @Override
-    public synchronized void changeCameraFrom(int currentId) {
-
-        super.changeCameraFrom(currentId);
+    void configure() {
 
         // first, tear down camera
         if(mCamera != null) {
@@ -55,21 +55,10 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         }
 
         // Open and configure the camera
-        if(mCameraId == -1) { return; }
-        try {
-            mCamera = Camera.open(mCameraId);
-        } catch (Exception e) {
-            if (e.getMessage().equals("Fail to connect to camera service")) {
-                // camera is in use by another app, so just wait it out
-                onError(1, mCamera);
-                return;
-            } else {
-                mApplication.userErrorMessage(R.string.camera_error,true);
-                return;
-            }
-        }
+        if(mCameraId == -1) return;
 
         try {
+            mCamera = Camera.open(mCameraId);
 
             Camera.Parameters param= mCamera.getParameters();
 
@@ -120,14 +109,6 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             mResX = previewSize.width;
             mResY = previewSize.height;
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            mApplication.userErrorMessage(R.string.camera_error, true);
-            return;
-        }
-
-        try {
-            final int N_CYCLE_BUFFERS = 3;
             int bufSize = previewSize.width*previewSize.height* ImageFormat.getBitsPerPixel(mParams.getPreviewFormat())/8;
             mCamera.setPreviewCallbackWithBuffer(this);
             for(int i=0; i<N_CYCLE_BUFFERS; i++) {
@@ -144,7 +125,13 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
             mCamera.startPreview();
 
         } catch (Exception e) {
-            mApplication.userErrorMessage(R.string.camera_error, true);
+            if (e.getMessage().equals("Fail to connect to camera service")) {
+                // camera is in use by another app, so just wait it out
+                onError(1, mCamera);
+            } else {
+                e.printStackTrace();
+                mApplication.userErrorMessage(R.string.camera_error,true);
+            }
         }
     }
 

@@ -43,14 +43,6 @@ import io.crayfis.android.util.CFLog;
 @TargetApi(21)
 class CFCamera2 extends CFCamera {
 
-    // thread for Camera callbacks
-    private Handler mCameraHandler;
-    private HandlerThread mCameraThread;
-
-    // thread for posting jobs handling frames
-    private Handler mFrameHandler;
-    private HandlerThread mFrameThread;
-
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
     private CameraDevice mCameraDevice;
     private CameraCharacteristics mCameraCharacteristics;
@@ -72,9 +64,9 @@ class CFCamera2 extends CFCamera {
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             // This method is called when the camera is opened.  We start camera preview here.
+            mCameraOpenCloseLock.release();
             mCameraDevice = cameraDevice;
             createCameraPreviewSession();
-            mCameraOpenCloseLock.release();
         }
 
         @Override
@@ -279,9 +271,7 @@ class CFCamera2 extends CFCamera {
     }
 
     @Override
-    public synchronized void changeCameraFrom(int currentId) {
-
-        super.changeCameraFrom(currentId);
+    void configure() {
 
         synchronized (mQueuedTimestamps) {
             mQueuedTimestamps.clear();
@@ -289,60 +279,22 @@ class CFCamera2 extends CFCamera {
 
         // get rid of old camera setup
 
-        try {
-            mCameraOpenCloseLock.acquire();
-            if (null != mCaptureSession) {
-                mCaptureSession.close();
-                mCaptureSession = null;
-            }
-            if (null != mCameraDevice) {
-                mCameraDevice.close();
-                mCameraDevice = null;
-            }
-            if (null != ain) {
-                ain.destroy();
-                ain = null;
-            }
-            mPreviewSize = null;
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera closing.", e);
-        } finally {
-            mCameraOpenCloseLock.release();
+        mCameraOpenCloseLock.acquireUninterruptibly();
+
+        if (null != mCaptureSession) {
+            mCaptureSession.close();
+            mCaptureSession = null;
         }
-
-        // quit the existing camera thread
-        if(mCameraThread != null) {
-            mCameraThread.quitSafely();
-            try {
-                mCameraThread.join();
-                mCameraThread = null;
-                mCameraHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        if (null != mCameraDevice) {
+            mCameraDevice.close();
+            mCameraDevice = null;
         }
-        
-        if(mFrameHandler != null) {
-            mFrameThread.quitSafely();
-            try {
-                mFrameThread.join();
-                mFrameThread = null;
-                mFrameHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        if (null != ain) {
+            ain.destroy();
+            ain = null;
         }
-
-        // start new threads
-
-        mCameraThread = new HandlerThread("CFCamera2");
-        mCameraThread.start();
-        mCameraHandler = new Handler(mCameraThread.getLooper());
-
-        mFrameThread = new HandlerThread("RawCamera2Frame");
-        mFrameThread.start();
-        mFrameHandler = new Handler(mFrameThread.getLooper());
-
+        mPreviewSize = null;
+        mCameraOpenCloseLock.release();
 
         if(mCameraId == -1) {
             return;
@@ -359,9 +311,7 @@ class CFCamera2 extends CFCamera {
         CameraManager manager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                mApplication.userErrorMessage(R.string.camera_error, true);
-            }
+            mCameraOpenCloseLock.tryAcquire();
 
             String[] idList = manager.getCameraIdList();
             String idString = idList[mCameraId];
@@ -387,8 +337,8 @@ class CFCamera2 extends CFCamera {
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
-        } catch (InterruptedException e) {
-            throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
+            mCameraOpenCloseLock.release();
+            mApplication.userErrorMessage(R.string.camera_error, true);
         }
     }
 
@@ -397,16 +347,18 @@ class CFCamera2 extends CFCamera {
     public String getParams() {
 
         if(mPreviewSize == null) return "";
-        String paramtxt = "Size: " + mPreviewSize.toString() + ", ";
+        StringBuilder paramtxt = new StringBuilder("Size: " + mPreviewSize.toString() + ", ");
 
         if(mPreviewRequest != null) {
             for (CaptureRequest.Key<?> k : mPreviewRequest.getKeys()) {
-                paramtxt += k.getName() + ": "
-                        + (mPreviewRequest.get(k) != null ?
-                        mPreviewRequest.get(k).toString() : "null") + ", ";
+                paramtxt.append(k.getName())
+                        .append(": ")
+                        .append((mPreviewRequest.get(k) != null ?
+                        mPreviewRequest.get(k).toString() : "null"))
+                        .append(", ");
             }
         }
-        return paramtxt;
+        return paramtxt.toString();
     }
 
     @Override
