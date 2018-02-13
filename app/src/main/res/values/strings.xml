@@ -62,13 +62,9 @@
     <string name="resolution_fhd" translatable="false">FHD (1080p)</string>
     <string name="resolution_qhd" translatable="false">QHD (1440p)</string>
     <string name="resolution_uhd" translatable="false">UHD (2160p)</string>
+    <string name="resolution_raw" translatable="false">Full RAW</string>
     <string name="long_exposure" translatable="false">Long exposure</string>
     <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
-
-    <string name="camera_select_face_down" translatable="false">Face-down</string>
-    <string name="camera_select_auto_detect" translatable="false">Auto-detect</string>
-    <string name="camera_select_front_lock" translatable="false">Front lock</string>
-    <string name="camera_select_back_lock" translatable="false">Back lock</string>
 
     <string name="menu_about">About</string>
     <string name="menu_settings">Settings</string>

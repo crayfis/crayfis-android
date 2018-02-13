@@ -42,6 +42,8 @@ public class ResolutionSpec {
                 return new ResolutionSpec(2560, 1440, "1440p");
             case "2160p":
                 return new ResolutionSpec(3840, 2160, "2160p");
+            case "raw":
+                return new ResolutionSpec(3840, 2160, "raw");
             default:
                 break;
         }

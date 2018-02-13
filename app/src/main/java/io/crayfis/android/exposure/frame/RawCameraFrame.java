@@ -2,9 +2,7 @@ package io.crayfis.android.exposure.frame;
 
 import android.annotation.TargetApi;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.location.Location;
 import android.renderscript.Allocation;
@@ -17,9 +15,9 @@ import org.opencv.core.Mat;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.ScriptC_parse;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -73,7 +71,8 @@ public abstract class RawCameraFrame {
 
     private enum FrameType {
         DEPRECATED,
-        YUV
+        YUV,
+        RAW
     }
 
     /**
@@ -89,6 +88,9 @@ public abstract class RawCameraFrame {
 
         // Camera2 YUV
         private Allocation bRaw;
+
+        // Camera2 RAW
+        private short[] bShorts;
 
         int bCameraId;
         boolean bFacingBack;
@@ -106,6 +108,7 @@ public abstract class RawCameraFrame {
         ExposureBlock bExposureBlock;
 
         ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        ScriptC_parse bParse;
         ScriptC_weight bScriptCWeight;
         Allocation bWeighted;
         Allocation bOut;
@@ -145,16 +148,20 @@ public abstract class RawCameraFrame {
         /**
          * Method for configuring Builder to create RawCamera2Frames
          *
-         * @param manager CameraManager
+         * @param cc CameraCharacteristics
          * @param cameraId int
          * @param alloc Allocation camera buffer
          * @param rs RenderScript context
          * @return Builder
          */
         @TargetApi(21)
-        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
+        public Builder setCamera2(CameraCharacteristics cc, int cameraId, Allocation alloc, RenderScript rs) {
 
-            bFrameType = FrameType.YUV;
+            if(alloc.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
+                bFrameType = FrameType.YUV;
+            } else if(alloc.getElement().getDataType() == Element.DataType.UNSIGNED_16) {
+                bFrameType = FrameType.RAW;
+            }
 
             bRaw = alloc;
 
@@ -165,19 +172,18 @@ public abstract class RawCameraFrame {
             bLength = bFrameWidth * bFrameHeight;
 
             bCameraId = cameraId;
-            try {
-                String[] idList = manager.getCameraIdList();
-                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
-                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
-                if (lensFacing != null) {
-                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
-                }
-            } catch (CameraAccessException e) {
-                CFLog.e("CameraAccessException");
+            Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+            if (lensFacing != null) {
+                bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
             }
 
             setRenderScript(rs, bFrameWidth, bFrameHeight);
 
+            return this;
+        }
+
+        public Builder setShorts(short[] shorts) {
+            bShorts = shorts;
             return this;
         }
 
@@ -187,6 +193,7 @@ public abstract class RawCameraFrame {
                     .setY(height)
                     .create();
 
+            bParse = new ScriptC_parse(rs);
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
             if(bWeighted != null) bWeighted.destroy();
             bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
@@ -248,6 +255,11 @@ public abstract class RawCameraFrame {
                             bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+                case RAW:
+                    return new RawCamera2RAWFrame(bShorts, bRaw, bCameraId, bFacingBack,
+                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
+                            bScriptIntrinsicHistogram, bScriptCWeight, bParse, bWeighted, bOut);
                 default:
                     CFLog.e("Frame builder not configured: returning null");
                     return null;
@@ -291,13 +303,13 @@ public abstract class RawCameraFrame {
         aout = out;
     }
 
-    public byte getRawByteAt(int x, int y) {
+    public int getRawValAt(int x, int y) {
         // we don't need to worry about unweighted bytes until
         // after L1 processing
         if(!mBufferClaimed) {
             claim();
         }
-        return mRawBytes[x + mFrameWidth * y];
+        return mRawBytes[x + mFrameWidth * y] & 0xFF;
     }
 
     /**
@@ -338,8 +350,10 @@ public abstract class RawCameraFrame {
     }
 
     public final void commit() {
-        callLocks();
-        mExposureBlock.tryAssignFrame(this);
+        if(mExposureBlock != null) {
+            callLocks();
+            mExposureBlock.tryAssignFrame(this);
+        }
     }
 
     void callLocks() { }

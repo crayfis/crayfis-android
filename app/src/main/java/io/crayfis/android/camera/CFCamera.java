@@ -62,10 +62,12 @@ public abstract class CFCamera {
 
         if(sInstance == null) {
 
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                sInstance = new CFCamera2();
-            } else {
+            if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 sInstance = new CFCameraDeprecated();
+            } else if(CFConfig.getInstance().getTargetResolution().name.equalsIgnoreCase("RAW")) {
+                sInstance = new CFCamera2RAW();
+            } else {
+                sInstance = new CFCamera2();
             }
         }
         return sInstance;
@@ -210,7 +212,7 @@ public abstract class CFCamera {
         synchronized(mTimestampHistory) {
             int nframes = mTimestampHistory.size();
             if (nframes>0) {
-                return ((double) nframes) / (System.currentTimeMillis() - mTimestampHistory.getOldest()) * 1000L;
+                return ((double) nframes) / (System.nanoTime() - mTimestampHistory.getOldest()) * 1000000000L;
             }
         }
 

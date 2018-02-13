@@ -99,7 +99,7 @@ class L2TaskMaxN extends TriggerProcessor.Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = frame.getRawByteAt(ix, iy) & 0xFF;
+            int val = frame.getRawValAt(ix, iy);
             int adjustedVal = (int) grayMat.get(iy, ix)[0];
 
             LayoutData.appendData(val);

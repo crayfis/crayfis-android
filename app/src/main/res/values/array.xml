@@ -26,6 +26,7 @@
         <item>@string/resolution_fhd</item>
         <item>@string/resolution_qhd</item>
         <item>@string/resolution_uhd</item>
+        <item>@string/resolution_raw</item>
     </string-array>
     <string-array name="pref_resolution_vals" translatable="false">
         <item>low</item>
@@ -34,10 +35,12 @@
         <item>1080p</item>
         <item>1440p</item>
         <item>2160p</item>
+        <item>RAW</item>
     </string-array>
 
     <string-array name="pref_fps_entries" translatable="false">
         <item>1</item>
+        <item>5</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>
@@ -47,6 +50,7 @@
 
     <string-array name="pref_fps_vals" translatable="false">
         <item>1</item>
+        <item>5</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>
@@ -74,16 +78,4 @@
         <item>80%</item>
     </string-array>
 
-    <string-array name="camera_select_mode_entries" translatable="false">
-        <item>@string/camera_select_face_down</item>
-        <item>@string/camera_select_auto_detect</item>
-        <item>@string/camera_select_back_lock</item>
-        <item>@string/camera_select_front_lock</item>
-    </string-array>
-    <string-array name="camera_select_mode_values" translatable="false">
-        <item>facedown</item>
-        <item>autodetect</item>
-        <item>lock</item>
-        <item>lock;backlock=false</item>
-    </string-array>
 </resources>
