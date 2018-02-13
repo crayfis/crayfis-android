@@ -92,7 +92,6 @@ public class CFApplication extends Application {
     };
 
     //private static final String SHARED_PREFS_NAME = "global";
-    private static long mStartTimeNano;
     private int mBatteryTemp = -1;
     private static final int BATTERY_START_TEMP = 350;
     private static final float BATTERY_START_PCT = .80f;
@@ -122,6 +121,8 @@ public class CFApplication extends Application {
         config.onSharedPreferenceChanged(defaultPrefs, null);
 
         setApplicationState(State.FINISHED);
+        mBatteryLow = false;
+        mBatteryOverheated = false;
 
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
@@ -322,6 +323,10 @@ public class CFApplication extends Application {
         if(mBatteryLow) {
             LayoutStatus.updateIdleStatus(String.format(getResources().getString(R.string.idle_low),
                     (int) (batteryPct * 100), (int) (BATTERY_START_PCT * 100)));
+            int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+            if(status != BatteryManager.BATTERY_STATUS_CHARGING && mApplicationState != State.FINISHED) {
+                finishAndQuit(R.string.quit_low);
+            }
         } else if(mBatteryOverheated) {
             LayoutStatus.updateIdleStatus(String.format(getResources().getString(R.string.idle_cooling),
                     newTemp / 10.));

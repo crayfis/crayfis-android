@@ -228,22 +228,20 @@ public class DAQService extends Service {
             }
         };
         idleTimer.schedule(idleTimerTask,
-                CONFIG.getExposureBlockPeriod(),
-                CONFIG.getExposureBlockPeriod());
+                CONFIG.getExposureBlockPeriod() * 1000,
+                CONFIG.getExposureBlockPeriod() * 1000);
 
         switch(previousState) {
             case INIT:
                 // starting with low battery, but finish initialization first
                 break;
+            case STABILIZATION:
             case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
                 mCFCamera.changeCamera();
                 xbManager.abortExposureBlock();
-                break;
-            case STABILIZATION:
-                xbManager.newExposureBlock(CFApplication.State.IDLE);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());

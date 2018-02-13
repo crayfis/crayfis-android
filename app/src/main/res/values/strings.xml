@@ -144,6 +144,7 @@
 
     <string name="quit_no_cameras" translatable="false">No covered cameras available</string>
     <string name="quit_permission" translatable="false">CRAYFIS no longer has the required permissions to run. \nPlease restart the app.</string>
+    <string name="quit_low" translatable="false">Low battery: please connect to power and restart the app</string>
 
     <string name="idle_cooling" translatable="false">Cooling battery: %1.1fC</string>
     <string name="idle_low" translatable="false">Low battery: %d%%/%d%%</string>
