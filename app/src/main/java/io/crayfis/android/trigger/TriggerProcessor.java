@@ -82,7 +82,7 @@ public abstract class TriggerProcessor {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                processed.incrementAndGet();
+                int nFrames = processed.incrementAndGet();
                 try {
                     int passes = mTask.processFrame(frame);
                     pass.addAndGet(passes);
@@ -94,7 +94,7 @@ public abstract class TriggerProcessor {
                     }
 
                     Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
-                    if(maxFrames != null && processed.intValue() == maxFrames) {
+                    if(maxFrames != null && nFrames == maxFrames) {
                         mTask.onMaxReached();
                         onMaxReached();
                     }

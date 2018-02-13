@@ -50,6 +50,6 @@ class QualityTaskLock extends TriggerProcessor.Task {
 
     @Override
     protected int processFrame(RawCameraFrame frame) {
-        return (frame.isFacingBack() == mConfig.backLock) ? 0 : 1;
+        return (frame.isFacingBack() == mConfig.backLock) ? 1 : 0;
     }
 }
