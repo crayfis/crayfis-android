@@ -12,6 +12,7 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.renderscript.Allocation;
@@ -160,7 +161,7 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            //CFLog.d("ExposureTime = " + result.get(CaptureResult.SENSOR_EXPOSURE_TIME));
+            CFLog.d("ExposureTime = " + result.get(CaptureResult.SENSOR_EXPOSURE_TIME));
 
             mQueuedCaptureResults.add(result);
             createFrames();
@@ -303,8 +304,11 @@ class CFCamera2 extends CFCamera {
 
         Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
         if(exposureTimes != null) {
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
-                    Math.min(exposureTimes.getUpper(), requestedDuration));
+            // allow 1 ns/pix dead time for internal processing
+            long requestedExpTime = (long) (Math.min(exposureTimes.getUpper(), requestedDuration)
+                    * (1-CONFIG.getFracDeadTime()));
+
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, requestedExpTime);
         }
 
         ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.YUV(mRS))
