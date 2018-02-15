@@ -3,6 +3,7 @@ package io.crayfis.android.exposure.frame;
 import android.annotation.TargetApi;
 import android.location.Location;
 import android.renderscript.Allocation;
+import android.renderscript.Element;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
@@ -62,8 +63,12 @@ class RawCamera2Frame extends RawCameraFrame {
     @Override
     protected synchronized void weightAllocation() {
         if(mScriptCWeight != null) {
-            mScriptCWeight.set_gInYuv(aRaw);
-            mScriptCWeight.forEach_weightYuv(aWeighted);
+            if(aRaw.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
+                mScriptCWeight.set_gInYuv(aRaw);
+                mScriptCWeight.forEach_weightYuv(aWeighted);
+            } else {
+                mScriptCWeight.forEach_weight(aRaw, aWeighted);
+            }
         } else {
             aWeighted = aRaw;
         }

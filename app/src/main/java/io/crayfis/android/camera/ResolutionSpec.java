@@ -43,7 +43,7 @@ public class ResolutionSpec {
             case "2160p":
                 return new ResolutionSpec(3840, 2160, "2160p");
             case "raw":
-                return new ResolutionSpec(3840, 2160, "raw");
+                return new ResolutionSpec(Integer.MAX_VALUE, 1, "raw");
             default:
                 break;
         }

@@ -64,8 +64,6 @@ public abstract class CFCamera {
 
             if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 sInstance = new CFCameraDeprecated();
-            } else if(CFConfig.getInstance().getTargetResolution().name.equalsIgnoreCase("RAW")) {
-                sInstance = new CFCamera2RAW();
             } else {
                 sInstance = new CFCamera2();
             }

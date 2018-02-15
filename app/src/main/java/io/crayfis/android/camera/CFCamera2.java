@@ -14,6 +14,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.StreamConfigurationMap;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.Type;
@@ -221,7 +222,7 @@ class CFCamera2 extends CFCamera {
 
     }
 
-    protected long findTargetDuration() {
+    protected long findTargetDuration(Size size) {
 
         // go through ranges known to be supported
         Long requestedDuration = 33000000L;
@@ -253,9 +254,34 @@ class CFCamera2 extends CFCamera {
         // seems to work better when rounded to ms
         requestedDuration = 1000000L * Math.round(requestedDuration/1000000.);
 
+        // first, check whether RAW format is requested/available
+
+        StreamConfigurationMap map = mCameraCharacteristics.get(
+                CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+        String formatString = "Supported formats: ";
+        for (int i : map.getOutputFormats()) {
+            formatString += i + ", ";
+        }
+        CFLog.d(formatString);
+
+        int format = ImageFormat.YUV_420_888;
+
+        if(CONFIG.getTargetResolution().name.equalsIgnoreCase("RAW")) {
+            for (int f : map.getOutputFormats()) {
+                if (f == ImageFormat.RAW_SENSOR) {
+                    format = ImageFormat.RAW_SENSOR;
+                    break;
+                }
+            }
+        }
+
+        // now make sure this is above the minimum for the format
+        long minDuration = map.getOutputMinFrameDuration(format, size);
+
         CFLog.d("Target FPS = " + (int)(1000000000./requestedDuration));
 
-        return requestedDuration;
+        return Math.max(requestedDuration, minDuration);
     }
 
 
@@ -272,7 +298,11 @@ class CFCamera2 extends CFCamera {
         // make preview as close to RAW as possible
         configureManualSettings();
 
-        long requestedDuration = findTargetDuration();
+        mPreviewSize = CONFIG.getTargetResolution().getClosestSize(mCameraCharacteristics);
+        mResX = mPreviewSize.getWidth();
+        mResY = mPreviewSize.getHeight();
+
+        long requestedDuration = findTargetDuration(mPreviewSize);
 
         // set the frame length and exposure time
         mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, requestedDuration);
@@ -282,11 +312,6 @@ class CFCamera2 extends CFCamera {
             mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME,
                     Math.min(exposureTimes.getUpper(), requestedDuration));
         }
-
-        mPreviewSize = CONFIG.getTargetResolution().getClosestSize(mCameraCharacteristics);
-
-        mResX = mPreviewSize.getWidth();
-        mResY = mPreviewSize.getHeight();
 
         ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.YUV(mRS))
                 .setX(mPreviewSize.getWidth())

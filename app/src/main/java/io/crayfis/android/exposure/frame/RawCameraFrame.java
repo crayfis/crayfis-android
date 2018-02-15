@@ -71,8 +71,7 @@ public abstract class RawCameraFrame {
 
     private enum FrameType {
         DEPRECATED,
-        YUV,
-        RAW
+        CAMERA2
     }
 
     /**
@@ -88,9 +87,6 @@ public abstract class RawCameraFrame {
 
         // Camera2 YUV
         private Allocation bRaw;
-
-        // Camera2 RAW
-        private short[] bShorts;
 
         int bCameraId;
         boolean bFacingBack;
@@ -156,11 +152,7 @@ public abstract class RawCameraFrame {
         @TargetApi(21)
         public Builder setCamera2(CameraCharacteristics cc, int cameraId, Allocation alloc, RenderScript rs) {
 
-            if(alloc.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
-                bFrameType = FrameType.YUV;
-            } else {
-                bFrameType = FrameType.RAW;
-            }
+            bFrameType = FrameType.CAMERA2;
 
             bRaw = alloc;
 
@@ -243,13 +235,8 @@ public abstract class RawCameraFrame {
                             bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-                case YUV:
+                case CAMERA2:
                     return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
-                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
-                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-                case RAW:
-                    return new RawCamera2RAWFrame(bRaw, bCameraId, bFacingBack,
                             bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
