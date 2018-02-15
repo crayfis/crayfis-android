@@ -1,6 +1,8 @@
 package io.crayfis.android.exposure.frame;
 
 import android.annotation.TargetApi;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -12,6 +14,7 @@ import org.opencv.core.MatOfByte;
 
 import java.util.concurrent.Semaphore;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -24,10 +27,11 @@ import io.crayfis.android.util.CFLog;
 @TargetApi(21)
 class RawCamera2Frame extends RawCameraFrame {
 
-    protected Allocation aRaw;
+    private Allocation aRaw;
+    private TotalCaptureResult mResult;
 
     // lock for buffers entering aRaw
-    protected static final Semaphore mRawLock = new Semaphore(1);
+    private static final Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
@@ -36,7 +40,7 @@ class RawCamera2Frame extends RawCameraFrame {
                     final int frameHeight,
                     final int length,
                     final AcquisitionTime acquisitionTime,
-                    final long timestamp,
+                    final TotalCaptureResult result,
                     final Location location,
                     final float[] orientation,
                     final float rotationZZ,
@@ -47,11 +51,13 @@ class RawCamera2Frame extends RawCameraFrame {
                     final Allocation in,
                     final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime,
                 location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
         aRaw = alloc;
+        mResult = result;
+
     }
 
     @Override
@@ -115,11 +121,28 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public final void retire() {
+    public void retire() {
         if(!mBufferClaimed) {
             mRawLock.release();
         }
         super.retire();
+    }
+
+    @Override
+    public DataProtos.Event.Builder getEventBuilder() {
+        super.getEventBuilder();
+
+        Long timestamp = mResult.get(CaptureResult.SENSOR_TIMESTAMP);
+        if(timestamp != null) {
+            mEventBuilder.setTimestamp(timestamp);
+        }
+
+        Long exposureTime = mResult.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+        if(exposureTime != null) {
+            CFLog.d("exposure = " + exposureTime);
+            mEventBuilder.setExposureTime(exposureTime);
+        }
+        return mEventBuilder;
     }
 
 }

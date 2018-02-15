@@ -3538,14 +3538,26 @@ public final class DataProtos {
     int getL2Thresh();
 
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     boolean hasL0Conf();
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     java.lang.String getL0Conf();
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     com.google.protobuf.ByteString
@@ -4702,12 +4714,20 @@ public final class DataProtos {
     public static final int L0_CONF_FIELD_NUMBER = 36;
     private volatile java.lang.Object l0Conf_;
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     public boolean hasL0Conf() {
       return ((bitField0_ & 0x00800000) == 0x00800000);
     }
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     public java.lang.String getL0Conf() {
@@ -4725,6 +4745,10 @@ public final class DataProtos {
       }
     }
     /**
+     * <pre>
+     * these should not be used anymore
+     * </pre>
+     *
      * <code>optional string L0_conf = 36;</code>
      */
     public com.google.protobuf.ByteString
@@ -7616,12 +7640,20 @@ public final class DataProtos {
 
       private java.lang.Object l0Conf_ = "";
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public boolean hasL0Conf() {
         return ((bitField0_ & 0x01000000) == 0x01000000);
       }
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public java.lang.String getL0Conf() {
@@ -7639,6 +7671,10 @@ public final class DataProtos {
         }
       }
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public com.google.protobuf.ByteString
@@ -7655,6 +7691,10 @@ public final class DataProtos {
         }
       }
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public Builder setL0Conf(
@@ -7668,6 +7708,10 @@ public final class DataProtos {
         return this;
       }
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public Builder clearL0Conf() {
@@ -7677,6 +7721,10 @@ public final class DataProtos {
         return this;
       }
       /**
+       * <pre>
+       * these should not be used anymore
+       * </pre>
+       *
        * <code>optional string L0_conf = 36;</code>
        */
       public Builder setL0ConfBytes(
@@ -8672,6 +8720,15 @@ public final class DataProtos {
     long getTimestampTarget();
 
     /**
+     * <code>optional uint64 exposure_time = 23;</code>
+     */
+    boolean hasExposureTime();
+    /**
+     * <code>optional uint64 exposure_time = 23;</code>
+     */
+    long getExposureTime();
+
+    /**
      * <code>optional double gps_lat = 2;</code>
      */
     boolean hasGpsLat();
@@ -8868,6 +8925,7 @@ public final class DataProtos {
       timestampNano_ = 0L;
       timestampNtp_ = 0L;
       timestampTarget_ = 0L;
+      exposureTime_ = 0L;
       gpsLat_ = 0D;
       gpsLon_ = 0D;
       gpsAltitude_ = 0D;
@@ -8922,66 +8980,66 @@ public final class DataProtos {
               break;
             }
             case 17: {
-              bitField0_ |= 0x00000010;
+              bitField0_ |= 0x00000020;
               gpsLat_ = input.readDouble();
               break;
             }
             case 25: {
-              bitField0_ |= 0x00000020;
+              bitField0_ |= 0x00000040;
               gpsLon_ = input.readDouble();
               break;
             }
             case 34: {
-              if (!((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+              if (!((mutable_bitField0_ & 0x00001000) == 0x00001000)) {
                 pixels_ = new java.util.ArrayList<io.crayfis.android.DataProtos.Pixel>();
-                mutable_bitField0_ |= 0x00000800;
+                mutable_bitField0_ |= 0x00001000;
               }
               pixels_.add(
                   input.readMessage(io.crayfis.android.DataProtos.Pixel.PARSER, extensionRegistry));
               break;
             }
             case 41: {
-              bitField0_ |= 0x00001000;
+              bitField0_ |= 0x00002000;
               avg_ = input.readDouble();
               break;
             }
             case 49: {
-              bitField0_ |= 0x00002000;
+              bitField0_ |= 0x00004000;
               std_ = input.readDouble();
               break;
             }
             case 56: {
-              bitField0_ |= 0x00004000;
+              bitField0_ |= 0x00008000;
               xbn_ = input.readUInt32();
               break;
             }
             case 69: {
-              bitField0_ |= 0x00008000;
+              bitField0_ |= 0x00010000;
               orientX_ = input.readFloat();
               break;
             }
             case 77: {
-              bitField0_ |= 0x00010000;
+              bitField0_ |= 0x00020000;
               orientY_ = input.readFloat();
               break;
             }
             case 85: {
-              bitField0_ |= 0x00020000;
+              bitField0_ |= 0x00040000;
               orientZ_ = input.readFloat();
               break;
             }
             case 89: {
-              bitField0_ |= 0x00000040;
+              bitField0_ |= 0x00000080;
               gpsAltitude_ = input.readDouble();
               break;
             }
             case 101: {
-              bitField0_ |= 0x00000080;
+              bitField0_ |= 0x00000100;
               gpsAccuracy_ = input.readFloat();
               break;
             }
             case 104: {
-              bitField0_ |= 0x00000100;
+              bitField0_ |= 0x00000200;
               gpsFixtime_ = input.readUInt64();
               break;
             }
@@ -8996,12 +9054,12 @@ public final class DataProtos {
               break;
             }
             case 128: {
-              bitField0_ |= 0x00000200;
+              bitField0_ |= 0x00000400;
               gpsFixtimeNano_ = input.readUInt64();
               break;
             }
             case 149: {
-              bitField0_ |= 0x00040000;
+              bitField0_ |= 0x00080000;
               pressure_ = input.readFloat();
               break;
             }
@@ -9011,9 +9069,9 @@ public final class DataProtos {
               break;
             }
             case 160: {
-              if (!((mutable_bitField0_ & 0x00008000) == 0x00008000)) {
+              if (!((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
                 hist_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00008000;
+                mutable_bitField0_ |= 0x00010000;
               }
               hist_.add(input.readUInt32());
               break;
@@ -9021,9 +9079,9 @@ public final class DataProtos {
             case 162: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00008000) == 0x00008000) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00010000) == 0x00010000) && input.getBytesUntilLimit() > 0) {
                 hist_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00008000;
+                mutable_bitField0_ |= 0x00010000;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hist_.add(input.readUInt32());
@@ -9033,7 +9091,7 @@ public final class DataProtos {
             }
             case 170: {
               io.crayfis.android.DataProtos.ZeroBiasSquare.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000400) == 0x00000400)) {
+              if (((bitField0_ & 0x00000800) == 0x00000800)) {
                 subBuilder = zeroBias_.toBuilder();
               }
               zeroBias_ = input.readMessage(io.crayfis.android.DataProtos.ZeroBiasSquare.PARSER, extensionRegistry);
@@ -9041,12 +9099,12 @@ public final class DataProtos {
                 subBuilder.mergeFrom(zeroBias_);
                 zeroBias_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000400;
+              bitField0_ |= 0x00000800;
               break;
             }
             case 178: {
               io.crayfis.android.DataProtos.ByteBlock.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000800) == 0x00000800)) {
+              if (((bitField0_ & 0x00001000) == 0x00001000)) {
                 subBuilder = byteBlock_.toBuilder();
               }
               byteBlock_ = input.readMessage(io.crayfis.android.DataProtos.ByteBlock.PARSER, extensionRegistry);
@@ -9054,7 +9112,12 @@ public final class DataProtos {
                 subBuilder.mergeFrom(byteBlock_);
                 byteBlock_ = subBuilder.buildPartial();
               }
-              bitField0_ |= 0x00000800;
+              bitField0_ |= 0x00001000;
+              break;
+            }
+            case 184: {
+              bitField0_ |= 0x00000010;
+              exposureTime_ = input.readUInt64();
               break;
             }
           }
@@ -9065,10 +9128,10 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000800) == 0x00000800)) {
+        if (((mutable_bitField0_ & 0x00001000) == 0x00001000)) {
           pixels_ = java.util.Collections.unmodifiableList(pixels_);
         }
-        if (((mutable_bitField0_ & 0x00008000) == 0x00008000)) {
+        if (((mutable_bitField0_ & 0x00010000) == 0x00010000)) {
           hist_ = java.util.Collections.unmodifiableList(hist_);
         }
         this.unknownFields = unknownFields.build();
@@ -9148,13 +9211,28 @@ public final class DataProtos {
       return timestampTarget_;
     }
 
+    public static final int EXPOSURE_TIME_FIELD_NUMBER = 23;
+    private long exposureTime_;
+    /**
+     * <code>optional uint64 exposure_time = 23;</code>
+     */
+    public boolean hasExposureTime() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional uint64 exposure_time = 23;</code>
+     */
+    public long getExposureTime() {
+      return exposureTime_;
+    }
+
     public static final int GPS_LAT_FIELD_NUMBER = 2;
     private double gpsLat_;
     /**
      * <code>optional double gps_lat = 2;</code>
      */
     public boolean hasGpsLat() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional double gps_lat = 2;</code>
@@ -9169,7 +9247,7 @@ public final class DataProtos {
      * <code>optional double gps_lon = 3;</code>
      */
     public boolean hasGpsLon() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional double gps_lon = 3;</code>
@@ -9184,7 +9262,7 @@ public final class DataProtos {
      * <code>optional double gps_altitude = 11;</code>
      */
     public boolean hasGpsAltitude() {
-      return ((bitField0_ & 0x00000040) == 0x00000040);
+      return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional double gps_altitude = 11;</code>
@@ -9199,7 +9277,7 @@ public final class DataProtos {
      * <code>optional float gps_accuracy = 12;</code>
      */
     public boolean hasGpsAccuracy() {
-      return ((bitField0_ & 0x00000080) == 0x00000080);
+      return ((bitField0_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional float gps_accuracy = 12;</code>
@@ -9214,7 +9292,7 @@ public final class DataProtos {
      * <code>optional uint64 gps_fixtime = 13;</code>
      */
     public boolean hasGpsFixtime() {
-      return ((bitField0_ & 0x00000100) == 0x00000100);
+      return ((bitField0_ & 0x00000200) == 0x00000200);
     }
     /**
      * <code>optional uint64 gps_fixtime = 13;</code>
@@ -9229,7 +9307,7 @@ public final class DataProtos {
      * <code>optional uint64 gps_fixtime_nano = 16;</code>
      */
     public boolean hasGpsFixtimeNano() {
-      return ((bitField0_ & 0x00000200) == 0x00000200);
+      return ((bitField0_ & 0x00000400) == 0x00000400);
     }
     /**
      * <code>optional uint64 gps_fixtime_nano = 16;</code>
@@ -9244,7 +9322,7 @@ public final class DataProtos {
      * <code>optional .crayfis.ZeroBiasSquare zero_bias = 21;</code>
      */
     public boolean hasZeroBias() {
-      return ((bitField0_ & 0x00000400) == 0x00000400);
+      return ((bitField0_ & 0x00000800) == 0x00000800);
     }
     /**
      * <code>optional .crayfis.ZeroBiasSquare zero_bias = 21;</code>
@@ -9300,7 +9378,7 @@ public final class DataProtos {
      * <code>optional .crayfis.ByteBlock byte_block = 22;</code>
      */
     public boolean hasByteBlock() {
-      return ((bitField0_ & 0x00000800) == 0x00000800);
+      return ((bitField0_ & 0x00001000) == 0x00001000);
     }
     /**
      * <code>optional .crayfis.ByteBlock byte_block = 22;</code>
@@ -9321,7 +9399,7 @@ public final class DataProtos {
      * <code>optional double avg = 5;</code>
      */
     public boolean hasAvg() {
-      return ((bitField0_ & 0x00001000) == 0x00001000);
+      return ((bitField0_ & 0x00002000) == 0x00002000);
     }
     /**
      * <code>optional double avg = 5;</code>
@@ -9336,7 +9414,7 @@ public final class DataProtos {
      * <code>optional double std = 6;</code>
      */
     public boolean hasStd() {
-      return ((bitField0_ & 0x00002000) == 0x00002000);
+      return ((bitField0_ & 0x00004000) == 0x00004000);
     }
     /**
      * <code>optional double std = 6;</code>
@@ -9373,7 +9451,7 @@ public final class DataProtos {
      * <code>optional uint32 xbn = 7;</code>
      */
     public boolean hasXbn() {
-      return ((bitField0_ & 0x00004000) == 0x00004000);
+      return ((bitField0_ & 0x00008000) == 0x00008000);
     }
     /**
      * <code>optional uint32 xbn = 7;</code>
@@ -9388,7 +9466,7 @@ public final class DataProtos {
      * <code>optional float orient_x = 8;</code>
      */
     public boolean hasOrientX() {
-      return ((bitField0_ & 0x00008000) == 0x00008000);
+      return ((bitField0_ & 0x00010000) == 0x00010000);
     }
     /**
      * <code>optional float orient_x = 8;</code>
@@ -9403,7 +9481,7 @@ public final class DataProtos {
      * <code>optional float orient_y = 9;</code>
      */
     public boolean hasOrientY() {
-      return ((bitField0_ & 0x00010000) == 0x00010000);
+      return ((bitField0_ & 0x00020000) == 0x00020000);
     }
     /**
      * <code>optional float orient_y = 9;</code>
@@ -9418,7 +9496,7 @@ public final class DataProtos {
      * <code>optional float orient_z = 10;</code>
      */
     public boolean hasOrientZ() {
-      return ((bitField0_ & 0x00020000) == 0x00020000);
+      return ((bitField0_ & 0x00040000) == 0x00040000);
     }
     /**
      * <code>optional float orient_z = 10;</code>
@@ -9433,7 +9511,7 @@ public final class DataProtos {
      * <code>optional float pressure = 18;</code>
      */
     public boolean hasPressure() {
-      return ((bitField0_ & 0x00040000) == 0x00040000);
+      return ((bitField0_ & 0x00080000) == 0x00080000);
     }
     /**
      * <code>optional float pressure = 18;</code>
@@ -9457,40 +9535,40 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeUInt64(1, timestamp_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeDouble(2, gpsLat_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         output.writeDouble(3, gpsLon_);
       }
       for (int i = 0; i < pixels_.size(); i++) {
         output.writeMessage(4, pixels_.get(i));
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         output.writeDouble(5, avg_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
         output.writeDouble(6, std_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
         output.writeUInt32(7, xbn_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
         output.writeFloat(8, orientX_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
         output.writeFloat(9, orientY_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
         output.writeFloat(10, orientZ_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         output.writeDouble(11, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         output.writeFloat(12, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         output.writeUInt64(13, gpsFixtime_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
@@ -9499,10 +9577,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeUInt64(15, timestampNtp_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         output.writeUInt64(16, gpsFixtimeNano_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
         output.writeFloat(18, pressure_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
@@ -9511,11 +9589,14 @@ public final class DataProtos {
       for (int i = 0; i < hist_.size(); i++) {
         output.writeUInt32(20, hist_.get(i));
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         output.writeMessage(21, getZeroBias());
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         output.writeMessage(22, getByteBlock());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeUInt64(23, exposureTime_);
       }
       unknownFields.writeTo(output);
     }
@@ -9529,11 +9610,11 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(1, timestamp_);
       }
-      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(2, gpsLat_);
       }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(3, gpsLon_);
       }
@@ -9541,39 +9622,39 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, pixels_.get(i));
       }
-      if (((bitField0_ & 0x00001000) == 0x00001000)) {
+      if (((bitField0_ & 0x00002000) == 0x00002000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(5, avg_);
       }
-      if (((bitField0_ & 0x00002000) == 0x00002000)) {
+      if (((bitField0_ & 0x00004000) == 0x00004000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(6, std_);
       }
-      if (((bitField0_ & 0x00004000) == 0x00004000)) {
+      if (((bitField0_ & 0x00008000) == 0x00008000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(7, xbn_);
       }
-      if (((bitField0_ & 0x00008000) == 0x00008000)) {
+      if (((bitField0_ & 0x00010000) == 0x00010000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(8, orientX_);
       }
-      if (((bitField0_ & 0x00010000) == 0x00010000)) {
+      if (((bitField0_ & 0x00020000) == 0x00020000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(9, orientY_);
       }
-      if (((bitField0_ & 0x00020000) == 0x00020000)) {
+      if (((bitField0_ & 0x00040000) == 0x00040000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(10, orientZ_);
       }
-      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+      if (((bitField0_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeDoubleSize(11, gpsAltitude_);
       }
-      if (((bitField0_ & 0x00000080) == 0x00000080)) {
+      if (((bitField0_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(12, gpsAccuracy_);
       }
-      if (((bitField0_ & 0x00000100) == 0x00000100)) {
+      if (((bitField0_ & 0x00000200) == 0x00000200)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(13, gpsFixtime_);
       }
@@ -9585,11 +9666,11 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(15, timestampNtp_);
       }
-      if (((bitField0_ & 0x00000200) == 0x00000200)) {
+      if (((bitField0_ & 0x00000400) == 0x00000400)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(16, gpsFixtimeNano_);
       }
-      if (((bitField0_ & 0x00040000) == 0x00040000)) {
+      if (((bitField0_ & 0x00080000) == 0x00080000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeFloatSize(18, pressure_);
       }
@@ -9606,13 +9687,17 @@ public final class DataProtos {
         size += dataSize;
         size += 2 * getHistList().size();
       }
-      if (((bitField0_ & 0x00000400) == 0x00000400)) {
+      if (((bitField0_ & 0x00000800) == 0x00000800)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(21, getZeroBias());
       }
-      if (((bitField0_ & 0x00000800) == 0x00000800)) {
+      if (((bitField0_ & 0x00001000) == 0x00001000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(22, getByteBlock());
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(23, exposureTime_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -9649,6 +9734,11 @@ public final class DataProtos {
       if (hasTimestampTarget()) {
         result = result && (getTimestampTarget()
             == other.getTimestampTarget());
+      }
+      result = result && (hasExposureTime() == other.hasExposureTime());
+      if (hasExposureTime()) {
+        result = result && (getExposureTime()
+            == other.getExposureTime());
       }
       result = result && (hasGpsLat() == other.hasGpsLat());
       if (hasGpsLat()) {
@@ -9779,6 +9869,11 @@ public final class DataProtos {
         hash = (37 * hash) + TIMESTAMP_TARGET_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getTimestampTarget());
+      }
+      if (hasExposureTime()) {
+        hash = (37 * hash) + EXPOSURE_TIME_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getExposureTime());
       }
       if (hasGpsLat()) {
         hash = (37 * hash) + GPS_LAT_FIELD_NUMBER;
@@ -10000,27 +10095,29 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         timestampTarget_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
-        gpsLat_ = 0D;
+        exposureTime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000010);
-        gpsLon_ = 0D;
+        gpsLat_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000020);
-        gpsAltitude_ = 0D;
+        gpsLon_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000040);
-        gpsAccuracy_ = 0F;
+        gpsAltitude_ = 0D;
         bitField0_ = (bitField0_ & ~0x00000080);
-        gpsFixtime_ = 0L;
+        gpsAccuracy_ = 0F;
         bitField0_ = (bitField0_ & ~0x00000100);
-        gpsFixtimeNano_ = 0L;
+        gpsFixtime_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000200);
+        gpsFixtimeNano_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000400);
         if (zeroBiasBuilder_ == null) {
           zeroBias_ = null;
         } else {
           zeroBiasBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000800);
         if (pixelsBuilder_ == null) {
           pixels_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00001000);
         } else {
           pixelsBuilder_.clear();
         }
@@ -10029,23 +10126,23 @@ public final class DataProtos {
         } else {
           byteBlockBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00001000);
-        avg_ = 0D;
         bitField0_ = (bitField0_ & ~0x00002000);
-        std_ = 0D;
+        avg_ = 0D;
         bitField0_ = (bitField0_ & ~0x00004000);
-        hist_ = java.util.Collections.emptyList();
+        std_ = 0D;
         bitField0_ = (bitField0_ & ~0x00008000);
-        xbn_ = 0;
+        hist_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00010000);
-        orientX_ = 0F;
+        xbn_ = 0;
         bitField0_ = (bitField0_ & ~0x00020000);
-        orientY_ = 0F;
+        orientX_ = 0F;
         bitField0_ = (bitField0_ & ~0x00040000);
-        orientZ_ = 0F;
+        orientY_ = 0F;
         bitField0_ = (bitField0_ & ~0x00080000);
-        pressure_ = 0F;
+        orientZ_ = 0F;
         bitField0_ = (bitField0_ & ~0x00100000);
+        pressure_ = 0F;
+        bitField0_ = (bitField0_ & ~0x00200000);
         return this;
       }
 
@@ -10089,29 +10186,33 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.gpsLat_ = gpsLat_;
+        result.exposureTime_ = exposureTime_;
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000020;
         }
-        result.gpsLon_ = gpsLon_;
+        result.gpsLat_ = gpsLat_;
         if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
           to_bitField0_ |= 0x00000040;
         }
-        result.gpsAltitude_ = gpsAltitude_;
+        result.gpsLon_ = gpsLon_;
         if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
           to_bitField0_ |= 0x00000080;
         }
-        result.gpsAccuracy_ = gpsAccuracy_;
+        result.gpsAltitude_ = gpsAltitude_;
         if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
           to_bitField0_ |= 0x00000100;
         }
-        result.gpsFixtime_ = gpsFixtime_;
+        result.gpsAccuracy_ = gpsAccuracy_;
         if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
           to_bitField0_ |= 0x00000200;
         }
-        result.gpsFixtimeNano_ = gpsFixtimeNano_;
+        result.gpsFixtime_ = gpsFixtime_;
         if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
           to_bitField0_ |= 0x00000400;
+        }
+        result.gpsFixtimeNano_ = gpsFixtimeNano_;
+        if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+          to_bitField0_ |= 0x00000800;
         }
         if (zeroBiasBuilder_ == null) {
           result.zeroBias_ = zeroBias_;
@@ -10119,53 +10220,53 @@ public final class DataProtos {
           result.zeroBias_ = zeroBiasBuilder_.build();
         }
         if (pixelsBuilder_ == null) {
-          if (((bitField0_ & 0x00000800) == 0x00000800)) {
+          if (((bitField0_ & 0x00001000) == 0x00001000)) {
             pixels_ = java.util.Collections.unmodifiableList(pixels_);
-            bitField0_ = (bitField0_ & ~0x00000800);
+            bitField0_ = (bitField0_ & ~0x00001000);
           }
           result.pixels_ = pixels_;
         } else {
           result.pixels_ = pixelsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
-          to_bitField0_ |= 0x00000800;
+        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+          to_bitField0_ |= 0x00001000;
         }
         if (byteBlockBuilder_ == null) {
           result.byteBlock_ = byteBlock_;
         } else {
           result.byteBlock_ = byteBlockBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
-          to_bitField0_ |= 0x00001000;
-        }
-        result.avg_ = avg_;
         if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
           to_bitField0_ |= 0x00002000;
         }
-        result.std_ = std_;
-        if (((bitField0_ & 0x00008000) == 0x00008000)) {
-          hist_ = java.util.Collections.unmodifiableList(hist_);
-          bitField0_ = (bitField0_ & ~0x00008000);
-        }
-        result.hist_ = hist_;
-        if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+        result.avg_ = avg_;
+        if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
           to_bitField0_ |= 0x00004000;
         }
-        result.xbn_ = xbn_;
+        result.std_ = std_;
+        if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          hist_ = java.util.Collections.unmodifiableList(hist_);
+          bitField0_ = (bitField0_ & ~0x00010000);
+        }
+        result.hist_ = hist_;
         if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
           to_bitField0_ |= 0x00008000;
         }
-        result.orientX_ = orientX_;
+        result.xbn_ = xbn_;
         if (((from_bitField0_ & 0x00040000) == 0x00040000)) {
           to_bitField0_ |= 0x00010000;
         }
-        result.orientY_ = orientY_;
+        result.orientX_ = orientX_;
         if (((from_bitField0_ & 0x00080000) == 0x00080000)) {
           to_bitField0_ |= 0x00020000;
         }
-        result.orientZ_ = orientZ_;
+        result.orientY_ = orientY_;
         if (((from_bitField0_ & 0x00100000) == 0x00100000)) {
           to_bitField0_ |= 0x00040000;
+        }
+        result.orientZ_ = orientZ_;
+        if (((from_bitField0_ & 0x00200000) == 0x00200000)) {
+          to_bitField0_ |= 0x00080000;
         }
         result.pressure_ = pressure_;
         result.bitField0_ = to_bitField0_;
@@ -10222,6 +10323,9 @@ public final class DataProtos {
         if (other.hasTimestampTarget()) {
           setTimestampTarget(other.getTimestampTarget());
         }
+        if (other.hasExposureTime()) {
+          setExposureTime(other.getExposureTime());
+        }
         if (other.hasGpsLat()) {
           setGpsLat(other.getGpsLat());
         }
@@ -10247,7 +10351,7 @@ public final class DataProtos {
           if (!other.pixels_.isEmpty()) {
             if (pixels_.isEmpty()) {
               pixels_ = other.pixels_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00001000);
             } else {
               ensurePixelsIsMutable();
               pixels_.addAll(other.pixels_);
@@ -10260,7 +10364,7 @@ public final class DataProtos {
               pixelsBuilder_.dispose();
               pixelsBuilder_ = null;
               pixels_ = other.pixels_;
-              bitField0_ = (bitField0_ & ~0x00000800);
+              bitField0_ = (bitField0_ & ~0x00001000);
               pixelsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getPixelsFieldBuilder() : null;
@@ -10281,7 +10385,7 @@ public final class DataProtos {
         if (!other.hist_.isEmpty()) {
           if (hist_.isEmpty()) {
             hist_ = other.hist_;
-            bitField0_ = (bitField0_ & ~0x00008000);
+            bitField0_ = (bitField0_ & ~0x00010000);
           } else {
             ensureHistIsMutable();
             hist_.addAll(other.hist_);
@@ -10459,12 +10563,44 @@ public final class DataProtos {
         return this;
       }
 
+      private long exposureTime_ ;
+      /**
+       * <code>optional uint64 exposure_time = 23;</code>
+       */
+      public boolean hasExposureTime() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional uint64 exposure_time = 23;</code>
+       */
+      public long getExposureTime() {
+        return exposureTime_;
+      }
+      /**
+       * <code>optional uint64 exposure_time = 23;</code>
+       */
+      public Builder setExposureTime(long value) {
+        bitField0_ |= 0x00000010;
+        exposureTime_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional uint64 exposure_time = 23;</code>
+       */
+      public Builder clearExposureTime() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        exposureTime_ = 0L;
+        onChanged();
+        return this;
+      }
+
       private double gpsLat_ ;
       /**
        * <code>optional double gps_lat = 2;</code>
        */
       public boolean hasGpsLat() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional double gps_lat = 2;</code>
@@ -10476,7 +10612,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 2;</code>
        */
       public Builder setGpsLat(double value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000020;
         gpsLat_ = value;
         onChanged();
         return this;
@@ -10485,7 +10621,7 @@ public final class DataProtos {
        * <code>optional double gps_lat = 2;</code>
        */
       public Builder clearGpsLat() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000020);
         gpsLat_ = 0D;
         onChanged();
         return this;
@@ -10496,7 +10632,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public boolean hasGpsLon() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional double gps_lon = 3;</code>
@@ -10508,7 +10644,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public Builder setGpsLon(double value) {
-        bitField0_ |= 0x00000020;
+        bitField0_ |= 0x00000040;
         gpsLon_ = value;
         onChanged();
         return this;
@@ -10517,7 +10653,7 @@ public final class DataProtos {
        * <code>optional double gps_lon = 3;</code>
        */
       public Builder clearGpsLon() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000040);
         gpsLon_ = 0D;
         onChanged();
         return this;
@@ -10528,7 +10664,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public boolean hasGpsAltitude() {
-        return ((bitField0_ & 0x00000040) == 0x00000040);
+        return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <code>optional double gps_altitude = 11;</code>
@@ -10540,7 +10676,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public Builder setGpsAltitude(double value) {
-        bitField0_ |= 0x00000040;
+        bitField0_ |= 0x00000080;
         gpsAltitude_ = value;
         onChanged();
         return this;
@@ -10549,7 +10685,7 @@ public final class DataProtos {
        * <code>optional double gps_altitude = 11;</code>
        */
       public Builder clearGpsAltitude() {
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000080);
         gpsAltitude_ = 0D;
         onChanged();
         return this;
@@ -10560,7 +10696,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public boolean hasGpsAccuracy() {
-        return ((bitField0_ & 0x00000080) == 0x00000080);
+        return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <code>optional float gps_accuracy = 12;</code>
@@ -10572,7 +10708,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public Builder setGpsAccuracy(float value) {
-        bitField0_ |= 0x00000080;
+        bitField0_ |= 0x00000100;
         gpsAccuracy_ = value;
         onChanged();
         return this;
@@ -10581,7 +10717,7 @@ public final class DataProtos {
        * <code>optional float gps_accuracy = 12;</code>
        */
       public Builder clearGpsAccuracy() {
-        bitField0_ = (bitField0_ & ~0x00000080);
+        bitField0_ = (bitField0_ & ~0x00000100);
         gpsAccuracy_ = 0F;
         onChanged();
         return this;
@@ -10592,7 +10728,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public boolean hasGpsFixtime() {
-        return ((bitField0_ & 0x00000100) == 0x00000100);
+        return ((bitField0_ & 0x00000200) == 0x00000200);
       }
       /**
        * <code>optional uint64 gps_fixtime = 13;</code>
@@ -10604,7 +10740,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public Builder setGpsFixtime(long value) {
-        bitField0_ |= 0x00000100;
+        bitField0_ |= 0x00000200;
         gpsFixtime_ = value;
         onChanged();
         return this;
@@ -10613,7 +10749,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime = 13;</code>
        */
       public Builder clearGpsFixtime() {
-        bitField0_ = (bitField0_ & ~0x00000100);
+        bitField0_ = (bitField0_ & ~0x00000200);
         gpsFixtime_ = 0L;
         onChanged();
         return this;
@@ -10624,7 +10760,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime_nano = 16;</code>
        */
       public boolean hasGpsFixtimeNano() {
-        return ((bitField0_ & 0x00000200) == 0x00000200);
+        return ((bitField0_ & 0x00000400) == 0x00000400);
       }
       /**
        * <code>optional uint64 gps_fixtime_nano = 16;</code>
@@ -10636,7 +10772,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime_nano = 16;</code>
        */
       public Builder setGpsFixtimeNano(long value) {
-        bitField0_ |= 0x00000200;
+        bitField0_ |= 0x00000400;
         gpsFixtimeNano_ = value;
         onChanged();
         return this;
@@ -10645,7 +10781,7 @@ public final class DataProtos {
        * <code>optional uint64 gps_fixtime_nano = 16;</code>
        */
       public Builder clearGpsFixtimeNano() {
-        bitField0_ = (bitField0_ & ~0x00000200);
+        bitField0_ = (bitField0_ & ~0x00000400);
         gpsFixtimeNano_ = 0L;
         onChanged();
         return this;
@@ -10658,7 +10794,7 @@ public final class DataProtos {
        * <code>optional .crayfis.ZeroBiasSquare zero_bias = 21;</code>
        */
       public boolean hasZeroBias() {
-        return ((bitField0_ & 0x00000400) == 0x00000400);
+        return ((bitField0_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional .crayfis.ZeroBiasSquare zero_bias = 21;</code>
@@ -10683,7 +10819,7 @@ public final class DataProtos {
         } else {
           zeroBiasBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -10697,7 +10833,7 @@ public final class DataProtos {
         } else {
           zeroBiasBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -10705,7 +10841,7 @@ public final class DataProtos {
        */
       public Builder mergeZeroBias(io.crayfis.android.DataProtos.ZeroBiasSquare value) {
         if (zeroBiasBuilder_ == null) {
-          if (((bitField0_ & 0x00000400) == 0x00000400) &&
+          if (((bitField0_ & 0x00000800) == 0x00000800) &&
               zeroBias_ != null &&
               zeroBias_ != io.crayfis.android.DataProtos.ZeroBiasSquare.getDefaultInstance()) {
             zeroBias_ =
@@ -10717,7 +10853,7 @@ public final class DataProtos {
         } else {
           zeroBiasBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000800;
         return this;
       }
       /**
@@ -10730,14 +10866,14 @@ public final class DataProtos {
         } else {
           zeroBiasBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00000400);
+        bitField0_ = (bitField0_ & ~0x00000800);
         return this;
       }
       /**
        * <code>optional .crayfis.ZeroBiasSquare zero_bias = 21;</code>
        */
       public io.crayfis.android.DataProtos.ZeroBiasSquare.Builder getZeroBiasBuilder() {
-        bitField0_ |= 0x00000400;
+        bitField0_ |= 0x00000800;
         onChanged();
         return getZeroBiasFieldBuilder().getBuilder();
       }
@@ -10772,9 +10908,9 @@ public final class DataProtos {
       private java.util.List<io.crayfis.android.DataProtos.Pixel> pixels_ =
         java.util.Collections.emptyList();
       private void ensurePixelsIsMutable() {
-        if (!((bitField0_ & 0x00000800) == 0x00000800)) {
+        if (!((bitField0_ & 0x00001000) == 0x00001000)) {
           pixels_ = new java.util.ArrayList<io.crayfis.android.DataProtos.Pixel>(pixels_);
-          bitField0_ |= 0x00000800;
+          bitField0_ |= 0x00001000;
          }
       }
 
@@ -10924,7 +11060,7 @@ public final class DataProtos {
       public Builder clearPixels() {
         if (pixelsBuilder_ == null) {
           pixels_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000800);
+          bitField0_ = (bitField0_ & ~0x00001000);
           onChanged();
         } else {
           pixelsBuilder_.clear();
@@ -11001,7 +11137,7 @@ public final class DataProtos {
           pixelsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               io.crayfis.android.DataProtos.Pixel, io.crayfis.android.DataProtos.Pixel.Builder, io.crayfis.android.DataProtos.PixelOrBuilder>(
                   pixels_,
-                  ((bitField0_ & 0x00000800) == 0x00000800),
+                  ((bitField0_ & 0x00001000) == 0x00001000),
                   getParentForChildren(),
                   isClean());
           pixels_ = null;
@@ -11016,7 +11152,7 @@ public final class DataProtos {
        * <code>optional .crayfis.ByteBlock byte_block = 22;</code>
        */
       public boolean hasByteBlock() {
-        return ((bitField0_ & 0x00001000) == 0x00001000);
+        return ((bitField0_ & 0x00002000) == 0x00002000);
       }
       /**
        * <code>optional .crayfis.ByteBlock byte_block = 22;</code>
@@ -11041,7 +11177,7 @@ public final class DataProtos {
         } else {
           byteBlockBuilder_.setMessage(value);
         }
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00002000;
         return this;
       }
       /**
@@ -11055,7 +11191,7 @@ public final class DataProtos {
         } else {
           byteBlockBuilder_.setMessage(builderForValue.build());
         }
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00002000;
         return this;
       }
       /**
@@ -11063,7 +11199,7 @@ public final class DataProtos {
        */
       public Builder mergeByteBlock(io.crayfis.android.DataProtos.ByteBlock value) {
         if (byteBlockBuilder_ == null) {
-          if (((bitField0_ & 0x00001000) == 0x00001000) &&
+          if (((bitField0_ & 0x00002000) == 0x00002000) &&
               byteBlock_ != null &&
               byteBlock_ != io.crayfis.android.DataProtos.ByteBlock.getDefaultInstance()) {
             byteBlock_ =
@@ -11075,7 +11211,7 @@ public final class DataProtos {
         } else {
           byteBlockBuilder_.mergeFrom(value);
         }
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00002000;
         return this;
       }
       /**
@@ -11088,14 +11224,14 @@ public final class DataProtos {
         } else {
           byteBlockBuilder_.clear();
         }
-        bitField0_ = (bitField0_ & ~0x00001000);
+        bitField0_ = (bitField0_ & ~0x00002000);
         return this;
       }
       /**
        * <code>optional .crayfis.ByteBlock byte_block = 22;</code>
        */
       public io.crayfis.android.DataProtos.ByteBlock.Builder getByteBlockBuilder() {
-        bitField0_ |= 0x00001000;
+        bitField0_ |= 0x00002000;
         onChanged();
         return getByteBlockFieldBuilder().getBuilder();
       }
@@ -11132,7 +11268,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public boolean hasAvg() {
-        return ((bitField0_ & 0x00002000) == 0x00002000);
+        return ((bitField0_ & 0x00004000) == 0x00004000);
       }
       /**
        * <code>optional double avg = 5;</code>
@@ -11144,7 +11280,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public Builder setAvg(double value) {
-        bitField0_ |= 0x00002000;
+        bitField0_ |= 0x00004000;
         avg_ = value;
         onChanged();
         return this;
@@ -11153,7 +11289,7 @@ public final class DataProtos {
        * <code>optional double avg = 5;</code>
        */
       public Builder clearAvg() {
-        bitField0_ = (bitField0_ & ~0x00002000);
+        bitField0_ = (bitField0_ & ~0x00004000);
         avg_ = 0D;
         onChanged();
         return this;
@@ -11164,7 +11300,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public boolean hasStd() {
-        return ((bitField0_ & 0x00004000) == 0x00004000);
+        return ((bitField0_ & 0x00008000) == 0x00008000);
       }
       /**
        * <code>optional double std = 6;</code>
@@ -11176,7 +11312,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public Builder setStd(double value) {
-        bitField0_ |= 0x00004000;
+        bitField0_ |= 0x00008000;
         std_ = value;
         onChanged();
         return this;
@@ -11185,7 +11321,7 @@ public final class DataProtos {
        * <code>optional double std = 6;</code>
        */
       public Builder clearStd() {
-        bitField0_ = (bitField0_ & ~0x00004000);
+        bitField0_ = (bitField0_ & ~0x00008000);
         std_ = 0D;
         onChanged();
         return this;
@@ -11193,9 +11329,9 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Integer> hist_ = java.util.Collections.emptyList();
       private void ensureHistIsMutable() {
-        if (!((bitField0_ & 0x00008000) == 0x00008000)) {
+        if (!((bitField0_ & 0x00010000) == 0x00010000)) {
           hist_ = new java.util.ArrayList<java.lang.Integer>(hist_);
-          bitField0_ |= 0x00008000;
+          bitField0_ |= 0x00010000;
          }
       }
       /**
@@ -11252,7 +11388,7 @@ public final class DataProtos {
        */
       public Builder clearHist() {
         hist_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00008000);
+        bitField0_ = (bitField0_ & ~0x00010000);
         onChanged();
         return this;
       }
@@ -11262,7 +11398,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public boolean hasXbn() {
-        return ((bitField0_ & 0x00010000) == 0x00010000);
+        return ((bitField0_ & 0x00020000) == 0x00020000);
       }
       /**
        * <code>optional uint32 xbn = 7;</code>
@@ -11274,7 +11410,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public Builder setXbn(int value) {
-        bitField0_ |= 0x00010000;
+        bitField0_ |= 0x00020000;
         xbn_ = value;
         onChanged();
         return this;
@@ -11283,7 +11419,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 7;</code>
        */
       public Builder clearXbn() {
-        bitField0_ = (bitField0_ & ~0x00010000);
+        bitField0_ = (bitField0_ & ~0x00020000);
         xbn_ = 0;
         onChanged();
         return this;
@@ -11294,7 +11430,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public boolean hasOrientX() {
-        return ((bitField0_ & 0x00020000) == 0x00020000);
+        return ((bitField0_ & 0x00040000) == 0x00040000);
       }
       /**
        * <code>optional float orient_x = 8;</code>
@@ -11306,7 +11442,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public Builder setOrientX(float value) {
-        bitField0_ |= 0x00020000;
+        bitField0_ |= 0x00040000;
         orientX_ = value;
         onChanged();
         return this;
@@ -11315,7 +11451,7 @@ public final class DataProtos {
        * <code>optional float orient_x = 8;</code>
        */
       public Builder clearOrientX() {
-        bitField0_ = (bitField0_ & ~0x00020000);
+        bitField0_ = (bitField0_ & ~0x00040000);
         orientX_ = 0F;
         onChanged();
         return this;
@@ -11326,7 +11462,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public boolean hasOrientY() {
-        return ((bitField0_ & 0x00040000) == 0x00040000);
+        return ((bitField0_ & 0x00080000) == 0x00080000);
       }
       /**
        * <code>optional float orient_y = 9;</code>
@@ -11338,7 +11474,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public Builder setOrientY(float value) {
-        bitField0_ |= 0x00040000;
+        bitField0_ |= 0x00080000;
         orientY_ = value;
         onChanged();
         return this;
@@ -11347,7 +11483,7 @@ public final class DataProtos {
        * <code>optional float orient_y = 9;</code>
        */
       public Builder clearOrientY() {
-        bitField0_ = (bitField0_ & ~0x00040000);
+        bitField0_ = (bitField0_ & ~0x00080000);
         orientY_ = 0F;
         onChanged();
         return this;
@@ -11358,7 +11494,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public boolean hasOrientZ() {
-        return ((bitField0_ & 0x00080000) == 0x00080000);
+        return ((bitField0_ & 0x00100000) == 0x00100000);
       }
       /**
        * <code>optional float orient_z = 10;</code>
@@ -11370,7 +11506,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public Builder setOrientZ(float value) {
-        bitField0_ |= 0x00080000;
+        bitField0_ |= 0x00100000;
         orientZ_ = value;
         onChanged();
         return this;
@@ -11379,7 +11515,7 @@ public final class DataProtos {
        * <code>optional float orient_z = 10;</code>
        */
       public Builder clearOrientZ() {
-        bitField0_ = (bitField0_ & ~0x00080000);
+        bitField0_ = (bitField0_ & ~0x00100000);
         orientZ_ = 0F;
         onChanged();
         return this;
@@ -11390,7 +11526,7 @@ public final class DataProtos {
        * <code>optional float pressure = 18;</code>
        */
       public boolean hasPressure() {
-        return ((bitField0_ & 0x00100000) == 0x00100000);
+        return ((bitField0_ & 0x00200000) == 0x00200000);
       }
       /**
        * <code>optional float pressure = 18;</code>
@@ -11402,7 +11538,7 @@ public final class DataProtos {
        * <code>optional float pressure = 18;</code>
        */
       public Builder setPressure(float value) {
-        bitField0_ |= 0x00100000;
+        bitField0_ |= 0x00200000;
         pressure_ = value;
         onChanged();
         return this;
@@ -11411,7 +11547,7 @@ public final class DataProtos {
        * <code>optional float pressure = 18;</code>
        */
       public Builder clearPressure() {
-        bitField0_ = (bitField0_ & ~0x00100000);
+        bitField0_ = (bitField0_ & ~0x00200000);
         pressure_ = 0F;
         onChanged();
         return this;
@@ -19306,45 +19442,46 @@ public final class DataProtos {
       "skip\030- \003(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\014\n\004hi" +
       "st\030# \003(\004\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\"@" +
       "\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DA" +
-      "TA\020\002\022\022\n\016PRECALIBRATION\020\003J\004\010\037\020 R\006bg_avg\"\345" +
+      "TA\020\002\022\022\n\016PRECALIBRATION\020\003J\004\010\037\020 R\006bg_avg\"\374" +
       "\003\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\026\n\016timestamp" +
       "_nano\030\016 \001(\004\022\025\n\rtimestamp_ntp\030\017 \001(\004\022\030\n\020ti" +
-      "mestamp_target\030\023 \001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n" +
-      "\007gps_lon\030\003 \001(\001\022\024\n\014gps_altitude\030\013 \001(\001\022\024\n\014" +
-      "gps_accuracy\030\014 \001(\002\022\023\n\013gps_fixtime\030\r \001(\004\022" +
-      "\030\n\020gps_fixtime_nano\030\020 \001(\004\022*\n\tzero_bias\030\025" +
-      " \001(\0132\027.crayfis.ZeroBiasSquare\022\036\n\006pixels\030" +
-      "\004 \003(\0132\016.crayfis.Pixel\022&\n\nbyte_block\030\026 \001(" +
-      "\0132\022.crayfis.ByteBlock\022\013\n\003avg\030\005 \001(\001\022\013\n\003st" +
-      "d\030\006 \001(\001\022\014\n\004hist\030\024 \003(\r\022\013\n\003xbn\030\007 \001(\r\022\020\n\010or" +
-      "ient_x\030\010 \001(\002\022\020\n\010orient_y\030\t \001(\002\022\020\n\010orient" +
-      "_z\030\n \001(\002\022\020\n\010pressure\030\022 \001(\002J\004\010\021\020\022R\014batter" +
-      "y_temp\"p\n\005Pixel\022\t\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n" +
-      "\003val\030\003 \001(\r\022\024\n\014adjusted_val\030\007 \001(\r\022\020\n\010near" +
-      "_max\030\004 \001(\r\022\r\n\005avg_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002" +
-      "\"C\n\tByteBlock\022\t\n\001x\030\001 \003(\r\022\t\n\001y\030\002 \003(\r\022\013\n\003v" +
-      "al\030\003 \003(\r\022\023\n\013side_length\030\004 \001(\r\"Q\n\016ZeroBia" +
-      "sSquare\022\r\n\005x_min\030\001 \001(\r\022\r\n\005y_min\030\002 \001(\r\022\013\n" +
-      "\003val\030\003 \003(\r\022\024\n\014frame_number\030\004 \001(\r\"\264\001\n\021Cal" +
-      "ibrationResult\022\016\n\006run_id\030\001 \001(\004\022\021\n\trun_id" +
-      "_hi\030\010 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_tim" +
-      "e\030\003 \001(\004\022\022\n\nhist_pixel\030\004 \003(\r\022\024\n\014hist_l2pi" +
-      "xel\030\005 \003(\r\022\025\n\rhist_maxpixel\030\006 \003(\r\022\025\n\rhist" +
-      "_numpixel\030\007 \003(\r\"\201\003\n\024PreCalibrationResult" +
-      "\022\016\n\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030\022 \001(\004\022\021\n\tp" +
-      "recal_id\030\023 \001(\004\022\024\n\014precal_id_hi\030\024 \001(\004\022\022\n\n" +
-      "start_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\017\n\007we" +
-      "ights\030\006 \003(\002\022\024\n\014sample_res_x\030\007 \001(\r\022\024\n\014sam" +
-      "ple_res_y\030\010 \001(\r\022\025\n\rinterpolation\030\013 \001(\r\022\024" +
-      "\n\014battery_temp\030\014 \001(\r\022\032\n\022compressed_weigh" +
-      "ts\030\r \001(\014\022\031\n\021compressed_format\030\016 \001(\t\022\023\n\013s" +
-      "econd_hist\030\017 \003(\r\022\017\n\007hotcell\030\020 \003(\r\022\r\n\005res" +
-      "_x\030\021 \001(\r\022\025\n\rprecal_config\030\025 \001(\tJ\004\010\004\020\005J\004\010" +
-      "\005\020\006\"\220\001\n\rCrayonMessage\022\017\n\007payload\030\001 \001(\014\022\016" +
-      "\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007use" +
-      "r_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022\023\n\013remote_a" +
-      "ddr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(\rB \n\022io.cra" +
-      "yfis.androidB\nDataProtos"
+      "mestamp_target\030\023 \001(\004\022\025\n\rexposure_time\030\027 " +
+      "\001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\024\n" +
+      "\014gps_altitude\030\013 \001(\001\022\024\n\014gps_accuracy\030\014 \001(" +
+      "\002\022\023\n\013gps_fixtime\030\r \001(\004\022\030\n\020gps_fixtime_na" +
+      "no\030\020 \001(\004\022*\n\tzero_bias\030\025 \001(\0132\027.crayfis.Ze" +
+      "roBiasSquare\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.P" +
+      "ixel\022&\n\nbyte_block\030\026 \001(\0132\022.crayfis.ByteB" +
+      "lock\022\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\014\n\004hist\030\024" +
+      " \003(\r\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020\n\010o" +
+      "rient_y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\022\020\n\010press" +
+      "ure\030\022 \001(\002J\004\010\021\020\022R\014battery_temp\"p\n\005Pixel\022\t" +
+      "\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adj" +
+      "usted_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg" +
+      "_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"C\n\tByteBlock\022\t\n\001" +
+      "x\030\001 \003(\r\022\t\n\001y\030\002 \003(\r\022\013\n\003val\030\003 \003(\r\022\023\n\013side_" +
+      "length\030\004 \001(\r\"Q\n\016ZeroBiasSquare\022\r\n\005x_min\030" +
+      "\001 \001(\r\022\r\n\005y_min\030\002 \001(\r\022\013\n\003val\030\003 \003(\r\022\024\n\014fra" +
+      "me_number\030\004 \001(\r\"\264\001\n\021CalibrationResult\022\016\n" +
+      "\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030\010 \001(\004\022\022\n\nstar" +
+      "t_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_p" +
+      "ixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist" +
+      "_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\201" +
+      "\003\n\024PreCalibrationResult\022\016\n\006run_id\030\001 \001(\004\022" +
+      "\021\n\trun_id_hi\030\022 \001(\004\022\021\n\tprecal_id\030\023 \001(\004\022\024\n" +
+      "\014precal_id_hi\030\024 \001(\004\022\022\n\nstart_time\030\002 \001(\004\022" +
+      "\020\n\010end_time\030\003 \001(\004\022\017\n\007weights\030\006 \003(\002\022\024\n\014sa" +
+      "mple_res_x\030\007 \001(\r\022\024\n\014sample_res_y\030\010 \001(\r\022\025" +
+      "\n\rinterpolation\030\013 \001(\r\022\024\n\014battery_temp\030\014 " +
+      "\001(\r\022\032\n\022compressed_weights\030\r \001(\014\022\031\n\021compr" +
+      "essed_format\030\016 \001(\t\022\023\n\013second_hist\030\017 \003(\r\022" +
+      "\017\n\007hotcell\030\020 \003(\r\022\r\n\005res_x\030\021 \001(\r\022\025\n\rpreca" +
+      "l_config\030\025 \001(\tJ\004\010\004\020\005J\004\010\005\020\006\"\220\001\n\rCrayonMes" +
+      "sage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n" +
+      "\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app" +
+      "_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n\013subm" +
+      "it_time\030\007 \001(\rB \n\022io.crayfis.androidB\nDat" +
+      "aProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -19381,7 +19518,7 @@ public final class DataProtos {
     internal_static_crayfis_Event_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_Event_descriptor,
-        new java.lang.String[] { "Timestamp", "TimestampNano", "TimestampNtp", "TimestampTarget", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "ZeroBias", "Pixels", "ByteBlock", "Avg", "Std", "Hist", "Xbn", "OrientX", "OrientY", "OrientZ", "Pressure", });
+        new java.lang.String[] { "Timestamp", "TimestampNano", "TimestampNtp", "TimestampTarget", "ExposureTime", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "ZeroBias", "Pixels", "ByteBlock", "Avg", "Std", "Hist", "Xbn", "OrientX", "OrientY", "OrientZ", "Pressure", });
     internal_static_crayfis_Pixel_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_crayfis_Pixel_fieldAccessorTable = new

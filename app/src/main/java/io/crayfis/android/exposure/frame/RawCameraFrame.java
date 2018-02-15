@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -31,7 +32,7 @@ public abstract class RawCameraFrame {
 
     byte[] mRawBytes;
     Mat mGrayMat;
-    private int[] mHist = new int[256];
+    private final int[] mHist = new int[256];
 
     private final int mCameraId;
     private final boolean mFacingBack;
@@ -41,7 +42,6 @@ public abstract class RawCameraFrame {
     final int mLength;
 
     private final AcquisitionTime mAcquiredTime;
-    private final long mTimestamp;
     private final Location mLocation;
     private final float[] mOrientation;
     private final float mRotationZZ;
@@ -54,7 +54,7 @@ public abstract class RawCameraFrame {
 
     Boolean mBufferClaimed = false;
 
-    private DataProtos.Event.Builder mEventBuilder;
+    DataProtos.Event.Builder mEventBuilder;
     private DataProtos.Event mEvent;
     private boolean mUploadRequested;
 
@@ -97,6 +97,7 @@ public abstract class RawCameraFrame {
 
         AcquisitionTime bAcquisitionTime;
         long bTimestamp;
+        TotalCaptureResult bResult;
         Location bLocation;
         float[] bOrientation;
         float bRotationZZ;
@@ -198,6 +199,11 @@ public abstract class RawCameraFrame {
             return this;
         }
 
+        public Builder setCaptureResult(TotalCaptureResult result) {
+            bResult = result;
+            return this;
+        }
+
         public Builder setLocation(Location location) {
             bLocation = location;
             return this;
@@ -237,7 +243,7 @@ public abstract class RawCameraFrame {
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
                 case CAMERA2:
                     return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bResult, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
                 default:
@@ -254,7 +260,6 @@ public abstract class RawCameraFrame {
                    final int frameHeight,
                    final int length,
                    final AcquisitionTime acquisitionTime,
-                   final long timestamp,
                    final Location location,
                    final float[] orientation,
                    final float rotationZZ,
@@ -271,7 +276,6 @@ public abstract class RawCameraFrame {
         mFrameHeight = frameHeight;
         mLength = length;
         mAcquiredTime = acquisitionTime;
-        mTimestamp = timestamp;
         mLocation = location;
         mOrientation = orientation;
         mRotationZZ = rotationZZ;
@@ -407,12 +411,6 @@ public abstract class RawCameraFrame {
      */
     public long getAcquiredTimeNano() { return mAcquiredTime.Nano; }
 
-    /**
-     * Get the timestamp associated with the target to which the camera is rendering frames.
-     *
-     * @return long
-     */
-    public long getTimestamp() { return mTimestamp; }
 
     /**
      * Get the location for this.
@@ -508,14 +506,14 @@ public abstract class RawCameraFrame {
         return mFacingBack;
     }
 
-    private DataProtos.Event.Builder getEventBuilder() {
+    @CallSuper
+    DataProtos.Event.Builder getEventBuilder() {
         if (mEventBuilder == null) {
             mEventBuilder = DataProtos.Event.newBuilder();
 
             mEventBuilder.setTimestamp(getAcquiredTime())
                     .setTimestampNano(getAcquiredTimeNano())
                     .setTimestampNtp(getAcquiredTimeNTP())
-                    .setTimestampTarget(getTimestamp())
                     .setPressure(mPressure)
                     .setGpsLat(mLocation.getLatitude())
                     .setGpsLon(mLocation.getLongitude())

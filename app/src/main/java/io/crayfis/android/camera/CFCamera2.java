@@ -12,7 +12,6 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.renderscript.Allocation;
@@ -25,7 +24,7 @@ import android.util.Size;
 import android.view.Surface;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,18 +41,18 @@ import io.crayfis.android.util.CFLog;
 class CFCamera2 extends CFCamera {
 
     private Semaphore mCameraOpenCloseLock = new Semaphore(1);
-    protected CameraDevice mCameraDevice;
-    protected CameraCharacteristics mCameraCharacteristics;
+    private CameraDevice mCameraDevice;
+    private CameraCharacteristics mCameraCharacteristics;
 
-    protected CaptureRequest.Builder mPreviewRequestBuilder;
+    private CaptureRequest.Builder mPreviewRequestBuilder;
     private CaptureRequest mPreviewRequest;
-    protected Size mPreviewSize;
+    private Size mPreviewSize;
     private CameraCaptureSession mCaptureSession;
 
-    protected Allocation ain;
+    private Allocation ain;
     
     private AtomicInteger mBuffersQueued = new AtomicInteger();
-    private final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
+    private final ArrayDeque<TotalCaptureResult> mQueuedCaptureResults = new ArrayDeque<>();
 
 
     /**
@@ -74,7 +73,7 @@ class CFCamera2 extends CFCamera {
                 ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
                 Surface surface = ain.getSurface();
                 mPreviewRequestBuilder.addTarget(surface);
-                mCameraDevice.createCaptureSession(Arrays.asList(surface), mStateCallback, null);
+                mCameraDevice.createCaptureSession(Collections.singletonList(surface), mStateCallback, null);
 
             } catch (CameraAccessException e) {
                 e.printStackTrace();
@@ -163,7 +162,7 @@ class CFCamera2 extends CFCamera {
 
             //CFLog.d("ExposureTime = " + result.get(CaptureResult.SENSOR_EXPOSURE_TIME));
 
-            mQueuedTimestamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
+            mQueuedCaptureResults.add(result);
             createFrames();
         }
     };
@@ -177,9 +176,9 @@ class CFCamera2 extends CFCamera {
         // make sure the timestamp queues aren't cleared underneath us
         synchronized (mTimestampHistory) {
 
-            if(mBuffersQueued.intValue() > 0 && !mQueuedTimestamps.isEmpty()) {
+            if(mBuffersQueued.intValue() > 0 && !mQueuedCaptureResults.isEmpty()) {
                 final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                        .setTimestamp(mQueuedTimestamps.poll())
+                        .setCaptureResult(mQueuedCaptureResults.poll())
                         .build();
 
                 mTimestampHistory.addValue(frame.getAcquiredTimeNano());
@@ -195,7 +194,7 @@ class CFCamera2 extends CFCamera {
         }
     }
 
-    protected void configureManualSettings() {
+    private void configureManualSettings() {
 
         mPreviewRequestBuilder.set(CaptureRequest.BLACK_LEVEL_LOCK, true);
 
@@ -222,7 +221,7 @@ class CFCamera2 extends CFCamera {
 
     }
 
-    protected long findTargetDuration(Size size) {
+    private long findTargetDuration(Size size) {
 
         // go through ranges known to be supported
         Long requestedDuration = 33000000L;
@@ -259,12 +258,6 @@ class CFCamera2 extends CFCamera {
         StreamConfigurationMap map = mCameraCharacteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
-        String formatString = "Supported formats: ";
-        for (int i : map.getOutputFormats()) {
-            formatString += i + ", ";
-        }
-        CFLog.d(formatString);
-
         int format = ImageFormat.YUV_420_888;
 
         if(CONFIG.getTargetResolution().name.equalsIgnoreCase("RAW")) {
@@ -279,6 +272,7 @@ class CFCamera2 extends CFCamera {
         // now make sure this is above the minimum for the format
         long minDuration = map.getOutputMinFrameDuration(format, size);
 
+        CFLog.d("requestedDuration = " + requestedDuration);
         CFLog.d("Target FPS = " + (int)(1000000000./requestedDuration));
 
         return Math.max(requestedDuration, minDuration);
@@ -288,7 +282,7 @@ class CFCamera2 extends CFCamera {
     /**
      * Configures and starts CameraCaptureSession with a CaptureRequest.Builder
      */
-    protected void configureCameraPreviewSession() throws CameraAccessException {
+    private void configureCameraPreviewSession() throws CameraAccessException {
 
 
         // We set up a CaptureRequest.Builder with the output Surface.
@@ -323,8 +317,8 @@ class CFCamera2 extends CFCamera {
     @Override
     void configure() {
 
-        synchronized (mQueuedTimestamps) {
-            mQueuedTimestamps.clear();
+        synchronized (mQueuedCaptureResults) {
+            mQueuedCaptureResults.clear();
         }
 
         // get rid of old camera setup
