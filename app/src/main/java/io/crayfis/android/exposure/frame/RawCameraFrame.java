@@ -10,6 +10,7 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
+import android.support.annotation.CallSuper;
 
 import org.opencv.core.Mat;
 
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.ScriptC_parse;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -108,7 +108,6 @@ public abstract class RawCameraFrame {
         ExposureBlock bExposureBlock;
 
         ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
-        ScriptC_parse bParse;
         ScriptC_weight bScriptCWeight;
         Allocation bWeighted;
         Allocation bOut;
@@ -159,7 +158,7 @@ public abstract class RawCameraFrame {
 
             if(alloc.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
                 bFrameType = FrameType.YUV;
-            } else if(alloc.getElement().getDataType() == Element.DataType.UNSIGNED_16) {
+            } else {
                 bFrameType = FrameType.RAW;
             }
 
@@ -182,18 +181,12 @@ public abstract class RawCameraFrame {
             return this;
         }
 
-        public Builder setShorts(short[] shorts) {
-            bShorts = shorts;
-            return this;
-        }
-
         private void setRenderScript(RenderScript rs, int width, int height) {
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(width)
                     .setY(height)
                     .create();
 
-            bParse = new ScriptC_parse(rs);
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
             if(bWeighted != null) bWeighted.destroy();
             bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
@@ -256,10 +249,10 @@ public abstract class RawCameraFrame {
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
                 case RAW:
-                    return new RawCamera2RAWFrame(bShorts, bRaw, bCameraId, bFacingBack,
+                    return new RawCamera2RAWFrame(bRaw, bCameraId, bFacingBack,
                             bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
-                            bScriptIntrinsicHistogram, bScriptCWeight, bParse, bWeighted, bOut);
+                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
                 default:
                     CFLog.e("Frame builder not configured: returning null");
                     return null;
@@ -303,7 +296,7 @@ public abstract class RawCameraFrame {
         aout = out;
     }
 
-    public int getRawValAt(int x, int y) {
+    public final int getRawValAt(int x, int y) {
         // we don't need to worry about unweighted bytes until
         // after L1 processing
         if(!mBufferClaimed) {
@@ -361,24 +354,27 @@ public abstract class RawCameraFrame {
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
+    @CallSuper
     public void retire() {
-        weightingLock.release();
+        if(!mBufferClaimed) {
+            weightingLock.release();
+            mBufferClaimed = true;
+        }
     }
 
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
+    @CallSuper
     public boolean claim() {
-        // ensure that calculateStatistics has been called, so that allocated
-        // data doesn't disappear.
         calculateStatistics();
-
         return true;
     }
 
     /**
      * Notify the ExposureBlock we are done with this frame, and free all memory
      */
+    @CallSuper
     public void clear() {
         if(!mBufferClaimed) retire();
 

@@ -14,7 +14,6 @@ import java.util.concurrent.Semaphore;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -24,10 +23,10 @@ import io.crayfis.android.util.CFLog;
 @TargetApi(21)
 class RawCamera2Frame extends RawCameraFrame {
 
-    private Allocation aRaw;
+    protected Allocation aRaw;
 
     // lock for buffers entering aRaw
-    private static final Semaphore mRawLock = new Semaphore(1);
+    protected static final Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
                     final int cameraId,
@@ -71,10 +70,11 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public boolean claim() {
-        super.claim();
+    public final boolean claim() {
 
         if (mBufferClaimed) return true;
+
+        super.claim();
 
         Mat mat1 = null;
         Mat mat2 = null;
@@ -86,8 +86,8 @@ class RawCamera2Frame extends RawCameraFrame {
             weightingLock.release();
             mat1 = new MatOfByte(adjustedBytes);
 
+            aRaw.copyTo(adjustedBytes);
             mRawBytes = adjustedBytes;
-            aRaw.copyTo(mRawBytes);
             mRawLock.release();
 
             // probably a better way to do this, but this
@@ -99,8 +99,8 @@ class RawCamera2Frame extends RawCameraFrame {
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            weightingLock.release();
-            mRawLock.release();
+            if(weightingLock.availablePermits() == 0) weightingLock.release();
+            if(mRawLock.availablePermits() == 0) mRawLock.release();
             if (mat1 != null) mat1.release();
             if (mat2 != null) mat2.release();
             if (mGrayMat != null) mGrayMat.release();
@@ -110,12 +110,11 @@ class RawCamera2Frame extends RawCameraFrame {
     }
 
     @Override
-    public void retire() {
-        super.retire();
+    public final void retire() {
         if(!mBufferClaimed) {
             mRawLock.release();
-            mBufferClaimed = true;
         }
+        super.retire();
     }
 
 }

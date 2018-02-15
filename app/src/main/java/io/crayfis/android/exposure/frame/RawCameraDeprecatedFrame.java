@@ -62,9 +62,10 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     @Override
     public boolean claim() {
-        super.claim();
 
         if (mBufferClaimed) return true;
+
+        super.claim();
 
         Mat mat1 = null;
         Mat mat2 = null;

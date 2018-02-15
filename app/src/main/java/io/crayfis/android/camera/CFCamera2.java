@@ -50,7 +50,6 @@ class CFCamera2 extends CFCamera {
     private CameraCaptureSession mCaptureSession;
 
     protected Allocation ain;
-    protected Surface mSurface;
     
     private AtomicInteger mBuffersQueued = new AtomicInteger();
     private final ArrayDeque<Long> mQueuedTimestamps = new ArrayDeque<>();
@@ -71,8 +70,10 @@ class CFCamera2 extends CFCamera {
                 configureCameraPreviewSession();
                 RCF_BUILDER.setCamera2(mCameraCharacteristics, mCameraId, ain, mApplication.getRenderScript());
 
-                mPreviewRequestBuilder.addTarget(mSurface);
-                mCameraDevice.createCaptureSession(Arrays.asList(mSurface), mStateCallback, null);
+                ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
+                Surface surface = ain.getSurface();
+                mPreviewRequestBuilder.addTarget(surface);
+                mCameraDevice.createCaptureSession(Arrays.asList(surface), mStateCallback, null);
 
             } catch (CameraAccessException e) {
                 e.printStackTrace();
@@ -163,7 +164,6 @@ class CFCamera2 extends CFCamera {
 
             mQueuedTimestamps.add(result.get(CaptureResult.SENSOR_TIMESTAMP));
             createFrames();
-
         }
     };
 
@@ -293,9 +293,6 @@ class CFCamera2 extends CFCamera {
                 .setY(mPreviewSize.getHeight())
                 .setYuvFormat(ImageFormat.YUV_420_888)
                 .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
-
-        ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
-        mSurface = ain.getSurface();
     }
     
     @Override
@@ -320,7 +317,6 @@ class CFCamera2 extends CFCamera {
         if (null != ain) {
             ain.destroy();
             ain = null;
-            mSurface = null;
         }
         mPreviewSize = null;
         mCameraOpenCloseLock.release();

@@ -7,19 +7,15 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.Image;
-import android.media.ImageReader;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.Type;
 import android.util.Size;
 
-import java.nio.ShortBuffer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -28,44 +24,6 @@ import io.crayfis.android.util.CFLog;
 
 @TargetApi(21)
 class CFCamera2RAW extends CFCamera2 {
-
-    private ImageReader mImageReader;
-
-    private ImageReader.OnImageAvailableListener mRAWListener
-            = new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader imageReader) {
-
-            AcquisitionTime acq = new AcquisitionTime();
-            synchronized (mTimestampHistory) {
-                mTimestampHistory.addValue(acq.Nano);
-            }
-
-            final Image im = imageReader.acquireNextImage();
-
-            Image.Plane rawPlane = im.getPlanes()[0];
-            ShortBuffer buf = rawPlane.getBuffer().asShortBuffer();
-            short[] shorts = new short[mResX * mResY];
-            buf.get(shorts);
-
-            RCF_BUILDER.setAcquisitionTime(acq)
-                    .setTimestamp(im.getTimestamp())
-                    .setShorts(shorts);
-            im.close();
-
-
-            final RawCameraFrame frame = RCF_BUILDER.build();
-
-            mFrameHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    frame.commit();
-                }
-            });
-
-        }
-    };
-
 
     /**
      * Configures image capture
@@ -124,24 +82,13 @@ class CFCamera2RAW extends CFCamera2 {
         mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, targetDuration);
         mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, targetDuration);
 
-        mImageReader = ImageReader.newInstance(mResX, mResY, format, 3);
-        mImageReader.setOnImageAvailableListener(mRAWListener, mFrameHandler);
-        mSurface = mImageReader.getSurface();
-
-        ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.U16(mRS))
+        ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.U8(mRS))
                 .setX(mResX)
                 .setY(mResY)
-                .create(), Allocation.USAGE_SCRIPT);
+                .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
 
     }
 
-    @Override
-    void configure() {
-        if(mImageReader != null) {
-            mImageReader.close();
-            mImageReader = null;
-        }
-        super.configure();
-    }
+
 
 }
