@@ -110,7 +110,7 @@ public class PreCalibrator extends TriggerProcessor {
     public void onMaxReached() {
         if(sConfigStep < sConfigList.size()-1) {
             sConfigStep++;
-            ExposureBlockManager.getInstance(mApplication).newExposureBlock(CFApplication.State.PRECALIBRATION);
+            ExposureBlockManager.getInstance().newExposureBlock(CFApplication.State.PRECALIBRATION);
         } else {
             submitPrecalibrationResult();
             sConfigStep = 0;

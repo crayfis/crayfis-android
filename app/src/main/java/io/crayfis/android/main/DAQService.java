@@ -170,7 +170,9 @@ public class DAQService extends Service {
 
                 startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
-                xbManager = ExposureBlockManager.getInstance(mApplication);
+                xbManager = ExposureBlockManager.getInstance();
+                xbManager.register(mApplication);
+                xbManager.newExposureBlock(CFApplication.State.INIT);
 
                 // start camera
 
@@ -317,10 +319,9 @@ public class DAQService extends Service {
             case DATA:
             case IDLE:
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
+                xbManager.flushCommittedBlocks();
                 mCFCamera.unregister();
-                xbManager.destroy();
-
-                xbManager.flushCommittedBlocks(true);
+                xbManager.unregister();
 
                 mApplication.killTimer();
 

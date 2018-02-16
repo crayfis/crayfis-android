@@ -26,11 +26,11 @@ public abstract class CFCamera {
 
     // thread for Camera callbacks
     protected Handler mCameraHandler;
-    protected HandlerThread mCameraThread;
+    protected final HandlerThread mCameraThread = new HandlerThread("CFCamera2");;
 
     // thread for posting jobs handling frames
     protected Handler mFrameHandler;
-    protected HandlerThread mFrameThread;
+    protected final HandlerThread mFrameThread = new HandlerThread("RawCamera2Frame");
 
     private CFSensor mCFSensor;
     private CFLocation mCFLocation;
@@ -58,7 +58,7 @@ public abstract class CFCamera {
      *
      * @return CFCamera
      */
-    public static CFCamera getInstance() {
+    public static synchronized CFCamera getInstance() {
 
         if(sInstance == null) {
 
@@ -76,24 +76,22 @@ public abstract class CFCamera {
      *
      * @param app the application
      */
-    public void register(CFApplication app) {
+    public synchronized void register(CFApplication app) {
+
+        if(mApplication != null) return; // already registered
+
         mApplication = app;
         mRS = mApplication.getRenderScript();
 
         mCFSensor = new CFSensor(app, getFrameBuilder());
         mCFLocation = new CFLocation(app, getFrameBuilder());
 
-        // start new threads if necessary
-        if(mCameraHandler == null) {
+        mCameraThread.start();
+        mCameraHandler = new Handler(mCameraThread.getLooper());
 
-            mCameraThread = new HandlerThread("CFCamera2");
-            mCameraThread.start();
-            mCameraHandler = new Handler(mCameraThread.getLooper());
+        mFrameThread.start();
+        mFrameHandler = new Handler(mFrameThread.getLooper());
 
-            mFrameThread = new HandlerThread("RawCamera2Frame");
-            mFrameThread.start();
-            mFrameHandler = new Handler(mFrameThread.getLooper());
-        }
 
         changeCamera();
     }
@@ -101,30 +99,24 @@ public abstract class CFCamera {
     /**
      * Unregisters cameras, sensors, and location services
      */
-    public void unregister() {
+    public synchronized void unregister() {
+
+        if(!mCameraThread.isAlive()) return; // already unregistered
         mCameraId = -1;
 
-        changeCamera();
+        changeCameraFrom(mCameraId, true);
 
         // quit the existing camera thread
-        if(mCameraThread != null) {
-            mCameraThread.quitSafely();
-            try {
-                mCameraThread.join();
-                mCameraThread = null;
-                mCameraHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            mFrameThread.quitSafely();
-            try {
-                mFrameThread.join();
-                mFrameThread = null;
-                mFrameHandler = null;
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        try {
+            mCameraThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        mFrameThread.quitSafely();
+        try {
+            mFrameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         mCFSensor.unregister();
@@ -141,15 +133,20 @@ public abstract class CFCamera {
         changeCameraFrom(mCameraId);
     }
 
+    public void changeCameraFrom(final int currentId) {
+        changeCameraFrom(currentId, false);
+    }
+
     /**
      * The same as changeCamera(), except marks the ID of a bad frame to avoid changing camera
      * multiple times unnecessarily
      *
      * @param currentId The cameraId of the bad frame
+     * @param quit Whether we quit the thread after changing the camera
      */
-    public void changeCameraFrom(final int currentId) {
+    private synchronized void changeCameraFrom(final int currentId, final boolean quit) {
 
-        if(currentId != mCameraId || mCameraHandler == null) return;
+        if (currentId != mCameraId || !mCameraThread.isAlive()) return;
 
         mCameraHandler.post(new Runnable() {
             @Override
@@ -158,35 +155,36 @@ public abstract class CFCamera {
                 // find next camera based on DAQ state
                 int nextId = -1;
                 CFApplication.State state = mApplication.getApplicationState();
-                switch(state) {
+                switch (state) {
                     case INIT:
                         nextId = 0;
                         break;
                     case STABILIZATION:
                         // switch cameras and try again
                         nextId = currentId + 1;
-                        if(nextId >= Camera.getNumberOfCameras()) {
+                        if (nextId >= Camera.getNumberOfCameras()) {
                             nextId = -1;
+                        } else {
+                            // need a new STABILIZATION XB for next camera
+                            ExposureBlockManager.getInstance().abortExposureBlock();
                         }
                         break;
                     case PRECALIBRATION:
                     case CALIBRATION:
                     case DATA:
                     case IDLE:
+                    case FINISHED:
                         // take a break for a while
                         nextId = -1;
                 }
 
                 mCameraId = nextId;
 
-                if(nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
+                if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
                     mApplication.startStabilizationTimer();
                 }
 
-                ExposureBlockManager xbManager = ExposureBlockManager.getInstance(mApplication);
-                xbManager.abortExposureBlock();
-
-                CFLog.i("cameraId:" + currentId + " -> "+ nextId);
+                CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
                 configure();
 
@@ -194,8 +192,13 @@ public abstract class CFCamera {
                     mTimestampHistory.clear();
                 }
 
-                if(state == CFApplication.State.INIT) {
+                if (state == CFApplication.State.INIT) {
                     mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+                }
+
+                // if we are unregistering the camera
+                if(quit && mCameraId == -1) {
+                    mCameraThread.quitSafely();
                 }
             }
         });

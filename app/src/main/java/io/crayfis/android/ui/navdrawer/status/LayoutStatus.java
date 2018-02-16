@@ -212,12 +212,12 @@ public class LayoutStatus extends NavDrawerFragment {
                 final int count, total;
                 String statusMessage = "";
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
-                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
+                    count = ExposureBlockManager.getInstance().getCurrentExposureBlock().count.intValue();
                     total = PreCalibrator.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
                     statusMessage += String.format(getString(R.string.status_step),
                             PreCalibrator.getStepNumber()+1, PreCalibrator.getTotalSteps()) + "\n";
                 } else {
-                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
+                    count = ExposureBlockManager.getInstance().getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;
