@@ -50,7 +50,7 @@
     <string name="taking_data">Собираем данные!</string>
     <string name="calibration">Меряем уровни</string>
     <string name="network_unavailable">Нет доступа в сеть</string>
-    <string name="stabilization">Проверяем что камера закрыта</string>
+    <string name="survey">Проверяем что камера закрыта</string>
     <string name="bad_user_code">Неправильный код пользователя.</string>
     <string name="server_overload">Сервер перегружен</string>
     <string name="ignored">Проигнорирован</string>

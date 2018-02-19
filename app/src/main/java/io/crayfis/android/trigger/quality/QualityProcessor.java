@@ -77,8 +77,8 @@ public class QualityProcessor extends TriggerProcessor {
 
     @Override
     public void onMaxReached() {
-        // we have a sufficient number of good frames, so switch to CALIBRATION from STABILIZATION
-        if(mApplication.getApplicationState() == CFApplication.State.STABILIZATION) {
+        // we have a sufficient number of good frames, so switch to CALIBRATION from SURVEY
+        if(mApplication.getApplicationState() == CFApplication.State.SURVEY) {
             mApplication.setApplicationState(CFApplication.State.CALIBRATION);
         }
     }

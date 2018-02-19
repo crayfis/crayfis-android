@@ -49,7 +49,7 @@
     <string name="taking_data">جاري جمع البيانات</string>
     <string name="calibration">قياس الدرجات</string>
     <string name="network_unavailable">الشبكة غير متوفرة</string>
-    <string name="stabilization">التحقق من حجب الكاميرا</string>
+    <string name="survey">التحقق من حجب الكاميرا</string>
     <string name="bad_user_code">رمز مستخدم غير مقبول</string>
     <string name="server_overload">الخادم مثقل</string>
     <string name="ignored">تم تجاهله</string>

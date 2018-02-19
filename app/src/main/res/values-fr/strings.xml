@@ -50,7 +50,7 @@
     <string name="taking_data">En fonctionnement!</string>
     <string name="calibration">Etalonnage ..</string>
     <string name="network_unavailable">Réseau indisponible</string>
-    <string name="stabilization">Vérification que l\'appareil photo est couvert</string>
+    <string name="survey">Vérification que l\'appareil photo est couvert</string>
     <string name="bad_user_code">Code utilisateur invalide.</string>
     <string name="server_overload">Serveur surchargé</string>
     <string name="ignored">Ignoré</string>

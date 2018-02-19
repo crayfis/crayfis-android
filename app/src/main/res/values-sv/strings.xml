@@ -50,7 +50,7 @@
     <string name="taking_data">Tar data!</string>
     <string name="calibration">Mäter nivåer</string>
     <string name="network_unavailable">Nätverk otillgängligt</string>
-    <string name="stabilization">Kontrollerar om kameran är täckt</string>
+    <string name="survey">Kontrollerar om kameran är täckt</string>
     <string name="bad_user_code">Ogiltig användarkod.</string>
     <string name="server_overload">Servern är överbelastad</string>
     <string name="ignored">Ignorerad</string>

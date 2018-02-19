@@ -34,7 +34,7 @@ public class TriggerChain implements Iterable<TriggerProcessor> {
     public TriggerChain(CFApplication application, CFApplication.State state) {
 
         switch (state) {
-            case STABILIZATION:
+            case SURVEY:
                 mFirst = L0Processor.makeProcessor(application)
                         .setNext(QualityProcessor.makeProcessor(application));
                 break;

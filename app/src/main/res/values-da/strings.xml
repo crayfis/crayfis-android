@@ -50,7 +50,7 @@
     <string name="taking_data">Taking data!</string>
     <string name="calibration">Measuring levels</string>
     <string name="network_unavailable">Network unavailable</string>
-    <string name="stabilization">Checking camera is covered</string>
+    <string name="survey">Checking camera is covered</string>
     <string name="bad_user_code">Invalid user code.</string>
     <string name="server_overload">Server overloaded</string>
     <string name="ignored">Ignored</string>

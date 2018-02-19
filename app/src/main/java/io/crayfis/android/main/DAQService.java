@@ -120,8 +120,8 @@ public class DAQService extends Service {
                 case INIT:
                     doStateTransitionInitialization(previous);
                     break;
-                case STABILIZATION:
-                    doStateTransitionStabilization(previous);
+                case SURVEY:
+                    doStateTransitionSurvey(previous);
                     break;
                 case PRECALIBRATION:
                     doStateTransitionPrecalibration(previous);
@@ -185,19 +185,19 @@ public class DAQService extends Service {
     }
 
     /**
-     * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
+     * We go to survey mode in order to wait for the camera to settle down after a period of bad data.
      *
      * @param previousState Previous {@link CFApplication.State}
      * @throws IllegalFsmStateException
      */
-    private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+    private void doStateTransitionSurvey(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         CONFIG.setL1Threshold(255);
         switch (previousState) {
             case IDLE:
                 mCFCamera.changeCamera();
             case INIT:
-                xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
+                xbManager.newExposureBlock(CFApplication.State.SURVEY);
                 mCFCamera.getFrameBuilder().setWeights(null);
                 break;
             default:
@@ -237,7 +237,7 @@ public class DAQService extends Service {
             case INIT:
                 // starting with low battery, but finish initialization first
                 break;
-            case STABILIZATION:
+            case SURVEY:
             case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
@@ -278,7 +278,7 @@ public class DAQService extends Service {
         }
 
         switch (previousState) {
-            case STABILIZATION:
+            case SURVEY:
             case PRECALIBRATION:
                 mCFCamera.badFlatEvents = 0;
                 PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
@@ -313,7 +313,7 @@ public class DAQService extends Service {
     private void doStateTransitionFinished(CFApplication.State previous) {
         switch (previous) {
             case INIT:
-            case STABILIZATION:
+            case SURVEY:
             case CALIBRATION:
             case PRECALIBRATION:
             case DATA:

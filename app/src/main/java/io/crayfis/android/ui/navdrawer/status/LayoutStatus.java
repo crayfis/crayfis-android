@@ -80,8 +80,8 @@ public class LayoutStatus extends NavDrawerFragment {
 
         final CFApplication.State appState = ((CFApplication) activity.getApplication()).getApplicationState();
         switch(appState) {
-            case STABILIZATION:
-                mStatus.setText(R.string.stabilization);
+            case SURVEY:
+                mStatus.setText(R.string.survey);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);

@@ -159,13 +159,13 @@ public abstract class CFCamera {
                     case INIT:
                         nextId = 0;
                         break;
-                    case STABILIZATION:
+                    case SURVEY:
                         // switch cameras and try again
                         nextId = currentId + 1;
                         if (nextId >= Camera.getNumberOfCameras()) {
                             nextId = -1;
                         } else {
-                            // need a new STABILIZATION XB for next camera
+                            // need a new SURVEY XB for next camera
                             ExposureBlockManager.getInstance().abortExposureBlock();
                         }
                         break;
@@ -181,7 +181,7 @@ public abstract class CFCamera {
                 mCameraId = nextId;
 
                 if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
-                    mApplication.startStabilizationTimer();
+                    mApplication.startSurveyTimer();
                 }
 
                 CFLog.i("cameraId:" + currentId + " -> " + nextId);
@@ -193,7 +193,7 @@ public abstract class CFCamera {
                 }
 
                 if (state == CFApplication.State.INIT) {
-                    mApplication.setApplicationState(CFApplication.State.STABILIZATION);
+                    mApplication.setApplicationState(CFApplication.State.SURVEY);
                 }
 
                 // if we are unregistering the camera
