@@ -108,18 +108,8 @@ public final class ExposureBlockManager {
             public void run() {
                 CFCamera camera = CFCamera.getInstance();
 
-                if(camera.getResX() == 0) {
-                    // camera error -- don't crash
-                    return;
-                }
-
                 // need to check battery BEFORE freezing to set final battery temp
                 mApplication.checkBatteryStats();
-
-                if (current_xb != null) {
-                    current_xb.freeze();
-                    retireExposureBlock(current_xb);
-                }
 
                 // set a timer for when this XB expires, if we are in DATA mode
                 if(mXBExpirationTimer != null) {
@@ -133,7 +123,7 @@ public final class ExposureBlockManager {
                 int cameraId = camera.getCameraId();
 
                 CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
-                current_xb = new ExposureBlock(mApplication,
+                ExposureBlock newXB = new ExposureBlock(mApplication,
                         mTotalXBs,
                         mApplication.getBuildInformation().getRunId(),
                         cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
@@ -145,7 +135,14 @@ public final class ExposureBlockManager {
                         camera.getResY());
 
                 // start assigning frames to new xb
-                camera.getFrameBuilder().setExposureBlock(current_xb);
+                camera.getFrameBuilder().setExposureBlock(newXB);
+
+                if (current_xb != null) {
+                    current_xb.freeze();
+                    retireExposureBlock(current_xb);
+                }
+
+                current_xb = newXB;
 
                 mTotalXBs++;
 

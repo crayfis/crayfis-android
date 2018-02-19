@@ -47,7 +47,7 @@ public class ExposureBlock {
 	private final int res_x;
 	private final int res_y;
 
-	private final TriggerChain triggerChain;
+	public final TriggerChain TRIGGER_CHAIN;
 	
 	private int total_pixels;
 	
@@ -73,7 +73,7 @@ public class ExposureBlock {
                          int xbn,
                          UUID run_id,
                          UUID precal_id,
-                         TriggerChain triggerChain,
+                         TriggerChain TRIGGER_CHAIN,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
@@ -85,7 +85,7 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
-        this.triggerChain = triggerChain;
+        this.TRIGGER_CHAIN = TRIGGER_CHAIN;
         this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -125,7 +125,7 @@ public class ExposureBlock {
         // If we made it here, we can submit the XB to the L1Processor.
         // It will pop the assigned frame from the XB's internal list, and will also handle
         // recycling the buffers.
-        triggerChain.submitFrame(frame);
+        TRIGGER_CHAIN.submitFrame(frame);
     }
 
     /**
@@ -221,20 +221,20 @@ public class ExposureBlock {
 		DataProtos.ExposureBlock.Builder buf = DataProtos.ExposureBlock.newBuilder()
                 .setDaqState(translateState(daq_state));
 
-		for(TriggerProcessor processor : triggerChain) {
+		for(TriggerProcessor processor : TRIGGER_CHAIN) {
 		    buf.addConfig(processor.getClass().getSimpleName() + ": " + processor.config.toString())
                     .addProcessed(processor.getProcessed())
                     .addPass(processor.getPasses())
                     .addSkip(processor.getSkips());
         }
 
-        TriggerProcessor L1 = triggerChain.getProcessor(L1Processor.class);
+        TriggerProcessor L1 = TRIGGER_CHAIN.getProcessor(L1Processor.class);
 
         if(L1 != null) {
             buf.setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
         }
 
-        TriggerProcessor L2 = triggerChain.getProcessor(L2Processor.class);
+        TriggerProcessor L2 = TRIGGER_CHAIN.getProcessor(L2Processor.class);
 
         if(L2 != null) {
             buf.setL2Thresh(L2.config.getInt(L2Processor.KEY_L2_THRESH));

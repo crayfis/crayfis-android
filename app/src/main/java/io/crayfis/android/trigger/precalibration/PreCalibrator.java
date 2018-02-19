@@ -233,15 +233,15 @@ public class PreCalibrator extends TriggerProcessor {
         return false;
     }
 
-    public static TriggerProcessor.Config getCurrentConfig() {
+    public TriggerProcessor.Config getCurrentConfig() {
         return sConfigList.get(sConfigStep);
     }
 
-    public static int getStepNumber() {
+    public int getStepNumber() {
         return sConfigStep;
     }
 
-    public static int getTotalSteps() {
+    public int getTotalSteps() {
         return sConfigList.size();
     }
 
