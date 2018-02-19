@@ -161,8 +161,6 @@ class CFCamera2 extends CFCamera {
 
             super.onCaptureCompleted(session, request, result);
 
-            CFLog.d("ExposureTime = " + result.get(CaptureResult.SENSOR_EXPOSURE_TIME));
-
             mQueuedCaptureResults.add(result);
             createFrames();
         }

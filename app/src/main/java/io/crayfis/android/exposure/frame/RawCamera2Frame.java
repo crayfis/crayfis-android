@@ -139,7 +139,6 @@ class RawCamera2Frame extends RawCameraFrame {
 
         Long exposureTime = mResult.get(CaptureResult.SENSOR_EXPOSURE_TIME);
         if(exposureTime != null) {
-            CFLog.d("exposure = " + exposureTime);
             mEventBuilder.setExposureTime(exposureTime);
         }
         return mEventBuilder;
