@@ -71,17 +71,12 @@ import io.crayfis.android.util.CFLog;
  */
 public class DAQActivity extends AppCompatActivity {
 
-    private DAQService.DAQBinder mBinder;
-
     private final CFConfig CONFIG = CFConfig.getInstance();
 
     private ServiceConnection mServiceConnection;
+    private DAQService.DAQBinder mBinder;
 
     private boolean mRestart = false;
-
-
-	Context context;
-
     private Intent DAQIntent;
 
     private ActionBarDrawerToggle mActionBarDrawerToggle;
@@ -90,7 +85,7 @@ public class DAQActivity extends AppCompatActivity {
         public void onReceive(Context c, Intent intent) {
             String message = intent.getStringExtra(CFApplication.EXTRA_ERROR_MESSAGE);
             if(intent.getBooleanExtra(CFApplication.EXTRA_IS_FATAL, false)) {
-                final TextView tx1 = new TextView(context);
+                final TextView tx1 = new TextView(DAQActivity.this);
                 tx1.setText(message);
                 tx1.setTextColor(Color.WHITE);
                 tx1.setBackgroundColor(Color.BLACK);
@@ -118,7 +113,18 @@ public class DAQActivity extends AppCompatActivity {
                     finish();
                 }
             } else {
-                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(DAQActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+        }
+    };
+
+    private final BroadcastReceiver STATE_CHANGE_RECEIVER = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch ((CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW)) {
+                case INIT:
+                case FINISHED:
+                    invalidateOptionsMenu();
             }
         }
     };
@@ -135,7 +141,6 @@ public class DAQActivity extends AppCompatActivity {
         setContentView(R.layout.activity_daq);
         configureNavigation();
 
-        context = getApplicationContext();
         DAQIntent = new Intent(this, DAQService.class);
 
         // make sure we begin the service when the activity is created
@@ -148,7 +153,7 @@ public class DAQActivity extends AppCompatActivity {
                 float time_sleeping = mBinder.getTimeWhileSleeping() * (float) 1e-3;
                 int cand_sleeping = mBinder.getCountsWhileSleeping();
                 if (time_sleeping > 5.0 && cand_sleeping > 0) {
-                    Toast.makeText(context, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
+                    Toast.makeText(DAQActivity.this, "Your device saw " + cand_sleeping + " particle candidates in the last " + String.format("%1.1f", time_sleeping) + "s", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -183,6 +188,9 @@ public class DAQActivity extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(this)
                 .registerReceiver(ERROR_RECEIVER, new IntentFilter(CFApplication.ACTION_ERROR));
+
+        LocalBroadcastManager.getInstance(this)
+                .registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
 
         // see if we are intentionally finished
         CFApplication application = (CFApplication) getApplication();
@@ -294,8 +302,8 @@ public class DAQActivity extends AppCompatActivity {
             actionBar.setHomeButtonEnabled(true);
         }
 
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, (DrawerLayout) findViewById(R.id.drawer_layout), 0, 0);
         final DrawerLayout drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, 0, 0);
         final NavHelper.NavDrawerListener listener = new NavHelper.NavDrawerListener(mActionBarDrawerToggle);
         drawerLayout.setDrawerListener(listener);
         final ListView navItems = (ListView) findViewById(R.id.nav_list_view);
@@ -389,20 +397,12 @@ public class DAQActivity extends AppCompatActivity {
     private void clickedStop() {
         CFApplication application = (CFApplication)getApplication();
         application.setApplicationState(CFApplication.State.FINISHED);
-        invalidateOptionsMenu();
     }
 
     private void clickedStart() {
-        invalidateOptionsMenu();
-
         startService(DAQIntent);
         bindService(DAQIntent, mServiceConnection, BIND_AUTO_CREATE);
     }
-
-
-    ////////////////
-    // UI Updates //
-    ////////////////
 
     public DAQService.DAQBinder getBinder() {
         return mBinder;
