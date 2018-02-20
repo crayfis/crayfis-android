@@ -60,7 +60,7 @@ class SpeedometerView extends View {
     private Bitmap rMask;
 
 
-    SpeedometerView(Context context) {
+    public SpeedometerView(Context context) {
         super(context);
         init();
 
@@ -68,7 +68,7 @@ class SpeedometerView extends View {
         setLabelTextSize(Math.round(DEFAULT_LABEL_TEXT_SIZE_DP * density));
     }
 
-    SpeedometerView(Context context, AttributeSet attrs) {
+    public SpeedometerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         float density = getResources().getDisplayMetrics().density;
@@ -115,7 +115,7 @@ class SpeedometerView extends View {
             public Double evaluate(float fraction, Double startValue, Double endValue) {
                 return startValue + fraction*(endValue-startValue);
             }
-        }, Double.valueOf(getSpeed()), Double.valueOf(progress));
+        }, getSpeed(), progress);
 
         va.setDuration(duration);
         va.setStartDelay(startDelay);
@@ -372,7 +372,7 @@ class SpeedometerView extends View {
 
     @SuppressWarnings("NewApi")
     private void init() {
-        if (Build.VERSION.SDK_INT >= 11 && !isInEditMode()) {
+        if (!isInEditMode()) {
             setLayerType(View.LAYER_TYPE_HARDWARE, null);
         }
 

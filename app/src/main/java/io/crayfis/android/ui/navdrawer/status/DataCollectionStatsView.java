@@ -12,21 +12,21 @@ import io.crayfis.android.util.ViewUtil;
 /**
  * Show the user the status of the application.
  */
-public final class DataCollectionStatsView extends LinearLayout {
+final class DataCollectionStatsView extends LinearLayout {
 
     private TextView mFramesScanned;
     private TextView mPixelsScanned;
     private TextView mCandidates;
 
-    DataCollectionStatsView(final Context context) {
+    public DataCollectionStatsView(final Context context) {
         this(context, null);
     }
 
-    DataCollectionStatsView(final Context context, final AttributeSet attrs) {
+    public DataCollectionStatsView(final Context context, final AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    DataCollectionStatsView(final Context context, final AttributeSet attrs, final int defStyle) {
+    public DataCollectionStatsView(final Context context, final AttributeSet attrs, final int defStyle) {
         super(context, attrs, defStyle);
         inflate(context, R.layout.widget_data_collection_stats, this);
         mFramesScanned = (TextView) findViewById(R.id.frames_scanned);
@@ -52,13 +52,13 @@ public final class DataCollectionStatsView extends LinearLayout {
      * General status values for the application.  Create a new instance through
      * {@link DataCollectionStatsView.Status.Builder}.
      */
-    public static final class Status {
+    static final class Status {
 
         private final long mTotalFrames;
-        private final int mTotalEvents;
+        private final long mTotalEvents;
         private final long mTotalPixels;
 
-        private Status(final int totalEvents, final long totalPixels, final long totalFrames) {
+        private Status(final long totalEvents, final long totalPixels, final long totalFrames) {
             mTotalFrames = totalFrames;
             mTotalEvents = totalEvents;
             mTotalPixels = totalPixels;
@@ -69,7 +69,7 @@ public final class DataCollectionStatsView extends LinearLayout {
          *
          * @return The total events.
          */
-        int getTotalEvents() {
+        long getTotalEvents() {
             return mTotalEvents;
         }
         long getTotalFrames() {
@@ -90,7 +90,7 @@ public final class DataCollectionStatsView extends LinearLayout {
          */
         public static final class Builder {
 
-            private int mTotalEvents;
+            private long mTotalEvents;
             private long mTotalPixels;
             private long mTotalFrames;
 
@@ -102,12 +102,12 @@ public final class DataCollectionStatsView extends LinearLayout {
              * @param totalEvents The total events.
              * @return This instance for chaining.
              */
-            public Builder setTotalEvents(final int totalEvents) {
+            Builder setTotalEvents(final long totalEvents) {
                 mTotalEvents = totalEvents;
                 return this;
             }
 
-            public Builder setTotalFrames(final long totalFrames) {
+            Builder setTotalFrames(final long totalFrames) {
                 mTotalFrames = totalFrames;
                 return this;
             }
@@ -118,7 +118,7 @@ public final class DataCollectionStatsView extends LinearLayout {
              * @param totalPixels The total candidate pixels.
              * @return This instance for chaining.
              */
-            public Builder setTotalPixels(final long totalPixels) {
+            Builder setTotalPixels(final long totalPixels) {
                 mTotalPixels = totalPixels;
                 return this;
             }
@@ -129,7 +129,7 @@ public final class DataCollectionStatsView extends LinearLayout {
              * Create a new instance of {@link DataCollectionStatsView.Status}.
              * @return A new instance of {@link DataCollectionStatsView.Status}.
              */
-            public Status build() {
+            Status build() {
                 return new Status(
                         mTotalEvents, mTotalPixels,mTotalFrames);
             }

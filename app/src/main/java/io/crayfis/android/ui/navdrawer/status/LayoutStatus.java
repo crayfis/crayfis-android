@@ -248,8 +248,11 @@ public class LayoutStatus extends NavDrawerFragment {
         try {
             DAQService.DAQBinder binder = ((DAQActivity)getActivity()).getBinder();
             if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-                final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
-                mDataCollectionStats.setStatus(status);
+                mDataCollectionStats.setStatus(new DataCollectionStatsView.Status.Builder()
+                        .setTotalFrames(binder.getTotalFrames())
+                        .setTotalEvents(binder.getTotalEvents())
+                        .setTotalPixels(binder.getTotalPixelsScanned())
+                        .build());
             }
         } catch (Exception e) {
             // don't crash

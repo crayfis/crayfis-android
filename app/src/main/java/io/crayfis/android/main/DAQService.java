@@ -34,7 +34,6 @@ import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.ui.navdrawer.status.DataCollectionStatsView;
 
 /**
  * Created by Jeff on 2/17/2017.
@@ -420,13 +419,16 @@ public class DAQService extends Service {
             return L2Processor.L2Count - mCountsBeforeSleeping;
         }
 
-        public DataCollectionStatsView.Status getDataCollectionStatus() {
-            final int area = mCFCamera.getResX() * mCFCamera.getResY();
-            return new DataCollectionStatsView.Status.Builder()
-                    .setTotalEvents(L2Processor.L2Count)
-                    .setTotalPixels((long)L1Processor.L1CountData * area)
-                    .setTotalFrames(L1Processor.L1CountData)
-                    .build();
+        public long getTotalEvents() {
+            return L2Processor.L2Count;
+        }
+
+        public long getTotalPixelsScanned() {
+            return (long)L1Processor.L1CountData * mCFCamera.getResX() * mCFCamera.getResY();
+        }
+
+        public long getTotalFrames() {
+            return L1Processor.L1CountData;
         }
 
         public String getDevText() {
