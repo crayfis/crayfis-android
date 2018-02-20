@@ -6,9 +6,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 
-import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
@@ -204,12 +202,18 @@ public final class ExposureBlockManager {
 
         CFApplication.State state = xb.getDAQState();
 
-        if (state != CFApplication.State.DATA) {
-            CFLog.e("Received ExposureBlock with a state of " + state + ", ignoring.");
-            return;
+        switch (state) {
+            case INIT:
+            case SURVEY:
+            case IDLE:
+            case FINISHED:
+                CFLog.e("Received ExposureBlock with a state of " + state + ", ignoring.");
+                break;
+            case PRECALIBRATION:
+            case CALIBRATION:
+            case DATA:
+                retired_blocks.add(xb);
         }
-
-        retired_blocks.add(xb);
     }
 
     public int getTotalXBs() {

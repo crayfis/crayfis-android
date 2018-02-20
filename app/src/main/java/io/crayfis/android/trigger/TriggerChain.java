@@ -35,8 +35,7 @@ public class TriggerChain implements Iterable<TriggerProcessor> {
 
         switch (state) {
             case SURVEY:
-                mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application));
+                mFirst = QualityProcessor.makeProcessor(application);
                 break;
             case PRECALIBRATION:
                 mFirst = L0Processor.makeProcessor(application)

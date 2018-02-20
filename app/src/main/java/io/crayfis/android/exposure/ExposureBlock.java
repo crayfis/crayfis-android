@@ -204,8 +204,6 @@ public class ExposureBlock {
 	// Translate between the internal and external enums
 	private static DataProtos.ExposureBlock.State translateState(CFApplication.State orig) {
 		switch (orig) {
-		    case INIT:
-			    return DataProtos.ExposureBlock.State.INIT;
             case PRECALIBRATION:
                 return DataProtos.ExposureBlock.State.PRECALIBRATION;
             case CALIBRATION:
