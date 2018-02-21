@@ -26,29 +26,19 @@
         <item>@string/resolution_fhd</item>
         <item>@string/resolution_qhd</item>
         <item>@string/resolution_uhd</item>
-        <item>@string/resolution_raw</item>
+        <item>@string/resolution_max</item>
     </string-array>
     <string-array name="pref_resolution_vals" translatable="false">
-        <item>low</item>
-        <item>medium</item>
+        <item>Low</item>
+        <item>Medium</item>
         <item>720p</item>
         <item>1080p</item>
         <item>1440p</item>
         <item>2160p</item>
-        <item>RAW</item>
+        <item>MAX</item>
     </string-array>
 
     <string-array name="pref_fps_entries" translatable="false">
-        <item>1</item>
-        <item>5</item>
-        <item>10</item>
-        <item>15</item>
-        <item>20</item>
-        <item>24</item>
-        <item>30</item>
-    </string-array>
-
-    <string-array name="pref_fps_vals" translatable="false">
         <item>1</item>
         <item>5</item>
         <item>10</item>

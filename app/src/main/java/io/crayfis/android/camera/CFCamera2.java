@@ -12,7 +12,6 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.renderscript.Allocation;
@@ -51,6 +50,7 @@ class CFCamera2 extends CFCamera {
     private CameraCaptureSession mCaptureSession;
 
     private Allocation ain;
+    private static final int YUV_FORMAT = ImageFormat.YUV_420_888;
     
     private AtomicInteger mBuffersQueued = new AtomicInteger();
     private final ArrayDeque<TotalCaptureResult> mQueuedCaptureResults = new ArrayDeque<>();
@@ -252,24 +252,11 @@ class CFCamera2 extends CFCamera {
         // seems to work better when rounded to ms
         requestedDuration = 1000000L * Math.round(requestedDuration/1000000.);
 
-        // first, check whether RAW format is requested/available
-
         StreamConfigurationMap map = mCameraCharacteristics.get(
                 CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
-        int format = ImageFormat.YUV_420_888;
-
-        if(CONFIG.getTargetResolution().name.equalsIgnoreCase("RAW")) {
-            for (int f : map.getOutputFormats()) {
-                if (f == ImageFormat.RAW_SENSOR) {
-                    format = ImageFormat.RAW_SENSOR;
-                    break;
-                }
-            }
-        }
-
         // now make sure this is above the minimum for the format
-        long minDuration = map.getOutputMinFrameDuration(format, size);
+        long minDuration = map.getOutputMinFrameDuration(YUV_FORMAT, size);
 
         CFLog.d("requestedDuration = " + requestedDuration);
         CFLog.d("Target FPS = " + (int)(1000000000./requestedDuration));
@@ -312,7 +299,7 @@ class CFCamera2 extends CFCamera {
         ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.YUV(mRS))
                 .setX(mPreviewSize.getWidth())
                 .setY(mPreviewSize.getHeight())
-                .setYuvFormat(ImageFormat.YUV_420_888)
+                .setYuvFormat(YUV_FORMAT)
                 .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
     }
     

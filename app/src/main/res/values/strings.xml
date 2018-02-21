@@ -62,7 +62,7 @@
     <string name="resolution_fhd" translatable="false">FHD (1080p)</string>
     <string name="resolution_qhd" translatable="false">QHD (1440p)</string>
     <string name="resolution_uhd" translatable="false">UHD (2160p)</string>
-    <string name="resolution_raw" translatable="false">Full RAW</string>
+    <string name="resolution_max" translatable="false">MAX</string>
     <string name="long_exposure" translatable="false">Long exposure</string>
     <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
 
