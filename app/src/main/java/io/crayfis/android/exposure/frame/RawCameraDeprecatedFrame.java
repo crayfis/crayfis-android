@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
@@ -21,6 +22,7 @@ import io.crayfis.android.exposure.ExposureBlock;
 class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     private final Camera mCamera;
+    private final long mTimestamp;
 
     RawCameraDeprecatedFrame(@NonNull final byte[] bytes,
                              final Camera camera,
@@ -41,12 +43,14 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final Allocation in,
                              final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime,
                 location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
         mRawBytes = bytes;
         mCamera = camera;
+        mTimestamp = timestamp;
+
 
     }
 
@@ -62,9 +66,10 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     @Override
     public boolean claim() {
-        super.claim();
 
         if (mBufferClaimed) return true;
+
+        super.claim();
 
         Mat mat1 = null;
         Mat mat2 = null;
@@ -110,6 +115,14 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                 mRawBytes = null;
             }
         }
+    }
+
+    @Override
+    DataProtos.Event.Builder getEventBuilder() {
+        super.getEventBuilder();
+
+        mEventBuilder.setTimestamp(mTimestamp);
+        return mEventBuilder;
     }
 
 }

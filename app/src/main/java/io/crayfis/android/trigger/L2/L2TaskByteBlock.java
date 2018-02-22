@@ -90,7 +90,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
             double[] xy = l2PixelCoords.get(i,0);
             int ix = (int) xy[0];
             int iy = (int) xy[1];
-            int val = frame.getRawByteAt(ix, iy) & 0xFF;
+            int val = frame.getRawValAt(ix, iy);
             builder.addX(ix)
                     .addY(iy);
 
@@ -105,7 +105,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         }
 
         for(Pair<Integer, Integer> pairXY : blockXY) {
-            builder.addVal(frame.getRawByteAt(pairXY.first, pairXY.second) & 0xFF);
+            builder.addVal(frame.getRawValAt(pairXY.first, pairXY.second));
         }
 
         l2PixelCoords.release();

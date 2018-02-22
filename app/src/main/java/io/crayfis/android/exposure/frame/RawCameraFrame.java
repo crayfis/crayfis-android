@@ -2,22 +2,21 @@ package io.crayfis.android.exposure.frame;
 
 import android.annotation.TargetApi;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
+import android.support.annotation.CallSuper;
 
 import org.opencv.core.Mat;
 
 import java.util.List;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.AcquisitionTime;
@@ -33,7 +32,7 @@ public abstract class RawCameraFrame {
 
     byte[] mRawBytes;
     Mat mGrayMat;
-    private int[] mHist = new int[256];
+    private final int[] mHist = new int[256];
 
     private final int mCameraId;
     private final boolean mFacingBack;
@@ -43,7 +42,6 @@ public abstract class RawCameraFrame {
     final int mLength;
 
     private final AcquisitionTime mAcquiredTime;
-    private final long mTimestamp;
     private final Location mLocation;
     private final float[] mOrientation;
     private final float mRotationZZ;
@@ -56,7 +54,7 @@ public abstract class RawCameraFrame {
 
     Boolean mBufferClaimed = false;
 
-    private DataProtos.Event.Builder mEventBuilder;
+    DataProtos.Event.Builder mEventBuilder;
     private DataProtos.Event mEvent;
     private boolean mUploadRequested;
 
@@ -73,7 +71,7 @@ public abstract class RawCameraFrame {
 
     private enum FrameType {
         DEPRECATED,
-        YUV
+        CAMERA2
     }
 
     /**
@@ -99,6 +97,7 @@ public abstract class RawCameraFrame {
 
         AcquisitionTime bAcquisitionTime;
         long bTimestamp;
+        TotalCaptureResult bResult;
         Location bLocation;
         float[] bOrientation;
         float bRotationZZ;
@@ -145,16 +144,16 @@ public abstract class RawCameraFrame {
         /**
          * Method for configuring Builder to create RawCamera2Frames
          *
-         * @param manager CameraManager
+         * @param cc CameraCharacteristics
          * @param cameraId int
          * @param alloc Allocation camera buffer
          * @param rs RenderScript context
          * @return Builder
          */
         @TargetApi(21)
-        public Builder setCamera2(CameraManager manager, int cameraId, Allocation alloc, RenderScript rs) {
+        public Builder setCamera2(CameraCharacteristics cc, int cameraId, Allocation alloc, RenderScript rs) {
 
-            bFrameType = FrameType.YUV;
+            bFrameType = FrameType.CAMERA2;
 
             bRaw = alloc;
 
@@ -165,15 +164,9 @@ public abstract class RawCameraFrame {
             bLength = bFrameWidth * bFrameHeight;
 
             bCameraId = cameraId;
-            try {
-                String[] idList = manager.getCameraIdList();
-                CameraCharacteristics cc = manager.getCameraCharacteristics(idList[cameraId]);
-                Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
-                if (lensFacing != null) {
-                    bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
-                }
-            } catch (CameraAccessException e) {
-                CFLog.e("CameraAccessException");
+            Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
+            if (lensFacing != null) {
+                bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
             }
 
             setRenderScript(rs, bFrameWidth, bFrameHeight);
@@ -203,6 +196,11 @@ public abstract class RawCameraFrame {
 
         public Builder setTimestamp(long timestamp) {
             bTimestamp = timestamp;
+            return this;
+        }
+
+        public Builder setCaptureResult(TotalCaptureResult result) {
+            bResult = result;
             return this;
         }
 
@@ -243,9 +241,9 @@ public abstract class RawCameraFrame {
                             bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
-                case YUV:
+                case CAMERA2:
                     return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
+                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bResult, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock,
                             bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
                 default:
@@ -262,7 +260,6 @@ public abstract class RawCameraFrame {
                    final int frameHeight,
                    final int length,
                    final AcquisitionTime acquisitionTime,
-                   final long timestamp,
                    final Location location,
                    final float[] orientation,
                    final float rotationZZ,
@@ -279,7 +276,6 @@ public abstract class RawCameraFrame {
         mFrameHeight = frameHeight;
         mLength = length;
         mAcquiredTime = acquisitionTime;
-        mTimestamp = timestamp;
         mLocation = location;
         mOrientation = orientation;
         mRotationZZ = rotationZZ;
@@ -291,13 +287,13 @@ public abstract class RawCameraFrame {
         aout = out;
     }
 
-    public byte getRawByteAt(int x, int y) {
+    public final int getRawValAt(int x, int y) {
         // we don't need to worry about unweighted bytes until
         // after L1 processing
         if(!mBufferClaimed) {
             claim();
         }
-        return mRawBytes[x + mFrameWidth * y];
+        return mRawBytes[x + mFrameWidth * y] & 0xFF;
     }
 
     /**
@@ -338,8 +334,10 @@ public abstract class RawCameraFrame {
     }
 
     public final void commit() {
-        callLocks();
-        mExposureBlock.tryAssignFrame(this);
+        if(mExposureBlock != null) {
+            callLocks();
+            mExposureBlock.tryAssignFrame(this);
+        }
     }
 
     void callLocks() { }
@@ -347,24 +345,27 @@ public abstract class RawCameraFrame {
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
+    @CallSuper
     public void retire() {
-        weightingLock.release();
+        if(!mBufferClaimed) {
+            weightingLock.release();
+            mBufferClaimed = true;
+        }
     }
 
     /**
      * Replenish image buffer after sending frame for L2 processing
      */
+    @CallSuper
     public boolean claim() {
-        // ensure that calculateStatistics has been called, so that allocated
-        // data doesn't disappear.
         calculateStatistics();
-
         return true;
     }
 
     /**
      * Notify the ExposureBlock we are done with this frame, and free all memory
      */
+    @CallSuper
     public void clear() {
         if(!mBufferClaimed) retire();
 
@@ -410,12 +411,6 @@ public abstract class RawCameraFrame {
      */
     public long getAcquiredTimeNano() { return mAcquiredTime.Nano; }
 
-    /**
-     * Get the timestamp associated with the target to which the camera is rendering frames.
-     *
-     * @return long
-     */
-    public long getTimestamp() { return mTimestamp; }
 
     /**
      * Get the location for this.
@@ -511,14 +506,14 @@ public abstract class RawCameraFrame {
         return mFacingBack;
     }
 
-    private DataProtos.Event.Builder getEventBuilder() {
+    @CallSuper
+    DataProtos.Event.Builder getEventBuilder() {
         if (mEventBuilder == null) {
             mEventBuilder = DataProtos.Event.newBuilder();
 
             mEventBuilder.setTimestamp(getAcquiredTime())
                     .setTimestampNano(getAcquiredTimeNano())
                     .setTimestampNtp(getAcquiredTimeNTP())
-                    .setTimestampTarget(getTimestamp())
                     .setPressure(mPressure)
                     .setGpsLat(mLocation.getLatitude())
                     .setGpsLon(mLocation.getLongitude())

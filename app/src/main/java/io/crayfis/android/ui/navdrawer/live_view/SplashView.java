@@ -32,7 +32,7 @@ class SplashView extends AppCompatImageView
     private float scale_y = 1;
 
 
-    SplashView(Context context, AttributeSet attrs)  {
+    public SplashView(Context context, AttributeSet attrs)  {
         super(context, attrs);
         h = new Handler();
 

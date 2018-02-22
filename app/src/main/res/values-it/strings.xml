@@ -51,7 +51,7 @@
     <string name="taking_data">Presa dati in corso!</string>
     <string name="calibration">Sto misurando i livelli</string>
     <string name="network_unavailable">Rete non disponibile</string>
-    <string name="stabilization">Sto verificando che la fotocamera sia oscurata</string>
+    <string name="survey">Sto verificando che la fotocamera sia oscurata</string>
     <string name="bad_user_code">Codice utente invalido.</string>
     <string name="server_overload">Server sovraccarico</string>
     <string name="ignored">Ignorato</string>

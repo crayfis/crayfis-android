@@ -51,7 +51,7 @@
     <string name="taking_data">Data Kayitlaniyor!</string>
     <string name="calibration">Seviye olcumu</string>
     <string name="network_unavailable">Iletisim agi yok</string>
-    <string name="stabilization">kamera kapali</string>
+    <string name="survey">kamera kapali</string>
     <string name="bad_user_code">Kullanici kodu gecersiz.</string>
     <string name="server_overload">Sunucu asiri dolu</string>
     <string name="ignored">Onemsizlendi</string>

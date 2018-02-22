@@ -80,8 +80,8 @@ public class LayoutStatus extends NavDrawerFragment {
 
         final CFApplication.State appState = ((CFApplication) activity.getApplication()).getApplicationState();
         switch(appState) {
-            case STABILIZATION:
-                mStatus.setText(R.string.stabilization);
+            case SURVEY:
+                mStatus.setText(R.string.survey);
                 mProgressBar.setVisibility(View.VISIBLE);
                 mStatusMessage.setVisibility(View.GONE);
                 mDataCollectionStats.setVisibility(View.GONE);
@@ -212,12 +212,16 @@ public class LayoutStatus extends NavDrawerFragment {
                 final int count, total;
                 String statusMessage = "";
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
-                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
-                    total = PreCalibrator.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
+                    ExposureBlockManager xbManager = ExposureBlockManager.getInstance();
+                    count = xbManager.getCurrentExposureBlock().count.intValue();
+                    PreCalibrator precal = (PreCalibrator) xbManager.getCurrentExposureBlock()
+                            .TRIGGER_CHAIN.getProcessor(PreCalibrator.class);
+                    if(precal == null) return;
+                    total = precal.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
                     statusMessage += String.format(getString(R.string.status_step),
-                            PreCalibrator.getStepNumber()+1, PreCalibrator.getTotalSteps()) + "\n";
+                            precal.getStepNumber()+1, precal.getTotalSteps()) + "\n";
                 } else {
-                    count = ExposureBlockManager.getInstance(application).getCurrentExposureBlock().count.intValue();
+                    count = ExposureBlockManager.getInstance().getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;
@@ -244,8 +248,11 @@ public class LayoutStatus extends NavDrawerFragment {
         try {
             DAQService.DAQBinder binder = ((DAQActivity)getActivity()).getBinder();
             if (mDataCollectionStats.getVisibility() == View.VISIBLE) {
-                final DataCollectionStatsView.Status status = binder.getDataCollectionStatus();
-                mDataCollectionStats.setStatus(status);
+                mDataCollectionStats.setStatus(new DataCollectionStatsView.Status.Builder()
+                        .setTotalFrames(binder.getTotalFrames())
+                        .setTotalEvents(binder.getTotalEvents())
+                        .setTotalPixels(binder.getTotalPixelsScanned())
+                        .build());
             }
         } catch (Exception e) {
             // don't crash

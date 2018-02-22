@@ -54,7 +54,7 @@
         android:key="@string/prefFPS"
         android:defaultValue="30"
         android:entries="@array/pref_fps_entries"
-        android:entryValues="@array/pref_fps_vals"
+        android:entryValues="@array/pref_fps_entries"
         android:summary="@string/settings_pref_fps_summary"
         android:title="@string/settings_pref_fps_title" />
 

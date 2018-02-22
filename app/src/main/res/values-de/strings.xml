@@ -49,7 +49,7 @@
     <string name="taking_data">Daten werden gesammelt!</string>
     <string name="calibration">Werte werden ueberprueft</string>
     <string name="network_unavailable">Netzwerk nicht verfuegbar</string>
-    <string name="stabilization">Checking camera is covered</string>
+    <string name="survey">Checking camera is covered</string>
     <string name="bad_user_code">Unglueltiger Benuztercode.</string>
     <string name="server_overload">Server ueberbelastet</string>
     <string name="ignored">Unbeachtet</string>

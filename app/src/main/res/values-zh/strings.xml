@@ -50,7 +50,7 @@
     <string name="taking_data">采集数据中!</string>
     <string name="calibration">测量级别中</string>
     <string name="network_unavailable">无网络</string>
-    <string name="stabilization">检查摄像头</string>
+    <string name="survey">检查摄像头</string>
     <string name="bad_user_code">无效用户码.</string>
     <string name="server_overload">服务器过载</string>
     <string name="ignored">忽略</string>

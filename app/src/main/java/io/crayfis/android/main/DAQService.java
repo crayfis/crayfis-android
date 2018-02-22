@@ -34,7 +34,6 @@ import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
-import io.crayfis.android.ui.navdrawer.status.DataCollectionStatsView;
 
 /**
  * Created by Jeff on 2/17/2017.
@@ -120,8 +119,8 @@ public class DAQService extends Service {
                 case INIT:
                     doStateTransitionInitialization(previous);
                     break;
-                case STABILIZATION:
-                    doStateTransitionStabilization(previous);
+                case SURVEY:
+                    doStateTransitionSurvey(previous);
                     break;
                 case PRECALIBRATION:
                     doStateTransitionPrecalibration(previous);
@@ -170,7 +169,9 @@ public class DAQService extends Service {
 
                 startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
-                xbManager = ExposureBlockManager.getInstance(mApplication);
+                xbManager = ExposureBlockManager.getInstance();
+                xbManager.register(mApplication);
+                xbManager.newExposureBlock(CFApplication.State.INIT);
 
                 // start camera
 
@@ -183,19 +184,19 @@ public class DAQService extends Service {
     }
 
     /**
-     * We go to stabilization mode in order to wait for the camera to settle down after a period of bad data.
+     * We go to survey mode in order to wait for the camera to settle down after a period of bad data.
      *
      * @param previousState Previous {@link CFApplication.State}
      * @throws IllegalFsmStateException
      */
-    private void doStateTransitionStabilization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+    private void doStateTransitionSurvey(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         CONFIG.setL1Threshold(255);
         switch (previousState) {
             case IDLE:
                 mCFCamera.changeCamera();
             case INIT:
-                xbManager.newExposureBlock(CFApplication.State.STABILIZATION);
+                xbManager.newExposureBlock(CFApplication.State.SURVEY);
                 mCFCamera.getFrameBuilder().setWeights(null);
                 break;
             default:
@@ -235,7 +236,7 @@ public class DAQService extends Service {
             case INIT:
                 // starting with low battery, but finish initialization first
                 break;
-            case STABILIZATION:
+            case SURVEY:
             case PRECALIBRATION:
             case CALIBRATION:
             case DATA:
@@ -276,7 +277,7 @@ public class DAQService extends Service {
         }
 
         switch (previousState) {
-            case STABILIZATION:
+            case SURVEY:
             case PRECALIBRATION:
                 mCFCamera.badFlatEvents = 0;
                 PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
@@ -311,16 +312,15 @@ public class DAQService extends Service {
     private void doStateTransitionFinished(CFApplication.State previous) {
         switch (previous) {
             case INIT:
-            case STABILIZATION:
+            case SURVEY:
             case CALIBRATION:
             case PRECALIBRATION:
             case DATA:
             case IDLE:
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
+                xbManager.flushCommittedBlocks();
                 mCFCamera.unregister();
-                xbManager.destroy();
-
-                xbManager.flushCommittedBlocks(true);
+                xbManager.unregister();
 
                 mApplication.killTimer();
 
@@ -419,13 +419,16 @@ public class DAQService extends Service {
             return L2Processor.L2Count - mCountsBeforeSleeping;
         }
 
-        public DataCollectionStatsView.Status getDataCollectionStatus() {
-            final int area = mCFCamera.getResX() * mCFCamera.getResY();
-            return new DataCollectionStatsView.Status.Builder()
-                    .setTotalEvents(L2Processor.L2Count)
-                    .setTotalPixels((long)L1Processor.L1CountData * area)
-                    .setTotalFrames(L1Processor.L1CountData)
-                    .build();
+        public long getTotalEvents() {
+            return L2Processor.L2Count;
+        }
+
+        public long getTotalPixelsScanned() {
+            return (long)L1Processor.L1CountData * mCFCamera.getResX() * mCFCamera.getResY();
+        }
+
+        public long getTotalFrames() {
+            return L1Processor.L1CountData;
         }
 
         public String getDevText() {

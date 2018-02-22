@@ -38,6 +38,7 @@ class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private Float mTargetFPS;
+    @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
     @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
 
@@ -107,36 +108,6 @@ class ServerCommand {
     }
 
     /**
-     * Get the max upload interval.
-     *
-     * @return
-     */
-    @Nullable
-    Integer getMaxUploadInterval() {
-        return mMaxUploadInterval;
-    }
-
-    /**
-     * Get the max chunk size.
-     *
-     * @return Integer or {@code null}.
-     */
-    @Nullable
-    Integer getMaxChunkSize() {
-        return mMaxChunkSize;
-    }
-
-    /**
-     * Get the minimum cache upload interval.
-     *
-     * @return Integer or {@code null}.
-     */
-    @Nullable
-    Integer getMinCacheUploadInterval() {
-        return mMinCacheUploadInterval;
-    }
-
-    /**
      * Get the current experiment.
      *
      * @return String or {@code null}
@@ -164,6 +135,11 @@ class ServerCommand {
     @Nullable
     Float getTargetFPS() {
         return mTargetFPS;
+    }
+
+    @Nullable
+    Float getFracDeadTime() {
+        return mFracDeadTime;
     }
 
     @Nullable

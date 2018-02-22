@@ -42,6 +42,8 @@ public class ResolutionSpec {
                 return new ResolutionSpec(2560, 1440, "1440p");
             case "2160p":
                 return new ResolutionSpec(3840, 2160, "2160p");
+            case "max":
+                return new ResolutionSpec(Integer.MAX_VALUE, 1, "max");
             default:
                 break;
         }

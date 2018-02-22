@@ -52,15 +52,15 @@ public class CFApplication extends Application {
 
     private int errorId = 2;
 
-    private static final long STABILIZATION_COUNTDOWN_TICK = 1000; // ms
-    private static final long STABILIZATION_DELAY = 10000; // ms
+    private static final long SURVEY_COUNTDOWN_TICK = 1000; // ms
+    private static final long SURVEY_DELAY = 10000; // ms
 
-    private boolean mWaitingForStabilization = false;
+    private boolean mWaitingForSurvey = false;
     public int consecutiveIdles = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private CountDownTimer mStabilizationTimer = new CountDownTimer(STABILIZATION_DELAY, STABILIZATION_COUNTDOWN_TICK) {
+    private CountDownTimer mSurveyTimer = new CountDownTimer(SURVEY_DELAY, SURVEY_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
             CFLog.d(Long.toString(millisUntilFinished));
@@ -80,8 +80,8 @@ public class CFApplication extends Application {
             }
             if(CFConfig.getInstance().getQualTrigger().getName().equals("facedown")
                     || CFCamera.getInstance().isFlat()) {
-                mWaitingForStabilization = false;
-                setApplicationState(CFApplication.State.STABILIZATION);
+                mWaitingForSurvey = false;
+                setApplicationState(CFApplication.State.SURVEY);
             } else {
                 // continue waiting
                 userErrorMessage(R.string.warning_facedown, false);
@@ -279,7 +279,7 @@ public class CFApplication extends Application {
 
     /**
      * Finds the battery temperature and charge, then switches to IDLE mode if the battery
-     * has poor health or to STABILIZATION if the battery returns to health
+     * has poor health or to SURVEY if the battery returns to health
      *
      * @return true if in good health, false otherwise
      */
@@ -341,9 +341,9 @@ public class CFApplication extends Application {
 
         // if we are in idle mode, restart if everything is okay
         else if (mApplicationState == CFApplication.State.IDLE
-                && !mBatteryLow && !mBatteryOverheated && !mWaitingForStabilization) {
+                && !mBatteryLow && !mBatteryOverheated && !mWaitingForSurvey) {
 
-            setApplicationState(CFApplication.State.STABILIZATION);
+            setApplicationState(CFApplication.State.SURVEY);
         }
 
         return !mBatteryLow && !mBatteryOverheated;
@@ -452,14 +452,14 @@ public class CFApplication extends Application {
         }
     }
 
-    public void startStabilizationTimer() {
+    public void startSurveyTimer() {
         setApplicationState(State.IDLE);
-        mStabilizationTimer.start();
-        mWaitingForStabilization = true;
+        mSurveyTimer.start();
+        mWaitingForSurvey = true;
     }
 
     public void killTimer() {
-        mStabilizationTimer.cancel();
+        mSurveyTimer.cancel();
     }
 
     /**
@@ -470,7 +470,7 @@ public class CFApplication extends Application {
         PRECALIBRATION,
         CALIBRATION,
         DATA,
-        STABILIZATION,
+        SURVEY,
         IDLE,
         FINISHED
     }

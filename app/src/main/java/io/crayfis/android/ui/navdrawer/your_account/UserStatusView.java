@@ -22,15 +22,15 @@ public class UserStatusView extends RelativeLayout {
     private TextView mUserStatusText;
     private ViewGroup mUserUnregistered;
 
-    UserStatusView(final Context context) {
+    public UserStatusView(final Context context) {
         this(context, null);
     }
 
-    UserStatusView(final Context context, final AttributeSet attrs) {
+    public UserStatusView(final Context context, final AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    UserStatusView(final Context context, final AttributeSet attrs, final int defStyleAttr) {
+    public UserStatusView(final Context context, final AttributeSet attrs, final int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         inflate(context, R.layout.widget_user_status, this);
         mUserRegistered = (ViewGroup) findViewById(R.id.user_status_registered);

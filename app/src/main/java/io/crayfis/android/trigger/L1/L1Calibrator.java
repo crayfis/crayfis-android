@@ -17,7 +17,6 @@ public class L1Calibrator {
     private final CFApplication mApplication;
     private static String sTaskName;
     private static final FrameHistogram sFrameStatistics = new FrameHistogram(1000);
-    private static Integer[] sPixArray = new Integer[1000];
 
     L1Calibrator(CFApplication application, TriggerProcessor.Config config) {
         mApplication = application;
@@ -33,7 +32,7 @@ public class L1Calibrator {
         }
     }
 
-    public static Integer[] getFrameStatistics() { return sFrameStatistics.toArray(sPixArray); }
+    public static Integer[] getFrameStatistics() { return sFrameStatistics.toArray(new Integer[sFrameStatistics.size()]); }
 
     static void addStatistic(int stat) {
         synchronized (sFrameStatistics) {

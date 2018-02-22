@@ -1,8 +1,11 @@
 package io.crayfis.android.exposure.frame;
 
 import android.annotation.TargetApi;
+import android.hardware.camera2.CaptureResult;
+import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.renderscript.Allocation;
+import android.renderscript.Element;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.support.annotation.NonNull;
 
@@ -11,10 +14,10 @@ import org.opencv.core.MatOfByte;
 
 import java.util.concurrent.Semaphore;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -25,6 +28,7 @@ import io.crayfis.android.util.CFLog;
 class RawCamera2Frame extends RawCameraFrame {
 
     private Allocation aRaw;
+    private TotalCaptureResult mResult;
 
     // lock for buffers entering aRaw
     private static final Semaphore mRawLock = new Semaphore(1);
@@ -36,7 +40,7 @@ class RawCamera2Frame extends RawCameraFrame {
                     final int frameHeight,
                     final int length,
                     final AcquisitionTime acquisitionTime,
-                    final long timestamp,
+                    final TotalCaptureResult result,
                     final Location location,
                     final float[] orientation,
                     final float rotationZZ,
@@ -47,11 +51,13 @@ class RawCamera2Frame extends RawCameraFrame {
                     final Allocation in,
                     final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime, timestamp,
+        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime,
                 location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
                 scriptCWeight, in, out);
 
         aRaw = alloc;
+        mResult = result;
+
     }
 
     @Override
@@ -63,18 +69,23 @@ class RawCamera2Frame extends RawCameraFrame {
     @Override
     protected synchronized void weightAllocation() {
         if(mScriptCWeight != null) {
-            mScriptCWeight.set_gInYuv(aRaw);
-            mScriptCWeight.forEach_weightYuv(aWeighted);
+            if(aRaw.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
+                mScriptCWeight.set_gInYuv(aRaw);
+                mScriptCWeight.forEach_weightYuv(aWeighted);
+            } else {
+                mScriptCWeight.forEach_weight(aRaw, aWeighted);
+            }
         } else {
             aWeighted = aRaw;
         }
     }
 
     @Override
-    public boolean claim() {
-        super.claim();
+    public final boolean claim() {
 
         if (mBufferClaimed) return true;
+
+        super.claim();
 
         Mat mat1 = null;
         Mat mat2 = null;
@@ -86,8 +97,8 @@ class RawCamera2Frame extends RawCameraFrame {
             weightingLock.release();
             mat1 = new MatOfByte(adjustedBytes);
 
+            aRaw.copyTo(adjustedBytes);
             mRawBytes = adjustedBytes;
-            aRaw.copyTo(mRawBytes);
             mRawLock.release();
 
             // probably a better way to do this, but this
@@ -99,8 +110,8 @@ class RawCamera2Frame extends RawCameraFrame {
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {
-            weightingLock.release();
-            mRawLock.release();
+            if(weightingLock.availablePermits() == 0) weightingLock.release();
+            if(mRawLock.availablePermits() == 0) mRawLock.release();
             if (mat1 != null) mat1.release();
             if (mat2 != null) mat2.release();
             if (mGrayMat != null) mGrayMat.release();
@@ -111,11 +122,26 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     public void retire() {
-        super.retire();
         if(!mBufferClaimed) {
             mRawLock.release();
-            mBufferClaimed = true;
         }
+        super.retire();
+    }
+
+    @Override
+    public DataProtos.Event.Builder getEventBuilder() {
+        super.getEventBuilder();
+
+        Long timestamp = mResult.get(CaptureResult.SENSOR_TIMESTAMP);
+        if(timestamp != null) {
+            mEventBuilder.setTimestamp(timestamp);
+        }
+
+        Long exposureTime = mResult.get(CaptureResult.SENSOR_EXPOSURE_TIME);
+        if(exposureTime != null) {
+            mEventBuilder.setExposureTime(exposureTime);
+        }
+        return mEventBuilder;
     }
 
 }

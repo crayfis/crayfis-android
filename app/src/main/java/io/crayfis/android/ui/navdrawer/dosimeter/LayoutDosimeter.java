@@ -1,10 +1,10 @@
 package io.crayfis.android.ui.navdrawer.dosimeter;
 
-import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 import io.crayfis.android.trigger.L1.L1Calibrator;
+import io.crayfis.android.util.CFLog;
 
 import android.graphics.Color;
 import android.os.Bundle;
@@ -31,21 +31,20 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 
 public class LayoutDosimeter extends NavDrawerFragment {
 
-    private final CFConfig CONFIG = CFConfig.getInstance();
+    private static final boolean DO_LOG = false;
 
     private static final @StringRes int ABOUT_ID = R.string.toast_dosimeter;
 
     public DataPoint[] makeGraphData(Integer values[])
     {
-        //CFLog.i(" Making graph data for nbins ="+values.length);
+        CFLog.i(" Making graph data for nbins ="+values.length);
         int max_bin = values.length;
 
-        boolean do_log=false;
         DataPoint gd[] = new DataPoint[max_bin];
         for (int i=0;i<max_bin;i++)
         {
             //CFLog.i(" make graph data: "+i);
-            if (do_log) {
+            if (DO_LOG) {
                 if (values[i] > 0)
                     gd[i] = new DataPoint(i, java.lang.Math.log(values[i]));
                 else

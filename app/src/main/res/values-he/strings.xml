@@ -55,7 +55,7 @@
     <string name="taking_data">דוגם מידע!</string>
     <string name="calibration">מודד רמות</string>
     <string name="network_unavailable">רשת לא זמינה</string>
-    <string name="stabilization">בודק שהמצלמה מכוסה</string>
+    <string name="survey">בודק שהמצלמה מכוסה</string>
     <string name="bad_user_code">קוד משתמש שגוי.</string>
     <string name="server_overload">עומס בהעלאה לשרת</string>
     <string name="ignored">Ignored</string>
