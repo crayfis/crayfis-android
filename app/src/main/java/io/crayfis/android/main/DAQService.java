@@ -279,7 +279,6 @@ public class DAQService extends Service {
         switch (previousState) {
             case SURVEY:
             case PRECALIBRATION:
-                mCFCamera.badFlatEvents = 0;
                 PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
                 break;
             default:
