@@ -353,20 +353,21 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
+        boolean changeCamera = false;
+
         if (serverCommand.getPrecalWeights() != null) {
             mPrecalWeights = serverCommand.getPrecalWeights();
         }
         if (serverCommand.getHotcells() != null) {
             mHotcells = serverCommand.getHotcells();
         }
-        if (serverCommand.getLastPrecalTime() != null) {
-            mLastPrecalTime = serverCommand.getLastPrecalTime();
-        }
-        if (serverCommand.getLastPrecalResX() != null) {
-            mLastPrecalResX = serverCommand.getLastPrecalResX();
-        }
-        if (serverCommand.getPrecalId() != null) {
-            mPrecalUUID = serverCommand.getPrecalId();
+        if (serverCommand.getPrecalResetTime() != null) {
+            // in case we choose to only update through the server
+            if(serverCommand.getPrecalResetTime() > 0) {
+                mPrecalResetTime = serverCommand.getPrecalResetTime();
+            } else {
+                mPrecalResetTime = null;
+            }
         }
         if (serverCommand.getL0Trigger() != null) {
             mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger());
@@ -401,26 +402,26 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // if we're changing the camera settings, reconfigure it
         if (serverCommand.getResolution() != null) {
             mTargetResolutionStr = serverCommand.getResolution();
-            CFCamera.getInstance().changeCamera();
+            changeCamera = true;
         }
         if(serverCommand.getTargetFPS() != null) {
             mTargetFPS = serverCommand.getTargetFPS();
-            CFCamera.getInstance().changeCamera();
+            changeCamera = true;
         }
         if(serverCommand.getFracDeadTime() != null) {
             mFracDeadTime = serverCommand.getFracDeadTime();
-            CFCamera.getInstance().changeCamera();
+            changeCamera = true;
         }
         if (serverCommand.getBatteryOverheatTemp() != null) {
             mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
         }
-        if (serverCommand.getPrecalResetTime() != null) {
-            // in case we choose to only update through the server
-            if(serverCommand.getPrecalResetTime() > 0) {
-                mPrecalResetTime = serverCommand.getPrecalResetTime();
-            } else {
-                mPrecalResetTime = null;
-            }
+        if (serverCommand.shouldRecalibrate() != null) {
+            mLastPrecalTime = new long[mLastPrecalTime.length];
+            changeCamera = true;
+        }
+
+        if (changeCamera) {
+            CFCamera.getInstance().changeCamera();
         }
     }
 
