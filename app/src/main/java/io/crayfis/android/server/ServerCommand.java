@@ -19,18 +19,13 @@ class ServerCommand {
 
     @SerializedName("set_precal") private String[] mPrecalWeights;
     @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
-    @SerializedName("set_last_precal_time") private long[] mLastPrecalTime;
-    @SerializedName("set_last_precal_res_x") private int[] mLastPrecalResX;
-    @SerializedName("set_precal_id") private UUID[] mPrecalUUID;
+    @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
     @SerializedName("set_L0_trig") private String mL0Trigger;
     @SerializedName("set_qual_trig") private String mQualityTrigger;
     @SerializedName("set_precal_trig") private String mPrecalTrigger;
     @SerializedName("set_L1_trig") private String mL1Trigger;
     @SerializedName("set_L2_trig") private String mL2Trigger;
     @SerializedName("set_xb_period") private Integer mTargetExposureBlockPeriod;
-    @SerializedName("set_max_upload_interval") private Integer mMaxUploadInterval;
-    @SerializedName("set_upload_size_max") private Integer mMaxChunkSize;
-    @SerializedName("set_cache_upload_interval") private Integer mMinCacheUploadInterval;
     @SerializedName("cmd_recalibrate") private Boolean mShouldRecalibrate;
     @SerializedName("experiment") private String mCurrentExperiment;
     @SerializedName("nickname") private String mDeviceNickname;
@@ -40,7 +35,6 @@ class ServerCommand {
     @SerializedName("set_target_fps") private Float mTargetFPS;
     @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
-    @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
 
 
     /**
@@ -64,19 +58,19 @@ class ServerCommand {
     }
 
     @Nullable
-    String[] getPrecalWeights() { return mPrecalWeights; }
+    String[] getPrecalWeights() {
+        return mPrecalWeights;
+    }
 
     @Nullable
-    List<Set<String>> getHotcells() { return mHotcells; }
+    List<Set<String>> getHotcells() {
+        return mHotcells;
+    }
 
     @Nullable
-    UUID[] getPrecalId() { return mPrecalUUID; }
-
-    @Nullable
-    long[] getLastPrecalTime() { return mLastPrecalTime; }
-
-    @Nullable
-    int[] getLastPrecalResX() { return mLastPrecalResX; }
+    Long getPrecalResetTime() {
+        return mPrecalResetTime;
+    }
 
     @Nullable
     String getL0Trigger() { return mL0Trigger; }
@@ -148,8 +142,8 @@ class ServerCommand {
     }
 
     @Nullable
-    Long getPrecalResetTime() {
-        return mPrecalResetTime;
+    Boolean shouldRecalibrate() {
+        return mShouldRecalibrate;
     }
 
 }

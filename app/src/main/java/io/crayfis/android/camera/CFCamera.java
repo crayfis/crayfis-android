@@ -42,8 +42,6 @@ public abstract class CFCamera {
 
     final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
-    public int badFlatEvents;
-
     private static CFCamera sInstance;
 
     final RawCameraFrame.Builder RCF_BUILDER = new RawCameraFrame.Builder();
