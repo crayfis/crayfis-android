@@ -65,6 +65,7 @@ class L2Task extends TriggerProcessor.Task {
         ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
 
         Mat grayMat = frame.getGrayMat();
+        if(grayMat == null) return 0;
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 

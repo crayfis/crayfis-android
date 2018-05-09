@@ -26,9 +26,6 @@ public class L1Calibrator {
                 sTaskName = config.getName();
                 sFrameStatistics.resize(config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES));
             }
-            if(mApplication.getApplicationState() != CFApplication.State.CALIBRATION) {
-                mApplication.setApplicationState(CFApplication.State.CALIBRATION);
-            }
         }
     }
 

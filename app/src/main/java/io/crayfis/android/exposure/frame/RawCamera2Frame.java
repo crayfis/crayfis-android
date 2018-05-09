@@ -134,7 +134,7 @@ class RawCamera2Frame extends RawCameraFrame {
 
         Long timestamp = mResult.get(CaptureResult.SENSOR_TIMESTAMP);
         if(timestamp != null) {
-            mEventBuilder.setTimestamp(timestamp);
+            mEventBuilder.setTimestampTarget(timestamp);
         }
 
         Long exposureTime = mResult.get(CaptureResult.SENSOR_EXPOSURE_TIME);

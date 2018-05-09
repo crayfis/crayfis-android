@@ -73,6 +73,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         builder.setSideLength(2*mConfig.radius + 1);
 
         Mat grayMat = frame.getGrayMat();
+        if(grayMat == null) return 0;
         Mat threshMat = new Mat();
         Mat l2PixelCoords = new Mat();
 

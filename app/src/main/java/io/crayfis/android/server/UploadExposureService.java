@@ -91,9 +91,20 @@ public class UploadExposureService extends IntentService {
      */
     public static void submitExposureBlock(@NonNull final Context context,
                                            @NonNull final DataProtos.ExposureBlock exposureBlock) {
-        final Intent intent = new Intent(context, UploadExposureService.class);
-        intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
-        context.startService(intent);
+
+        try {
+            final Intent intent = new Intent(context, UploadExposureService.class);
+            intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
+            context.startService(intent);
+        } catch (RuntimeException e) {
+            // don't crash if the XB is too big
+            final Intent intent = new Intent(context, UploadExposureService.class);
+            // still pass an XB to the server to report the error
+            intent.putExtra(EXPOSURE_BLOCK, DataProtos.ExposureBlock.newBuilder(exposureBlock)
+                    .addAllEvents(null)
+                    .build());
+
+        }
     }
 
     /**
