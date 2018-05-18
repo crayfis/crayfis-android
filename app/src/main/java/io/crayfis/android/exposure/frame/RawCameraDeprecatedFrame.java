@@ -121,7 +121,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
     DataProtos.Event.Builder getEventBuilder() {
         super.getEventBuilder();
 
-        mEventBuilder.setTimestamp(mTimestamp);
+        mEventBuilder.setTimestampTarget(mTimestamp);
         return mEventBuilder;
     }
 

@@ -121,7 +121,7 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         c.setRequestProperty("Content-length", String.format("%d", rawData.size()));
         c.setRequestProperty("Device-id", mServerInfo.deviceId);
         c.setRequestProperty("Run-id", mRunId);
-        c.setRequestProperty("Crayfis-version", "a " + mServerInfo.buildVersion);
+        c.setRequestProperty("Crayfis-version", "b " + mServerInfo.buildVersion);
         c.setRequestProperty("Crayfis-version-code", Integer.toString(mServerInfo.versionCode));
 
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(mApplication);

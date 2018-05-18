@@ -74,6 +74,7 @@ class L0Task extends TriggerProcessor.Task {
         if (isZeroBias()) {
             // do the zero bias things!
             Mat grayMat = frame.getGrayMat();
+            if(grayMat == null) return 0;
 
             // find a random pixel to be upper left corner
             Random r = new Random();

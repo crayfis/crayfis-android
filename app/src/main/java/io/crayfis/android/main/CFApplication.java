@@ -188,18 +188,30 @@ public class CFApplication extends Application {
         SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         if(!sharedPrefs.getBoolean(getString(R.string.prefEnableAutoStart), false)) return false;
 
-        int startAfter = sharedPrefs.getInt(getString(R.string.prefStartAfter), 0);
-        int startBefore = sharedPrefs.getInt(getString(R.string.prefStartBefore), 0);
-        Calendar c = Calendar.getInstance();
-        int hour = c.get(Calendar.HOUR_OF_DAY);
-        int minute = c.get(Calendar.MINUTE);
-        int timeInMinutes = 60 * hour + minute;
+        try {
+            int startAfter = sharedPrefs.getInt(getString(R.string.prefStartAfter), 0);
+            int startBefore = sharedPrefs.getInt(getString(R.string.prefStartBefore), 0);
 
-        int b1 = (startAfter >= startBefore) ? 1 : 0;
-        int b2 = (timeInMinutes >= startAfter) ? 1 : 0;
-        int b3 = (timeInMinutes < startBefore) ? 1 : 0;
+            Calendar c = Calendar.getInstance();
+            int hour = c.get(Calendar.HOUR_OF_DAY);
+            int minute = c.get(Calendar.MINUTE);
+            int timeInMinutes = 60 * hour + minute;
 
-        return b1 + b2 + b3 >= 2;
+            int b1 = (startAfter >= startBefore) ? 1 : 0;
+            int b2 = (timeInMinutes >= startAfter) ? 1 : 0;
+            int b3 = (timeInMinutes < startBefore) ? 1 : 0;
+
+            return b1 + b2 + b3 >= 2;
+
+        } catch(ClassCastException e) {
+            // FIXME: this is a fix from an old version.  Deprecate.
+            sharedPrefs.edit()
+                    .putInt(getString(R.string.prefStartAfter), 0)
+                    .putInt(getString(R.string.prefStartBefore), 480)
+                    .apply();
+            
+            return false;
+        }
     }
 
     public void userErrorMessage(@StringRes int id, boolean quit) {

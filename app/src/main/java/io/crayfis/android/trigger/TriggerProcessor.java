@@ -2,7 +2,6 @@ package io.crayfis.android.trigger;
 
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
-import android.util.Pair;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -10,8 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.util.CFLog;
-import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by jswaney on 1/10/18.
@@ -242,6 +239,7 @@ public abstract class TriggerProcessor {
         }
 
         @Override
+        @SuppressWarnings(value="unchecked")
         public final String toString() {
             StringBuilder cfgBuilder = new StringBuilder(mTaskName + "; ");
             for(HashMap<String, ?> hm : new HashMap[] {mTaskConfigInt, mTaskConfigFloat, mTaskConfigBool, mTaskConfigStr}) {
