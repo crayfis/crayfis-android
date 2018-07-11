@@ -1,5 +1,7 @@
 package io.crayfis.android.main;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -58,7 +60,9 @@ public class DAQService extends Service {
     private CFApplication mApplication;
 
     private NotificationCompat.Builder mNotificationBuilder;
-    private final int FOREGROUND_ID = 1;
+    private static final int FOREGROUND_ID = 1;
+    private static final String CHANNEL_ID = "io.crayfis.android";
+    private static final String CHANNEL_NAME = "CRAYFIS Data Acquisition";
 
     private CFCamera mCFCamera;
 
@@ -160,7 +164,16 @@ public class DAQService extends Service {
                 PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
                 if(mNotificationBuilder == null) {
-                    mNotificationBuilder = new NotificationCompat.Builder(this)
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        NotificationChannel notificationChannel
+                                = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+                        // TODO: we can customize the notification features too
+
+                        NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+                        manager.createNotificationChannel(notificationChannel);
+                    }
+
+                    mNotificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_just_a)
                             .setContentTitle(getString(R.string.notification_title))
                             .setContentText(getString(R.string.notification_idle))
