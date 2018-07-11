@@ -276,7 +276,7 @@ public class DAQService extends Service {
         // first generate runconfig for specific camera
         if (run_config == null || mCFCamera.getCameraId() != run_config.getCameraId()) {
             generateRunConfig();
-            UploadExposureService.submitRunConfig(this, run_config);
+            UploadExposureService.submitRunConfig(this, run_config.getCameraId(), run_config);
         }
 
         // notify user that camera is running

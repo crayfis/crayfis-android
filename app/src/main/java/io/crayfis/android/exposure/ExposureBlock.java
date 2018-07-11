@@ -35,6 +35,7 @@ public class ExposureBlock {
 
 	private final UUID run_id;
     private final UUID precal_id;
+    private final int camera_id;
 
 	private final AcquisitionTime start_time;
 	private AcquisitionTime end_time;
@@ -73,6 +74,7 @@ public class ExposureBlock {
                          int xbn,
                          UUID run_id,
                          UUID precal_id,
+                         int camera_id,
                          TriggerChain TRIGGER_CHAIN,
                          Location start_loc,
                          int batteryTemp,
@@ -85,6 +87,7 @@ public class ExposureBlock {
         this.xbn = xbn;
         this.run_id = run_id;
         this.precal_id = precal_id;
+        this.camera_id = camera_id;
         this.TRIGGER_CHAIN = TRIGGER_CHAIN;
         this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
@@ -308,6 +311,10 @@ public class ExposureBlock {
 
     public CFApplication.State getDAQState() {
         return daq_state;
+    }
+
+    public int getCameraId() {
+        return camera_id;
     }
 
     public int getXBN() {

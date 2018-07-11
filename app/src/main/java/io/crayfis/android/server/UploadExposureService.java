@@ -29,9 +29,9 @@ import io.crayfis.android.util.CFLog;
 /**
  * An implementation of IntentService that handles uploading blocks to the server.
  *
- * You can use the helper methods {@link #submitCalibrationResult(android.content.Context, io.crayfis.android.DataProtos.CalibrationResult)},
- * {@link #submitExposureBlock(android.content.Context, io.crayfis.android.DataProtos.ExposureBlock)} or
- * {@link #submitRunConfig(android.content.Context, io.crayfis.android.DataProtos.RunConfig)} to make this
+ * You can use the helper methods {@link #submitCalibrationResult(android.content.Context, java.lang.Integer, io.crayfis.android.DataProtos.CalibrationResult)},
+ * {@link #submitExposureBlock(android.content.Context, java.lang.Integer, io.crayfis.android.DataProtos.ExposureBlock)} or
+ * {@link #submitRunConfig(android.content.Context, java.lang.Integer, io.crayfis.android.DataProtos.RunConfig)} to make this
  * easier to use.
  *
  * This does not perform any uploading itself.  It instead validates that a valid block has been
@@ -41,6 +41,8 @@ public class UploadExposureService extends IntentService {
 
     public static final AtomicBoolean sPermitUpload = new AtomicBoolean(true);
     public static final AtomicBoolean sValidId = new AtomicBoolean(true);
+
+    public static final String EXTRA_CAMERA_ID = "camera_id";
 
     public static final String EXTRA_UPLOAD_CACHE = "upload_cache";
 
@@ -90,11 +92,13 @@ public class UploadExposureService extends IntentService {
      * @param exposureBlock The {@link io.crayfis.android.exposure.ExposureBlock}.
      */
     public static void submitExposureBlock(@NonNull final Context context,
+                                           @NonNull final Integer cameraId,
                                            @NonNull final DataProtos.ExposureBlock exposureBlock) {
 
         try {
-            final Intent intent = new Intent(context, UploadExposureService.class);
-            intent.putExtra(EXPOSURE_BLOCK, exposureBlock);
+            final Intent intent = new Intent(context, UploadExposureService.class)
+                    .putExtra(EXPOSURE_BLOCK, exposureBlock)
+                    .putExtra(EXTRA_CAMERA_ID, cameraId);
             context.startService(intent);
         } catch (RuntimeException e) {
             // don't crash if the XB is too big
@@ -117,9 +121,11 @@ public class UploadExposureService extends IntentService {
      * @param runConfig The {@link io.crayfis.android.DataProtos.RunConfig}.
      */
     public static void submitRunConfig(@NonNull final Context context,
+                                       @NonNull final Integer cameraId,
                                        @NonNull final DataProtos.RunConfig runConfig) {
-        final Intent intent = new Intent(context, UploadExposureService.class);
-        intent.putExtra(RUN_CONFIG, runConfig);
+        final Intent intent = new Intent(context, UploadExposureService.class)
+                .putExtra(RUN_CONFIG, runConfig)
+                .putExtra(EXTRA_CAMERA_ID, cameraId);
         context.startService(intent);
     }
 
@@ -132,9 +138,11 @@ public class UploadExposureService extends IntentService {
      * @param calibrationResult The {@link io.crayfis.android.DataProtos.CalibrationResult}.
      */
     public static void submitCalibrationResult(@NonNull final Context context,
+                                               @NonNull final Integer cameraId,
                                                @NonNull final DataProtos.CalibrationResult calibrationResult) {
-        final Intent intent = new Intent(context, UploadExposureService.class);
-        intent.putExtra(CALIBRATION_RESULT, calibrationResult);
+        final Intent intent = new Intent(context, UploadExposureService.class)
+                .putExtra(CALIBRATION_RESULT, calibrationResult)
+                .putExtra(EXTRA_CAMERA_ID, cameraId);
         context.startService(intent);
     }
 
@@ -147,10 +155,12 @@ public class UploadExposureService extends IntentService {
      * @param preCalibrationResult The {@link io.crayfis.android.DataProtos.PreCalibrationResult}.
      */
     public static void submitPreCalibrationResult(@NonNull final Context context,
+                                               @NonNull final Integer cameraId,
                                                @NonNull final DataProtos.PreCalibrationResult preCalibrationResult) {
 
-        final Intent intent = new Intent(context, UploadExposureService.class);
-        intent.putExtra(PRECALIBRATION_RESULT, preCalibrationResult);
+        final Intent intent = new Intent(context, UploadExposureService.class)
+                .putExtra(PRECALIBRATION_RESULT, preCalibrationResult)
+                .putExtra(EXTRA_CAMERA_ID, cameraId);
         context.startService(intent);
     }
 
@@ -202,15 +212,16 @@ public class UploadExposureService extends IntentService {
         } else {
             // otherwise, make a file from protobuf data
             final AbstractMessage message = getAbstractMessage(intent);
+            final Integer cameraId = intent.getIntExtra(EXTRA_CAMERA_ID, -1);
             if (message != null) {
                 CFLog.d("Got message " + message);
                 final DataProtos.DataChunk.Builder builder = createDataChunk(message);
                 if (builder != null) {
                     if (sPendingRunConfig != null) {
-                        submitRunConfig(getApplicationContext(), sPendingRunConfig);
+                        submitRunConfig(getApplicationContext(), cameraId, sPendingRunConfig);
                     }
                     final AbstractMessage uploadMessage = builder.build();
-                    File file = saveMessageToCache(uploadMessage, isPublic);
+                    File file = saveMessageToCache(cameraId, uploadMessage, isPublic);
                     if(file != null) {
                         if(isPublic) {
                             // make sure we save things like precalibration result
@@ -323,10 +334,10 @@ public class UploadExposureService extends IntentService {
     }
 
     @Nullable
-    private File saveMessageToCache(final AbstractMessage abstractMessage, boolean isPublic) {
+    private File saveMessageToCache(final int cameraId, final AbstractMessage abstractMessage, boolean isPublic) {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
-        final String filename = sAppBuild.getRunId().toString() + "_" + timestamp + "." + type + ".bin";
+        final String filename = sAppBuild.getRunId().toString() + "_" + cameraId + "_" + timestamp + "." + type + ".bin";
         File protofile;
         FileOutputStream outputStream;
 

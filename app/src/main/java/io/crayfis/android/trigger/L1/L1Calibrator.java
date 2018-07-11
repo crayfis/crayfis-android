@@ -100,7 +100,7 @@ public class L1Calibrator {
 
         // and commit it to the output stream
         CFLog.i("DAQService Committing new calibration result.");
-        UploadExposureService.submitCalibrationResult(mApplication, cal.build());
+        UploadExposureService.submitCalibrationResult(mApplication, CFCamera.getInstance().getCameraId(), cal.build());
     }
 
 }

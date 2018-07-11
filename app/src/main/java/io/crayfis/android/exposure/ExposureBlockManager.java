@@ -125,6 +125,7 @@ public final class ExposureBlockManager {
                         mTotalXBs,
                         mApplication.getBuildInformation().getRunId(),
                         cameraId == -1 ? null : CONFIG.getPrecalId(cameraId),
+                        cameraId,
                         new TriggerChain(mApplication, state),
                         camera.getLastKnownLocation(),
                         mApplication.getBatteryTemp(),
@@ -183,7 +184,7 @@ public final class ExposureBlockManager {
 
                 for (ExposureBlock xb : toRemove) {
                     // submit the retired XB's to be uploaded.
-                    UploadExposureService.submitExposureBlock(mApplication, xb.buildProto());
+                    UploadExposureService.submitExposureBlock(mApplication, xb.getCameraId(), xb.buildProto());
                     retired_blocks.remove(xb);
                 }
             }

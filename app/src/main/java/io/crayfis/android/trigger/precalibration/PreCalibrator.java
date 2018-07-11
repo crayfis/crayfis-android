@@ -139,7 +139,7 @@ public class PreCalibrator extends TriggerProcessor {
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitPreCalibrationResult(mApplication, PRECAL_BUILDER.build());
+        UploadExposureService.submitPreCalibrationResult(mApplication, cameraId, PRECAL_BUILDER.build());
 
     }
 
