@@ -119,7 +119,7 @@ class WeightingTask extends TriggerProcessor.Task {
         scriptCDownsample.set_sampleStep(sampleStep);
         scriptCDownsample.set_gTotalFrames(totalFrames);
 
-        for(int pos: CONFIG.getHotcells(cameraId)) {
+        for(int pos: PreCalibrator.PRECAL_BUILDER.getHotcellList()) {
             int x = pos % width;
             int y = pos / width;
             scriptCDownsample.invoke_killHotcell(x, y);
@@ -181,14 +181,12 @@ class WeightingTask extends TriggerProcessor.Task {
         byte[] bytes = buf.toArray();
         CFLog.d("Compressed bytes = " + bytes.length);
 
-        // now store weights in CFConfig and PreCalibration Result
-        CONFIG.setPrecalWeights(cameraId, Base64.encodeToString(bytes, Base64.DEFAULT));
-
         downsampledBytes.release();
         downsampleMat2D.release();
         buf.release();
         params.release();
 
+        // now store weights in PreCalibrationResult
         PreCalibrator.PRECAL_BUILDER.setSampleResX(sampleResX)
                 .setSampleResY(sampleResY)
                 .setCompressedWeights(ByteString.copyFrom(bytes))

@@ -23,6 +23,7 @@ import android.support.v4.content.LocalBroadcastManager;
 
 import com.crashlytics.android.Crashlytics;
 
+import java.net.URL;
 import java.util.Calendar;
 import java.util.UUID;
 

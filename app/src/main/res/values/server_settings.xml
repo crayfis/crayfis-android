@@ -10,5 +10,6 @@
     <string name="server_port">80</string> -->
 
     <string name="upload_uri" translatable="false">/submit</string>
+	<string name="precal_uri" translatable="false">/precal.json</string>
 	<bool name="debug_stream">false</bool>
 </resources>

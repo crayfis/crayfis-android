@@ -182,7 +182,6 @@ class HotCellTask extends TriggerProcessor.Task {
 
         // store in CFConfig and protobuf file
         CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
-        CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
         for(Integer pos: HOTCELL_COORDS) {
             PreCalibrator.PRECAL_BUILDER.addHotcell(pos);

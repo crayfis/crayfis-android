@@ -32,4 +32,9 @@
         android:title="@string/settings_public_title"
         android:summary="@string/settings_public_summary" />
 
+    <EditTextPreference
+        android:key="@string/prefIpAddress"
+        android:title="@string/settings_ip_title"
+        android:summary="@string/settings_ip_summary" />
+
 </PreferenceScreen>

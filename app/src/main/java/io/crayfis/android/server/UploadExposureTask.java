@@ -155,22 +155,20 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
         final int serverResponseCode = c.getResponseCode();
 
-        if (serverResponseCode == 403 || serverResponseCode == 401) {
-            // server rejected us! so we are not allowed to upload.
-            // oh well! we can still take data at least.
-
-            UploadExposureService.sPermitUpload.set(false);
-
-            if (serverResponseCode == 401) {
+        switch (serverResponseCode) {
+            case 401:
                 // server rejected us because our app code is invalid.
                 SharedPreferences.Editor editor = sharedprefs.edit();
                 editor.putBoolean("badID", true);
                 editor.apply();
                 CFLog.w("Setting bad ID flag!");
                 UploadExposureService.sValidId.set(false);
-            }
+            case 403:
+                // server rejected us! so we are not allowed to upload.
+                // oh well! we can still take data at least.
 
-            return Boolean.FALSE;
+                UploadExposureService.sPermitUpload.set(false);
+                return Boolean.FALSE;
         }
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));

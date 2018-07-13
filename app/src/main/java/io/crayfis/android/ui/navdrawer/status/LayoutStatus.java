@@ -213,13 +213,19 @@ public class LayoutStatus extends NavDrawerFragment {
                 String statusMessage = "";
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
                     ExposureBlockManager xbManager = ExposureBlockManager.getInstance();
-                    count = xbManager.getCurrentExposureBlock().count.intValue();
-                    PreCalibrator precal = (PreCalibrator) xbManager.getCurrentExposureBlock()
-                            .TRIGGER_CHAIN.getProcessor(PreCalibrator.class);
-                    if(precal == null) return;
-                    total = precal.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
-                    statusMessage += String.format(getString(R.string.status_step),
-                            precal.getStepNumber()+1, precal.getTotalSteps()) + "\n";
+                    if(xbManager.getCurrentExposureBlock().getDAQState() == CFApplication.State.PRECALIBRATION) {
+                        count = xbManager.getCurrentExposureBlock().count.intValue();
+                        PreCalibrator precal = (PreCalibrator) xbManager.getCurrentExposureBlock()
+                                .TRIGGER_CHAIN.getProcessor(PreCalibrator.class);
+                        if (precal == null) return;
+                        total = precal.getCurrentConfig().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
+                        statusMessage += String.format(getString(R.string.status_step),
+                                precal.getStepNumber() + 1, precal.getTotalSteps()) + "\n";
+                    } else {
+                        // we must be connecting to the server
+                        setStatusMessage(getString(R.string.status_server));
+                        break;
+                    }
                 } else {
                     count = ExposureBlockManager.getInstance().getCurrentExposureBlock().count.intValue();
                     total = config.getCalibrationSampleFrames();

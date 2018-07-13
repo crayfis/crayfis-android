@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
+import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Calibrator;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
@@ -263,18 +264,15 @@ public class DAQService extends Service {
     }
 
     private void doStateTransitionPrecalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        switch (previousState) {
-            case CALIBRATION:
-                xbManager.newExposureBlock(CFApplication.State.PRECALIBRATION);
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
-    }
+        if(previousState != CFApplication.State.SURVEY)
+            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-    private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         // first generate runconfig for specific camera
-        if (run_config == null || mCFCamera.getCameraId() != run_config.getCameraId()) {
+        int cameraId = mCFCamera.getCameraId();
+        int resX = mCFCamera.getResX();
+        int resY = mCFCamera.getResY();
+
+        if (run_config == null || cameraId != run_config.getCameraId()) {
             generateRunConfig();
             UploadExposureService.submitRunConfig(this, run_config.getCameraId(), run_config);
         }
@@ -284,19 +282,12 @@ public class DAQService extends Service {
         startForeground(FOREGROUND_ID, mNotificationBuilder.build());
         mApplication.consecutiveIdles = 0;
 
-        if(PreCalibrator.dueForPreCalibration(mCFCamera.getCameraId())) {
-            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
-            return;
-        }
+        PreCalibrationService.getWeights(this, cameraId, resX, resY);
+    }
 
-        switch (previousState) {
-            case SURVEY:
-            case PRECALIBRATION:
-                PreCalibrator.updateWeights(mApplication.getRenderScript(), CFCamera.getInstance().getCameraId());
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
+    private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+        if(previousState != CFApplication.State.PRECALIBRATION)
+            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
         xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
     }
@@ -308,17 +299,10 @@ public class DAQService extends Service {
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+        if(previousState != CFApplication.State.CALIBRATION)
+            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-        switch (previousState) {
-            case CALIBRATION:
-                // Finally, set the state and start a new xb
-                xbManager.newExposureBlock(CFApplication.State.DATA);
-
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
-
+        xbManager.newExposureBlock(CFApplication.State.DATA);
     }
 
     private void doStateTransitionFinished(CFApplication.State previous) {

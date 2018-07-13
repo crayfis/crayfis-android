@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -73,7 +74,7 @@ public class ExposureBlock {
     ExposureBlock(CFApplication application,
                          int xbn,
                          UUID run_id,
-                         UUID precal_id,
+                         @Nullable UUID precal_id,
                          int camera_id,
                          TriggerChain TRIGGER_CHAIN,
                          Location start_loc,

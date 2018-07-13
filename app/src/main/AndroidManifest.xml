@@ -34,8 +34,6 @@
         </activity>
 
 
-
-
         <receiver android:name=".broadcast.AutostartReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED"/>
@@ -57,7 +55,10 @@
         </receiver>
 
         <service android:name=".server.UploadExposureService"
-                 android:exported="false"/>
+            android:exported="false"/>
+
+        <service android:name=".server.PreCalibrationService"
+            android:exported="false"/>
 
         <activity
             android:name=".main.DAQActivity"
@@ -72,7 +73,7 @@
             android:exported="false"/>
 
         <activity android:name=".ui.usernotif.UserNotificationActivity"
-                  android:screenOrientation="portrait"/>
+            android:screenOrientation="portrait"/>
 
         <activity
             android:name=".ui.settings.UserSettingActivity"

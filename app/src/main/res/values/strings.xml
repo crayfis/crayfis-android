@@ -26,9 +26,6 @@
 
     <string name="settings_wifi_title">Wifi only</string>
     <string name="settings_wifi_summary">Only use Wifi to upload data</string>
-    <string name="settings_thresh_title" translatable="false">Trigger lock</string>
-    <string name="settings_thresh_summary" translatable="false">Thresholds are fixed at initial values</string>
-
     <string name="settings_code_summary">Generated from the CRAYFIS website</string>
     <string name="settings_code_title">CRAYFIS User code"</string>
     <string name="settings_gallery_title">Enable gallery</string>
@@ -55,6 +52,8 @@
     <string name="settings_l2_trigger_title" translatable="false">L2 Trigger</string>
     <string name="settings_public_summary" translatable="false">Save files in DCIM instead of uploading</string>
     <string name="settings_public_title" translatable="false">Store files publicly</string>
+    <string name="settings_ip_title" translatable="false">IP Address</string>
+    <string name="settings_ip_summary" translatable="false">If non-empty, submit data to this IP address and port</string>
 
     <string name="resolution_low" translatable="false">Low</string>
     <string name="resolution_medium" translatable="false">Medium</string>
@@ -103,12 +102,13 @@
 
     <string name="init" translatable="false">Initializing</string>
     <string name="survey">Checking camera is covered</string>
-    <string name="precalibration" translatable="false">Calculating pixel stats</string>
+    <string name="precalibration" translatable="false">Acquiring pixel stats</string>
     <string name="calibration">Measuring levels</string>
     <string name="taking_data">Taking data!</string>
     <string name="idle" translatable="false">Idle</string>
     <string name="status_step" translatable="false">Step %d/%d</string>
     <string name="status_pct" translatable="false">%d%% complete\n%d:%02d remaining</string>
+    <string name="status_server" translatable="false">Attempting connection to the server...</string>
 
     <string name="bad_user_code">Invalid user code.</string>
     <string name="server_overload">Server overloaded</string>

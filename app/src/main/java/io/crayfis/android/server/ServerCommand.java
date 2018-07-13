@@ -17,9 +17,8 @@ import java.util.UUID;
  */
 class ServerCommand {
 
-    @SerializedName("set_precal") private String[] mPrecalWeights;
-    @SerializedName("set_hotcells") private List<Set<String>> mHotcells;
-    @SerializedName("set_precal_reset_time") private Long mPrecalResetTime;
+    //@SerializedName("set_weights") private String[] mWeights;
+    //@SerializedName("set_hotcells") private List<Set<String>> mHotcells;
     @SerializedName("set_L0_trig") private String mL0Trigger;
     @SerializedName("set_qual_trig") private String mQualityTrigger;
     @SerializedName("set_precal_trig") private String mPrecalTrigger;
@@ -57,20 +56,17 @@ class ServerCommand {
         return mAccountName;
     }
 
+    /*
     @Nullable
-    String[] getPrecalWeights() {
-        return mPrecalWeights;
+    String[] getWeights() {
+        return mWeights;
     }
 
     @Nullable
     List<Set<String>> getHotcells() {
         return mHotcells;
     }
-
-    @Nullable
-    Long getPrecalResetTime() {
-        return mPrecalResetTime;
-    }
+    */
 
     @Nullable
     String getL0Trigger() { return mL0Trigger; }

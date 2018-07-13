@@ -77,8 +77,8 @@ public class UploadExposureService extends IntentService {
     @Nullable
     private static DataProtos.RunConfig sPendingRunConfig;
 
-    private static CFApplication.AppBuild sAppBuild;
-    private static ServerInfo sServerInfo;
+    private CFApplication.AppBuild mAppBuild;
+    private ServerInfo mServerInfo;
 
     private static long sLastCacheUpload;
     private static final long UPLOAD_CACHE_GAP = 5000L;
@@ -252,7 +252,7 @@ public class UploadExposureService extends IntentService {
         Handler handler = new Handler(getMainLooper());
         handler.post(new Runnable() {
             @Override
-            public void run() {new UploadExposureTask(application, sServerInfo, file).
+            public void run() {new UploadExposureTask(application, mServerInfo, file).
                     execute();
             }
         });
@@ -299,10 +299,10 @@ public class UploadExposureService extends IntentService {
     private void lazyInit() {
         final CFApplication context = (CFApplication) getApplicationContext();
         // need to see whether this has changed
-        sAppBuild = context.getBuildInformation();
+        mAppBuild = context.getBuildInformation();
 
-        if (sServerInfo == null) {
-            sServerInfo = new ServerInfo(context);
+        if (mServerInfo == null) {
+            mServerInfo = new ServerInfo(context);
         }
     }
 
@@ -337,7 +337,7 @@ public class UploadExposureService extends IntentService {
     private File saveMessageToCache(final int cameraId, final AbstractMessage abstractMessage, boolean isPublic) {
         final long timestamp = System.currentTimeMillis();
         final String type = getDataChunkType(abstractMessage);
-        final String filename = sAppBuild.getRunId().toString() + "_" + cameraId + "_" + timestamp + "." + type + ".bin";
+        final String filename = mAppBuild.getRunId().toString() + "_" + cameraId + "_" + timestamp + "." + type + ".bin";
         File protofile;
         FileOutputStream outputStream;
 
@@ -388,7 +388,8 @@ public class UploadExposureService extends IntentService {
      * POJO for the server information.
      */
     public static final class ServerInfo {
-         String uploadUrl;
+         final String uploadUrl;
+         final String precalUrl;
          String deviceId;
          String buildVersion;
          int versionCode;
@@ -396,22 +397,43 @@ public class UploadExposureService extends IntentService {
         final int connectTimeout = 2 * 1000; // ms
         final int readTimeout = 5 * 1000; // ms
 
-        public ServerInfo(@NonNull final Context context) {
-            final String serverAddress = context.getString(R.string.server_address);
-            final String serverPort = context.getString(R.string.server_port);
+        ServerInfo(@NonNull final Context context) {
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            final String ipAddress = prefs.getString(context.getString(R.string.prefIpAddress), "");
+
             final String uploadUri = context.getString(R.string.upload_uri);
-            final boolean forceHttps = context.getResources().getBoolean(R.bool.force_https);
+            final String precalUri = context.getString(R.string.precal_uri);
 
-            uploadUrl = String.format("%s://%s:%s%s",
-                    forceHttps ? "https" : "http",
-                    serverAddress,
-                    serverPort,
-                    uploadUri);
+            if(ipAddress.isEmpty()) {
 
-            if (sAppBuild != null) {
-                deviceId = sAppBuild.getDeviceId();
-                buildVersion = sAppBuild.getBuildVersion();
-                versionCode = sAppBuild.getVersionCode();
+                final String serverAddress = context.getString(R.string.server_address);
+                final String serverPort = context.getString(R.string.server_port);
+                final boolean forceHttps = context.getResources().getBoolean(R.bool.force_https);
+
+                uploadUrl = String.format("%s://%s:%s%s",
+                        forceHttps ? "https" : "http",
+                        serverAddress,
+                        serverPort,
+                        uploadUri);
+
+                precalUrl = String.format("%s://%s:%s%s",
+                        forceHttps ? "https" : "http",
+                        serverAddress,
+                        serverPort,
+                        precalUri);
+
+            } else {
+                uploadUrl = String.format("http://%s%s", ipAddress, uploadUri);
+                precalUrl = String.format("http://%s%s", ipAddress, precalUri);
+            }
+
+            CFApplication application = (CFApplication) context.getApplicationContext();
+            CFApplication.AppBuild build = application.getBuildInformation();
+            if (build != null) {
+                deviceId = build.getDeviceId();
+                buildVersion = build.getBuildVersion();
+                versionCode = build.getVersionCode();
             }
         }
     }
