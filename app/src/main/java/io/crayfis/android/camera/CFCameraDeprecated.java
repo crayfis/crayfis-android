@@ -4,6 +4,8 @@ import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.crayfis.android.R;
@@ -133,6 +135,32 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
                 mApplication.userErrorMessage(R.string.camera_error,true);
             }
         }
+    }
+
+    @Override
+    public void changeDataRate(boolean increase) {
+        List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
+        if(sizes == null) return;
+
+        Collections.sort(sizes, new Comparator<Camera.Size>() {
+            @Override
+            public int compare(Camera.Size s0, Camera.Size s1) {
+                return s0.width * s0.height - s1.width * s1.height;
+            }
+        });
+
+        int index = sizes.indexOf(previewSize);
+        if(increase && index < sizes.size()-1) {
+            index++;
+        } else if(!increase && index > 0) {
+            index--;
+        } else {
+            return;
+        }
+
+        Camera.Size newSize = sizes.get(index);
+        CONFIG.setTargetResolution(newSize.width, newSize.height);
+
     }
 
 

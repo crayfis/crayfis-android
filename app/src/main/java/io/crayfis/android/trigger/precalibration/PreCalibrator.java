@@ -112,15 +112,20 @@ public class PreCalibrator extends TriggerProcessor {
 
         String b64Weights = Base64.encodeToString
                 (PRECAL_BUILDER.getCompressedWeights().toByteArray(), Base64.DEFAULT);
-        Integer[] hotcells = new Integer[PRECAL_BUILDER.getHotcellCount()];
-        PRECAL_BUILDER.getHotcellList().toArray(hotcells);
+        int[] hotcells = new int[PRECAL_BUILDER.getHotcellCount()];
+        String precalIdStr = precalId.toString().replace("-", "");
+
+        int i=0;
+        for(int pix: PRECAL_BUILDER.getHotcellList()) {
+            hotcells[i] = pix;
+            i++;
+        }
 
         PreCalibrationService.PreCalibrationConfig result
-                = new PreCalibrationService.PreCalibrationConfig(b64Weights, hotcells, precalId.toString());
+                = new PreCalibrationService.PreCalibrationConfig(b64Weights, hotcells, precalIdStr);
 
         result.saveToPrefs(mApplication, cameraId, resX, resY);
-        result.updateRS(mApplication.getRenderScript(), resX, resY);
-        PreCalibrationService.sConfig = result;
+        CAMERA.setPrecalConfig(result);
 
         PRECAL_BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setRunIdHi(mApplication.getBuildInformation().getRunId().getMostSignificantBits())
@@ -128,7 +133,7 @@ public class PreCalibrator extends TriggerProcessor {
                 .setPrecalIdHi(precalId.getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(mApplication.getBatteryTemp())
-                .setInterpolation(PreCalibrationService.INTER)
+                .setInterpolation(CFCamera.INTER)
                 .setPrecalConfig(sConfigList.toString());
 
         // submit the PreCalibrationResult object

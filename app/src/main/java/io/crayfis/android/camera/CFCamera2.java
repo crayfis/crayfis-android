@@ -24,7 +24,10 @@ import android.util.Size;
 import android.view.Surface;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -357,6 +360,34 @@ class CFCamera2 extends CFCamera {
             e.printStackTrace();
             mCameraOpenCloseLock.release();
             mApplication.userErrorMessage(R.string.camera_error, true);
+        }
+    }
+
+    @Override
+    public void changeDataRate(boolean increase) {
+        StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+        if(map != null) {
+            Size[] outputSizes = map.getOutputSizes(Allocation.class);
+            List<Size> sizes = Arrays.asList(outputSizes);
+
+            Collections.sort(sizes, new Comparator<Size>() {
+                @Override
+                public int compare(Size s0, Size s1) {
+                    return s0.getWidth() * s0.getHeight() - s1.getWidth() * s1.getHeight();
+                }
+            });
+
+            int index = sizes.indexOf(mPreviewSize);
+            if(increase && index < sizes.size()-1) {
+                index++;
+            } else if(!increase && index > 0) {
+                index--;
+            } else {
+                return;
+            }
+
+            Size newSize = sizes.get(index);
+            CONFIG.setTargetResolution(newSize.getWidth(), newSize.getHeight());
         }
     }
 

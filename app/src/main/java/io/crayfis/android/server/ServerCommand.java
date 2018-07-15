@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import io.crayfis.android.camera.CFCamera;
+
 /**
  * Wrapper class for parsing a server command response.  This uses objects rather than primitives
  * because I'm not sure what the valid value ranges are, 0 may be valid, same with negative numbers.
@@ -17,8 +19,8 @@ import java.util.UUID;
  */
 class ServerCommand {
 
-    //@SerializedName("set_weights") private String[] mWeights;
-    //@SerializedName("set_hotcells") private List<Set<String>> mHotcells;
+    @SerializedName("update_precal") private PrecalCommand mUpdate;
+    @SerializedName("change_data_rate") private CameraCommand mCameraCommand;
     @SerializedName("set_L0_trig") private String mL0Trigger;
     @SerializedName("set_qual_trig") private String mQualityTrigger;
     @SerializedName("set_precal_trig") private String mPrecalTrigger;
@@ -34,6 +36,40 @@ class ServerCommand {
     @SerializedName("set_target_fps") private Float mTargetFPS;
     @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
+
+    class PrecalCommand {
+        @SerializedName("camera_id") private Integer mCameraId;
+        @SerializedName("res_x") private Integer mResX;
+        @SerializedName("res_y") private Integer mResY;
+        @SerializedName("precal_id") private String mPrecalId;
+
+        boolean isApplicable() {
+            CFCamera camera = CFCamera.getInstance();
+            return mCameraId == camera.getCameraId()
+                    && mResX == camera.getResX()
+                    && mResY == camera.getResY()
+                    && !mPrecalId.equals(camera.getPrecalConfig().getPrecalId());
+        }
+    }
+
+    class CameraCommand {
+        @SerializedName("res_x") private Integer mResX;
+        @SerializedName("res_y") private Integer mResY;
+        @SerializedName("fps") private Float mFPS;
+        @SerializedName("increase") private Boolean mShouldIncrease;
+
+        boolean isApplicable() {
+            CFCamera camera = CFCamera.getInstance();
+            return mResX == camera.getResX()
+                    && mResY == camera.getResY()
+                    && mShouldIncrease != null;
+        }
+
+        @Nullable
+        Boolean shouldIncrease() {
+            return mShouldIncrease;
+        }
+    }
 
 
     /**
@@ -55,18 +91,6 @@ class ServerCommand {
     String getAccountName() {
         return mAccountName;
     }
-
-    /*
-    @Nullable
-    String[] getWeights() {
-        return mWeights;
-    }
-
-    @Nullable
-    List<Set<String>> getHotcells() {
-        return mHotcells;
-    }
-    */
 
     @Nullable
     String getL0Trigger() { return mL0Trigger; }
@@ -140,6 +164,16 @@ class ServerCommand {
     @Nullable
     Boolean shouldRecalibrate() {
         return mShouldRecalibrate;
+    }
+
+    @Nullable
+    PrecalCommand getUpdateCommand() {
+        return mUpdate;
+    }
+
+    @Nullable
+    CameraCommand getCameraCommand() {
+        return mCameraCommand;
     }
 
 }

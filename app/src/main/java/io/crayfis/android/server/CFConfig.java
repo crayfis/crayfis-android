@@ -35,9 +35,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECAL_TRIGGER = "precal_trigger";
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
-    private static final String KEY_WEIGHTS = "weights_%d:%dx%d";
-    private static final String KEY_HOTCELLS = "hotcells_%d:%dx%d";
-    private static final String KEY_PRECAL_ID = "precal_id_%d:%dx%d%";
     private static final String KEY_XB_PERIOD = "xb_period";
     private static final String KEY_CURRENT_EXPERIMENT = "current_experiment";
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
@@ -202,6 +199,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public float getAccountScore() { return mAccountScore; }
 
+    public void setTargetResolution(int resX, int resY) {
+        mTargetResolutionStr = new ResolutionSpec(resX, resY).toString();
+    }
+
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
@@ -248,14 +249,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         CFLog.i("GOT command from server!");
         boolean changeCamera = false;
 
-        /*
-        if (serverCommand.getPrecalWeights() != null) {
-            mPrecalWeights = serverCommand.getPrecalWeights();
+        if (serverCommand.getUpdateCommand() != null
+                && serverCommand.getUpdateCommand().isApplicable()) {
+            changeCamera = true;
         }
-        if (serverCommand.getHotcells() != null) {
-            mHotcells = serverCommand.getHotcells();
+        if (serverCommand.getCameraCommand() != null
+                && serverCommand.getCameraCommand().isApplicable()) {
+            CFCamera.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
         }
-        */
         if (serverCommand.getL0Trigger() != null) {
             mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger());
         }

@@ -211,7 +211,6 @@ public class DAQService extends Service {
                 mCFCamera.changeCamera();
             case INIT:
                 xbManager.newExposureBlock(CFApplication.State.SURVEY);
-                mCFCamera.getFrameBuilder().setWeights(null);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());

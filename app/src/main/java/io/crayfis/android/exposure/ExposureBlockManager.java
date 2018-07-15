@@ -7,11 +7,9 @@ import android.os.HandlerThread;
 import android.support.annotation.NonNull;
 
 import java.util.LinkedHashSet;
-import java.util.UUID;
 
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
@@ -127,7 +125,7 @@ public final class ExposureBlockManager {
                         mTotalXBs,
                         mApplication.getBuildInformation().getRunId(),
                         state == CFApplication.State.CALIBRATION || state == CFApplication.State.DATA
-                                ? UUID.fromString(PreCalibrationService.sConfig.precalId) : null,
+                                ? camera.getPrecalConfig().getPrecalUUID() : null,
                         cameraId,
                         new TriggerChain(mApplication, state),
                         camera.getLastKnownLocation(),
@@ -137,7 +135,7 @@ public final class ExposureBlockManager {
                         camera.getResY());
 
                 // start assigning frames to new xb
-                camera.getFrameBuilder().setExposureBlock(newXB);
+                camera.setExposureBlock(newXB);
 
                 if (current_xb != null) {
                     current_xb.freeze();
