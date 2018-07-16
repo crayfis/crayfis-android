@@ -1,4 +1,4 @@
-package io.crayfis.android.exposure.frame;
+package io.crayfis.android.exposure;
 
 import android.annotation.TargetApi;
 import android.hardware.camera2.CaptureResult;
@@ -15,10 +15,7 @@ import org.opencv.core.MatOfByte;
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 9/2/2017.
@@ -34,11 +31,6 @@ class RawCamera2Frame extends RawCameraFrame {
     private static final Semaphore mRawLock = new Semaphore(1);
 
     RawCamera2Frame(@NonNull final Allocation alloc,
-                    final int cameraId,
-                    final boolean facingBack,
-                    final int frameWidth,
-                    final int frameHeight,
-                    final int length,
                     final AcquisitionTime acquisitionTime,
                     final TotalCaptureResult result,
                     final Location location,
@@ -47,13 +39,11 @@ class RawCamera2Frame extends RawCameraFrame {
                     final float pressure,
                     final ExposureBlock exposureBlock,
                     final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
-                    final ScriptC_weight scriptCWeight,
                     final Allocation in,
                     final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime,
-                location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
-                scriptCWeight, in, out);
+        super(acquisitionTime, location, orientation, rotationZZ, pressure,
+                exposureBlock, scriptIntrinsicHistogram, in, out);
 
         aRaw = alloc;
         mResult = result;
@@ -68,12 +58,12 @@ class RawCamera2Frame extends RawCameraFrame {
 
     @Override
     protected synchronized void weightAllocation() {
-        if(mScriptCWeight != null) {
+        if(mExposureBlock.weights != null) {
             if(aRaw.getElement().getDataKind() == Element.DataKind.PIXEL_YUV) {
-                mScriptCWeight.set_gInYuv(aRaw);
-                mScriptCWeight.forEach_weightYuv(aWeighted);
+                mExposureBlock.weights.set_gInYuv(aRaw);
+                mExposureBlock.weights.forEach_weightYuv(aWeighted);
             } else {
-                mScriptCWeight.forEach_weight(aRaw, aWeighted);
+                mExposureBlock.weights.forEach_weight(aRaw, aWeighted);
             }
         } else {
             aWeighted = aRaw;
@@ -104,9 +94,9 @@ class RawCamera2Frame extends RawCameraFrame {
             // probably a better way to do this, but this
             // works for preventing native memory leaks
 
-            mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat2 = mat1.rowRange(0, mExposureBlock.res_area); // only use grayscale byte
             mat1.release();
-            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+            mGrayMat = mat2.reshape(1, mExposureBlock.res_y); // create 2D array
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {

@@ -213,7 +213,7 @@ public class LayoutStatus extends NavDrawerFragment {
                 String statusMessage = "";
                 if(application.getApplicationState() == CFApplication.State.PRECALIBRATION) {
                     ExposureBlockManager xbManager = ExposureBlockManager.getInstance();
-                    if(xbManager.getCurrentExposureBlock().getDAQState() == CFApplication.State.PRECALIBRATION) {
+                    if(xbManager.getCurrentExposureBlock().daq_state == CFApplication.State.PRECALIBRATION) {
                         count = xbManager.getCurrentExposureBlock().count.intValue();
                         PreCalibrator precal = (PreCalibrator) xbManager.getCurrentExposureBlock()
                                 .TRIGGER_CHAIN.getProcessor(PreCalibrator.class);

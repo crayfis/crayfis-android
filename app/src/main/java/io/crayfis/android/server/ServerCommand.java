@@ -48,7 +48,7 @@ class ServerCommand {
             return mCameraId == camera.getCameraId()
                     && mResX == camera.getResX()
                     && mResY == camera.getResY()
-                    && !mPrecalId.equals(camera.getPrecalConfig().getPrecalId());
+                    && !mPrecalId.equals(CFConfig.getInstance().getPrecalConfig().getPrecalId());
         }
     }
 

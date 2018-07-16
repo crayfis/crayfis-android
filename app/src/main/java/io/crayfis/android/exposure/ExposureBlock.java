@@ -3,6 +3,8 @@ package io.crayfis.android.exposure;
 import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
+import android.hardware.camera2.CameraCharacteristics;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
@@ -14,17 +16,16 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
+import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.Histogram;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
 import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
 import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
 import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;
@@ -34,9 +35,10 @@ public class ExposureBlock {
 
     private final CFApplication APPLICATION;
 
-	private final UUID run_id;
-    private final UUID precal_id;
-    private final int camera_id;
+	public final UUID run_id;
+    public final UUID precal_id;
+    public final int camera_id;
+    final Boolean camera_facing_back;
 
 	private final AcquisitionTime start_time;
 	private AcquisitionTime end_time;
@@ -46,17 +48,19 @@ public class ExposureBlock {
     private final int batteryTemp;
     private int batteryEndTemp;
 
-	private final int res_x;
-	private final int res_y;
+	public final int res_x;
+	public final int res_y;
+	final int res_area;
 
+	final ScriptC_weight weights;
 	public final TriggerChain TRIGGER_CHAIN;
 	
 	private int total_pixels;
 	
 	// the exposure block number within the given run
-	private final int xbn;
+	public final int xbn;
 
-	private final CFApplication.State daq_state;
+	public final CFApplication.State daq_state;
     public AtomicInteger count = new AtomicInteger();
 
 	private boolean frozen = false;
@@ -76,6 +80,8 @@ public class ExposureBlock {
                          UUID run_id,
                          @Nullable UUID precal_id,
                          int camera_id,
+                         @Nullable Boolean camera_facing_back,
+                         ScriptC_weight weights,
                          TriggerChain TRIGGER_CHAIN,
                          Location start_loc,
                          int batteryTemp,
@@ -89,6 +95,8 @@ public class ExposureBlock {
         this.run_id = run_id;
         this.precal_id = precal_id;
         this.camera_id = camera_id;
+        this.camera_facing_back = camera_facing_back;
+        this.weights = weights;
         this.TRIGGER_CHAIN = TRIGGER_CHAIN;
         this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
@@ -96,6 +104,7 @@ public class ExposureBlock {
         this.daq_state = daq_state;
         this.res_x = resx;
         this.res_y = resy;
+        this.res_area = resx * resy;
 
         total_pixels = 0;
 
@@ -308,17 +317,5 @@ public class ExposureBlock {
 
     long getEndTimeNano() {
         return end_time.Nano;
-    }
-
-    public CFApplication.State getDAQState() {
-        return daq_state;
-    }
-
-    public int getCameraId() {
-        return camera_id;
-    }
-
-    public int getXBN() {
-        return xbn;
     }
 }

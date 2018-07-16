@@ -1,13 +1,10 @@
 package io.crayfis.android.trigger.quality;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
 import java.util.HashMap;
 
 import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;

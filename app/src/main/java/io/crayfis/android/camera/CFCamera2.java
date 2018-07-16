@@ -32,7 +32,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 
@@ -72,7 +72,7 @@ class CFCamera2 extends CFCamera {
             try {
 
                 configureCameraPreviewSession();
-                RCF_BUILDER.setCamera2(mCameraCharacteristics, mCameraId, ain, mApplication.getRenderScript());
+                RCF_BUILDER.setCamera2(ain, mApplication.getRenderScript());
 
                 ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
                 Surface surface = ain.getSurface();
@@ -391,6 +391,25 @@ class CFCamera2 extends CFCamera {
         }
     }
 
+    @Override
+    int getNumberOfCameras() {
+        CameraManager cameraManager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
+        try {
+            return cameraManager.getCameraIdList().length;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public Boolean isFacingBack() {
+        if(mCameraCharacteristics == null) return null;
+        Integer lensFacing = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+        if(lensFacing != null && mCameraId != -1) {
+            return lensFacing == CameraMetadata.LENS_FACING_BACK;
+        }
+        return null;
+    }
 
     @Override
     public String getParams() {

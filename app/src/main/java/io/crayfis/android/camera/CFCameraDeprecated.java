@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -119,7 +119,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             mCamera.setPreviewTexture(mTexture);
 
-            RCF_BUILDER.setCamera(mCamera, mCameraId, mRS);
+            RCF_BUILDER.setCamera(mCamera, mRS);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);
@@ -166,10 +166,8 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
-        AcquisitionTime time = new AcquisitionTime();
-        RCF_BUILDER.setBytes(bytes)
-                .setAcquisitionTime(time);
-
+        RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                .setBytes(bytes);
 
         RawCameraFrame frame = RCF_BUILDER.build();
         mTimestampHistory.addValue(frame.getAcquiredTimeNano());
@@ -182,6 +180,19 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
         changeCameraFrom(mCameraId);
+    }
+
+    @Override
+    public Boolean isFacingBack() {
+        if(mCameraId == -1) return null;
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(mCameraId, cameraInfo);
+        return cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
+    @Override
+    int getNumberOfCameras() {
+        return Camera.getNumberOfCameras();
     }
 
     @Override

@@ -10,11 +10,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
-import io.crayfis.android.util.CFLog;
-import io.crayfis.android.util.CFUtil;
 
 /**
  * Created by cshimmin on 5/16/16.

@@ -1,4 +1,4 @@
-package io.crayfis.android.exposure.frame;
+package io.crayfis.android.exposure;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
@@ -11,9 +11,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.exposure.ExposureBlock;
 
 /**
  * Created by Jeff on 9/2/2017.
@@ -26,11 +24,6 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
     RawCameraDeprecatedFrame(@NonNull final byte[] bytes,
                              final Camera camera,
-                             final int cameraId,
-                             final boolean facingBack,
-                             final int frameWidth,
-                             final int frameHeight,
-                             final int length,
                              final AcquisitionTime acquisitionTime,
                              final long timestamp,
                              final Location location,
@@ -39,13 +32,11 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final float pressure,
                              final ExposureBlock exposureBlock,
                              final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
-                             final ScriptC_weight scriptCWeight,
                              final Allocation in,
                              final Allocation out) {
 
-        super(cameraId, facingBack, frameWidth, frameHeight, length, acquisitionTime,
-                location, orientation, rotationZZ, pressure, exposureBlock, scriptIntrinsicHistogram,
-                scriptCWeight, in, out);
+        super(acquisitionTime, location, orientation, rotationZZ, pressure,
+                exposureBlock, scriptIntrinsicHistogram, in, out);
 
         mRawBytes = bytes;
         mCamera = camera;
@@ -58,8 +49,8 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
     protected synchronized void weightAllocation() {
         super.getWeightedAllocation();
         aWeighted.copy1DRangeFromUnchecked(0, aWeighted.getBytesSize(), mRawBytes);
-        if(mScriptCWeight != null) {
-            mScriptCWeight.forEach_weight(aWeighted, aWeighted);
+        if(mExposureBlock.weights != null) {
+            mExposureBlock.weights.forEach_weight(aWeighted, aWeighted);
         }
     }
 
@@ -76,7 +67,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
         try {
 
-            byte[] adjustedBytes = new byte[mLength * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
+            byte[] adjustedBytes = new byte[mExposureBlock.res_area * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
 
             // update with weighted pixels
             aWeighted.copyTo(adjustedBytes);
@@ -89,9 +80,9 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
             mat1 = new MatOfByte(adjustedBytes);
             mCamera.addCallbackBuffer(adjustedBytes);
-            mat2 = mat1.rowRange(0, mLength); // only use grayscale byte
+            mat2 = mat1.rowRange(0, mExposureBlock.res_area); // only use grayscale byte
             mat1.release();
-            mGrayMat = mat2.reshape(1, mFrameHeight); // create 2D array
+            mGrayMat = mat2.reshape(1, mExposureBlock.res_y); // create 2D array
             mat2.release();
 
             mBufferClaimed = true;

@@ -4,7 +4,6 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.Type;
-import android.util.Base64;
 
 import com.google.protobuf.ByteString;
 
@@ -20,7 +19,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_downsample;
 import io.crayfis.android.ScriptC_sumFrames;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 

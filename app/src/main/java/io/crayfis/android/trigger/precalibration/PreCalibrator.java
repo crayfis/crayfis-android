@@ -125,7 +125,7 @@ public class PreCalibrator extends TriggerProcessor {
                 = new PreCalibrationService.PreCalibrationConfig(b64Weights, hotcells, precalIdStr);
 
         result.saveToPrefs(mApplication, cameraId, resX, resY);
-        CAMERA.setPrecalConfig(result);
+        CFConfig.getInstance().setPrecalConfig(result);
 
         PRECAL_BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setRunIdHi(mApplication.getBuildInformation().getRunId().getMostSignificantBits())
@@ -133,7 +133,7 @@ public class PreCalibrator extends TriggerProcessor {
                 .setPrecalIdHi(precalId.getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(mApplication.getBatteryTemp())
-                .setInterpolation(CFCamera.INTER)
+                .setInterpolation(PreCalibrationService.INTER)
                 .setPrecalConfig(sConfigList.toString());
 
         // submit the PreCalibrationResult object

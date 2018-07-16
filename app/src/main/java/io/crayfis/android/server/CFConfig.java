@@ -55,6 +55,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
+    private static final PreCalibrationService.PreCalibrationConfig DEFAULT_PRECAL_CONFIG = null;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
@@ -70,6 +71,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
+    private PreCalibrationService.PreCalibrationConfig mPrecalConfig;
     private String mTargetResolutionStr;
     private Float mTargetFPS;
     private float mFracDeadTime;
@@ -86,6 +88,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
+        mPrecalConfig = DEFAULT_PRECAL_CONFIG;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mTargetFPS = DEFAULT_TARGET_FPS;
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
@@ -198,6 +201,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public float getAccountScore() { return mAccountScore; }
+
+    public void setPrecalConfig(PreCalibrationService.PreCalibrationConfig config) {
+        mPrecalConfig = config;
+    }
+
+    public PreCalibrationService.PreCalibrationConfig getPrecalConfig() {
+        return mPrecalConfig;
+    }
 
     public void setTargetResolution(int resX, int resY) {
         mTargetResolutionStr = new ResolutionSpec(resX, resY).toString();

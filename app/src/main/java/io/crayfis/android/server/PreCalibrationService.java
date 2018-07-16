@@ -5,10 +5,21 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.renderscript.Allocation;
+import android.renderscript.Element;
+import android.renderscript.RenderScript;
+import android.renderscript.Type;
+import android.util.Base64;
 import android.util.JsonWriter;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.Size;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,7 +32,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.util.CFLog;
@@ -35,6 +46,7 @@ public class PreCalibrationService extends IntentService {
     private UploadExposureService.ServerInfo mServerInfo;
     private PreCalibrationConfig mConfig;
 
+    public final static int INTER = Imgproc.INTER_CUBIC;
 
     public static void getWeights(Context context, int cameraId, int resX, int resY) {
         Intent intent = new Intent(context, PreCalibrationService.class)
@@ -75,7 +87,7 @@ public class PreCalibrationService extends IntentService {
 
         if(mConfig != null && mConfig.isValid()) {
 
-            CFCamera.getInstance().setPrecalConfig(mConfig);
+            CFConfig.getInstance().setPrecalConfig(mConfig);
             application.setApplicationState(CFApplication.State.CALIBRATION);
 
         } else {
@@ -226,6 +238,48 @@ public class PreCalibrationService extends IntentService {
                     precalId.substring(12, 16),
                     precalId.substring(16, 20),
                     precalId.substring(20)));
+        }
+
+        public ScriptC_weight getScriptCWeight(RenderScript RS, int resX, int resY) {
+            // configure weights in RS as well
+            byte[] bytes = Base64.decode(b64Weights, Base64.DEFAULT);
+
+            MatOfByte compressedMat = new MatOfByte(bytes);
+            Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
+            compressedMat.release();
+
+            Mat resampledMat2D = new Mat();
+            Imgproc.resize(downsampleMat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
+            downsampleMat.release();
+
+            Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
+            MatOfByte resampledByte = new MatOfByte(resampledMat);
+            resampledMat2D.release();
+            resampledMat.release();
+
+            byte[] resampledArray = resampledByte.toArray();
+            resampledByte.release();
+
+            // kill hotcells in resampled frame;
+            if(hotcells != null) {
+                for (Integer pos : hotcells) {
+                    resampledArray[pos] = (byte) 0;
+                }
+            }
+
+            Type weightType = new Type.Builder(RS, Element.U8(RS))
+                    .setX(resX)
+                    .setY(resY)
+                    .create();
+            Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
+            weights.copyFrom(resampledArray);
+
+            resampledMat.release();
+            resampledByte.release();
+
+            ScriptC_weight scriptCWeight = new ScriptC_weight(RS);
+            scriptCWeight.set_gWeights(weights);
+            return scriptCWeight;
         }
     }
 }

@@ -3,7 +3,7 @@ package io.crayfis.android.trigger.L1;
 import java.util.HashMap;
 
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -56,7 +56,7 @@ class L1Task extends TriggerProcessor.Task {
         int max = frame.getPixMax();
         L1Calibrator.addStatistic(max);
 
-        if(frame.getExposureBlock().getDAQState() == CFApplication.State.DATA) {
+        if(frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
             L1Processor.L1CountData++;
 
             if (max > mConfig.thresh) {
