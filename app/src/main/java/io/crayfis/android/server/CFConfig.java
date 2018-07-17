@@ -260,8 +260,17 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         CFLog.i("GOT command from server!");
         boolean changeCamera = false;
 
+        if (serverCommand.getWeights() != null
+                && serverCommand.getWeights().isApplicable()) {
+            mPrecalConfig = mPrecalConfig.update(serverCommand.getWeights().makePrecalConfig());
+        }
+        if (serverCommand.getHotcells() != null
+                && serverCommand.getHotcells().isApplicable()) {
+            mPrecalConfig = mPrecalConfig.update(serverCommand.getHotcells().makePrecalConfig());
+        }
         if (serverCommand.getUpdateCommand() != null
                 && serverCommand.getUpdateCommand().isApplicable()) {
+            // FIXME: ideally, we would call PreCalibrationService without switching to IDLE
             changeCamera = true;
         }
         if (serverCommand.getCameraCommand() != null

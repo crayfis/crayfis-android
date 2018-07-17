@@ -19,6 +19,8 @@ import io.crayfis.android.camera.CFCamera;
  */
 class ServerCommand {
 
+    @SerializedName("set_weights") private PrecalCommand mWeights;
+    @SerializedName("set_hotcells") private PrecalCommand mHotcells;
     @SerializedName("update_precal") private PrecalCommand mUpdate;
     @SerializedName("change_data_rate") private CameraCommand mCameraCommand;
     @SerializedName("set_L0_trig") private String mL0Trigger;
@@ -42,6 +44,8 @@ class ServerCommand {
         @SerializedName("res_x") private Integer mResX;
         @SerializedName("res_y") private Integer mResY;
         @SerializedName("precal_id") private String mPrecalId;
+        @SerializedName("weights") private String mWeights;
+        @SerializedName("mask") private int[] mHotcells;
 
         boolean isApplicable() {
             CFCamera camera = CFCamera.getInstance();
@@ -49,6 +53,10 @@ class ServerCommand {
                     && mResX == camera.getResX()
                     && mResY == camera.getResY()
                     && !mPrecalId.equals(CFConfig.getInstance().getPrecalConfig().getPrecalId());
+        }
+
+        public PreCalibrationService.PreCalibrationConfig makePrecalConfig() {
+            return new PreCalibrationService.PreCalibrationConfig(mWeights, mHotcells, mPrecalId);
         }
     }
 
@@ -69,6 +77,27 @@ class ServerCommand {
         Boolean shouldIncrease() {
             return mShouldIncrease;
         }
+    }
+
+    @Nullable
+    PrecalCommand getWeights() {
+        return mWeights;
+    }
+
+    @Nullable
+    PrecalCommand getHotcells() {
+        return mHotcells;
+    }
+
+
+    @Nullable
+    PrecalCommand getUpdateCommand() {
+        return mUpdate;
+    }
+
+    @Nullable
+    CameraCommand getCameraCommand() {
+        return mCameraCommand;
     }
 
 
@@ -164,16 +193,6 @@ class ServerCommand {
     @Nullable
     Boolean shouldRecalibrate() {
         return mShouldRecalibrate;
-    }
-
-    @Nullable
-    PrecalCommand getUpdateCommand() {
-        return mUpdate;
-    }
-
-    @Nullable
-    CameraCommand getCameraCommand() {
-        return mCameraCommand;
     }
 
 }

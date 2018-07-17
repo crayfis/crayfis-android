@@ -15,6 +15,7 @@ import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 
 /**

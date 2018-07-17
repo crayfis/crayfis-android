@@ -176,7 +176,7 @@ class WeightingTask extends TriggerProcessor.Task {
         MatOfByte buf = new MatOfByte();
         int[] paramArray = new int[]{Imgcodecs.CV_IMWRITE_JPEG_QUALITY, 100};
         MatOfInt params = new MatOfInt(paramArray);
-        Imgcodecs.imencode(FORMAT, downsampleMat2D, buf, params);
+        Imgcodecs.imencode(FORMAT, downsampleMat2D.t(), buf, params);
         byte[] bytes = buf.toArray();
         CFLog.d("Compressed bytes = " + bytes.length);
 

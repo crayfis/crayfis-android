@@ -231,6 +231,13 @@ public class PreCalibrationService extends IntentService {
             return precalId;
         }
 
+        public PreCalibrationConfig update(PreCalibrationConfig config) {
+            return new PreCalibrationConfig(
+                    config.b64Weights != null ? config.b64Weights : b64Weights,
+                    config.hotcells != null ? config.hotcells : hotcells,
+                    config.precalId != null ? config.precalId: precalId);
+        }
+
         public UUID getPrecalUUID() {
             return UUID.fromString(String.format("%s-%s-%s-%s-%s",
                     precalId.substring(0, 8),
@@ -249,7 +256,7 @@ public class PreCalibrationService extends IntentService {
             compressedMat.release();
 
             Mat resampledMat2D = new Mat();
-            Imgproc.resize(downsampleMat, resampledMat2D, new Size(resX, resY), 0, 0, INTER);
+            Imgproc.resize(downsampleMat, resampledMat2D, new Size(resY, resX), 0, 0, INTER);
             downsampleMat.release();
 
             Mat resampledMat = resampledMat2D.reshape(0, resampledMat2D.cols() * resampledMat2D.rows());
