@@ -186,11 +186,11 @@ class WeightingTask extends TriggerProcessor.Task {
         params.release();
 
         // now store weights in PreCalibrationResult
-        PreCalibrator.PRECAL_BUILDER.setSampleResX(sampleResX)
-                .setSampleResY(sampleResY)
+        PreCalibrator.PRECAL_BUILDER
                 .setCompressedWeights(ByteString.copyFrom(bytes))
                 .setCompressedFormat(FORMAT)
-                .setResX(width);
+                .setResX(width)
+                .setResY(height);
     }
 
     /**

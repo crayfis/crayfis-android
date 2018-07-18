@@ -98,6 +98,7 @@ public class PreCalibrationService extends IntentService {
                     UploadExposureService.submitPreCalibrationResult(this, cameraId,
                             DataProtos.PreCalibrationResult.newBuilder()
                                     .setResX(resX)
+                                    .setResY(resY)
                                     .setPrecalId(precalId.getLeastSignificantBits())
                                     .setPrecalIdHi(precalId.getMostSignificantBits())
                                     .setCompressedWeights(weights)
