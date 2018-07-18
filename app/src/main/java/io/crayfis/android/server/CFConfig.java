@@ -342,6 +342,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
                 .apply();
 
-        mPrecalConfig.saveToPrefs(sharedPreferences);
+        if(mPrecalConfig != null) mPrecalConfig.saveToPrefs(sharedPreferences);
     }
 }

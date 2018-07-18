@@ -79,6 +79,7 @@ public class PreCalibrationService extends IntentService {
             case 200:
             case 202:
                 // use the weights and hotcells provided
+                break;
             case 204:
                 // the server needs a PreCalibrationResult to get started, so
                 // let's try to generate one
