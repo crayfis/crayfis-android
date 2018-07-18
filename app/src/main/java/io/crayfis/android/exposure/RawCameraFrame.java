@@ -32,6 +32,11 @@ public abstract class RawCameraFrame {
     Mat mGrayMat;
     private final int[] mHist = new int[256];
 
+    // these are left as frame properties in case they change in a SURVEY block
+    final int mResX;
+    final int mResY;
+    final int mResArea;
+
     private final AcquisitionTime mAcquiredTime;
     private final Location mLocation;
     private final float[] mOrientation;
@@ -78,19 +83,22 @@ public abstract class RawCameraFrame {
 
         // Camera2 YUV
         private Allocation bRaw;
-        TotalCaptureResult bResult;
+        private TotalCaptureResult bResult;
 
-        AcquisitionTime bAcquisitionTime;
-        long bTimestamp;
-        Location bLocation;
-        float[] bOrientation;
-        float bRotationZZ;
-        float bPressure;
-        ExposureBlock bExposureBlock;
+        private int bResX;
+        private int bResY;
 
-        ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
-        Allocation bWeighted;
-        Allocation bOut;
+        private AcquisitionTime bAcquisitionTime;
+        private long bTimestamp;
+        private Location bLocation;
+        private float[] bOrientation;
+        private float bRotationZZ;
+        private float bPressure;
+        private ExposureBlock bExposureBlock;
+
+        private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        private Allocation bWeighted;
+        private Allocation bOut;
 
         /**
          * Method for configuring Builder to create RawCameraDeprecatedFrames
@@ -106,7 +114,7 @@ public abstract class RawCameraFrame {
             Camera.Parameters params = camera.getParameters();
             Camera.Size sz = params.getPreviewSize();
 
-            setRenderScript(rs, sz.width, sz.height);
+            setRSBuffers(rs, sz.width, sz.height);
             return this;
         }
 
@@ -127,12 +135,15 @@ public abstract class RawCameraFrame {
 
             bFrameType = FrameType.CAMERA2;
             bRaw = buf;
-            setRenderScript(rs, buf.getType().getX(), buf.getType().getY());
+            setRSBuffers(rs, buf.getType().getX(), buf.getType().getY());
 
             return this;
         }
 
-        private void setRenderScript(RenderScript rs, int width, int height) {
+        private void setRSBuffers(RenderScript rs, int width, int height) {
+            bResX = width;
+            bResY = height;
+
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(width)
                     .setY(height)
@@ -192,11 +203,11 @@ public abstract class RawCameraFrame {
                 case DEPRECATED:
                     return new RawCameraDeprecatedFrame(bBytes, bCamera,
                             bAcquisitionTime, bTimestamp, bLocation, bOrientation, bRotationZZ, bPressure,
-                            bExposureBlock, bScriptIntrinsicHistogram, bWeighted, bOut);
+                            bExposureBlock, bResX, bResY, bScriptIntrinsicHistogram, bWeighted, bOut);
                 case CAMERA2:
                     return new RawCamera2Frame(bRaw, bAcquisitionTime,
                             bResult, bLocation, bOrientation, bRotationZZ, bPressure,
-                            bExposureBlock, bScriptIntrinsicHistogram, bWeighted, bOut);
+                            bExposureBlock, bResX, bResY, bScriptIntrinsicHistogram, bWeighted, bOut);
                 default:
                     CFLog.e("Frame builder not configured: returning null");
                     return null;
@@ -211,6 +222,8 @@ public abstract class RawCameraFrame {
                    final float rotationZZ,
                    final float pressure,
                    final ExposureBlock exposureBlock,
+                   final int resX,
+                   final int resY,
                    final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                    final Allocation in,
                    final Allocation out) {
@@ -221,6 +234,9 @@ public abstract class RawCameraFrame {
         mRotationZZ = rotationZZ;
         mPressure = pressure;
         mExposureBlock = exposureBlock;
+        mResX = resX;
+        mResY = resY;
+        mResArea = resX * resY;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
         aWeighted = in;
         aout = out;
@@ -232,7 +248,7 @@ public abstract class RawCameraFrame {
         if(!mBufferClaimed) {
             claim();
         }
-        return mRawBytes[x + mExposureBlock.res_x * y] & 0xFF;
+        return mRawBytes[x + mResX * y] & 0xFF;
     }
 
     /**
@@ -379,9 +395,9 @@ public abstract class RawCameraFrame {
 
     public int getCameraId() { return mExposureBlock.camera_id; }
 
-    public int getWidth() { return mExposureBlock.res_x; }
+    public int getWidth() { return mResX; }
 
-    public int getHeight() { return mExposureBlock.res_y; }
+    public int getHeight() { return mResY; }
 
     private void calculateStatistics() {
 
@@ -409,14 +425,14 @@ public abstract class RawCameraFrame {
         }
 
         mPixMax = max;
-        mPixAvg = (double)sum/(mExposureBlock.res_area);
+        mPixAvg = (double)sum/mResArea;
 
         for(int i=0; i<=max; i++) {
             double dev = i - mPixAvg;
             sumDevSq += mHist[i]*dev*dev;
         }
 
-        mPixStd = Math.sqrt(sumDevSq/(mExposureBlock.res_area-1));
+        mPixStd = Math.sqrt(sumDevSq/(mResArea-1));
 
     }
 

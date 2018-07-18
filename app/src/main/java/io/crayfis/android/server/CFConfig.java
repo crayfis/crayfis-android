@@ -1,17 +1,8 @@
 package io.crayfis.android.server;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.hardware.Camera;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
@@ -55,7 +46,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
-    private static final PreCalibrationService.PreCalibrationConfig DEFAULT_PRECAL_CONFIG = null;
+    private static final PreCalibrationService.Config DEFAULT_PRECAL_CONFIG = null;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
@@ -71,7 +62,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
-    private PreCalibrationService.PreCalibrationConfig mPrecalConfig;
+    private PreCalibrationService.Config mPrecalConfig;
     private String mTargetResolutionStr;
     private Float mTargetFPS;
     private float mFracDeadTime;
@@ -202,11 +193,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public float getAccountScore() { return mAccountScore; }
 
-    public void setPrecalConfig(PreCalibrationService.PreCalibrationConfig config) {
+    public void setPrecalConfig(PreCalibrationService.Config config) {
         mPrecalConfig = config;
     }
 
-    public PreCalibrationService.PreCalibrationConfig getPrecalConfig() {
+    public PreCalibrationService.Config getPrecalConfig() {
         return mPrecalConfig;
     }
 
@@ -350,5 +341,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putFloat(KEY_FRAC_DEAD_TIME, mFracDeadTime)
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
                 .apply();
+
+        mPrecalConfig.saveToPrefs(sharedPreferences);
     }
 }

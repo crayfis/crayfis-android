@@ -31,12 +31,14 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
                              final float rotationZZ,
                              final float pressure,
                              final ExposureBlock exposureBlock,
+                             final int resX,
+                             final int resY,
                              final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                              final Allocation in,
                              final Allocation out) {
 
-        super(acquisitionTime, location, orientation, rotationZZ, pressure,
-                exposureBlock, scriptIntrinsicHistogram, in, out);
+        super(acquisitionTime, location, orientation, rotationZZ, pressure, exposureBlock,
+                resX, resY, scriptIntrinsicHistogram, in, out);
 
         mRawBytes = bytes;
         mCamera = camera;
@@ -67,7 +69,7 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
         try {
 
-            byte[] adjustedBytes = new byte[mExposureBlock.res_area * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
+            byte[] adjustedBytes = new byte[mResArea * ImageFormat.getBitsPerPixel(ImageFormat.YUV_420_888)];
 
             // update with weighted pixels
             aWeighted.copyTo(adjustedBytes);
@@ -80,9 +82,9 @@ class RawCameraDeprecatedFrame extends RawCameraFrame {
 
             mat1 = new MatOfByte(adjustedBytes);
             mCamera.addCallbackBuffer(adjustedBytes);
-            mat2 = mat1.rowRange(0, mExposureBlock.res_area); // only use grayscale byte
+            mat2 = mat1.rowRange(0, mResArea); // only use grayscale byte
             mat1.release();
-            mGrayMat = mat2.reshape(1, mExposureBlock.res_y); // create 2D array
+            mGrayMat = mat2.reshape(1, mResY); // create 2D array
             mat2.release();
 
             mBufferClaimed = true;

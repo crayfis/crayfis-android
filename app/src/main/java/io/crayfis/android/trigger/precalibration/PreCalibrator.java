@@ -15,7 +15,6 @@ import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
-import io.crayfis.android.util.CFLog;
 
 
 /**
@@ -122,10 +121,9 @@ public class PreCalibrator extends TriggerProcessor {
             i++;
         }
 
-        PreCalibrationService.PreCalibrationConfig result
-                = new PreCalibrationService.PreCalibrationConfig(b64Weights, hotcells, precalIdStr);
+        PreCalibrationService.Config result
+                = new PreCalibrationService.Config(cameraId, resX, resY, b64Weights, hotcells, precalIdStr);
 
-        result.saveToPrefs(mApplication, cameraId, resX, resY);
         CFConfig.getInstance().setPrecalConfig(result);
 
         PRECAL_BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
@@ -144,7 +142,7 @@ public class PreCalibrator extends TriggerProcessor {
     }
 
 
-    public TriggerProcessor.Config getCurrentConfig() {
+    public Config getCurrentConfig() {
         return sConfigList.get(sConfigStep);
     }
 

@@ -119,7 +119,7 @@ public final class ExposureBlockManager {
                     mXBExpirationTimer.start();
                 }
 
-                PreCalibrationService.PreCalibrationConfig precalConfig = CFConfig.getInstance().getPrecalConfig();
+                PreCalibrationService.Config precalConfig = CFConfig.getInstance().getPrecalConfig();
 
                 CFLog.i("Starting new exposure block w/ state " + state + "! (" + retired_blocks.size() + " retired blocks queued.)");
                 ExposureBlock newXB = new ExposureBlock(mApplication,
@@ -130,7 +130,7 @@ public final class ExposureBlockManager {
                         camera.getCameraId(),
                         camera.isFacingBack(),
                         precalConfig != null ?
-                                precalConfig.getScriptCWeight(mApplication.getRenderScript(), camera.getResX(), camera.getResY())
+                                precalConfig.getScriptCWeight(mApplication.getRenderScript())
                                 : null,
                         new TriggerChain(mApplication, state),
                         camera.getLastKnownLocation(),

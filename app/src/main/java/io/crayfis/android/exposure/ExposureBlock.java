@@ -50,7 +50,6 @@ public class ExposureBlock {
 
 	public final int res_x;
 	public final int res_y;
-	final int res_area;
 
 	final ScriptC_weight weights;
 	public final TriggerChain TRIGGER_CHAIN;
@@ -104,7 +103,6 @@ public class ExposureBlock {
         this.daq_state = daq_state;
         this.res_x = resx;
         this.res_y = resy;
-        this.res_area = resx * resy;
 
         total_pixels = 0;
 

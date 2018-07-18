@@ -38,12 +38,14 @@ class RawCamera2Frame extends RawCameraFrame {
                     final float rotationZZ,
                     final float pressure,
                     final ExposureBlock exposureBlock,
+                    final int resX,
+                    final int resY,
                     final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
                     final Allocation in,
                     final Allocation out) {
 
-        super(acquisitionTime, location, orientation, rotationZZ, pressure,
-                exposureBlock, scriptIntrinsicHistogram, in, out);
+        super(acquisitionTime, location, orientation, rotationZZ, pressure, exposureBlock,
+                resX, resY, scriptIntrinsicHistogram, in, out);
 
         aRaw = alloc;
         mResult = result;
@@ -94,9 +96,9 @@ class RawCamera2Frame extends RawCameraFrame {
             // probably a better way to do this, but this
             // works for preventing native memory leaks
 
-            mat2 = mat1.rowRange(0, mExposureBlock.res_area); // only use grayscale byte
+            mat2 = mat1.rowRange(0, mResArea); // only use grayscale byte
             mat1.release();
-            mGrayMat = mat2.reshape(1, mExposureBlock.res_y); // create 2D array
+            mGrayMat = mat2.reshape(1, mResY); // create 2D array
             mat2.release();
             mBufferClaimed = true;
         } catch (OutOfMemoryError oom) {

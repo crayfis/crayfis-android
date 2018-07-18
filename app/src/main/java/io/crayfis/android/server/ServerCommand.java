@@ -4,10 +4,6 @@ import android.support.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
 import io.crayfis.android.camera.CFCamera;
 
 /**
@@ -55,8 +51,8 @@ class ServerCommand {
                     && !mPrecalId.equals(CFConfig.getInstance().getPrecalConfig().getPrecalId());
         }
 
-        public PreCalibrationService.PreCalibrationConfig makePrecalConfig() {
-            return new PreCalibrationService.PreCalibrationConfig(mWeights, mHotcells, mPrecalId);
+        public PreCalibrationService.Config makePrecalConfig() {
+            return new PreCalibrationService.Config(mCameraId, mResX, mResY, mWeights, mHotcells, mPrecalId);
         }
     }
 
