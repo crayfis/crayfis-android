@@ -40,6 +40,8 @@
     <string name="settings_pref_resolution_title" translatable="false">Camera resolution</string>
     <string name="settings_pref_fps_summary" translatable="false">Decrease frame rate if temperature is too high</string>
     <string name="settings_pref_fps_title" translatable="false">Camera frame rate</string>
+    <string name="settings_fps_res_lock_summary" translatable="false">Do not accept server commands to change resolution/FPS</string>
+    <string name="settings_fps_res_lock_title" translatable="false">Resolution/FPS Lock</string>
     <string name="settings_l0_trigger_summary" translatable="false">Options: default</string>
     <string name="settings_l0_trigger_title" translatable="false">L0 Trigger</string>
     <string name="settings_qual_trigger_summary" translatable="false">Options: facedown, autodetect, lock</string>

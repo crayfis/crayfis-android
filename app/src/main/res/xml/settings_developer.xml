@@ -1,6 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <CheckBoxPreference
+        android:key="@string/prefFPSResLock"
+        android:defaultValue="false"
+        android:title="@string/settings_fps_res_lock_title"
+        android:summary="@string/settings_fps_res_lock_summary" />
+
+    <ListPreference
+        android:key="@string/prefResolution"
+        android:defaultValue="1080p"
+        android:entries="@array/pref_resolution"
+        android:summary="@string/settings_pref_resolution_summary"
+        android:entryValues="@array/pref_resolution_vals"
+        android:title="@string/settings_pref_resolution_title" />
+
+    <ListPreference
+        android:key="@string/prefFPS"
+        android:defaultValue="30"
+        android:entries="@array/pref_fps_entries"
+        android:entryValues="@array/pref_fps_entries"
+        android:summary="@string/settings_pref_fps_summary"
+        android:title="@string/settings_pref_fps_title" />
+
     <EditTextPreference
         android:title="@string/settings_l0_trigger_title"
         android:summary="@string/settings_l0_trigger_summary"

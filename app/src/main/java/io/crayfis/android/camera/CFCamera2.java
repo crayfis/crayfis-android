@@ -3,6 +3,7 @@ package io.crayfis.android.camera;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
@@ -14,6 +15,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.Type;
@@ -365,6 +367,12 @@ class CFCamera2 extends CFCamera {
 
     @Override
     public void changeDataRate(boolean increase) {
+        // do nothing if we're locked
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        if(prefs.getBoolean(mApplication.getString(R.string.prefFPSResLock), false)) {
+            return;
+        }
+
         StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         if(map != null) {
             Size[] outputSizes = map.getOutputSizes(Allocation.class);

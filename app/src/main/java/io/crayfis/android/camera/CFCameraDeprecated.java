@@ -1,8 +1,10 @@
 package io.crayfis.android.camera;
 
+import android.content.SharedPreferences;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.preference.PreferenceManager;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -139,6 +141,12 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
     @Override
     public void changeDataRate(boolean increase) {
+        // do nothing if we're locked
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        if(prefs.getBoolean(mApplication.getString(R.string.prefFPSResLock), false)) {
+            return;
+        }
+
         List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
         if(sizes == null) return;
 
