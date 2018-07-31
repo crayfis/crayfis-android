@@ -35,6 +35,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_FRAC_DEAD_TIME = "prefDeadTime";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
+    private static final String KEY_DATACHUNK_SIZE = "datachunk_size";
 
     private static final String DEFAULT_L0_TRIGGER = "";
     private static final String DEFAULT_QUAL_TRIGGER = "";
@@ -51,6 +52,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
+    private static final long DEFAULT_DATACHUNK_SIZE = 50000L;
 
     private TriggerProcessor.Config mL0Trigger;
     private TriggerProcessor.Config mQualTrigger;
@@ -67,6 +69,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private Float mTargetFPS;
     private float mFracDeadTime;
     private int mBatteryOverheatTemp;
+    private long mDataChunkSize;
 
     private CFConfig() {
         mL0Trigger = L0Processor.makeConfig(DEFAULT_L0_TRIGGER);
@@ -84,6 +87,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTargetFPS = DEFAULT_TARGET_FPS;
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
+        mDataChunkSize = DEFAULT_DATACHUNK_SIZE;
     }
 
     public TriggerProcessor.Config getL0Trigger() {
@@ -220,25 +224,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mBatteryOverheatTemp;
     }
 
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
-        mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
-        mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
-        mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
-        mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
-        mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
-        mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
-        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
-        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
-        mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
-        try {
-            mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
-        } catch (NumberFormatException e) {
-            mTargetFPS = DEFAULT_TARGET_FPS;
-        }
-
+    public long getDataChunkSize() {
+        return mDataChunkSize;
     }
 
     /**
@@ -314,6 +301,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getBatteryOverheatTemp() != null) {
             mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
         }
+        if (serverCommand.getDataChunkSize() != null) {
+            mDataChunkSize = serverCommand.getDataChunkSize();
+        }
         if (serverCommand.shouldRecalibrate() != null) {
             changeCamera = true;
         }
@@ -321,6 +311,29 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (changeCamera) {
             CFCamera.getInstance().changeCamera();
         }
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
+        mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
+        mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
+        mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
+        mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
+        mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
+        mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
+        mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
+        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
+        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
+        mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
+        try {
+            mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
+        } catch (NumberFormatException e) {
+            mTargetFPS = DEFAULT_TARGET_FPS;
+        }
+        mFracDeadTime = sharedPreferences.getFloat(KEY_FRAC_DEAD_TIME, DEFAULT_FRAC_DEAD_TIME);
+        mBatteryOverheatTemp = sharedPreferences.getInt(KEY_BATTERY_OVERHEAT_TEMP, DEFAULT_BATTERY_OVERHEAT_TEMP);
+        mDataChunkSize = sharedPreferences.getLong(KEY_DATACHUNK_SIZE, DEFAULT_DATACHUNK_SIZE);
     }
 
     public void save(@NonNull final SharedPreferences sharedPreferences) {
@@ -340,6 +353,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_TARGET_FPS, mTargetFPS.toString())
                 .putFloat(KEY_FRAC_DEAD_TIME, mFracDeadTime)
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
+                .putLong(KEY_DATACHUNK_SIZE, mDataChunkSize)
                 .apply();
 
         if(mPrecalConfig != null) mPrecalConfig.saveToPrefs(sharedPreferences);

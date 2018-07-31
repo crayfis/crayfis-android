@@ -34,6 +34,7 @@ class ServerCommand {
     @SerializedName("set_target_fps") private Float mTargetFPS;
     @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
+    @SerializedName("set_datachunk_size") private Long mDataChunkSize;
 
     class PrecalCommand {
         @SerializedName("camera_id") private Integer mCameraId;
@@ -189,6 +190,11 @@ class ServerCommand {
     @Nullable
     Boolean shouldRecalibrate() {
         return mShouldRecalibrate;
+    }
+
+    @Nullable
+    Long getDataChunkSize() {
+        return mDataChunkSize;
     }
 
 }

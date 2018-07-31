@@ -96,7 +96,7 @@ public class PreCalibrationService extends IntentService {
                     }
 
                     // this is a minimal PreCalibrationResult
-                    UploadExposureService.submitPreCalibrationResult(this, cameraId,
+                    UploadExposureService.submitMessage(this, cameraId,
                             DataProtos.PreCalibrationResult.newBuilder()
                                     .setResX(resX)
                                     .setResY(resY)

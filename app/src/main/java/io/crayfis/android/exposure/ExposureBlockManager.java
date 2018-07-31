@@ -178,7 +178,7 @@ public final class ExposureBlockManager {
                     for (ExposureBlock xb : retired_blocks) {
                         if (xb.isFinalized()) {
                             // okay, it's safe to commit this block now. add it to the list of XBs
-                            // to dispatch, and then do that outside the synch block.
+                            // to dispatch, and then do that outside the sync block.
                             toRemove.add(xb);
                         } else if ( (current_time - xb.getEndTimeNano()) > XB_STALE_TIME * 1000000L) {
                             // this XB has gone stale! we should upload it anyways.
@@ -190,7 +190,7 @@ public final class ExposureBlockManager {
 
                 for (ExposureBlock xb : toRemove) {
                     // submit the retired XB's to be uploaded.
-                    UploadExposureService.submitExposureBlock(mApplication, xb.camera_id, xb.buildProto());
+                    UploadExposureService.submitMessage(mApplication, xb.camera_id, xb.buildProto());
                     retired_blocks.remove(xb);
                 }
             }

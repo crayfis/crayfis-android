@@ -23,7 +23,7 @@ import io.crayfis.android.trigger.TriggerProcessor;
 
 public class PreCalibrator extends TriggerProcessor {
 
-    static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
+    public static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
 
     private final CFCamera CAMERA;
 
@@ -137,7 +137,7 @@ public class PreCalibrator extends TriggerProcessor {
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitPreCalibrationResult(mApplication, cameraId, PRECAL_BUILDER.build());
+        UploadExposureService.submitMessage(mApplication, cameraId, PRECAL_BUILDER.build());
 
     }
 
