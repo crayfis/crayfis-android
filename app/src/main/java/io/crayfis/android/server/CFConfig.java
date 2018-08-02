@@ -256,19 +256,43 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             CFCamera.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
         }
         if (serverCommand.getL0Trigger() != null) {
-            mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger());
+            if(serverCommand.getL0Trigger().hasName()) {
+                mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger().toString());
+            } else {
+                mL0Trigger = mL0Trigger.editFromString(serverCommand.getL0Trigger().toString());
+            }
         }
         if (serverCommand.getQualityTrigger() != null) {
-            mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger());
+            if(serverCommand.getQualityTrigger().hasName()) {
+                mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger().toString());
+            } else {
+                mQualTrigger = mQualTrigger.editFromString(serverCommand.getQualityTrigger().toString());
+            }
         }
-        if (serverCommand.getPrecalTrigger() != null) {
-            mPrecalTriggers = PreCalibrator.makeConfig(serverCommand.getPrecalTrigger());
+        if (serverCommand.getPrecalTriggers() != null) {
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i<serverCommand.getPrecalTriggers().length; i++) {
+                ServerCommand.TrigCommand cmd = serverCommand.getPrecalTriggers()[i];
+                if(i>0) {
+                    sb.append("->");
+                }
+                sb.append(cmd.toString());
+            }
+            mPrecalTriggers = PreCalibrator.makeConfig(sb.toString());
         }
         if (serverCommand.getL1Trigger() != null) {
-            mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger());
+            if(serverCommand.getL1Trigger().hasName()) {
+                mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger().toString());
+            } else {
+                mL1Trigger = mL1Trigger.editFromString(serverCommand.getL1Trigger().toString());
+            }
         }
         if (serverCommand.getL2Trigger() != null) {
-            mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger());
+            if(serverCommand.getL2Trigger().hasName()) {
+                mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger().toString());
+            } else {
+                mL2Trigger = mL2Trigger.editFromString(serverCommand.getL2Trigger().toString());
+            }
         }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
             mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();

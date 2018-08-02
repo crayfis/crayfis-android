@@ -318,6 +318,41 @@ public abstract class TriggerProcessor {
                 return Config.this.makeNewConfig(cfgBuilder.toString());
             }
         }
+
+        /**
+         * Add additional preferences to existing config
+         *
+         * @param cfgStr Semicolon-delimited key-value pairs of the form k=v; ...
+         * @return Edited Config
+         */
+        public Config editFromString(String cfgStr) {
+            HashMap<String, String> cfgMap = parseConfigString(cfgStr);
+            Editor e = edit();
+            for(String key: cfgMap.keySet()) {
+                String strVal = cfgMap.get(key);
+                if(e.eTaskConfigBool.containsKey(key)) {
+                    e.eTaskConfigBool.put(key, Boolean.parseBoolean(strVal));
+                }
+                if(e.eTaskConfigFloat.containsKey(key)) {
+                    try {
+                        e.eTaskConfigFloat.put(key, Float.parseFloat(strVal));
+                    } catch (NumberFormatException nfe) {
+                        // leave the field as is
+                    }
+                }
+                if(e.eTaskConfigInt.containsKey(key)) {
+                    try {
+                        e.eTaskConfigInt.put(key, Integer.parseInt(strVal));
+                    } catch (NumberFormatException nfe) {
+                        // leave the field as is
+                    }
+                }
+                if(e.eTaskConfigStr.containsKey(key)) {
+                    mTaskConfigStr.put(key, strVal);
+                }
+            }
+            return e.create();
+        }
     }
 
     /**
