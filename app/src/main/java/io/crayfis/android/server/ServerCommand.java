@@ -134,13 +134,13 @@ class ServerCommand {
 
     private class PrecalTrigCommand extends TrigCommand {
         @SerializedName(TriggerProcessor.Config.KEY_MAXFRAMES) private Integer mMaxFrames;
-        @SerializedName(PreCalibrator.KEY_HOTCELL_THRESH) private Float mHotcellThresh;
+        @SerializedName(PreCalibrator.KEY_HOTCELL_LIMIT) private Float mHotcellThresh;
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder(super.toString());
             if(mMaxFrames != null) sb.append(TriggerProcessor.Config.KEY_MAXFRAMES + "=" + mMaxFrames + ";");
-            if(mHotcellThresh != null) sb.append(PreCalibrator.KEY_HOTCELL_THRESH + "=" + mHotcellThresh + ";");
+            if(mHotcellThresh != null) sb.append(PreCalibrator.KEY_HOTCELL_LIMIT + "=" + mHotcellThresh + ";");
             return sb.toString();
         }
     }

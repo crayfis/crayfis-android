@@ -124,27 +124,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @param l1Threshold The new threshold.
      */
-    public void setL1Threshold(int l1Threshold) {
+    public void setThresholds(int l1Threshold) {
         mL1Trigger = mL1Trigger.edit()
                 .putInt(L1Processor.KEY_L1_THRESH, l1Threshold)
                 .create();
-    }
-
-    /**
-     * Get the threshold for camera frame processing.
-     *
-     * @return int
-     */
-    public Integer getL2Threshold() {
-        return mL2Trigger.getInt(L2Processor.KEY_L2_THRESH);
-    }
-
-    /**
-     * Set the threshold for camera frame processing.
-     *
-     * @param l2Threshold The new threshold.
-     */
-    public void setL2Threshold(int l2Threshold) {
+        int l2Threshold = L2Processor.generateL2Threshold(l1Threshold, mL2Trigger);
         mL2Trigger = mL2Trigger.edit()
                 .putInt(L2Processor.KEY_L2_THRESH, l2Threshold)
                 .create();

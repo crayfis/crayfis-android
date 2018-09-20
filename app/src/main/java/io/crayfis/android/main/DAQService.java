@@ -205,7 +205,7 @@ public class DAQService extends Service {
      */
     private void doStateTransitionSurvey(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
-        CONFIG.setL1Threshold(255);
+        CONFIG.setThresholds(255);
         switch (previousState) {
             case IDLE:
                 mCFCamera.changeCamera();

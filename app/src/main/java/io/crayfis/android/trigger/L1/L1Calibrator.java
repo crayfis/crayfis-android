@@ -74,15 +74,7 @@ public class L1Calibrator {
 
         CFLog.i("Setting new L1 threshold: {" + L1Config.getInt(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
 
-        CFConfig CONFIG = CFConfig.getInstance();
-        CONFIG.setL1Threshold(thresh);
-        if (thresh > 2) {
-            CONFIG.setL2Threshold(thresh - 1);
-        } else {
-            // Okay, if we're getting this low, we shouldn't try to
-            // set the L2thresh any lower, else event frames will be huge.
-            CONFIG.setL2Threshold(thresh);
-        }
+        CFConfig.getInstance().setThresholds(thresh);
     }
 
     void submitCalibrationResult() {

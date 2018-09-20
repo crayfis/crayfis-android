@@ -23,7 +23,10 @@ import io.crayfis.android.trigger.TriggerProcessor;
 
 public class PreCalibrator extends TriggerProcessor {
 
-    public static final String KEY_HOTCELL_THRESH = "hotcell_thresh";
+    public static final String KEY_SECOND_MAX_THRESH = "second_max_thresh";
+    public static final String KEY_HOTCELL_LIMIT = "hotcell_thresh";
+    public static final String KEY_WEIGHT_GRID_SIZE = "grid_size";
+    public static final String KEY_HOTCELLS_N_DEVIATIONS = "n_deviations";
 
     private final CFCamera CAMERA;
 
@@ -71,18 +74,18 @@ public class PreCalibrator extends TriggerProcessor {
             options.remove("name");
 
             switch (name) {
-                case HotCellTask.Config.NAME:
-                    configs.add(new HotCellTask.Config(options));
+                case SecondMaxTask.Config.NAME:
+                    configs.add(new SecondMaxTask.Config(options));
                     break;
-                case WeightingTask.Config.NAME:
-                    configs.add(new WeightingTask.Config(options));
+                case StatsTask.Config.NAME:
+                    configs.add(new StatsTask.Config(options));
             }
         }
 
         if(configs.isEmpty()) {
             // no valid names: just use default
-            configs.add(new HotCellTask.Config(new HashMap<>()));
-            configs.add(new WeightingTask.Config(new HashMap<>()));
+            configs.add(new StatsTask.Config(new HashMap<>()));
+            configs.add(new SecondMaxTask.Config(new HashMap<>()));
         }
 
         return configs;

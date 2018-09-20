@@ -71,4 +71,13 @@ public class L2Processor extends TriggerProcessor {
             return sPassTimes.size() / dtMin;
         }
     }
+
+    public static int generateL2Threshold(int l1thresh, Config l2config) {
+        if((l2config instanceof L2Task.Config || l2config instanceof L2TaskMaxN.Config)
+                && l1thresh > 3) {
+            return l1thresh - 1;
+        }
+
+        return l1thresh;
+    }
 }
