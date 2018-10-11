@@ -36,7 +36,8 @@ public class ExposureBlock {
     private final CFApplication APPLICATION;
 
 	public final UUID run_id;
-    public final UUID precal_id;
+    public final int hot_hash;
+    public final int wgt_hash;
     public final int camera_id;
     final Boolean camera_facing_back;
 
@@ -77,7 +78,8 @@ public class ExposureBlock {
     ExposureBlock(CFApplication application,
                          int xbn,
                          UUID run_id,
-                         @Nullable UUID precal_id,
+                         int hot_hash,
+                         int wgt_hash,
                          int camera_id,
                          @Nullable Boolean camera_facing_back,
                          ScriptC_weight weights,
@@ -92,7 +94,8 @@ public class ExposureBlock {
         this.APPLICATION = application;
         this.xbn = xbn;
         this.run_id = run_id;
-        this.precal_id = precal_id;
+        this.hot_hash = hot_hash;
+        this.wgt_hash = wgt_hash;
         this.camera_id = camera_id;
         this.camera_facing_back = camera_facing_back;
         this.weights = weights;
@@ -286,8 +289,8 @@ public class ExposureBlock {
 
         // should be null for PRECALIBRATION
         if(daq_state == CFApplication.State.CALIBRATION || daq_state == CFApplication.State.DATA) {
-            buf.setPrecalId(precal_id.getLeastSignificantBits())
-                    .setPrecalIdHi(precal_id.getMostSignificantBits());
+            buf.setHotHash(hot_hash)
+                    .setWgtHash(wgt_hash);
         }
 		
 		// don't output event information for calibration blocks...

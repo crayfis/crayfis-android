@@ -25,12 +25,14 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -88,7 +90,6 @@ public class PreCalibrationService extends IntentService {
                 mConfig = Config.loadFromPrefs(this, cameraId, resX, resY);
                 if(mConfig != null && mConfig.isValid()) {
                     // redis must have lost the config, so re-upload it
-                    UUID precalId = mConfig.getPrecalUUID();
                     ByteString weights = ByteString.copyFrom(Base64.decode(mConfig.mB64Weights, Base64.DEFAULT));
                     ArrayList<Integer> hotcells = new ArrayList<>();
                     for(int hxy: mConfig.mHotcells) {
@@ -100,8 +101,8 @@ public class PreCalibrationService extends IntentService {
                             DataProtos.PreCalibrationResult.newBuilder()
                                     .setResX(resX)
                                     .setResY(resY)
-                                    .setPrecalId(precalId.getLeastSignificantBits())
-                                    .setPrecalIdHi(precalId.getMostSignificantBits())
+                                    .setHotHash(mConfig.mHotHash)
+                                    .setWgtHash(mConfig.mWeightHash)
                                     .setCompressedWeights(weights)
                                     .addAllHotcell(hotcells)
                                     .setInterpolation(INTER)
@@ -166,13 +167,16 @@ public class PreCalibrationService extends IntentService {
 
             if(serverResponseCode == 200 || serverResponseCode == 202) {
                 // read the response
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                InputStream in = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
                 String line;
                 StringBuilder sb = new StringBuilder();
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
                 }
 
+                reader.close();
+                in.close();
                 CFLog.d("Got response: " + sb.toString());
 
                 mConfig = new Config(cameraId, resX, resY, new Gson().fromJson(sb.toString(), Response.class));
@@ -180,7 +184,7 @@ public class PreCalibrationService extends IntentService {
                     CFConfig.getInstance().setPrecalConfig(mConfig);
                 }
             }
-
+            out.close();
             conn.disconnect();
             return serverResponseCode;
 
@@ -194,12 +198,14 @@ public class PreCalibrationService extends IntentService {
     private static class Response {
         @SerializedName("weights") final String b64Weights;
         @SerializedName("mask") final int[] hotcells;
-        @SerializedName("precal_id") final String precalId;
+        @SerializedName("hot_hash") final Integer hotHash;
+        @SerializedName("wgt_hash") final Integer weightHash;
 
-        public Response(String b64Weights, int[] hotcells, String precalId) {
+        public Response(int[] hotcells, int hotHash, String b64Weights, int weightHash) {
             this.b64Weights = b64Weights;
             this.hotcells = hotcells;
-            this.precalId = precalId;
+            this.hotHash = hotHash;
+            this.weightHash = weightHash;
         }
 
     }
@@ -209,37 +215,57 @@ public class PreCalibrationService extends IntentService {
         private final int mCameraId;
         private final int mResX;
         private final int mResY;
-        private final String mB64Weights;
         private final int[] mHotcells;
-        private final String mPrecalId;
+        private final int mHotHash;
+        private final String mB64Weights;
+        private final int mWeightHash;
 
         private static final String KEY_WEIGHTS_TEMPLATE = "weights_%d:%dx%d";
         private static final String KEY_HOTCELLS_TEMPLATE = "hotcells_%d:%dx%d";
-        private static final String KEY_PRECAL_ID_TEMPLATE = "id_%d:%dx%d";
+        private static final String KEY_HASH_TEMPLATE = "hash_%d:%dx%d";
 
         final String KEY_WEIGHTS;
         final String KEY_HOTCELLS;
-        final String KEY_PRECAL_ID;
+        final String KEY_HASH;
 
-        public Config(int cameraId, int resX, int resY, String b64Weights, int[] hotcells, String precalId) {
+        public Config(int cameraId, int resX, int resY, int[] hotcells, int hotHash, String b64Weights, int weightHash) {
             mCameraId = cameraId;
             mResX = resX;
             mResY = resY;
-            mB64Weights = b64Weights;
             mHotcells = hotcells;
-            mPrecalId = precalId;
+            mHotHash = hotHash;
+            mB64Weights = b64Weights;
+            mWeightHash = weightHash;
 
             KEY_WEIGHTS = String.format(KEY_WEIGHTS_TEMPLATE, mCameraId, mResX, mResY);
             KEY_HOTCELLS = String.format(KEY_HOTCELLS_TEMPLATE, mCameraId, mResX, mResY);
-            KEY_PRECAL_ID = String.format(KEY_PRECAL_ID_TEMPLATE, mCameraId, mResX, mResY);
+            KEY_HASH = String.format(KEY_HASH_TEMPLATE, mCameraId, mResX, mResY);
         }
 
         public Config(int cameraId, int resX, int resY, Response resp) {
-            this(cameraId, resX, resY, resp.b64Weights, resp.hotcells, resp.precalId);
+            this(cameraId, resX, resY, resp.hotcells, resp.hotHash, resp.b64Weights, resp.weightHash);
+            CFLog.d("Pulled " + resp.hotcells.length + " hotcells");
+        }
+
+        public static Config fromPartialResult(int cameraId, DataProtos.PreCalibrationResult result) {
+            String b64weights = Base64.encodeToString(result.getCompressedWeights().toByteArray(), Base64.DEFAULT);
+            int[] hotcells = new int[result.getHotcellCount()];
+            for(int i=0; i<result.getHotcellCount(); i++) {
+                hotcells[i] = result.getHotcell(i);
+            }
+            return new Config(cameraId, result.getResX(), result.getResY(), hotcells, -1, b64weights, -1);
         }
 
         boolean isValid() {
-            return mB64Weights != null && mHotcells != null && mPrecalId != null;
+            return mB64Weights != null && mHotcells != null && mHotHash >= 0 && mWeightHash >= 0;
+        }
+
+        public int getHotHash() {
+            return mHotHash;
+        }
+
+        public int getWeightHash() {
+            return mWeightHash;
         }
 
         public void saveToPrefs(SharedPreferences sharedPreferences) {
@@ -252,7 +278,7 @@ public class PreCalibrationService extends IntentService {
             sharedPreferences.edit()
                     .putString(KEY_WEIGHTS, mB64Weights)
                     .putStringSet(KEY_HOTCELLS, hexCells)
-                    .putString(KEY_PRECAL_ID, mPrecalId)
+                    .putLong(KEY_HASH, (long) mHotHash * Integer.MAX_VALUE + mWeightHash)
                     .apply();
         }
 
@@ -261,9 +287,11 @@ public class PreCalibrationService extends IntentService {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
             String b64Weights = prefs.getString(String.format(KEY_WEIGHTS_TEMPLATE, cameraId, resX, resY), null);
             Set<String> hexCells = prefs.getStringSet(String.format(KEY_HOTCELLS_TEMPLATE, cameraId, resX, resY), null);
-            String precalId = prefs.getString(String.format(KEY_PRECAL_ID_TEMPLATE, cameraId, resX, resY), null);
+            Long hash = prefs.getLong(String.format(KEY_HASH_TEMPLATE, cameraId, resX, resY), -1);
+            int hotHash = (int)(hash / Integer.MAX_VALUE);
+            int weightHash = (int)(hash % Integer.MAX_VALUE);
 
-            if(precalId == null) return null;
+            if(hotHash < 0 || weightHash < 0) return null;
 
             int[] hotcells = null;
 
@@ -276,11 +304,7 @@ public class PreCalibrationService extends IntentService {
                 }
             }
 
-            return new Config(cameraId, resX, resY, b64Weights, hotcells, precalId);
-        }
-
-        public String getPrecalId() {
-            return mPrecalId;
+            return new Config(cameraId, resX, resY, hotcells, hotHash, b64Weights, weightHash);
         }
 
         public Config update(Config config) {
@@ -289,46 +313,48 @@ public class PreCalibrationService extends IntentService {
             }
 
             return new Config(mCameraId, mResX, mResY,
-                    config.mB64Weights != null ? config.mB64Weights : mB64Weights,
                     config.mHotcells != null ? config.mHotcells : mHotcells,
-                    config.mPrecalId != null ? config.mPrecalId: mPrecalId);
-        }
-
-        public UUID getPrecalUUID() {
-            return UUID.fromString(String.format("%s-%s-%s-%s-%s",
-                    mPrecalId.substring(0, 8),
-                    mPrecalId.substring(8, 12),
-                    mPrecalId.substring(12, 16),
-                    mPrecalId.substring(16, 20),
-                    mPrecalId.substring(20)));
+                    config.mHotHash >= 0 ? config.mHotHash: mHotHash,
+                    config.mB64Weights != null ? config.mB64Weights : mB64Weights,
+                    config.mWeightHash >= 0 ? config.mWeightHash : mWeightHash);
         }
 
         public ScriptC_weight getScriptCWeight(RenderScript RS) {
             // configure weights in RS as well
-            byte[] bytes = Base64.decode(mB64Weights, Base64.DEFAULT);
+            byte[] weightArray;
+            if(mB64Weights != null && !mB64Weights.isEmpty()) {
+                byte[] bytes = Base64.decode(mB64Weights, Base64.DEFAULT);
 
-            MatOfByte compressedMat = new MatOfByte(bytes);
-            Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
-            compressedMat.release();
+                MatOfByte compressedMat = new MatOfByte(bytes);
+                Mat downsampleMat = Imgcodecs.imdecode(compressedMat, 0);
+                compressedMat.release();
 
-            Mat resampledMat2D = new Mat();
-            int scaleFactor = mResX / downsampleMat.rows();
-            Imgproc.resize(downsampleMat, resampledMat2D, new Size(0, 0), scaleFactor, scaleFactor, INTER);
-            downsampleMat.release();
+                Mat resampledMat2D = new Mat();
+                int scaleFactor = mResX / downsampleMat.rows();
+                Imgproc.resize(downsampleMat, resampledMat2D, new Size(0, 0), scaleFactor, scaleFactor, INTER);
+                downsampleMat.release();
 
-            // flatten to match coordinate scheme of hotcells
-            Mat resampledMat = resampledMat2D.t().reshape(0, 1);
-            MatOfByte resampledByte = new MatOfByte(resampledMat);
-            resampledMat2D.release();
-            resampledMat.release();
+                // flatten to match coordinate scheme of hotcells
+                Mat resampledMat = resampledMat2D.t().reshape(0, 1);
+                MatOfByte resampledByte = new MatOfByte(resampledMat);
+                resampledMat2D.release();
+                resampledMat.release();
 
-            byte[] resampledArray = resampledByte.toArray();
-            resampledByte.release();
+                weightArray = resampledByte.toArray();
+                resampledByte.release();
+
+                resampledMat.release();
+                resampledByte.release();
+            } else {
+                CFLog.d("No weights found");
+                weightArray = new byte[mResX * mResY];
+                Arrays.fill(weightArray, (byte) 255);
+            }
 
             // kill hotcells in resampled frame;
             if(mHotcells != null) {
                 for (Integer pos : mHotcells) {
-                    resampledArray[pos] = (byte) 0;
+                    weightArray[pos] = (byte) 0;
                 }
             }
 
@@ -337,10 +363,7 @@ public class PreCalibrationService extends IntentService {
                     .setY(mResY)
                     .create();
             Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
-            weights.copyFrom(resampledArray);
-
-            resampledMat.release();
-            resampledByte.release();
+            weights.copyFrom(weightArray);
 
             ScriptC_weight scriptCWeight = new ScriptC_weight(RS);
             scriptCWeight.set_gWeights(weights);

@@ -2,7 +2,13 @@ package io.crayfis.android.trigger.precalibration;
 
 import android.util.Base64;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +21,7 @@ import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 
 /**
@@ -47,7 +54,7 @@ public class PreCalibrator extends TriggerProcessor {
 
     private static List<Config> sConfigList;
     private static int sConfigStep = 0;
-    static final DataProtos.PreCalibrationResult.Builder PRECAL_BUILDER = DataProtos.PreCalibrationResult.newBuilder();
+    static final DataProtos.PreCalibrationResult.Builder BUILDER = DataProtos.PreCalibrationResult.newBuilder();
 
     private PreCalibrator(CFApplication app, Config config) {
         super(app, config, false);
@@ -57,6 +64,7 @@ public class PreCalibrator extends TriggerProcessor {
 
     public static TriggerProcessor makeProcessor(CFApplication application) {
         if(sConfigStep == 0) {
+            BUILDER.clear();
             sConfigList = CFConfig.getInstance().getPrecalTrigger();
         }
 
@@ -93,6 +101,12 @@ public class PreCalibrator extends TriggerProcessor {
 
     @Override
     public void onMaxReached() {
+        // use current weights/hotcells
+        PreCalibrationService.Config cfg
+                = PreCalibrationService.Config.fromPartialResult(CFCamera.getInstance().getCameraId(),
+                BUILDER.buildPartial());
+        CFConfig.getInstance().setPrecalConfig(cfg);
+        
         if(sConfigStep < sConfigList.size()-1) {
             sConfigStep++;
             ExposureBlockManager.getInstance().newExposureBlock(CFApplication.State.PRECALIBRATION);
@@ -111,28 +125,49 @@ public class PreCalibrator extends TriggerProcessor {
         int cameraId = CAMERA.getCameraId();
         int resX = CAMERA.getResX();
         int resY = CAMERA.getResY();
-        UUID precalId = UUID.randomUUID();
 
         String b64Weights = Base64.encodeToString
-                (PRECAL_BUILDER.getCompressedWeights().toByteArray(), Base64.DEFAULT);
-        int[] hotcells = new int[PRECAL_BUILDER.getHotcellCount()];
-        String precalIdStr = precalId.toString().replace("-", "");
+                (BUILDER.getCompressedWeights().toByteArray(), Base64.DEFAULT);
+        int[] hotcells = new int[BUILDER.getHotcellCount()];
 
         int i=0;
-        for(int pix: PRECAL_BUILDER.getHotcellList()) {
+        for(int pix: BUILDER.getHotcellList()) {
             hotcells[i] = pix;
             i++;
         }
 
+        ByteBuffer buf;
+        int hotHash = -1;
+        int weightHash = -1;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+            Arrays.sort(hotcells);
+            ByteBuffer hotBuf = ByteBuffer.allocate(hotcells.length * 4);
+            hotBuf.asIntBuffer().put(hotcells);
+
+            buf = ByteBuffer.wrap(md.digest(hotBuf.array()));
+            hotHash = buf.getInt(buf.capacity() - 4) & 0x7FFFFFFF;
+            CFLog.d("hot: " + hotHash);
+
+            md.reset();
+
+            buf = ByteBuffer.wrap(md.digest(b64Weights.getBytes("UTF-8")));
+            weightHash = buf.getInt(buf.capacity() - 4) & 0x7FFFFFFF;
+            CFLog.d("wgt = " + weightHash);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
         PreCalibrationService.Config result
-                = new PreCalibrationService.Config(cameraId, resX, resY, b64Weights, hotcells, precalIdStr);
+                = new PreCalibrationService.Config(cameraId, resX, resY, hotcells, hotHash, b64Weights, weightHash);
 
         CFConfig.getInstance().setPrecalConfig(result);
 
-        PRECAL_BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
+        BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
                 .setRunIdHi(mApplication.getBuildInformation().getRunId().getMostSignificantBits())
-                .setPrecalId(precalId.getLeastSignificantBits())
-                .setPrecalIdHi(precalId.getMostSignificantBits())
+                .setHotHash(hotHash)
+                .setWgtHash(weightHash)
                 .setEndTime(System.currentTimeMillis())
                 .setBatteryTemp(mApplication.getBatteryTemp())
                 .setInterpolation(PreCalibrationService.INTER)
@@ -140,7 +175,7 @@ public class PreCalibrator extends TriggerProcessor {
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitMessage(mApplication, cameraId, PRECAL_BUILDER.build());
+        UploadExposureService.submitMessage(mApplication, cameraId, BUILDER.build());
 
     }
 

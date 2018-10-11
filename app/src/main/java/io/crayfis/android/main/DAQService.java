@@ -316,6 +316,7 @@ public class DAQService extends Service {
                 xbManager.flushCommittedBlocks();
                 mCFCamera.unregister();
                 xbManager.unregister();
+                UploadExposureService.uploadFileCache(this);
 
                 mApplication.killTimer();
 

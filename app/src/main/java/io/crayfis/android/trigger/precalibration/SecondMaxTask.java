@@ -15,10 +15,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_findSecond;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -190,7 +192,7 @@ class SecondMaxTask extends TriggerProcessor.Task {
         CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
 
         for(Integer pos: HOTCELL_COORDS) {
-            PreCalibrator.PRECAL_BUILDER.addHotcell(pos);
+            PreCalibrator.BUILDER.addHotcell(pos);
         }
 
         int maxNonZero = 255;
@@ -198,7 +200,7 @@ class SecondMaxTask extends TriggerProcessor.Task {
             maxNonZero--;
         }
         for (int i = 0; i <= maxNonZero; i++) {
-            PreCalibrator.PRECAL_BUILDER.addSecondHist(secondHist[i]);
+            PreCalibrator.BUILDER.addSecondHist(secondHist[i]);
         }
     }
 }

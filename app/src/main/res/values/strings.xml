@@ -46,7 +46,7 @@
     <string name="settings_l0_trigger_title" translatable="false">L0 Trigger</string>
     <string name="settings_qual_trigger_summary" translatable="false">Options: facedown, autodetect, lock</string>
     <string name="settings_qual_trigger_title" translatable="false">Quality Trigger</string>
-    <string name="settings_precal_trigger_summary" translatable="false">Options: hotcell, weight (steps delimited with ->)</string>
+    <string name="settings_precal_trigger_summary" translatable="false">Options: secondmax, stats (steps delimited with ->)</string>
     <string name="settings_precal_trigger_title" translatable="false">Precalibration Trigger</string>
     <string name="settings_l1_trigger_summary" translatable="false">Options: default</string>
     <string name="settings_l1_trigger_title" translatable="false">L1 Trigger</string>

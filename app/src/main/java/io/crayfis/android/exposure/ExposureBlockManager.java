@@ -126,7 +126,9 @@ public final class ExposureBlockManager {
                         mTotalXBs,
                         mApplication.getBuildInformation().getRunId(),
                         precalConfig != null ?
-                                precalConfig.getPrecalUUID() : null,
+                                precalConfig.getHotHash() : -1,
+                        precalConfig != null ?
+                                precalConfig.getWeightHash() : -1,
                         camera.getCameraId(),
                         camera.isFacingBack(),
                         precalConfig != null ?

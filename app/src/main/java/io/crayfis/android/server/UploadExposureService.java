@@ -123,7 +123,15 @@ public class UploadExposureService extends IntentService {
                         return;
                     }
                     File f = cache.remove(0);
-                    if(f.getName().endsWith(".bin")) {
+                    if(f.getName().endsWith(".tmp.bin")) {
+                        String completeFilename = f.getName().replace(".tmp.bin", ".bin");
+                        File completeFile = new File(mPath, completeFilename);
+                        CFLog.d("New file name: " + completeFilename);
+                        if (!f.renameTo(completeFile)) {
+                            CFLog.w("Failed to rename file " + f.getName());
+                        }
+                        uploadFile(completeFile);
+                    } else if(f.getName().endsWith(".bin")) {
                         uploadFile(f);
                     }
                 }
@@ -213,7 +221,7 @@ public class UploadExposureService extends IntentService {
                 if (!f.renameTo(completeFile)) {
                     CFLog.w("Failed to rename file " + f.getName());
                 }
-                if(!mIsPublic) uploadFile(f);
+                if(!mIsPublic) uploadFile(completeFile);
             }
         }
 

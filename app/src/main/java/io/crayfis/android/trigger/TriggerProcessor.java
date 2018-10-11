@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by jswaney on 1/10/18.
@@ -79,8 +80,15 @@ public abstract class TriggerProcessor {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                int nFrames = processed.incrementAndGet();
+                Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
+
+                if(maxFrames != null && processed.intValue() > maxFrames && mNextProcessor == null) {
+                    frame.clear();
+                    return;
+                }
+
                 try {
+                    int nFrames = processed.incrementAndGet();
                     int passes = mTask.processFrame(frame);
                     pass.addAndGet(passes);
                     if(passes > 0 && mNextProcessor != null) {
@@ -90,7 +98,6 @@ public abstract class TriggerProcessor {
                         frame.clear();
                     }
 
-                    Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
                     if(maxFrames != null && nFrames == maxFrames) {
                         mTask.onMaxReached();
                         onMaxReached();

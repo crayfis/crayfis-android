@@ -48,20 +48,25 @@ class ServerCommand {
         @SerializedName("camera_id") private Integer mCameraId;
         @SerializedName("res_x") private Integer mResX;
         @SerializedName("res_y") private Integer mResY;
-        @SerializedName("precal_id") private String mPrecalId;
-        @SerializedName("weights") private String mWeights;
         @SerializedName("mask") private int[] mHotcells;
+        @SerializedName("hot_hash") private Integer mHotHash;
+        @SerializedName("weights") private String mWeights;
+        @SerializedName("wgt_hash") private Integer mWeightHash;
 
         boolean isApplicable() {
             CFCamera camera = CFCamera.getInstance();
+            PreCalibrationService.Config cfg = CFConfig.getInstance().getPrecalConfig();
             return mCameraId == camera.getCameraId()
                     && mResX == camera.getResX()
                     && mResY == camera.getResY()
-                    && !mPrecalId.equals(CFConfig.getInstance().getPrecalConfig().getPrecalId());
+                    && (mHotHash != null && mHotHash != cfg.getHotHash()
+                    || mWeightHash != null && mWeightHash != cfg.getWeightHash());
         }
 
         public PreCalibrationService.Config makePrecalConfig() {
-            return new PreCalibrationService.Config(mCameraId, mResX, mResY, mWeights, mHotcells, mPrecalId);
+            int hotHash = mHotHash == null ? -1 : mHotHash;
+            int weightHash = mWeightHash == null ? -1 : mWeightHash;
+            return new PreCalibrationService.Config(mCameraId, mResX, mResY, mHotcells, hotHash, mWeights, weightHash);
         }
     }
 

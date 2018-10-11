@@ -75,7 +75,10 @@ class StatsTask extends TriggerProcessor.Task {
     private Allocation mSsqAlloc;
     private ScriptC_sumFrames mScriptCSumFrames;
     private final RenderScript RS;
+
     private final Config mConfig;
+
+    private int mNCut = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
     private static final String FORMAT = ".jpeg";
@@ -84,6 +87,7 @@ class StatsTask extends TriggerProcessor.Task {
         super(processor);
 
         mConfig = config;
+
         RS = processor.mApplication.getRenderScript();
 
         CFLog.i("StatsTask created");
@@ -108,6 +112,10 @@ class StatsTask extends TriggerProcessor.Task {
      */
     @Override
     protected int processFrame(RawCameraFrame frame) {
+        if(frame.getExposureBlock().count.intValue()
+                % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
+            mProcessor.mApplication.checkBatteryStats();
+        }
         mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
         return 1;
     }
@@ -127,7 +135,7 @@ class StatsTask extends TriggerProcessor.Task {
         // kill hotcells by mean and variance
 
         boolean[] hotcellArray = new boolean[width*height];
-        Set<Integer> hotcellSet = new HashSet<>(PreCalibrator.PRECAL_BUILDER.getHotcellList());
+        Set<Integer> hotcellSet = new HashSet<>(PreCalibrator.BUILDER.getHotcellList());
         for(int hxy : hotcellSet) {
             hotcellArray[hxy] = true;
         }
@@ -149,6 +157,7 @@ class StatsTask extends TriggerProcessor.Task {
         mSsqAlloc.destroy();
 
         if(isBimodal(varArray, meanArray)) {
+            CFLog.d("Bimodal mean and var");
             double gainMean = 0;
             double n = 0;
             for(int i=0; i<varArray.length; i++) {
@@ -256,7 +265,7 @@ class StatsTask extends TriggerProcessor.Task {
         params.release();
 
         // now store weights in PreCalibrationResult
-        PreCalibrator.PRECAL_BUILDER
+        PreCalibrator.BUILDER
                 .setCompressedWeights(ByteString.copyFrom(bytes))
                 .setCompressedFormat(FORMAT)
                 .setResX(width)
@@ -366,13 +375,17 @@ class StatsTask extends TriggerProcessor.Task {
                     if(!cut[j] && data[i][j] > thresholds[i]) {
                         newCut = true;
                         cut[j] = true;
-                        for(int k=0; k<data.length; k++) {
+                        mNCut++;
+                        for(int k=0; k<nFeatures; k++) {
                             sum[k] -= data[k][j];
                             ssq[k] -= data[k][j] * data[k][j];
                         }
                         n--;
-                        break;
                     }
+                }
+                if(mNCut > nEntries * mConfig.hotcellLimit) {
+                    CFLog.d("mNCut = " + mNCut);
+                    return;
                 }
             }
 

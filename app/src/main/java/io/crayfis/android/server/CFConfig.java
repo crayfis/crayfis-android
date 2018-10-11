@@ -26,7 +26,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECAL_TRIGGER = "precal_trigger";
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
-    private static final String KEY_XB_PERIOD = "xb_period";
+    private static final String KEY_XB_TARGET_EVENTS = "xb_target_events";
     private static final String KEY_CURRENT_EXPERIMENT = "current_experiment";
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
     private static final String KEY_ACCOUNT_NAME = "account_name";
@@ -42,7 +42,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String DEFAULT_PRECAL_TRIGGER = "";
     private static final String DEFAULT_L1_TRIGGER = "";
     private static final String DEFAULT_L2_TRIGGER = "";
-    private static final int DEFAULT_XB_PERIOD = 120;
+    private static final int DEFAULT_XB_TARGET_EVENTS = 60;
     private static final String DEFAULT_CURRENT_EXPERIMENT = null;
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
@@ -59,7 +59,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private PreCalibrator.ConfigList mPrecalTriggers;
     private TriggerProcessor.Config mL1Trigger;
     private TriggerProcessor.Config mL2Trigger;
-    private int mExposureBlockPeriod;
+    private int mExposureBlockTargetEvents;
     private String mCurrentExperiment;
     private String mDeviceNickname;
     private String mAccountName;
@@ -77,7 +77,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
-        mExposureBlockPeriod = DEFAULT_XB_PERIOD;
+        mExposureBlockTargetEvents = DEFAULT_XB_TARGET_EVENTS;
         mCurrentExperiment = DEFAULT_CURRENT_EXPERIMENT;
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
@@ -150,7 +150,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return float
      */
     public float getTargetEventsPerMinute() {
-        return mL1Trigger.getInt(L1Processor.KEY_TARGET_EPM);
+        return mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM);
     }
 
     /**
@@ -159,7 +159,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getExposureBlockPeriod() {
-        return mExposureBlockPeriod;
+        return (int) (60 * mExposureBlockTargetEvents / getTargetEventsPerMinute());
+    }
+
+    public int getExposureBlockTargetEvents() {
+        return mExposureBlockTargetEvents;
     }
 
     /**
@@ -197,6 +201,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
     public double getTargetFPS() {
+        if(mTargetFPS == null) mTargetFPS = DEFAULT_TARGET_FPS;
         return mTargetFPS;
     }
 
@@ -230,8 +235,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 && serverCommand.getHotcells().isApplicable()) {
             mPrecalConfig = mPrecalConfig.update(serverCommand.getHotcells().makePrecalConfig());
         }
+        // only call PreCalibrationService if the commands above don't get the job done
         if (serverCommand.getUpdateCommand() != null
-                && serverCommand.getUpdateCommand().isApplicable()) {
+                && serverCommand.getUpdateCommand().isApplicable()
+                && serverCommand.getWeights() == null
+                && serverCommand.getHotcells() == null) {
             // FIXME: ideally, we would call PreCalibrationService without switching to IDLE
             changeCamera = true;
         }
@@ -279,7 +287,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             }
         }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
-            mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
+            mExposureBlockTargetEvents = (int)(serverCommand.getTargetExposureBlockPeriod()
+                    * mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM) / 60);
         }
         if (serverCommand.getCurrentExperiment() != null) {
             mCurrentExperiment = serverCommand.getCurrentExperiment();
@@ -328,7 +337,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
         mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
         mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
+        mExposureBlockTargetEvents = sharedPreferences.getInt(KEY_XB_TARGET_EVENTS, DEFAULT_XB_TARGET_EVENTS);
         mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
         mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
@@ -352,7 +361,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_PRECAL_TRIGGER, mPrecalTriggers.toString())
                 .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
                 .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
-                .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
+                .putInt(KEY_XB_TARGET_EVENTS, mExposureBlockTargetEvents)
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)

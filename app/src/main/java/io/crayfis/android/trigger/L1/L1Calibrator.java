@@ -55,7 +55,7 @@ public class L1Calibrator {
         if (fps == 0) {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
-        double targetL1Rate = L1Config.getInt(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
+        double targetL1Rate = L1Config.getFloat(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
 
         Histogram h = sFrameStatistics.getHistogram();
         long[] histValues = h.getValues();
