@@ -42,7 +42,7 @@ class StatsTask extends TriggerProcessor.Task {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put(KEY_MAXFRAMES, 25000);
             KEY_DEFAULT.put(PreCalibrator.KEY_WEIGHT_GRID_SIZE, 1500);
-            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELLS_N_DEVIATIONS, 5.f);
+            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELLS_N_DEVIATIONS, 10.f);
             KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_LIMIT, .01f);
         }
 
