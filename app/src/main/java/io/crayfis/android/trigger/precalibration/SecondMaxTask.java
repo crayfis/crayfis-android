@@ -15,10 +15,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_findSecond;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -26,24 +28,27 @@ import io.crayfis.android.util.CFLog;
  * Created by Jeff on 6/6/2017.
  */
 
-class HotCellTask extends TriggerProcessor.Task {
+class SecondMaxTask extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
 
-        static final String NAME = "hotcell";
+        static final String NAME = "secondmax";
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put(KEY_MAXFRAMES, 10000);
-            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_THRESH, .0002f);
+            KEY_DEFAULT.put(KEY_MAXFRAMES, 50000);
+            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_LIMIT, .01f);
+            KEY_DEFAULT.put(PreCalibrator.KEY_SECOND_MAX_THRESH, 4000);
         }
 
-        final float hotcellThresh;
+        final float hotcellLimit;
+        final int hotcellThresh;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            hotcellThresh = getFloat(PreCalibrator.KEY_HOTCELL_THRESH);
+            hotcellLimit = getFloat(PreCalibrator.KEY_HOTCELL_LIMIT);
+            hotcellThresh = getInt(PreCalibrator.KEY_SECOND_MAX_THRESH);
         }
 
         @Override
@@ -54,7 +59,7 @@ class HotCellTask extends TriggerProcessor.Task {
 
         @Override
         public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
-            return new HotCellTask(processor, this);
+            return new SecondMaxTask(processor, this);
         }
     }
 
@@ -70,13 +75,13 @@ class HotCellTask extends TriggerProcessor.Task {
 
     private Config mConfig;
 
-    HotCellTask(TriggerProcessor processor, Config config) {
+    SecondMaxTask(TriggerProcessor processor, Config config) {
         super(processor);
 
         mConfig = config;
 
         RS = mProcessor.mApplication.getRenderScript();
-        CFLog.i("HotCellTask created");
+        CFLog.i("SecondMaxTask created");
         mScriptCFindSecond = new ScriptC_findSecond(RS);
 
         Type type = new Type.Builder(RS, Element.U8(RS))
@@ -108,7 +113,6 @@ class HotCellTask extends TriggerProcessor.Task {
 
     @Override
     protected void onMaxReached() {
-        int cameraId = CAMERA.getCameraId();
 
         // set up Allocations for histogram
         ScriptIntrinsicHistogram histogram = ScriptIntrinsicHistogram.create(RS, Element.U8(RS));
@@ -127,13 +131,17 @@ class HotCellTask extends TriggerProcessor.Task {
 
         // find minimum value in aSecond considered as "hot"
         int area = aMax.getType().getX() * aMax.getType().getY();
-        int target = (int) (mConfig.hotcellThresh * area);
-        int pixRemaining = area;
+        int max = (int) (mConfig.hotcellLimit * area);
+        int pixKilled = 0;
 
-        int cutoff=0;
-        while(pixRemaining > target) {
-            pixRemaining -= secondHist[cutoff];
-            cutoff++;
+        int cutoff=255;
+        while(pixKilled < max && cutoff > 0) {
+            if(secondHist[cutoff] > mConfig.hotcellThresh) {
+                cutoff++;
+                break;
+            }
+            pixKilled += secondHist[cutoff];
+            cutoff--;
         }
         CFLog.d("cutoff = " + cutoff);
 
@@ -182,10 +190,9 @@ class HotCellTask extends TriggerProcessor.Task {
 
         // store in CFConfig and protobuf file
         CFLog.d("Total hotcells found: " + HOTCELL_COORDS.size());
-        CONFIG.setHotcells(cameraId, HOTCELL_COORDS);
 
         for(Integer pos: HOTCELL_COORDS) {
-            PreCalibrator.PRECAL_BUILDER.addHotcell(pos);
+            PreCalibrator.BUILDER.addHotcell(pos);
         }
 
         int maxNonZero = 255;
@@ -193,7 +200,7 @@ class HotCellTask extends TriggerProcessor.Task {
             maxNonZero--;
         }
         for (int i = 0; i <= maxNonZero; i++) {
-            PreCalibrator.PRECAL_BUILDER.addSecondHist(secondHist[i]);
+            PreCalibrator.BUILDER.addSecondHist(secondHist[i]);
         }
     }
 }

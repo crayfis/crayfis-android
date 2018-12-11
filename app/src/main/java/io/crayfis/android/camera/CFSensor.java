@@ -6,11 +6,13 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
+import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 4/15/2017.
@@ -95,8 +97,8 @@ class CFSensor implements SensorEventListener {
     }
 
     boolean isFlat() {
-        Float orientCutoff = CFConfig.getInstance().getQualTrigger().getFloat("orientation");
-        return orientCutoff == null || Math.abs(rotationMatrix[8]) >= orientCutoff;
+        Float orientThresh = CFConfig.getInstance().getQualTrigger().getFloat(QualityProcessor.KEY_ORIENT_THRESH);
+        return orientThresh == null || Math.abs(rotationMatrix[8]) >= Math.cos(Math.PI / 180. * orientThresh);
     }
 
     String getStatus() {

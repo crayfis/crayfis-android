@@ -6,9 +6,8 @@ import java.util.HashMap;
 import java.util.Random;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
-import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 1/4/18.

@@ -2,8 +2,7 @@ package io.crayfis.android.trigger.quality;
 
 import java.util.HashMap;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
-import io.crayfis.android.server.CFConfig;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**

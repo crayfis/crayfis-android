@@ -3,6 +3,7 @@ package io.crayfis.android.camera;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraAccessException;
@@ -13,7 +14,10 @@ import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.ColorSpaceTransform;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.hardware.camera2.params.TonemapCurve;
+import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.Type;
@@ -24,12 +28,15 @@ import android.util.Size;
 import android.view.Surface;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 
@@ -55,6 +62,7 @@ class CFCamera2 extends CFCamera {
     private AtomicInteger mBuffersQueued = new AtomicInteger();
     private final ArrayDeque<TotalCaptureResult> mQueuedCaptureResults = new ArrayDeque<>();
 
+    private ConfiguredCallback mConfiguredCallback;
 
     /**
      * Callback for opening the camera
@@ -69,7 +77,7 @@ class CFCamera2 extends CFCamera {
             try {
 
                 configureCameraPreviewSession();
-                RCF_BUILDER.setCamera2(mCameraCharacteristics, mCameraId, ain, mApplication.getRenderScript());
+                RCF_BUILDER.setCamera2(ain, mApplication.getRenderScript());
 
                 ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
                 Surface surface = ain.getSurface();
@@ -77,7 +85,7 @@ class CFCamera2 extends CFCamera {
                 mCameraDevice.createCaptureSession(Collections.singletonList(surface), mStateCallback, null);
 
             } catch (CameraAccessException e) {
-                e.printStackTrace();
+                mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
             }
 
         }
@@ -94,11 +102,10 @@ class CFCamera2 extends CFCamera {
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
-            CFLog.e("Error = " + error);
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            mApplication.userErrorMessage(R.string.camera_error, true);
+            mApplication.userErrorMessage(true, R.string.camera_error, error);
         }
     };
 
@@ -114,6 +121,8 @@ class CFCamera2 extends CFCamera {
                 return;
             }
 
+            mConfiguredCallback.onConfigured();
+
             // When the session is ready, we start displaying the preview.
             mCaptureSession = cameraCaptureSession;
             try {
@@ -122,9 +131,10 @@ class CFCamera2 extends CFCamera {
                 // Finally, we start displaying the camera preview.
                 mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
             } catch (CameraAccessException e) {
-                e.printStackTrace();
+                mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
             } catch (IllegalStateException e) {
                 // camera was already closed
+                mApplication.userErrorMessage(true, R.string.camera_error, 200);
             }
         }
 
@@ -205,7 +215,18 @@ class CFCamera2 extends CFCamera {
         mPreviewRequestBuilder.set(CaptureRequest.CONTROL_AWB_MODE, CameraMetadata.CONTROL_AWB_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_ABERRATION_MODE, CameraMetadata.COLOR_CORRECTION_ABERRATION_MODE_OFF);
 
-        //TODO: More color correction?
+        //TODO: RggbChannelVector?
+
+        mPreviewRequestBuilder.set(CaptureRequest.TONEMAP_MODE, CaptureRequest.TONEMAP_MODE_CONTRAST_CURVE);
+        float[] curve = new float[] {0, 0, 1, 1}; // linear response
+        mPreviewRequestBuilder.set(CaptureRequest.TONEMAP_CURVE, new TonemapCurve(curve, curve, curve));
+        mPreviewRequestBuilder.set(CaptureRequest.COLOR_CORRECTION_TRANSFORM, new ColorSpaceTransform(new int[]{
+                1, 1, 0, 1, 0, 1,
+                0, 1, 1, 1, 0, 1,
+                0, 1, 0, 1, 1, 1,
+                }) // identity RGB -> sRGB transform
+        );
+
 
         mPreviewRequestBuilder.set(CaptureRequest.EDGE_MODE, CameraMetadata.EDGE_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CameraMetadata.NOISE_REDUCTION_MODE_OFF);
@@ -304,7 +325,9 @@ class CFCamera2 extends CFCamera {
     }
     
     @Override
-    void configure() {
+    void configure(ConfiguredCallback callback) {
+
+        mConfiguredCallback = callback;
 
         synchronized (mQueuedCaptureResults) {
             mQueuedCaptureResults.clear();
@@ -330,13 +353,14 @@ class CFCamera2 extends CFCamera {
         mCameraOpenCloseLock.release();
 
         if(mCameraId == -1) {
+            mConfiguredCallback.onConfigured();
             return;
         }
 
         // make sure we have permission to use the camera
         if (ContextCompat.checkSelfPermission(mApplication, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            mApplication.userErrorMessage(R.string.quit_permission, true);
+            mApplication.userErrorMessage(true, R.string.quit_permission);
             return;
         }
 
@@ -344,22 +368,74 @@ class CFCamera2 extends CFCamera {
         CameraManager manager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            mCameraOpenCloseLock.tryAcquire();
+            mCameraOpenCloseLock.acquireUninterruptibly();
 
             String[] idList = manager.getCameraIdList();
             String idString = idList[mCameraId];
 
             mCameraCharacteristics = manager.getCameraCharacteristics(idString);
-
             manager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
             mCameraOpenCloseLock.release();
-            mApplication.userErrorMessage(R.string.camera_error, true);
+            mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
         }
     }
 
+    @Override
+    public void changeDataRate(boolean increase) {
+        // do nothing if we're locked
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        if(prefs.getBoolean(mApplication.getString(R.string.prefFPSResLock), false)) {
+            return;
+        }
+
+        StreamConfigurationMap map = mCameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+        if(map != null) {
+            Size[] outputSizes = map.getOutputSizes(Allocation.class);
+            List<Size> sizes = Arrays.asList(outputSizes);
+
+            Collections.sort(sizes, new Comparator<Size>() {
+                @Override
+                public int compare(Size s0, Size s1) {
+                    return s0.getWidth() * s0.getHeight() - s1.getWidth() * s1.getHeight();
+                }
+            });
+
+            int index = sizes.indexOf(mPreviewSize);
+            if(increase && index < sizes.size()-1) {
+                index++;
+            } else if(!increase && index > 0) {
+                index--;
+            } else {
+                return;
+            }
+
+            Size newSize = sizes.get(index);
+            CONFIG.setTargetResolution(newSize.getWidth(), newSize.getHeight());
+        }
+    }
+
+    @Override
+    int getNumberOfCameras() {
+        CameraManager cameraManager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
+        try {
+            return cameraManager.getCameraIdList().length;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    @Override
+    public Boolean isFacingBack() {
+        if(mCameraCharacteristics == null) return null;
+        Integer lensFacing = mCameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+        if(lensFacing != null && mCameraId != -1) {
+            return lensFacing == CameraMetadata.LENS_FACING_BACK;
+        }
+        return null;
+    }
 
     @Override
     public String getParams() {

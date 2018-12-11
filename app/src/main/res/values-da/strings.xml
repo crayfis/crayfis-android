@@ -58,7 +58,7 @@
     <string name="toast_hist_zero">When the app has finished calibrating, this pane will show a histogram of the particle candidates.</string>
     <string name="toast_hist">This pane shows a histogram of the particle candidates.</string>
     <string name="fatal_error_title">CRAYFIS Error</string>
-    <string name="camera_error">CRAYFIS could not open the camera.</string>
+    <string name="camera_error">CRAYFIS could not open the camera. (%d)</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
     <string name="pager_dev">Developer</string>
     <plurals name="total_frames">

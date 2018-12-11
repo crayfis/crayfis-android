@@ -1,4 +1,4 @@
-package io.crayfis.android.exposure.frame;
+package io.crayfis.android.exposure;
 
 import android.annotation.TargetApi;
 import android.hardware.Camera;
@@ -20,8 +20,6 @@ import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.camera.AcquisitionTime;
-import io.crayfis.android.ScriptC_weight;
-import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -34,19 +32,18 @@ public abstract class RawCameraFrame {
     Mat mGrayMat;
     private final int[] mHist = new int[256];
 
-    private final int mCameraId;
-    private final boolean mFacingBack;
-
-    final int mFrameWidth;
-    final int mFrameHeight;
-    final int mLength;
+    // these are left as frame properties in case they change in a SURVEY block
+    final int mResX;
+    final int mResY;
+    final int mResArea;
 
     private final AcquisitionTime mAcquiredTime;
     private final Location mLocation;
     private final float[] mOrientation;
     private final float mRotationZZ;
     private final float mPressure;
-    private final ExposureBlock mExposureBlock;
+
+    final ExposureBlock mExposureBlock;
 
     private int mPixMax = -1;
     private double mPixAvg = -1;
@@ -61,7 +58,6 @@ public abstract class RawCameraFrame {
     // RenderScript objects
 
     private ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
-    ScriptC_weight mScriptCWeight;
     Allocation aWeighted;
     private Allocation aout;
 
@@ -87,52 +83,38 @@ public abstract class RawCameraFrame {
 
         // Camera2 YUV
         private Allocation bRaw;
+        private TotalCaptureResult bResult;
 
-        int bCameraId;
-        boolean bFacingBack;
+        private int bResX;
+        private int bResY;
 
-        int bFrameWidth;
-        int bFrameHeight;
-        int bLength;
+        private AcquisitionTime bAcquisitionTime;
+        private long bTimestamp;
+        private Location bLocation;
+        private float[] bOrientation;
+        private float bRotationZZ;
+        private float bPressure;
+        private ExposureBlock bExposureBlock;
 
-        AcquisitionTime bAcquisitionTime;
-        long bTimestamp;
-        TotalCaptureResult bResult;
-        Location bLocation;
-        float[] bOrientation;
-        float bRotationZZ;
-        float bPressure;
-        ExposureBlock bExposureBlock;
-
-        ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
-        ScriptC_weight bScriptCWeight;
-        Allocation bWeighted;
-        Allocation bOut;
+        private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        private Allocation bWeighted;
+        private Allocation bOut;
 
         /**
          * Method for configuring Builder to create RawCameraDeprecatedFrames
          *
          * @param camera Camera
-         * @param cameraId int
          * @param rs RenderScript context
          * @return Builder
          */
-        public Builder setCamera(Camera camera, int cameraId, RenderScript rs) {
+        public Builder setCamera(Camera camera, RenderScript rs) {
 
             bFrameType = FrameType.DEPRECATED;
             bCamera = camera;
             Camera.Parameters params = camera.getParameters();
             Camera.Size sz = params.getPreviewSize();
-            bFrameWidth = sz.width;
-            bFrameHeight = sz.height;
-            bLength = bFrameWidth * bFrameHeight;
 
-            bCameraId = cameraId;
-            Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
-            Camera.getCameraInfo(cameraId, cameraInfo);
-            bFacingBack = cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
-
-            setRenderScript(rs, bFrameWidth, bFrameHeight);
+            setRSBuffers(rs, sz.width, sz.height);
             return this;
         }
 
@@ -144,37 +126,24 @@ public abstract class RawCameraFrame {
         /**
          * Method for configuring Builder to create RawCamera2Frames
          *
-         * @param cc CameraCharacteristics
-         * @param cameraId int
-         * @param alloc Allocation camera buffer
+         * @param  buf Allocation camera buffer
          * @param rs RenderScript context
          * @return Builder
          */
         @TargetApi(21)
-        public Builder setCamera2(CameraCharacteristics cc, int cameraId, Allocation alloc, RenderScript rs) {
+        public Builder setCamera2(Allocation buf, RenderScript rs) {
 
             bFrameType = FrameType.CAMERA2;
-
-            bRaw = alloc;
-
-            Type type = alloc.getType();
-
-            bFrameWidth = type.getX();
-            bFrameHeight = type.getY();
-            bLength = bFrameWidth * bFrameHeight;
-
-            bCameraId = cameraId;
-            Integer lensFacing = cc.get(CameraCharacteristics.LENS_FACING);
-            if (lensFacing != null) {
-                bFacingBack = (lensFacing == CameraMetadata.LENS_FACING_BACK);
-            }
-
-            setRenderScript(rs, bFrameWidth, bFrameHeight);
+            bRaw = buf;
+            setRSBuffers(rs, buf.getType().getX(), buf.getType().getY());
 
             return this;
         }
 
-        private void setRenderScript(RenderScript rs, int width, int height) {
+        private void setRSBuffers(RenderScript rs, int width, int height) {
+            bResX = width;
+            bResY = height;
+
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(width)
                     .setY(height)
@@ -186,8 +155,8 @@ public abstract class RawCameraFrame {
             bOut = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
             bScriptIntrinsicHistogram.setOutput(bOut);
         }
-        
-        
+
+
 
         public Builder setAcquisitionTime(AcquisitionTime acquisitionTime) {
             bAcquisitionTime = acquisitionTime;
@@ -229,23 +198,16 @@ public abstract class RawCameraFrame {
             return this;
         }
 
-        public Builder setWeights(ScriptC_weight weights) {
-            bScriptCWeight = weights;
-            return this;
-        }
-
         public RawCameraFrame build() {
             switch (bFrameType) {
                 case DEPRECATED:
-                    return new RawCameraDeprecatedFrame(bBytes, bCamera, bCameraId, bFacingBack,
-                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bTimestamp, bLocation,
-                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
-                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+                    return new RawCameraDeprecatedFrame(bBytes, bCamera,
+                            bAcquisitionTime, bTimestamp, bLocation, bOrientation, bRotationZZ, bPressure,
+                            bExposureBlock, bResX, bResY, bScriptIntrinsicHistogram, bWeighted, bOut);
                 case CAMERA2:
-                    return new RawCamera2Frame(bRaw, bCameraId, bFacingBack,
-                            bFrameWidth, bFrameHeight, bLength, bAcquisitionTime, bResult, bLocation,
-                            bOrientation, bRotationZZ, bPressure, bExposureBlock,
-                            bScriptIntrinsicHistogram, bScriptCWeight, bWeighted, bOut);
+                    return new RawCamera2Frame(bRaw, bAcquisitionTime,
+                            bResult, bLocation, bOrientation, bRotationZZ, bPressure,
+                            bExposureBlock, bResX, bResY, bScriptIntrinsicHistogram, bWeighted, bOut);
                 default:
                     CFLog.e("Frame builder not configured: returning null");
                     return null;
@@ -254,35 +216,28 @@ public abstract class RawCameraFrame {
 
     }
 
-    RawCameraFrame(final int cameraId,
-                   final boolean facingBack,
-                   final int frameWidth,
-                   final int frameHeight,
-                   final int length,
-                   final AcquisitionTime acquisitionTime,
+    RawCameraFrame(final AcquisitionTime acquisitionTime,
                    final Location location,
                    final float[] orientation,
                    final float rotationZZ,
                    final float pressure,
                    final ExposureBlock exposureBlock,
+                   final int resX,
+                   final int resY,
                    final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
-                   final ScriptC_weight scriptCWeight,
                    final Allocation in,
                    final Allocation out) {
 
-        mCameraId = cameraId;
-        mFacingBack = facingBack;
-        mFrameWidth = frameWidth;
-        mFrameHeight = frameHeight;
-        mLength = length;
         mAcquiredTime = acquisitionTime;
         mLocation = location;
         mOrientation = orientation;
         mRotationZZ = rotationZZ;
         mPressure = pressure;
         mExposureBlock = exposureBlock;
+        mResX = resX;
+        mResY = resY;
+        mResArea = resX * resY;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
-        mScriptCWeight = scriptCWeight;
         aWeighted = in;
         aout = out;
     }
@@ -293,7 +248,7 @@ public abstract class RawCameraFrame {
         if(!mBufferClaimed) {
             claim();
         }
-        return mRawBytes[x + mFrameWidth * y] & 0xFF;
+        return mRawBytes[x + mResX * y] & 0xFF;
     }
 
     /**
@@ -438,11 +393,11 @@ public abstract class RawCameraFrame {
 
     public ExposureBlock getExposureBlock() { return mExposureBlock; }
 
-    public int getCameraId() { return mCameraId; }
+    public int getCameraId() { return mExposureBlock.camera_id; }
 
-    public int getWidth() { return mFrameWidth; }
+    public int getWidth() { return mResX; }
 
-    public int getHeight() { return mFrameHeight; }
+    public int getHeight() { return mResY; }
 
     private void calculateStatistics() {
 
@@ -470,14 +425,14 @@ public abstract class RawCameraFrame {
         }
 
         mPixMax = max;
-        mPixAvg = (double)sum/mLength;
+        mPixAvg = (double)sum/mResArea;
 
         for(int i=0; i<=max; i++) {
             double dev = i - mPixAvg;
             sumDevSq += mHist[i]*dev*dev;
         }
 
-        mPixStd = Math.sqrt(sumDevSq/(mLength-1));
+        mPixStd = Math.sqrt(sumDevSq/(mResArea-1));
 
     }
 
@@ -503,7 +458,9 @@ public abstract class RawCameraFrame {
     }
 
     public boolean isFacingBack() {
-        return mFacingBack;
+        // if we're getting frames while the camera is off,
+        // this deserves an Exception
+        return mExposureBlock.camera_facing_back;
     }
 
     @CallSuper
@@ -536,7 +493,7 @@ public abstract class RawCameraFrame {
                 mEventBuilder.addHist(mHist[val]);
             }
 
-            mEventBuilder.setXbn(mExposureBlock.getXBN());
+            mEventBuilder.setXbn(mExposureBlock.xbn);
         }
 
         return mEventBuilder;

@@ -58,7 +58,7 @@
     <string name="toast_hist_zero">Quand cette app a terminé l\'étalonnage, cette fenêtre affichera un histogramme montrant les particules candidates.</string>
     <string name="toast_hist">Cette fenêtre contient un histogramme des particules candidates.</string>
     <string name="fatal_error_title">CRAYFIS Erreur</string>
-    <string name="camera_error">CRAYFIS n\'arrive pas à ouvrir votre appareil photo.</string>
+    <string name="camera_error">CRAYFIS n\'arrive pas à ouvrir votre appareil photo. (%d)</string>
     <string name="fatal_error_message">Une erreur interne a eu lieue et l\'activité que vous observez actuellement doit fermer.  Essayez à nouveau s\'il vous plait.</string>
     <string name="pager_dev">Dévelopeur</string>
     <plurals name="total_frames">

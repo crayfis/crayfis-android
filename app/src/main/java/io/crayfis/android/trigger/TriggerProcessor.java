@@ -7,8 +7,9 @@ import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by jswaney on 1/10/18.
@@ -79,8 +80,15 @@ public abstract class TriggerProcessor {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                int nFrames = processed.incrementAndGet();
+                Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
+
+                if(maxFrames != null && processed.intValue() > maxFrames && mNextProcessor == null) {
+                    frame.clear();
+                    return;
+                }
+
                 try {
+                    int nFrames = processed.incrementAndGet();
                     int passes = mTask.processFrame(frame);
                     pass.addAndGet(passes);
                     if(passes > 0 && mNextProcessor != null) {
@@ -90,7 +98,6 @@ public abstract class TriggerProcessor {
                         frame.clear();
                     }
 
-                    Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
                     if(maxFrames != null && nFrames == maxFrames) {
                         mTask.onMaxReached();
                         onMaxReached();
@@ -317,6 +324,41 @@ public abstract class TriggerProcessor {
                 }
                 return Config.this.makeNewConfig(cfgBuilder.toString());
             }
+        }
+
+        /**
+         * Add additional preferences to existing config
+         *
+         * @param cfgStr Semicolon-delimited key-value pairs of the form k=v; ...
+         * @return Edited Config
+         */
+        public Config editFromString(String cfgStr) {
+            HashMap<String, String> cfgMap = parseConfigString(cfgStr);
+            Editor e = edit();
+            for(String key: cfgMap.keySet()) {
+                String strVal = cfgMap.get(key);
+                if(e.eTaskConfigBool.containsKey(key)) {
+                    e.eTaskConfigBool.put(key, Boolean.parseBoolean(strVal));
+                }
+                if(e.eTaskConfigFloat.containsKey(key)) {
+                    try {
+                        e.eTaskConfigFloat.put(key, Float.parseFloat(strVal));
+                    } catch (NumberFormatException nfe) {
+                        // leave the field as is
+                    }
+                }
+                if(e.eTaskConfigInt.containsKey(key)) {
+                    try {
+                        e.eTaskConfigInt.put(key, Integer.parseInt(strVal));
+                    } catch (NumberFormatException nfe) {
+                        // leave the field as is
+                    }
+                }
+                if(e.eTaskConfigStr.containsKey(key)) {
+                    mTaskConfigStr.put(key, strVal);
+                }
+            }
+            return e.create();
         }
     }
 

@@ -16,7 +16,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
@@ -131,7 +131,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
         } catch (SecurityException e) {
             CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-            application.userErrorMessage(R.string.quit_permission, true);
+            application.userErrorMessage(true, R.string.quit_permission);
         }
 
     }
@@ -171,7 +171,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 mLastLocationDeprecated = location;
             } catch(SecurityException e) {
                 CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-                application.userErrorMessage(R.string.quit_permission, true);
+                application.userErrorMessage(true, R.string.quit_permission);
             }
         }
 

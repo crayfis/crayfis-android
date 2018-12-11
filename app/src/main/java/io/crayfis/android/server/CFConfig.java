@@ -1,15 +1,8 @@
 package io.crayfis.android.server;
 
 import android.content.SharedPreferences;
-import android.hardware.Camera;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;
@@ -33,13 +26,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_PRECAL_TRIGGER = "precal_trigger";
     private static final String KEY_L1_TRIGGER = "L1_trigger";
     private static final String KEY_L2_TRIGGER = "L2_trigger";
-    private static final String KEY_WEIGHTS = "precal_weights_";
-    private static final String KEY_HOTCELLS = "hotcells_";
-    private static final String KEY_PRECAL_MOST = "precal_uuid_most_";
-    private static final String KEY_PRECAL_LEAST = "precal_uuid_least_";
-    private static final String KEY_LAST_PRECAL_TIME = "last_precal_time_";
-    private static final String KEY_LAST_PRECAL_RES_X = "last_precal_res_x_";
-    private static final String KEY_XB_PERIOD = "xb_period";
+    private static final String KEY_XB_TARGET_EVENTS = "xb_target_events";
     private static final String KEY_CURRENT_EXPERIMENT = "current_experiment";
     private static final String KEY_DEVICE_NICKNAME = "device_nickname";
     private static final String KEY_ACCOUNT_NAME = "account_name";
@@ -48,70 +35,59 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_TARGET_FPS = "prefFPS";
     private static final String KEY_FRAC_DEAD_TIME = "prefDeadTime";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
-    private static final String KEY_PRECAL_RESET_TIME = "precal_reset_time";
+    private static final String KEY_DATACHUNK_SIZE = "datachunk_size";
 
-    private final int N_CAMERAS;
     private static final String DEFAULT_L0_TRIGGER = "";
     private static final String DEFAULT_QUAL_TRIGGER = "";
     private static final String DEFAULT_PRECAL_TRIGGER = "";
     private static final String DEFAULT_L1_TRIGGER = "";
     private static final String DEFAULT_L2_TRIGGER = "";
-    private static final Set<String> DEFAULT_HOTCELLS = new HashSet<>();
-    private static final int DEFAULT_XB_PERIOD = 120;
+    private static final int DEFAULT_XB_TARGET_EVENTS = 60;
     private static final String DEFAULT_CURRENT_EXPERIMENT = null;
     private static final String DEFAULT_DEVICE_NICKNAME = null;
     private static final String DEFAULT_ACCOUNT_NAME = null;
     private static final float DEFAULT_ACCOUNT_SCORE = (float)0.;
+    private static final PreCalibrationService.Config DEFAULT_PRECAL_CONFIG = null;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final Float DEFAULT_TARGET_FPS = 30f;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
-    private static final Long DEFAULT_PRECAL_RESET_TIME = 7*24*3600 * 1000L;
+    private static final long DEFAULT_DATACHUNK_SIZE = 50000L;
 
     private TriggerProcessor.Config mL0Trigger;
     private TriggerProcessor.Config mQualTrigger;
     private PreCalibrator.ConfigList mPrecalTriggers;
     private TriggerProcessor.Config mL1Trigger;
     private TriggerProcessor.Config mL2Trigger;
-    private List<Set<String>> mHotcells;
-    private String[] mPrecalWeights;
-    private UUID[] mPrecalUUID;
-    private long[] mLastPrecalTime;
-    private int[] mLastPrecalResX;
-    private int mExposureBlockPeriod;
+    private int mExposureBlockTargetEvents;
     private String mCurrentExperiment;
     private String mDeviceNickname;
     private String mAccountName;
     private float mAccountScore;
+    private PreCalibrationService.Config mPrecalConfig;
     private String mTargetResolutionStr;
     private Float mTargetFPS;
     private float mFracDeadTime;
     private int mBatteryOverheatTemp;
-    private Long mPrecalResetTime; // ms
+    private long mDataChunkSize;
 
     private CFConfig() {
-        N_CAMERAS = Camera.getNumberOfCameras();
-
         mL0Trigger = L0Processor.makeConfig(DEFAULT_L0_TRIGGER);
         mQualTrigger = QualityProcessor.makeConfig(DEFAULT_QUAL_TRIGGER);
         mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
-        mExposureBlockPeriod = DEFAULT_XB_PERIOD;
+        mExposureBlockTargetEvents = DEFAULT_XB_TARGET_EVENTS;
         mCurrentExperiment = DEFAULT_CURRENT_EXPERIMENT;
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
         mAccountName = DEFAULT_ACCOUNT_NAME;
         mAccountScore = DEFAULT_ACCOUNT_SCORE;
+        mPrecalConfig = DEFAULT_PRECAL_CONFIG;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mTargetFPS = DEFAULT_TARGET_FPS;
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
-        mPrecalResetTime = DEFAULT_PRECAL_RESET_TIME;
-
-        mHotcells = new ArrayList<>(N_CAMERAS);
-        for(int i=0; i<N_CAMERAS; i++) {
-            mHotcells.add(new HashSet<String>());
-        }
+        mDataChunkSize = DEFAULT_DATACHUNK_SIZE;
     }
 
     public TriggerProcessor.Config getL0Trigger() {
@@ -134,53 +110,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mL2Trigger;
     }
 
-    public String getPrecalWeights(int cameraId) {
-        return mPrecalWeights[cameraId];
-    }
-
-    public void setPrecalWeights(int cameraId, String s) {
-        mPrecalWeights[cameraId] = s;
-    }
-
-    public Set<Integer> getHotcells(int cameraId) {
-        Set<Integer> intSet = new HashSet<>(mHotcells.get(cameraId).size());
-        for(String pos: mHotcells.get(cameraId)) {
-            intSet.add(Integer.parseInt(pos,16));
-        }
-        return intSet;
-    }
-
-    public void setHotcells(int cameraId, Set<Integer> hotcells) {
-        mHotcells.get(cameraId).clear();
-        for(Integer pos: hotcells) {
-            mHotcells.get(cameraId).add(Integer.toHexString(pos));
-        }
-    }
-
-    public UUID getPrecalId(int cameraId) {
-        return mPrecalUUID[cameraId];
-    }
-
-    public void setPrecalId(int cameraId, UUID precalId) {
-        mPrecalUUID[cameraId] = precalId;
-    }
-
-    public long getLastPrecalTime(int cameraId) {
-        return mLastPrecalTime[cameraId];
-    }
-
-    public void setLastPrecalTime(int cameraId, long t) {
-        mLastPrecalTime[cameraId] = t;
-    }
-
-    public int getLastPrecalResX(int cameraId) {
-        return mLastPrecalResX[cameraId];
-    }
-
-    public void setLastPrecalResX(int cameraId, int resX) {
-        mLastPrecalResX[cameraId] = resX;
-    }
-
     /**
      * Get the threshold for camera frame capturing.
      *
@@ -195,27 +124,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @param l1Threshold The new threshold.
      */
-    public void setL1Threshold(int l1Threshold) {
+    public void setThresholds(int l1Threshold) {
         mL1Trigger = mL1Trigger.edit()
                 .putInt(L1Processor.KEY_L1_THRESH, l1Threshold)
                 .create();
-    }
-
-    /**
-     * Get the threshold for camera frame processing.
-     *
-     * @return int
-     */
-    public Integer getL2Threshold() {
-        return mL2Trigger.getInt(L2Processor.KEY_L2_THRESH);
-    }
-
-    /**
-     * Set the threshold for camera frame processing.
-     *
-     * @param l2Threshold The new threshold.
-     */
-    public void setL2Threshold(int l2Threshold) {
+        int l2Threshold = L2Processor.generateL2Threshold(l1Threshold, mL2Trigger);
         mL2Trigger = mL2Trigger.edit()
                 .putInt(L2Processor.KEY_L2_THRESH, l2Threshold)
                 .create();
@@ -237,7 +150,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return float
      */
     public float getTargetEventsPerMinute() {
-        return mL1Trigger.getInt(L1Processor.KEY_TARGET_EPM);
+        return mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM);
     }
 
     /**
@@ -246,7 +159,11 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getExposureBlockPeriod() {
-        return mExposureBlockPeriod;
+        return (int) (60 * mExposureBlockTargetEvents / getTargetEventsPerMinute());
+    }
+
+    public int getExposureBlockTargetEvents() {
+        return mExposureBlockTargetEvents;
     }
 
     /**
@@ -258,27 +175,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return INSTANCE;
     }
 
-    /**
-     * Get the current experiment.
-     *
-     * @return String or {@code null} if not set.
-     */
-    @Nullable
-    public String getCurrentExperiment() {
-        return mCurrentExperiment;
-    }
-
-    /**
-     * Get the device nickname.
-     *
-     * @return String or {@code null} if not set.
-     */
-    @Nullable
-    public String getDeviceNickname() {
-        return mDeviceNickname;
-    }
-
-
     public void setAccountName(@Nullable final String accountName) {
         mAccountName = accountName;
     }
@@ -289,10 +185,23 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
 
     public float getAccountScore() { return mAccountScore; }
 
+    public void setPrecalConfig(PreCalibrationService.Config config) {
+        mPrecalConfig = config;
+    }
+
+    public PreCalibrationService.Config getPrecalConfig() {
+        return mPrecalConfig;
+    }
+
+    public void setTargetResolution(int resX, int resY) {
+        mTargetResolutionStr = new ResolutionSpec(resX, resY).toString();
+    }
+
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
     public double getTargetFPS() {
+        if(mTargetFPS == null) mTargetFPS = DEFAULT_TARGET_FPS;
         return mTargetFPS;
     }
 
@@ -304,45 +213,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         return mBatteryOverheatTemp;
     }
 
-    public Long getPrecalResetTime() {
-        return mPrecalResetTime;
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
-        mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
-        mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
-        mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
-        mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
-        mExposureBlockPeriod = sharedPreferences.getInt(KEY_XB_PERIOD, DEFAULT_XB_PERIOD);
-        mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
-        mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
-        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
-        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
-        mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
-        try {
-            mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
-        } catch (NumberFormatException e) {
-            mTargetFPS = DEFAULT_TARGET_FPS;
-        }
-
-        mPrecalResetTime = sharedPreferences.getLong(KEY_PRECAL_RESET_TIME, DEFAULT_PRECAL_RESET_TIME);
-
-        mPrecalWeights = new String[N_CAMERAS];
-        mPrecalUUID = new UUID[N_CAMERAS];
-        mLastPrecalTime = new long[N_CAMERAS];
-        mLastPrecalResX = new int[N_CAMERAS];
-        for(int i=0; i<N_CAMERAS; i++) {
-            mPrecalWeights[i] = sharedPreferences.getString(KEY_WEIGHTS + i, null);
-            mHotcells.add(i, sharedPreferences.getStringSet(KEY_HOTCELLS + i, DEFAULT_HOTCELLS));
-            long mostSignificant = sharedPreferences.getLong(KEY_PRECAL_MOST + i, 0L);
-            long leastSignificant = sharedPreferences.getLong(KEY_PRECAL_LEAST + i, 0L);
-            mPrecalUUID[i] = new UUID(mostSignificant, leastSignificant);
-            mLastPrecalTime[i] = sharedPreferences.getLong(KEY_LAST_PRECAL_TIME + i, 0);
-            mLastPrecalResX[i] = sharedPreferences.getInt(KEY_LAST_PRECAL_RES_X + i, -1);
-        }
-
+    public long getDataChunkSize() {
+        return mDataChunkSize;
     }
 
     /**
@@ -355,37 +227,68 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         CFLog.i("GOT command from server!");
         boolean changeCamera = false;
 
-        if (serverCommand.getPrecalWeights() != null) {
-            mPrecalWeights = serverCommand.getPrecalWeights();
+        if (serverCommand.getWeights() != null
+                && serverCommand.getWeights().isApplicable()) {
+            mPrecalConfig = mPrecalConfig.update(serverCommand.getWeights().makePrecalConfig());
         }
-        if (serverCommand.getHotcells() != null) {
-            mHotcells = serverCommand.getHotcells();
+        if (serverCommand.getHotcells() != null
+                && serverCommand.getHotcells().isApplicable()) {
+            mPrecalConfig = mPrecalConfig.update(serverCommand.getHotcells().makePrecalConfig());
         }
-        if (serverCommand.getPrecalResetTime() != null) {
-            // in case we choose to only update through the server
-            if(serverCommand.getPrecalResetTime() > 0) {
-                mPrecalResetTime = serverCommand.getPrecalResetTime();
-            } else {
-                mPrecalResetTime = null;
-            }
+        // only call PreCalibrationService if the commands above don't get the job done
+        if (serverCommand.getUpdateCommand() != null
+                && serverCommand.getUpdateCommand().isApplicable()
+                && serverCommand.getWeights() == null
+                && serverCommand.getHotcells() == null) {
+            // FIXME: ideally, we would call PreCalibrationService without switching to IDLE
+            changeCamera = true;
+        }
+        if (serverCommand.getCameraCommand() != null
+                && serverCommand.getCameraCommand().isApplicable()) {
+            CFCamera.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
         }
         if (serverCommand.getL0Trigger() != null) {
-            mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger());
+            if(serverCommand.getL0Trigger().hasName()) {
+                mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger().toString());
+            } else {
+                mL0Trigger = mL0Trigger.editFromString(serverCommand.getL0Trigger().toString());
+            }
         }
         if (serverCommand.getQualityTrigger() != null) {
-            mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger());
+            if(serverCommand.getQualityTrigger().hasName()) {
+                mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger().toString());
+            } else {
+                mQualTrigger = mQualTrigger.editFromString(serverCommand.getQualityTrigger().toString());
+            }
         }
-        if (serverCommand.getPrecalTrigger() != null) {
-            mPrecalTriggers = PreCalibrator.makeConfig(serverCommand.getPrecalTrigger());
+        if (serverCommand.getPrecalTriggers() != null) {
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i<serverCommand.getPrecalTriggers().length; i++) {
+                ServerCommand.TrigCommand cmd = serverCommand.getPrecalTriggers()[i];
+                if(i>0) {
+                    sb.append("->");
+                }
+                sb.append(cmd.toString());
+            }
+            mPrecalTriggers = PreCalibrator.makeConfig(sb.toString());
         }
         if (serverCommand.getL1Trigger() != null) {
-            mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger());
+            if(serverCommand.getL1Trigger().hasName()) {
+                mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger().toString());
+            } else {
+                mL1Trigger = mL1Trigger.editFromString(serverCommand.getL1Trigger().toString());
+            }
         }
         if (serverCommand.getL2Trigger() != null) {
-            mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger());
+            if(serverCommand.getL2Trigger().hasName()) {
+                mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger().toString());
+            } else {
+                mL2Trigger = mL2Trigger.editFromString(serverCommand.getL2Trigger().toString());
+            }
         }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
-            mExposureBlockPeriod = serverCommand.getTargetExposureBlockPeriod();
+            mExposureBlockTargetEvents = (int)(serverCommand.getTargetExposureBlockPeriod()
+                    * mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM) / 60);
         }
         if (serverCommand.getCurrentExperiment() != null) {
             mCurrentExperiment = serverCommand.getCurrentExperiment();
@@ -415,8 +318,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getBatteryOverheatTemp() != null) {
             mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
         }
+        if (serverCommand.getDataChunkSize() != null) {
+            mDataChunkSize = serverCommand.getDataChunkSize();
+        }
         if (serverCommand.shouldRecalibrate() != null) {
-            mLastPrecalTime = new long[mLastPrecalTime.length];
             changeCamera = true;
         }
 
@@ -425,24 +330,38 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        mL0Trigger = L0Processor.makeConfig(sharedPreferences.getString(KEY_L0_TRIGGER, DEFAULT_L0_TRIGGER));
+        mQualTrigger = QualityProcessor.makeConfig(sharedPreferences.getString(KEY_QUAL_TRIGGER, DEFAULT_QUAL_TRIGGER));
+        mPrecalTriggers = PreCalibrator.makeConfig(sharedPreferences.getString(KEY_PRECAL_TRIGGER, DEFAULT_PRECAL_TRIGGER));
+        mL1Trigger = L1Processor.makeConfig(sharedPreferences.getString(KEY_L1_TRIGGER, DEFAULT_L1_TRIGGER));
+        mL2Trigger = L2Processor.makeConfig(sharedPreferences.getString(KEY_L2_TRIGGER, DEFAULT_L2_TRIGGER));
+        mExposureBlockTargetEvents = sharedPreferences.getInt(KEY_XB_TARGET_EVENTS, DEFAULT_XB_TARGET_EVENTS);
+        mCurrentExperiment = sharedPreferences.getString(KEY_CURRENT_EXPERIMENT, DEFAULT_CURRENT_EXPERIMENT);
+        mDeviceNickname = sharedPreferences.getString(KEY_DEVICE_NICKNAME, DEFAULT_DEVICE_NICKNAME);
+        mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
+        mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
+        mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
+        try {
+            mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
+        } catch (NumberFormatException e) {
+            mTargetFPS = DEFAULT_TARGET_FPS;
+        }
+        mFracDeadTime = sharedPreferences.getFloat(KEY_FRAC_DEAD_TIME, DEFAULT_FRAC_DEAD_TIME);
+        mBatteryOverheatTemp = sharedPreferences.getInt(KEY_BATTERY_OVERHEAT_TEMP, DEFAULT_BATTERY_OVERHEAT_TEMP);
+        mDataChunkSize = sharedPreferences.getLong(KEY_DATACHUNK_SIZE, DEFAULT_DATACHUNK_SIZE);
+    }
+
     public void save(@NonNull final SharedPreferences sharedPreferences) {
         SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        for(int i=0; i<N_CAMERAS; i++) {
-            editor.putString(KEY_WEIGHTS + i, mPrecalWeights[i])
-                    .putStringSet(KEY_HOTCELLS + i, mHotcells.get(i))
-                    .putLong(KEY_PRECAL_MOST + i, mPrecalUUID[i].getMostSignificantBits())
-                    .putLong(KEY_PRECAL_LEAST + i, mPrecalUUID[i].getLeastSignificantBits())
-                    .putLong(KEY_LAST_PRECAL_TIME + i, mLastPrecalTime[i])
-                    .putInt(KEY_LAST_PRECAL_RES_X + i, mLastPrecalResX[i]);
-        }
 
         editor.putString(KEY_L0_TRIGGER, mL0Trigger.toString())
                 .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
                 .putString(KEY_PRECAL_TRIGGER, mPrecalTriggers.toString())
                 .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
                 .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
-                .putInt(KEY_XB_PERIOD, mExposureBlockPeriod)
+                .putInt(KEY_XB_TARGET_EVENTS, mExposureBlockTargetEvents)
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)
                 .putString(KEY_ACCOUNT_NAME,mAccountName)
@@ -451,6 +370,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putString(KEY_TARGET_FPS, mTargetFPS.toString())
                 .putFloat(KEY_FRAC_DEAD_TIME, mFracDeadTime)
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
+                .putLong(KEY_DATACHUNK_SIZE, mDataChunkSize)
                 .apply();
+
+        if(mPrecalConfig != null) mPrecalConfig.saveToPrefs(sharedPreferences);
     }
 }

@@ -36,6 +36,13 @@ public class L1Processor extends TriggerProcessor {
         String name = options.get("name");
         options.remove("name");
 
+        if(options.containsKey(L1Processor.KEY_TARGET_EPM)) {
+            CFConfig cfg = CFConfig.getInstance();
+            double targetFrames = 60 * cfg.getExposureBlockTargetEvents()
+                    * cfg.getTargetFPS() / Float.parseFloat(options.get(L1Processor.KEY_TARGET_EPM));
+            options.put(Config.KEY_MAXFRAMES, Integer.toString((int)(targetFrames)));
+        }
+
         switch (name) {
             case L1Task.Config.NAME:
                 return new L1Task.Config(options);

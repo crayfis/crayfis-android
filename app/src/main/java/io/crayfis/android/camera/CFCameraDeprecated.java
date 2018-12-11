@@ -1,13 +1,17 @@
 package io.crayfis.android.camera;
 
+import android.content.SharedPreferences;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.preference.PreferenceManager;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.crayfis.android.R;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -41,7 +45,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
      * Sets up the camera if it is not already setup.
      */
     @Override
-    void configure() {
+    void configure(ConfiguredCallback configuredCallback) {
 
         // first, tear down camera
         if(mCamera != null) {
@@ -55,7 +59,10 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         }
 
         // Open and configure the camera
-        if(mCameraId == -1) return;
+        if(mCameraId == -1) {
+            configuredCallback.onConfigured();
+            return;
+        }
 
         try {
             mCamera = Camera.open(mCameraId);
@@ -117,12 +124,13 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             mCamera.setPreviewTexture(mTexture);
 
-            RCF_BUILDER.setCamera(mCamera, mCameraId, mRS);
+            RCF_BUILDER.setCamera(mCamera, mRS);
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);
-
             mCamera.startPreview();
+
+            configuredCallback.onConfigured();
 
         } catch (Exception e) {
             if (e.getMessage().equals("Fail to connect to camera service")) {
@@ -130,18 +138,48 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
                 onError(1, mCamera);
             } else {
                 e.printStackTrace();
-                mApplication.userErrorMessage(R.string.camera_error,true);
+                mApplication.userErrorMessage(true, R.string.camera_error, 0);
             }
         }
+    }
+
+    @Override
+    public void changeDataRate(boolean increase) {
+        // do nothing if we're locked
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
+        if(prefs.getBoolean(mApplication.getString(R.string.prefFPSResLock), false)) {
+            return;
+        }
+
+        List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
+        if(sizes == null) return;
+
+        Collections.sort(sizes, new Comparator<Camera.Size>() {
+            @Override
+            public int compare(Camera.Size s0, Camera.Size s1) {
+                return s0.width * s0.height - s1.width * s1.height;
+            }
+        });
+
+        int index = sizes.indexOf(previewSize);
+        if(increase && index < sizes.size()-1) {
+            index++;
+        } else if(!increase && index > 0) {
+            index--;
+        } else {
+            return;
+        }
+
+        Camera.Size newSize = sizes.get(index);
+        CONFIG.setTargetResolution(newSize.width, newSize.height);
+
     }
 
 
     @Override
     public void onPreviewFrame(byte[] bytes, Camera camera) {
-        AcquisitionTime time = new AcquisitionTime();
-        RCF_BUILDER.setBytes(bytes)
-                .setAcquisitionTime(time);
-
+        RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
+                .setBytes(bytes);
 
         RawCameraFrame frame = RCF_BUILDER.build();
         mTimestampHistory.addValue(frame.getAcquiredTimeNano());
@@ -154,6 +192,19 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         if(camera != mCamera) { return; }
         CFLog.e("Camera error " + errorId);
         changeCameraFrom(mCameraId);
+    }
+
+    @Override
+    public Boolean isFacingBack() {
+        if(mCameraId == -1) return null;
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(mCameraId, cameraInfo);
+        return cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK;
+    }
+
+    @Override
+    int getNumberOfCameras() {
+        return Camera.getNumberOfCameras();
     }
 
     @Override

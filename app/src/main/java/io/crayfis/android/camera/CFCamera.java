@@ -7,7 +7,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.renderscript.RenderScript;
 
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.FrameHistory;
@@ -36,7 +37,6 @@ public abstract class CFCamera {
     private CFLocation mCFLocation;
 
     int mCameraId = -1;
-
     int mResX;
     int mResY;
 
@@ -81,8 +81,8 @@ public abstract class CFCamera {
         mApplication = app;
         mRS = mApplication.getRenderScript();
 
-        mCFSensor = new CFSensor(app, getFrameBuilder());
-        mCFLocation = new CFLocation(app, getFrameBuilder());
+        mCFSensor = new CFSensor(app, RCF_BUILDER);
+        mCFLocation = new CFLocation(app, RCF_BUILDER);
 
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
@@ -104,25 +104,14 @@ public abstract class CFCamera {
 
         changeCameraFrom(mCameraId, true);
 
-        // quit the existing camera thread
-        try {
-            mCameraThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        mFrameThread.quitSafely();
-        try {
-            mFrameThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         mCFSensor.unregister();
         mCFLocation.unregister();
         sInstance = null;
     }
 
-    abstract void configure();
+    abstract void configure(ConfiguredCallback callback);
+    abstract int getNumberOfCameras();
+    public abstract void changeDataRate(boolean increase);
 
     /**
      * Tear down camera and, if appropriate, start a new stream.
@@ -146,6 +135,11 @@ public abstract class CFCamera {
 
         if (currentId != mCameraId || !mCameraThread.isAlive()) return;
 
+        synchronized (mTimestampHistory) {
+            mTimestampHistory.clear();
+        }
+        CONFIG.setPrecalConfig(null);
+
         mCameraHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -160,7 +154,7 @@ public abstract class CFCamera {
                     case SURVEY:
                         // switch cameras and try again
                         nextId = currentId + 1;
-                        if (nextId >= Camera.getNumberOfCameras()) {
+                        if (nextId >= getNumberOfCameras()) {
                             nextId = -1;
                         } else {
                             // need a new SURVEY XB for next camera
@@ -173,7 +167,6 @@ public abstract class CFCamera {
                     case IDLE:
                     case FINISHED:
                         // take a break for a while
-                        nextId = -1;
                 }
 
                 mCameraId = nextId;
@@ -184,20 +177,29 @@ public abstract class CFCamera {
 
                 CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
-                configure();
+                configure(new ConfiguredCallback() {
+                    @Override
+                    public void onConfigured() {
+                        if(state == CFApplication.State.INIT) {
+                            mApplication.setApplicationState(CFApplication.State.SURVEY);
 
-                synchronized (mTimestampHistory) {
-                    mTimestampHistory.clear();
-                }
-
-                if (state == CFApplication.State.INIT) {
-                    mApplication.setApplicationState(CFApplication.State.SURVEY);
-                }
-
-                // if we are unregistering the camera
-                if(quit && mCameraId == -1) {
-                    mCameraThread.quitSafely();
-                }
+                        } else if(quit && mCameraId == -1) {
+                            // if we are unregistering the camera
+                            mCameraThread.quitSafely();
+                            mFrameThread.quitSafely();
+                            try {
+                                mCameraThread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                mFrameThread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
             }
         });
 
@@ -240,8 +242,8 @@ public abstract class CFCamera {
         return devtxt;
     }
 
-    public RawCameraFrame.Builder getFrameBuilder() {
-        return RCF_BUILDER;
+    public void setExposureBlock(ExposureBlock xb) {
+        RCF_BUILDER.setExposureBlock(xb);
     }
 
     public int getResX() {
@@ -253,8 +255,10 @@ public abstract class CFCamera {
     }
 
     public boolean isFlat() {
-        return !(mCFSensor == null) && mCFSensor.isFlat();
+        return mCFSensor == null || mCFSensor.isFlat();
     }
+
+    public abstract Boolean isFacingBack();
 
     public Location getLastKnownLocation() {
         if(mCFLocation == null) return null;
@@ -263,5 +267,9 @@ public abstract class CFCamera {
 
     public boolean isUpdatingLocation() {
         return !(mCFLocation == null) && mCFLocation.isReceivingUpdates();
+    }
+
+    interface ConfiguredCallback {
+        void onConfigured();
     }
 }

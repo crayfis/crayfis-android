@@ -57,7 +57,7 @@
     <string name="toast_hist_zero">Nach der Kalibrierug zeigt dieses Fenster ein aktuelles Histogramm der Teilchenkandidaten</string>
     <string name="toast_hist">Dieses Fenster zeigt ein Histogramm der Teilchenkandidaten.</string>
     <string name="fatal_error_title">CRAYFIS Programmfehler</string>
-    <string name="camera_error">Dem Zugang zur Kamera wurde CRAYFIS nicht gestattet.</string>
+    <string name="camera_error">Dem Zugang zur Kamera wurde CRAYFIS nicht gestattet. (%d)</string>
     <string name="fatal_error_message">An internal error occurred and the activity you are currently viewing must close.  Please try again.</string>
     <string name="pager_dev">Entwickler</string>
     <plurals name="total_frames">

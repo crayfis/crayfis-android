@@ -32,12 +32,14 @@ import io.crayfis.android.util.CFLog;
  */
 class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
-    private static final String INVALID_FILE = "invalid_file";
-    private static final String MALFORMED_FILE = "malformed";
+    private static final int VALID_FILE = 0;
+    private static final int INVALID_FILE = 1;
+    private static final int MALFORMED_FILE = 2;
 
     private final CFApplication mApplication;
     private final UploadExposureService.ServerInfo mServerInfo;
     private final File mFile;
+    private String mCameraId;
     private String mRunId;
 
     /**
@@ -62,16 +64,14 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             return Boolean.FALSE;
         }
 
-        mRunId = getRunIdFromFile();
-        if (mRunId.equals(MALFORMED_FILE) || mRunId.equals(INVALID_FILE)) {
-            final String filename = mFile.getName();
-            if (mRunId.equals(MALFORMED_FILE)) {
+        final String filename = mFile.getName();
+        switch(parseFile()) {
+            case MALFORMED_FILE:
                 CFLog.e(filename + " is malformed");
-            }
-            if (mRunId.equals(INVALID_FILE)) {
+                return Boolean.FALSE;
+            case INVALID_FILE:
                 CFLog.e(filename + " is invalid.");
-            }
-            return Boolean.FALSE;
+                return Boolean.FALSE;
         }
 
         try {
@@ -79,16 +79,16 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
                     parseFrom(new FileInputStream(mFile));
             final ByteString rawData = chunk.toByteString();
 
-            CFLog.i("Uploading a " + rawData.size() + "b from " + mFile.getName());
+            CFLog.i("Uploading a " + rawData.size() + "b from " + filename);
 
             if (uploadData(rawData)) {
-                CFLog.d("Uploading " + mFile.getName() + " complete.");
+                CFLog.d("Uploading " + filename + " complete.");
                 if (!mFile.delete()) {
-                    CFLog.e("Could not delete file " + mFile.getName());
+                    CFLog.e("Could not delete file " + filename);
                 }
             }
         } catch (IOException ex) {
-            CFLog.e("Unable to upload file " + mFile.getName(), ex);
+            CFLog.e("Unable to upload file " + filename, ex);
         } catch (OutOfMemoryError ex) {
             // FIXME Why was this even running out of memory?
             CFLog.e("Oh noes! An OutofMemory occured.", ex);
@@ -98,18 +98,21 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
     }
 
     @NonNull
-    private String getRunIdFromFile() {
+    private int parseFile() {
         String filename = mFile.getName();
         if (! filename.endsWith(".bin")) {
             return INVALID_FILE;
         }
 
         String[] pieces = filename.split("_");
-        if (pieces.length < 2) {
+        if (pieces.length < 3) {
             return MALFORMED_FILE;
         }
 
-        return pieces[0];
+        mRunId = pieces[0];
+        mCameraId = pieces[1];
+
+        return VALID_FILE;
     }
 
     @NonNull
@@ -120,6 +123,7 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         c.setRequestProperty("Content-type", "application/octet-stream");
         c.setRequestProperty("Content-length", String.format("%d", rawData.size()));
         c.setRequestProperty("Device-id", mServerInfo.deviceId);
+        c.setRequestProperty("Camera-id", mCameraId);
         c.setRequestProperty("Run-id", mRunId);
         c.setRequestProperty("Crayfis-version", "b " + mServerInfo.buildVersion);
         c.setRequestProperty("Crayfis-version-code", Integer.toString(mServerInfo.versionCode));
@@ -151,22 +155,20 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
         final int serverResponseCode = c.getResponseCode();
 
-        if (serverResponseCode == 403 || serverResponseCode == 401) {
-            // server rejected us! so we are not allowed to upload.
-            // oh well! we can still take data at least.
-
-            UploadExposureService.sPermitUpload.set(false);
-
-            if (serverResponseCode == 401) {
+        switch (serverResponseCode) {
+            case 401:
                 // server rejected us because our app code is invalid.
                 SharedPreferences.Editor editor = sharedprefs.edit();
                 editor.putBoolean("badID", true);
                 editor.apply();
                 CFLog.w("Setting bad ID flag!");
                 UploadExposureService.sValidId.set(false);
-            }
+            case 403:
+                // server rejected us! so we are not allowed to upload.
+                // oh well! we can still take data at least.
 
-            return Boolean.FALSE;
+                UploadExposureService.sPermitUpload.set(false);
+                return Boolean.FALSE;
         }
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));

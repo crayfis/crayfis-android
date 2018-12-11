@@ -50,7 +50,7 @@ public class CFApplication extends Application {
     public static final String EXTRA_ERROR_MESSAGE = "error_message";
     public static final String EXTRA_IS_FATAL = "fatal_error";
 
-    private int errorId = 2;
+    private static final int ERROR_ID = 2; // different from FOREGROUND_ID to allow second notification
 
     private static final long SURVEY_COUNTDOWN_TICK = 1000; // ms
     private static final long SURVEY_DELAY = 10000; // ms
@@ -84,7 +84,7 @@ public class CFApplication extends Application {
                 setApplicationState(CFApplication.State.SURVEY);
             } else {
                 // continue waiting
-                userErrorMessage(R.string.warning_facedown, false);
+                userErrorMessage(false, R.string.warning_facedown);
                 this.start();
             }
         }
@@ -214,17 +214,17 @@ public class CFApplication extends Application {
         }
     }
 
-    public void userErrorMessage(@StringRes int id, boolean quit) {
-        userErrorMessage(id, quit, false);
+    public void userErrorMessage(boolean quit, @StringRes int id, Object... formatArgs) {
+        userErrorMessage(quit, false, id, formatArgs);
     }
 
-    public void finishAndQuit(@StringRes int id) {
-        userErrorMessage(id, true, true);
+    public void finishAndQuit(@StringRes int id, Object... formatArgs) {
+        userErrorMessage(true, true, id, formatArgs);
     }
 
-    private void userErrorMessage(@StringRes int id, boolean quit, boolean safeExit) {
+    private void userErrorMessage(boolean quit, boolean safeExit, @StringRes int id, Object... formatArgs) {
 
-        String dialogMessage = getString(id);
+        String dialogMessage = getString(id, formatArgs);
         Intent errorIntent = new Intent(ACTION_ERROR);
         errorIntent.putExtra(EXTRA_ERROR_MESSAGE, dialogMessage);
         if(quit) {
@@ -243,7 +243,7 @@ public class CFApplication extends Application {
                     title = getString(R.string.notification_error);
                     text = dialogMessage;
                 }
-                Notification notification = new NotificationCompat.Builder(this)
+                Notification notification = new NotificationCompat.Builder(this, DAQService.CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_just_a)
                         .setContentTitle(title)
                         .setContentText(text)
@@ -252,8 +252,7 @@ public class CFApplication extends Application {
 
                 NotificationManager notificationManager
                         = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-                notificationManager.notify(errorId, notification);
-                errorId++;
+                notificationManager.notify(ERROR_ID, notification);
             }
 
             // make sure to kill activity if open

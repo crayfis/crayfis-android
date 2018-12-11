@@ -6,7 +6,7 @@ import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.FrameHistory;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.util.CFLog;
 
 public class L2Processor extends TriggerProcessor {
@@ -70,5 +70,14 @@ public class L2Processor extends TriggerProcessor {
             double dtMin = dt / 1000000000. / 60.;
             return sPassTimes.size() / dtMin;
         }
+    }
+
+    public static int generateL2Threshold(int l1thresh, Config l2config) {
+        if((l2config instanceof L2Task.Config || l2config instanceof L2TaskMaxN.Config)
+                && l1thresh > 3) {
+            return l1thresh - 1;
+        }
+
+        return l1thresh;
     }
 }

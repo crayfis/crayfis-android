@@ -57,7 +57,7 @@
     <string name="toast_hist_zero">عندما ينتهي البرنامج من المعايرة، ستبين هذه النافذة رسماً بيانياً للجسيمات المرشحة.</string>
     <string name="toast_hist">هذه النافذة تبين رسماً بيانياً للجسيمات المرشحة.</string>
     <string name="fatal_error_title">خطأ كرايفس</string>
-    <string name="camera_error">كرايفس لم يتمكن من تشغيل الكاميرا.</string>
+    <string name="camera_error">كرايفس لم يتمكن من تشغيل الكاميرا. (%d)</string>
     <string name="fatal_error_message">حدث خطأ داخلي و يجب إغلاق النشاط الحالي.  يرجى المحاولة ثانيةً.</string>
     <string name="pager_dev">مطور</string>
     <plurals name="total_frames">

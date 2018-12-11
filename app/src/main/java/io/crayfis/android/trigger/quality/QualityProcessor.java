@@ -1,13 +1,10 @@
 package io.crayfis.android.trigger.quality;
 
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
-
 import java.util.HashMap;
 
 import io.crayfis.android.R;
 import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.exposure.frame.RawCameraFrame;
+import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
@@ -19,10 +16,10 @@ import io.crayfis.android.util.CFLog;
 
 public class QualityProcessor extends TriggerProcessor {
 
-    static final String KEY_MEAN_THRESH = "mean";
-    static final String KEY_ST_DEV_THRESH = "std";
-    static final String KEY_ORIENT_THRESH = "orient";
-    static final String KEY_BACKLOCK = "back";
+    public static final String KEY_MEAN_THRESH = "mean";
+    public static final String KEY_ST_DEV_THRESH = "std";
+    public static final String KEY_ORIENT_THRESH = "orient";
+    public static final String KEY_BACKLOCK = "back";
 
     private QualityProcessor(CFApplication application, Config config) {
         super(application, config, false);
@@ -56,10 +53,11 @@ public class QualityProcessor extends TriggerProcessor {
         if(!pass) {
             CFCamera camera = CFCamera.getInstance();
             camera.changeCameraFrom(frame.getCameraId());
+            CFLog.d("Flat: " + camera.isFlat());
             if (!camera.isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
+                mApplication.userErrorMessage(false, R.string.warning_facedown);
             } else {
-                mApplication.userErrorMessage(R.string.warning_bright, false);
+                mApplication.userErrorMessage(false, R.string.warning_bright);
             }
         }
 
@@ -69,7 +67,7 @@ public class QualityProcessor extends TriggerProcessor {
     public void onMaxReached() {
         // we have a sufficient number of good frames, so switch to CALIBRATION from SURVEY
         if(mApplication.getApplicationState() == CFApplication.State.SURVEY) {
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
         }
     }
 

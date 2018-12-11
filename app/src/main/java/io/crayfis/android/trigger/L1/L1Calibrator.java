@@ -55,7 +55,7 @@ public class L1Calibrator {
         if (fps == 0) {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
         }
-        double targetL1Rate = L1Config.getInt(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
+        double targetL1Rate = L1Config.getFloat(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
 
         Histogram h = sFrameStatistics.getHistogram();
         long[] histValues = h.getValues();
@@ -74,15 +74,7 @@ public class L1Calibrator {
 
         CFLog.i("Setting new L1 threshold: {" + L1Config.getInt(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
 
-        CFConfig CONFIG = CFConfig.getInstance();
-        CONFIG.setL1Threshold(thresh);
-        if (thresh > 2) {
-            CONFIG.setL2Threshold(thresh - 1);
-        } else {
-            // Okay, if we're getting this low, we shouldn't try to
-            // set the L2thresh any lower, else event frames will be huge.
-            CONFIG.setL2Threshold(thresh);
-        }
+        CFConfig.getInstance().setThresholds(thresh);
     }
 
     void submitCalibrationResult() {
@@ -100,7 +92,7 @@ public class L1Calibrator {
 
         // and commit it to the output stream
         CFLog.i("DAQService Committing new calibration result.");
-        UploadExposureService.submitCalibrationResult(mApplication, cal.build());
+        UploadExposureService.submitMessage(mApplication, CFCamera.getInstance().getCameraId(), cal.build());
     }
 
 }

@@ -7,9 +7,11 @@
     <string name="prefStartWait" translatable="false">prefStartWait</string>
     <string name="prefStorePublic" translatable="false">prefStorePublic</string>
     <string name="prefEnableGallery" translatable="false">prefEnableGallery</string>
+    <string name="prefFPSResLock" translatable="false">prefFPSResLock</string>
     <string name="prefResolution" translatable="false">prefResolution</string>
     <string name="prefFPS" translatable="false">prefFPS</string>
     <string name="prefBatteryStop" translatable="false">prefBatteryStop</string>
+    <string name="prefIpAddress" translatable="false">prefIpAddress</string>
 
     <string name="L0_trigger" translatable="false">L0_trigger</string>
     <string name="qual_trigger" translatable="false">qual_trigger</string>
