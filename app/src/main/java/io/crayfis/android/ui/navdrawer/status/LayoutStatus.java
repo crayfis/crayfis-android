@@ -227,7 +227,8 @@ public class LayoutStatus extends NavDrawerFragment {
                         break;
                     }
                 } else {
-                    count = ExposureBlockManager.getInstance().getCurrentExposureBlock().count.intValue();
+                    ExposureBlock xb = ExposureBlockManager.getInstance().getCurrentExposureBlock();
+                    count = xb != null ? xb.count.intValue() : 0;
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;

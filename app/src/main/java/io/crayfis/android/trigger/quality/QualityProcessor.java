@@ -53,10 +53,11 @@ public class QualityProcessor extends TriggerProcessor {
         if(!pass) {
             CFCamera camera = CFCamera.getInstance();
             camera.changeCameraFrom(frame.getCameraId());
+            CFLog.d("Flat: " + camera.isFlat());
             if (!camera.isFlat()) {
-                mApplication.userErrorMessage(R.string.warning_facedown, false);
+                mApplication.userErrorMessage(false, R.string.warning_facedown);
             } else {
-                mApplication.userErrorMessage(R.string.warning_bright, false);
+                mApplication.userErrorMessage(false, R.string.warning_bright);
             }
         }
 

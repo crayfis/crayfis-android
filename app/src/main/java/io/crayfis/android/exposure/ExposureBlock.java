@@ -61,7 +61,7 @@ public class ExposureBlock {
 	public final int xbn;
 
 	public final CFApplication.State daq_state;
-    public AtomicInteger count = new AtomicInteger();
+    public final AtomicInteger count = new AtomicInteger();
 
 	private boolean frozen = false;
 	boolean aborted = false;

@@ -60,10 +60,11 @@ public class DAQService extends Service {
     private final CFConfig CONFIG = CFConfig.getInstance();
     private CFApplication mApplication;
 
+    private NotificationManager mNotificationManager;
     private NotificationCompat.Builder mNotificationBuilder;
     private static final int FOREGROUND_ID = 1;
-    private static final String CHANNEL_ID = "io.crayfis.android";
-    private static final String CHANNEL_NAME = "CRAYFIS Data Acquisition";
+    public static final String CHANNEL_ID = "io.crayfis.android";
+    public static final String CHANNEL_NAME = "CRAYFIS Data Acquisition";
 
     private CFCamera mCFCamera;
 
@@ -80,6 +81,34 @@ public class DAQService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        // Notifications
+
+        Intent restartIntent = new Intent(this, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(restartIntent);
+        PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        if(mNotificationManager == null || mNotificationBuilder == null) {
+            mNotificationManager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                NotificationChannel notificationChannel
+                        = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+                // TODO: we can customize the notification features too
+
+                mNotificationManager.createNotificationChannel(notificationChannel);
+            }
+
+            mNotificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_just_a)
+                    .setContentTitle(getString(R.string.notification_title))
+                    .setContentText(getString(R.string.notification_idle))
+                    .setContentIntent(resultPendingIntent);
+        }
+
+        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
 
         // restart if DAQService is dead
         if(mApplication.getApplicationState() == CFApplication.State.FINISHED) {
@@ -156,33 +185,6 @@ public class DAQService extends Service {
         switch (previousState) {
             case FINISHED:
 
-                // Notifications
-
-                Intent restartIntent = new Intent(this, MainActivity.class);
-                TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-                stackBuilder.addParentStack(MainActivity.class);
-                stackBuilder.addNextIntent(restartIntent);
-                PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                if(mNotificationBuilder == null) {
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        NotificationChannel notificationChannel
-                                = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
-                        // TODO: we can customize the notification features too
-
-                        NotificationManager manager = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
-                        manager.createNotificationChannel(notificationChannel);
-                    }
-
-                    mNotificationBuilder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                            .setSmallIcon(R.drawable.ic_just_a)
-                            .setContentTitle(getString(R.string.notification_title))
-                            .setContentText(getString(R.string.notification_idle))
-                            .setContentIntent(resultPendingIntent);
-                }
-
-                startForeground(FOREGROUND_ID, mNotificationBuilder.build());
-
                 xbManager = ExposureBlockManager.getInstance();
                 xbManager.register(mApplication);
                 xbManager.newExposureBlock(CFApplication.State.INIT);
@@ -228,8 +230,9 @@ public class DAQService extends Service {
     private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         // notify user that we are no longer running
-        mNotificationBuilder.setContentText(getString(R.string.notification_idle));
-        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+        mNotificationManager.notify(FOREGROUND_ID, mNotificationBuilder
+                .setContentText(getString(R.string.notification_idle))
+                .build());
 
         // schedule a timer to check battery
         Timer idleTimer = new Timer();
@@ -312,6 +315,7 @@ public class DAQService extends Service {
             case PRECALIBRATION:
             case DATA:
             case IDLE:
+
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 xbManager.flushCommittedBlocks();
                 mCFCamera.unregister();
@@ -321,6 +325,7 @@ public class DAQService extends Service {
                 mApplication.killTimer();
 
                 mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
+                stopForeground(true);
                 stopSelf();
                 break;
             default:

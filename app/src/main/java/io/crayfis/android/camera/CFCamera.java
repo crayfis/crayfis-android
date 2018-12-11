@@ -104,25 +104,12 @@ public abstract class CFCamera {
 
         changeCameraFrom(mCameraId, true);
 
-        // quit the existing camera thread
-        try {
-            mCameraThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        mFrameThread.quitSafely();
-        try {
-            mFrameThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         mCFSensor.unregister();
         mCFLocation.unregister();
         sInstance = null;
     }
 
-    abstract void configure();
+    abstract void configure(ConfiguredCallback callback);
     abstract int getNumberOfCameras();
     public abstract void changeDataRate(boolean increase);
 
@@ -180,7 +167,6 @@ public abstract class CFCamera {
                     case IDLE:
                     case FINISHED:
                         // take a break for a while
-                        nextId = -1;
                 }
 
                 mCameraId = nextId;
@@ -191,16 +177,29 @@ public abstract class CFCamera {
 
                 CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
-                configure();
+                configure(new ConfiguredCallback() {
+                    @Override
+                    public void onConfigured() {
+                        if(state == CFApplication.State.INIT) {
+                            mApplication.setApplicationState(CFApplication.State.SURVEY);
 
-                if (state == CFApplication.State.INIT) {
-                    mApplication.setApplicationState(CFApplication.State.SURVEY);
-                }
-
-                // if we are unregistering the camera
-                if(quit && mCameraId == -1) {
-                    mCameraThread.quitSafely();
-                }
+                        } else if(quit && mCameraId == -1) {
+                            // if we are unregistering the camera
+                            mCameraThread.quitSafely();
+                            mFrameThread.quitSafely();
+                            try {
+                                mCameraThread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            try {
+                                mFrameThread.join();
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
             }
         });
 
@@ -256,7 +255,7 @@ public abstract class CFCamera {
     }
 
     public boolean isFlat() {
-        return !(mCFSensor == null) && mCFSensor.isFlat();
+        return mCFSensor == null || mCFSensor.isFlat();
     }
 
     public abstract Boolean isFacingBack();
@@ -268,5 +267,9 @@ public abstract class CFCamera {
 
     public boolean isUpdatingLocation() {
         return !(mCFLocation == null) && mCFLocation.isReceivingUpdates();
+    }
+
+    interface ConfiguredCallback {
+        void onConfigured();
     }
 }

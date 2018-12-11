@@ -131,7 +131,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
         } catch (SecurityException e) {
             CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-            application.userErrorMessage(R.string.quit_permission, true);
+            application.userErrorMessage(true, R.string.quit_permission);
         }
 
     }
@@ -171,7 +171,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 mLastLocationDeprecated = location;
             } catch(SecurityException e) {
                 CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
-                application.userErrorMessage(R.string.quit_permission, true);
+                application.userErrorMessage(true, R.string.quit_permission);
             }
         }
 

@@ -13,7 +13,7 @@
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 
     <string name="first_run_welcome_title" translatable="false">CRAYFIS beta</string>
-	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
+	<string name="first_run_welcome">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
     <string name="first_run_how_to_title" translatable="false">How to use this app</string>
     <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.</string>
     <string name="about_autostart" translatable="false">\"Autostart\" allows you to schedule nightly data-taking whenever your phone is charging and not in use. Please select when this feature %s.</string>
@@ -122,7 +122,7 @@
     <string name="fatal_error_message">An internal error occurred and data can no longer be gathered.  Please restart the app.</string>
     <string name="quit" translatable="false">Quit</string>
     <string name="keep_browsing" translatable="false">Keep browsing</string>
-    <string name="camera_error">CRAYFIS could not open the camera.</string>
+    <string name="camera_error">CRAYFIS could not open the camera (%d)</string>
     <string name="sensor_error" translatable="false">Unusual gravity sensor behavior:\nswitching to backup</string>
     <string name="permission_error_title" translatable="false">Permission required</string>
     <string name="permission_error" translatable="false">CRAYFIS requires Camera and Location settings to be enabled.</string>

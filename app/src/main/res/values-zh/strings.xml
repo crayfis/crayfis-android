@@ -58,7 +58,7 @@
     <string name="toast_hist_zero">当应用完成标度，此屏将显示候选粒子直方图.</string>
     <string name="toast_hist">此屏显示候选粒子直方图.</string>
     <string name="fatal_error_title">CRAYFIS 错误</string>
-    <string name="camera_error">CRAYFIS 无法打开摄像头.</string>
+    <string name="camera_error">CRAYFIS 无法打开摄像头. (%d)</string>
     <string name="fatal_error_message">发生内部错误导致当前显示关闭.  请重试.</string>
     <string name="pager_dev">开发者</string>
     <plurals name="total_frames">

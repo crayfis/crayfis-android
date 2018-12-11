@@ -12,6 +12,7 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 4/15/2017.
@@ -97,7 +98,7 @@ class CFSensor implements SensorEventListener {
 
     boolean isFlat() {
         Float orientThresh = CFConfig.getInstance().getQualTrigger().getFloat(QualityProcessor.KEY_ORIENT_THRESH);
-        return orientThresh == null || Math.abs(rotationMatrix[8]) >= Math.PI / 180. * orientThresh;
+        return orientThresh == null || Math.abs(rotationMatrix[8]) >= Math.cos(Math.PI / 180. * orientThresh);
     }
 
     String getStatus() {

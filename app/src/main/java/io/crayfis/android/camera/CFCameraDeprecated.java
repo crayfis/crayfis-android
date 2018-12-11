@@ -45,7 +45,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
      * Sets up the camera if it is not already setup.
      */
     @Override
-    void configure() {
+    void configure(ConfiguredCallback configuredCallback) {
 
         // first, tear down camera
         if(mCamera != null) {
@@ -59,7 +59,10 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
         }
 
         // Open and configure the camera
-        if(mCameraId == -1) return;
+        if(mCameraId == -1) {
+            configuredCallback.onConfigured();
+            return;
+        }
 
         try {
             mCamera = Camera.open(mCameraId);
@@ -125,8 +128,9 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
 
             // allow other apps to access camera
             mCamera.setErrorCallback(this);
-
             mCamera.startPreview();
+
+            configuredCallback.onConfigured();
 
         } catch (Exception e) {
             if (e.getMessage().equals("Fail to connect to camera service")) {
@@ -134,7 +138,7 @@ class CFCameraDeprecated extends CFCamera implements Camera.PreviewCallback, Cam
                 onError(1, mCamera);
             } else {
                 e.printStackTrace();
-                mApplication.userErrorMessage(R.string.camera_error,true);
+                mApplication.userErrorMessage(true, R.string.camera_error, 0);
             }
         }
     }

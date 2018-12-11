@@ -63,7 +63,7 @@
     <string name="toast_hist_zero">כאשר האפליקציה תסיים את הכיול, לוח זה יציג היסטוגרמה של המועמדים.</string>
     <string name="toast_hist">לוח זה מציג היסטוגרמה של המועמדיםThis pane shows a histogram of the particle candidates.</string>
     <string name="fatal_error_title">CRAYFIS שגיאה</string>
-    <string name="camera_error">CRAYFIS לא הצליח לפתוח את המצלמה.</string>
+    <string name="camera_error">CRAYFIS לא הצליח לפתוח את המצלמה. (%d)</string>
     <string name="fatal_error_message">אירעה שגיאה פנימית. נאלץ לסגור את התצוגה הנוכחית. אנא נסה/י שוב.</string>
     <string name="pager_dev">למפתחים</string>
     <plurals name="total_frames">

@@ -62,6 +62,7 @@ class CFCamera2 extends CFCamera {
     private AtomicInteger mBuffersQueued = new AtomicInteger();
     private final ArrayDeque<TotalCaptureResult> mQueuedCaptureResults = new ArrayDeque<>();
 
+    private ConfiguredCallback mConfiguredCallback;
 
     /**
      * Callback for opening the camera
@@ -84,7 +85,7 @@ class CFCamera2 extends CFCamera {
                 mCameraDevice.createCaptureSession(Collections.singletonList(surface), mStateCallback, null);
 
             } catch (CameraAccessException e) {
-                e.printStackTrace();
+                mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
             }
 
         }
@@ -101,11 +102,10 @@ class CFCamera2 extends CFCamera {
 
         @Override
         public void onError(@NonNull CameraDevice cameraDevice, int error) {
-            CFLog.e("Error = " + error);
             mCameraOpenCloseLock.release();
             cameraDevice.close();
             mCameraDevice = null;
-            mApplication.userErrorMessage(R.string.camera_error, true);
+            mApplication.userErrorMessage(true, R.string.camera_error, error);
         }
     };
 
@@ -121,6 +121,8 @@ class CFCamera2 extends CFCamera {
                 return;
             }
 
+            mConfiguredCallback.onConfigured();
+
             // When the session is ready, we start displaying the preview.
             mCaptureSession = cameraCaptureSession;
             try {
@@ -129,9 +131,10 @@ class CFCamera2 extends CFCamera {
                 // Finally, we start displaying the camera preview.
                 mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
             } catch (CameraAccessException e) {
-                e.printStackTrace();
+                mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
             } catch (IllegalStateException e) {
                 // camera was already closed
+                mApplication.userErrorMessage(true, R.string.camera_error, 200);
             }
         }
 
@@ -322,7 +325,9 @@ class CFCamera2 extends CFCamera {
     }
     
     @Override
-    void configure() {
+    void configure(ConfiguredCallback callback) {
+
+        mConfiguredCallback = callback;
 
         synchronized (mQueuedCaptureResults) {
             mQueuedCaptureResults.clear();
@@ -348,13 +353,14 @@ class CFCamera2 extends CFCamera {
         mCameraOpenCloseLock.release();
 
         if(mCameraId == -1) {
+            mConfiguredCallback.onConfigured();
             return;
         }
 
         // make sure we have permission to use the camera
         if (ContextCompat.checkSelfPermission(mApplication, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
-            mApplication.userErrorMessage(R.string.quit_permission, true);
+            mApplication.userErrorMessage(true, R.string.quit_permission);
             return;
         }
 
@@ -362,19 +368,18 @@ class CFCamera2 extends CFCamera {
         CameraManager manager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
 
         try {
-            mCameraOpenCloseLock.tryAcquire();
+            mCameraOpenCloseLock.acquireUninterruptibly();
 
             String[] idList = manager.getCameraIdList();
             String idString = idList[mCameraId];
 
             mCameraCharacteristics = manager.getCameraCharacteristics(idString);
-
             manager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
 
         } catch (CameraAccessException e) {
             e.printStackTrace();
             mCameraOpenCloseLock.release();
-            mApplication.userErrorMessage(R.string.camera_error, true);
+            mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
         }
     }
 

@@ -59,7 +59,7 @@
     <string name="toast_hist_zero">Quando l\'app ha completato la calibrazione, questa schermata mostrerá un istogramma delle candidate particelle.</string>
     <string name="toast_hist">Questa schermata mostra un istogramma delle candidate particelle.</string>
     <string name="fatal_error_title">Errore CRAYFIS</string>
-    <string name="camera_error">CRAYFIS non é in grado di utilizzare la fotocamera.</string>
+    <string name="camera_error">CRAYFIS non é in grado di utilizzare la fotocamera. (%d)</string>
     <string name="fatal_error_message">Si é verificato un errore interno e questa operazione deve essere interrotta. Riprova piú tardi.</string>
     <string name="pager_dev">Sviluppatori</string>
     <plurals name="total_frames">
