@@ -16,8 +16,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
+import io.crayfis.android.BuildConfig;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
@@ -128,6 +130,18 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         c.setRequestProperty("Crayfis-version", "b " + mServerInfo.buildVersion);
         c.setRequestProperty("Crayfis-version-code", Integer.toString(mServerInfo.versionCode));
 
+        if (!BuildConfig.SECRET_SALT.isEmpty()) {
+            ByteString bytesSecret = ByteString.copyFromUtf8(BuildConfig.SECRET_SALT);
+            try {
+                MessageDigest md = MessageDigest.getInstance("SHA-256");
+                md.digest(bytesSecret.toByteArray());
+                md.digest(rawData.toByteArray());
+                c.setRequestProperty("Hash-code", md.toString());
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
+            }
+        }
+
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(mApplication);
         String app_code = sharedprefs.getString("prefUserID", "");
         if (app_code != null && ! app_code.isEmpty()) {
@@ -155,14 +169,22 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
         final int serverResponseCode = c.getResponseCode();
 
+        SharedPreferences.Editor editor = sharedprefs.edit();
         switch (serverResponseCode) {
+            case 200:
+            case 202:
+                // make sure we clear the badID flag.
+                editor.putBoolean("badID", false);
+                editor.apply();
+                UploadExposureService.sValidId.set(true);
+                break;
             case 401:
                 // server rejected us because our app code is invalid.
-                SharedPreferences.Editor editor = sharedprefs.edit();
                 editor.putBoolean("badID", true);
                 editor.apply();
                 CFLog.w("Setting bad ID flag!");
                 UploadExposureService.sValidId.set(false);
+                break;
             case 403:
                 // server rejected us! so we are not allowed to upload.
                 // oh well! we can still take data at least.
@@ -187,14 +209,6 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
         // and now disconnect
         c.disconnect();
-
-        if (serverResponseCode == 202 || serverResponseCode == 200) {
-            // make sure we clear the badID flag.
-            SharedPreferences.Editor editor = sharedprefs.edit();
-            editor.putBoolean("badID", false);
-            editor.apply();
-            UploadExposureService.sValidId.set(true);
-        }
 
         return Boolean.TRUE;
     }
