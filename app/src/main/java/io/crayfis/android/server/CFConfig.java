@@ -1,8 +1,8 @@
 package io.crayfis.android.server;
 
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.camera.ResolutionSpec;

@@ -1,7 +1,7 @@
 package io.crayfis.android.server;
 
-import android.support.annotation.CallSuper;
-import android.support.annotation.Nullable;
+import androidx.annotation.CallSuper;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 

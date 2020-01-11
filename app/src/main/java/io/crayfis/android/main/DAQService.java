@@ -11,10 +11,10 @@ import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.support.v4.content.LocalBroadcastManager;
+import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.TaskStackBuilder;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.opencv.android.OpenCVLoader;
 
@@ -27,7 +27,6 @@ import io.crayfis.android.R;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Calibrator;
-import io.crayfis.android.trigger.precalibration.PreCalibrator;
 import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;

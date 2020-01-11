@@ -2,8 +2,6 @@ package io.crayfis.android.exposure;
 
 import android.annotation.TargetApi;
 import android.hardware.Camera;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.renderscript.Allocation;
@@ -11,7 +9,7 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
-import android.support.annotation.CallSuper;
+import androidx.annotation.CallSuper;
 
 import org.opencv.core.Mat;
 

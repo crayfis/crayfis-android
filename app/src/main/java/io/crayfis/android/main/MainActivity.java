@@ -31,7 +31,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import io.crayfis.android.ui.settings.ConfigureAutostartActivity;
 import io.crayfis.android.R;

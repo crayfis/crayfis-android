@@ -7,7 +7,7 @@ import android.location.Location;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.ScriptIntrinsicHistogram;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;

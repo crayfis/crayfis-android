@@ -1,11 +1,11 @@
 package io.crayfis.android.ui.navdrawer;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -116,7 +116,7 @@ public final class NavHelper {
     }
 
     /**
-     * Implementation of {@link android.support.v4.widget.DrawerLayout.DrawerListener} that will set the fragment
+     * Implementation of {@link DrawerLayout.DrawerListener} that will set the fragment
      * after closing.
      */
     public static final class NavDrawerListener implements DrawerLayout.DrawerListener {

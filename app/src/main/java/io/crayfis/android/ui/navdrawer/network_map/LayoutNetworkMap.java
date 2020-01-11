@@ -4,7 +4,7 @@ package io.crayfis.android.ui.navdrawer.network_map;
  * Created by danielwhiteson on 1/5/15.
  */
 
-import android.support.annotation.StringRes;
+import androidx.annotation.StringRes;
 import android.webkit.WebViewClient;
 import android.os.Bundle;
 import android.view.LayoutInflater;

@@ -7,7 +7,7 @@ package io.crayfis.android.ui.navdrawer.gallery;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.support.annotation.StringRes;
+import androidx.annotation.StringRes;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;

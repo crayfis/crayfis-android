@@ -7,18 +7,14 @@ import android.content.SharedPreferences;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.protobuf.AbstractMessage;
-import com.google.protobuf.GeneratedMessage;
 import com.google.protobuf.GeneratedMessageV3;
-import com.google.protobuf.Message;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.util.Arrays;

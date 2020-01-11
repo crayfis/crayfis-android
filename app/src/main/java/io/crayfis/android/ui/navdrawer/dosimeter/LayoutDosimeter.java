@@ -8,7 +8,7 @@ import io.crayfis.android.util.CFLog;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.StringRes;
+import androidx.annotation.StringRes;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;

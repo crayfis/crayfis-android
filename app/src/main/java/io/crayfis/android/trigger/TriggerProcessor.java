@@ -1,7 +1,7 @@
 package io.crayfis.android.trigger;
 
 import android.os.AsyncTask;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.concurrent.Executor;
@@ -9,7 +9,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.util.CFLog;
 
 /**
  * Created by jswaney on 1/10/18.

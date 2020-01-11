@@ -3,12 +3,10 @@ package io.crayfis.android.exposure;
 import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.hardware.Camera;
-import android.hardware.camera2.CameraCharacteristics;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
