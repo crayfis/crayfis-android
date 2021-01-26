@@ -7,10 +7,9 @@ package io.crayfis.android.ui.navdrawer.gallery;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
@@ -23,8 +22,6 @@ import android.os.Environment;
 import android.view.Display;
 import android.view.WindowManager;
 import android.graphics.Bitmap;
-
-import com.crashlytics.android.Crashlytics;
 
 
 public class GalleryUtil {
@@ -82,9 +79,8 @@ public class GalleryUtil {
             out.close();
             CFLog.d(" File created: " + si.filename);
         }
-            catch (Exception e) {
-                Crashlytics.logException(e);
-                e.printStackTrace();
+        catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -116,7 +112,7 @@ public class GalleryUtil {
 
             }
         } catch (Exception e) {
-            Crashlytics.logException(e);
+            e.printStackTrace();
         }
         return num_deleted;
     }
@@ -160,9 +156,6 @@ public class GalleryUtil {
             } catch (OutOfMemoryError e) {
                 File deleteFile = new File(filePath);
                 deleteFile.delete();
-            } catch (Exception e) {
-                Crashlytics.logException(e);
-                // couldn't do it. Don't crash.
             }
 
         }

@@ -21,8 +21,6 @@ import androidx.annotation.StringRes;
 import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.crashlytics.android.Crashlytics;
-
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -34,7 +32,6 @@ import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
 import io.crayfis.android.util.CFLog;
-import io.fabric.sdk.android.Fabric;
 
 
 /**
@@ -108,8 +105,6 @@ public class CFApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Fabric.with(this, new Crashlytics());
 
         //SharedPreferences localPrefs = getSharedPreferences(SHARED_PREFS_NAME, Context.MODE_PRIVATE);
         SharedPreferences defaultPrefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -283,7 +278,6 @@ public class CFApplication extends Application {
             mAppBuild = new AppBuild(this);
         } catch (PackageManager.NameNotFoundException e) {
             // Seriously, this should never happen but does warrant a RuntimeException if it does.
-            Crashlytics.logException(e);
             throw new RuntimeException(e);
         }
     }

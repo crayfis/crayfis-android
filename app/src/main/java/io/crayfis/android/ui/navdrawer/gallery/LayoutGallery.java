@@ -19,8 +19,6 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.crashlytics.android.Crashlytics;
-
 import java.util.ArrayList;
 
 import io.crayfis.android.R;
@@ -105,7 +103,8 @@ public class LayoutGallery extends NavDrawerFragment {
         // loading all image paths from SD card
         try {
             images = GalleryUtil.getSavedImages();
-        } catch (Exception e) {                             Crashlytics.logException(e);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         textView.setText(images.size()+R.string.Images);
@@ -139,10 +138,9 @@ public class LayoutGallery extends NavDrawerFragment {
         gridView.setOnItemClickListener(new OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 CFLog.d("GridView: clicked"+position+id);
-                try {
-                    Toast.makeText(getActivity(), R.string.pixel_hits + images.get(position).num_pix + " "+ R.string.max_pixel  + images.get(position).max_pix + " " + R.string.date + images.get(position).date, Toast.LENGTH_SHORT).show();
-                } catch (Exception e) {                             Crashlytics.logException(e);
-                };
+
+                Toast.makeText(getActivity(), R.string.pixel_hits + images.get(position).num_pix + " "+ R.string.max_pixel  + images.get(position).max_pix + " " + R.string.date + images.get(position).date, Toast.LENGTH_SHORT).show();
+
             }
         });
 

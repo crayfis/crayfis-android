@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "608837591804",
+    "project_id": "crayfis-android",
+    "storage_bucket": "crayfis-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608837591804:android:21ab21748a459d39142d79",
+        "android_client_info": {
+          "package_name": "io.crayfis.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608837591804-bseje45uusk73objirejrn88acsq6f0o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDj_njLw3bMCRkOxNk1f135pCvZbD3RhOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608837591804-bseje45uusk73objirejrn88acsq6f0o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

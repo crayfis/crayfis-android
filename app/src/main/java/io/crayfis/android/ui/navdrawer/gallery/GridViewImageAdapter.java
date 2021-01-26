@@ -4,23 +4,21 @@ package io.crayfis.android.ui.navdrawer.gallery;
  * Created by danielwhiteson on 11/19/14.
  */
 
-    import java.io.File;
-    import java.io.FileInputStream;
-    import java.io.FileNotFoundException;
-    import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 
-    import android.content.Context;
+import android.content.Context;
 
-    import android.graphics.Bitmap;
-    import android.graphics.BitmapFactory;
-    import android.view.View;
-    import android.view.ViewGroup;
-    import android.widget.BaseAdapter;
-    import android.widget.GridView;
-    import android.widget.ImageView;
-
-    import com.crashlytics.android.Crashlytics;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
 
 
 class GridViewImageAdapter extends BaseAdapter {
@@ -72,7 +70,6 @@ class GridViewImageAdapter extends BaseAdapter {
                     imageWidth));
             imageView.setImageBitmap(image);
         } catch (Exception e ) {
-            Crashlytics.logException(e);
             e.printStackTrace();
         }
 
@@ -102,14 +99,14 @@ class GridViewImageAdapter extends BaseAdapter {
             BitmapFactory.Options o2 = new BitmapFactory.Options();
             o2.inSampleSize = scale;
             return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
-        } catch (FileNotFoundException e) {
-            Crashlytics.logException(e);
+        } catch (FileNotFoundException | OutOfMemoryError e) {
             e.printStackTrace();
-        } catch (OutOfMemoryError e){ Crashlytics.logException(e); /* don't want to do anything if OOM */ }
-            return null;
         }
 
+        return null;
     }
+
+}
 
 
 

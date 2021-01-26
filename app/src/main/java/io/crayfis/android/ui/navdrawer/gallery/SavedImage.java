@@ -9,11 +9,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.util.CFLog;
 
 
-import com.crashlytics.android.Crashlytics;
-
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -128,7 +124,6 @@ class SavedImage {
                 }
             }
         }  catch (Exception e) {
-            Crashlytics.logException(e);
             e.printStackTrace();
         }
         filename=makeFilename(max_pix, num_pix, date);
@@ -195,7 +190,6 @@ class SavedImage {
                 }
             }
         }  catch (Exception e) {
-            Crashlytics.logException(e);
             e.printStackTrace();
         }
         filename=makeFilename(max_pix, num_pix, date);
