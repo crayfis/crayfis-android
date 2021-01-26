@@ -1,24 +1,4 @@
-buildscript {
-    repositories {
-        google()
-        maven { url 'http://maven.fabric.io/public' }
-        jcenter()
-    }
-    dependencies {
-        classpath 'io.fabric.tools:gradle:1.25.4'
-        classpath 'com.android.tools.build:gradle:3.5.3'
-    }
-}
-
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
-
-repositories {
-    maven { url 'https://maven.fabric.io/public' }
-    google()
-}
-
-
 
 def getVersionCode = { ->
     try {
@@ -30,7 +10,7 @@ def getVersionCode = { ->
         return Integer.parseInt(stdout.toString().trim())
     }
     catch (ignored) {
-        return -1;
+        return -1
     }
 }
 
@@ -53,7 +33,7 @@ def getVersionName = { ->
         }
     }
     catch (ignored) {
-	return 'invalid';
+	    return 'invalid'
     }
 }
 
@@ -67,8 +47,8 @@ if (apikeyPropertiesFile.exists()) {
 }
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 30
+    buildToolsVersion '29.0.2'
 
     defaultConfig {
         applicationId "io.crayfis.android"
@@ -84,9 +64,11 @@ android {
     // make sure salt is included in release variants
     android.applicationVariants.all {  variant ->
         if ( variant.buildType.name == "release"){
-            variant.assemble.doFirst {
-                if (!rootProject.file("apikey.properties").exists()) {
-                    throw new GradleException("apikey.properties file needed for release build");
+            variant.getAssembleProvider().configure() {
+                it.doLast() {
+                    if (!rootProject.file("apikey.properties").exists()) {
+                        throw new GradleException("apikey.properties file needed for release build")
+                    }
                 }
             }
         }
@@ -105,16 +87,16 @@ android {
 }
 
 dependencies {
-    api 'androidx.appcompat:appcompat:1.0.0'
+    api 'androidx.appcompat:appcompat:1.2.0'
     api 'androidx.legacy:legacy-support-v13:1.0.0'
-    api 'androidx.annotation:annotation:1.0.0'
-    api 'com.google.protobuf:protobuf-java:3.4.0'
+    api 'androidx.annotation:annotation:1.1.0'
+    api 'com.google.protobuf:protobuf-java:3.10.0'
     api 'com.jjoe64:graphview:4.2.1'
     api 'com.google.code.gson:gson:2.8.5'
-    api 'com.google.android.gms:play-services-location:17.0.0'
+    api 'com.google.android.gms:play-services-location:17.1.0'
     api project(':libraries:opencv')
-    api('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
-        transitive = true;
+    api('com.crashlytics.sdk.android:crashlytics:2.10.1@aar') {
+        transitive = true
     }
 }
 
