@@ -13,7 +13,7 @@
     <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 
     <string name="first_run_welcome_title" translatable="false">CRAYFIS beta</string>
-	<string name="first_run_welcome">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
+	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
     <string name="first_run_how_to_title" translatable="false">How to use this app</string>
     <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.</string>
     <string name="about_autostart" translatable="false">\"Autostart\" allows you to schedule nightly data-taking whenever your phone is charging and not in use. Please select when this feature %s.</string>
@@ -64,6 +64,7 @@
     <string name="resolution_qhd" translatable="false">QHD (1440p)</string>
     <string name="resolution_uhd" translatable="false">UHD (2160p)</string>
     <string name="resolution_max" translatable="false">MAX</string>
+    <string name="resolution_raw" translatable="false">RAW</string>
     <string name="long_exposure" translatable="false">Long exposure</string>
     <string name="battery_stop_default" translatable="false" formatted="false">20%</string>
 

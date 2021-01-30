@@ -3,7 +3,7 @@ package io.crayfis.android.trigger.quality;
 import java.util.HashMap;
 
 import io.crayfis.android.R;
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
@@ -51,10 +51,10 @@ public class QualityProcessor extends TriggerProcessor {
     @Override
     public void onFrameResult(RawCameraFrame frame, boolean pass) {
         if(!pass) {
-            CFCamera camera = CFCamera.getInstance();
-            camera.changeCameraFrom(frame.getCameraId());
-            CFLog.d("Flat: " + camera.isFlat());
-            if (!camera.isFlat()) {
+            DAQManager daq = DAQManager.getInstance();
+            daq.changeCameraFrom(frame.getCameraId());
+            CFLog.d("Flat: " + daq.isPhoneFlat());
+            if (!daq.isPhoneFlat()) {
                 mApplication.userErrorMessage(false, R.string.warning_facedown);
             } else {
                 mApplication.userErrorMessage(false, R.string.warning_bright);

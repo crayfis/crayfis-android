@@ -1,4 +1,4 @@
-package io.crayfis.android.camera;
+package io.crayfis.android.daq;
 
 /**
  * Created by cshimmin on 5/13/16.

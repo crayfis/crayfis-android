@@ -4,8 +4,8 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import io.crayfis.android.camera.CFCamera;
-import io.crayfis.android.camera.ResolutionSpec;
+import io.crayfis.android.daq.DAQManager;
+import io.crayfis.android.daq.ResolutionSpec;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
@@ -245,7 +245,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getCameraCommand() != null
                 && serverCommand.getCameraCommand().isApplicable()) {
-            CFCamera.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
+            DAQManager.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
         }
         if (serverCommand.getL0Trigger() != null) {
             if(serverCommand.getL0Trigger().hasName()) {
@@ -326,7 +326,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
 
         if (changeCamera) {
-            CFCamera.getInstance().changeCamera();
+            DAQManager.getInstance().changeCamera();
         }
     }
 

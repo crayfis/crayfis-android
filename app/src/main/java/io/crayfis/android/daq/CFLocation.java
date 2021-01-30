@@ -1,4 +1,4 @@
-package io.crayfis.android.camera;
+package io.crayfis.android.daq;
 
 import android.Manifest;
 import android.content.Context;

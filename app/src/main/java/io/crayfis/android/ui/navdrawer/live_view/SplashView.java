@@ -5,7 +5,7 @@ package io.crayfis.android.ui.navdrawer.live_view;
  */
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.daq.DAQManager;
 
 import android.graphics.Paint;
 import android.content.Context;
@@ -74,8 +74,8 @@ class SplashView extends AppCompatImageView
                 int maxCanvasX = c.getWidth();
                 int maxCanvasY = c.getHeight();
 
-                scale_x = maxCanvasY / ((float) 1.1 * CFCamera.getInstance().getResX());  // 1.1 to avoid off screen edge effects
-                scale_y = maxCanvasX / ((float) 1.1 * CFCamera.getInstance().getResY());
+                scale_x = maxCanvasY / ((float) 1.1 * DAQManager.getInstance().getResX());  // 1.1 to avoid off screen edge effects
+                scale_y = maxCanvasX / ((float) 1.1 * DAQManager.getInstance().getResY());
                 //CFLog.d("Splashview camera = "+maxCameraX+","+maxCameraY+" canvas = "+maxCanvasX+", "+maxCanvasY+" scaling = "+scale_x+", "+scale_y);
             }
 

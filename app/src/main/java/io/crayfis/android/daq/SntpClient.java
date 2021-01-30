@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.crayfis.android.camera;
+package io.crayfis.android.daq;
 
 import io.crayfis.android.util.CFLog;
 

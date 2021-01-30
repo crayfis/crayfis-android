@@ -4,20 +4,18 @@ import android.util.Base64;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
@@ -34,8 +32,6 @@ public class PreCalibrator extends TriggerProcessor {
     public static final String KEY_HOTCELL_LIMIT = "hotcell_thresh";
     public static final String KEY_WEIGHT_GRID_SIZE = "grid_size";
     public static final String KEY_HOTCELLS_N_DEVIATIONS = "n_deviations";
-
-    private final CFCamera CAMERA;
 
     public static class ConfigList extends ArrayList<Config> {
 
@@ -58,8 +54,6 @@ public class PreCalibrator extends TriggerProcessor {
 
     private PreCalibrator(CFApplication app, Config config) {
         super(app, config, false);
-
-        CAMERA = CFCamera.getInstance();
     }
 
     public static TriggerProcessor makeProcessor(CFApplication application) {
@@ -103,7 +97,7 @@ public class PreCalibrator extends TriggerProcessor {
     public void onMaxReached() {
         // use current weights/hotcells
         PreCalibrationService.Config cfg
-                = PreCalibrationService.Config.fromPartialResult(CFCamera.getInstance().getCameraId(),
+                = PreCalibrationService.Config.fromPartialResult(DAQManager.getInstance().getCameraId(),
                 BUILDER.buildPartial());
         CFConfig.getInstance().setPrecalConfig(cfg);
         
@@ -122,9 +116,11 @@ public class PreCalibrator extends TriggerProcessor {
      */
     private void submitPrecalibrationResult() {
 
-        int cameraId = CAMERA.getCameraId();
-        int resX = CAMERA.getResX();
-        int resY = CAMERA.getResY();
+        DAQManager daq = DAQManager.getInstance();
+
+        int cameraId = daq.getCameraId();
+        int resX = daq.getResX();
+        int resY = daq.getResY();
 
         String b64Weights = Base64.encodeToString
                 (BUILDER.getCompressedWeights().toByteArray(), Base64.DEFAULT);

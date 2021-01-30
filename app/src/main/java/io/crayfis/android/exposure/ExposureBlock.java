@@ -23,7 +23,7 @@ import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.trigger.TriggerChain;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.Histogram;
-import io.crayfis.android.camera.AcquisitionTime;
+import io.crayfis.android.daq.AcquisitionTime;
 import io.crayfis.android.ui.navdrawer.gallery.GalleryUtil;
 import io.crayfis.android.ui.navdrawer.gallery.LayoutGallery;
 import io.crayfis.android.ui.navdrawer.live_view.LayoutLiveView;

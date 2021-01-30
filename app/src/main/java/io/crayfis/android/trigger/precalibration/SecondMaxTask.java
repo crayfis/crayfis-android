@@ -15,12 +15,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import io.crayfis.android.DataProtos;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_findSecond;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.RawCameraFrame;
-import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -66,7 +64,6 @@ class SecondMaxTask extends TriggerProcessor.Task {
     private final Set<Integer> HOTCELL_COORDS;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
-    private final CFCamera CAMERA = CFCamera.getInstance();
 
     private final RenderScript RS;
     private ScriptC_findSecond mScriptCFindSecond;
@@ -84,9 +81,11 @@ class SecondMaxTask extends TriggerProcessor.Task {
         CFLog.i("SecondMaxTask created");
         mScriptCFindSecond = new ScriptC_findSecond(RS);
 
+        DAQManager daq = DAQManager.getInstance();
+
         Type type = new Type.Builder(RS, Element.U8(RS))
-                .setX(CAMERA.getResX())
-                .setY(CAMERA.getResY())
+                .setX(daq.getResX())
+                .setY(daq.getResY())
                 .create();
         aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);

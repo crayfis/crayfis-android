@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.trigger.precalibration.PreCalibrator;
@@ -232,7 +232,7 @@ public class LayoutStatus extends NavDrawerFragment {
                     total = config.getCalibrationSampleFrames();
                 }
                 int pct = 100*count/total;
-                int sLeft = (int)((total-count)/CFCamera.getInstance().getFPS());
+                int sLeft = (int)((total-count)/ DAQManager.getInstance().getFPS());
                 statusMessage += String.format(getString(R.string.status_pct), pct, sLeft/60, sLeft%60);
                 setStatusMessage(statusMessage);
 
@@ -240,7 +240,7 @@ public class LayoutStatus extends NavDrawerFragment {
 
         if (application.getApplicationState() == CFApplication.State.FINISHED) {
             setErrorMessage(0);
-        } else if (!CFCamera.getInstance().isUpdatingLocation()) {
+        } else if (!DAQManager.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);
         } else if (!application.isNetworkAvailable()) {
             setErrorMessage(R.string.network_unavailable);

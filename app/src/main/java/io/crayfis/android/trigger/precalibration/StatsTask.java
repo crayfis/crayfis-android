@@ -20,9 +20,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_sumFrames;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
@@ -92,10 +92,11 @@ class StatsTask extends TriggerProcessor.Task {
 
         CFLog.i("StatsTask created");
         mScriptCSumFrames = new ScriptC_sumFrames(RS);
+        DAQManager daq = DAQManager.getInstance();
 
         Type type = new Type.Builder(RS, Element.I32(RS))
-                .setX(CFCamera.getInstance().getResX())
-                .setY(CFCamera.getInstance().getResY())
+                .setX(daq.getResX())
+                .setY(daq.getResY())
                 .create();
 
         mSumAlloc = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);

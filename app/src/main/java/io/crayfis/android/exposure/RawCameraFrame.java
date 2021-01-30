@@ -1,6 +1,5 @@
 package io.crayfis.android.exposure;
 
-import android.annotation.TargetApi;
 import android.hardware.Camera;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.camera.AcquisitionTime;
+import io.crayfis.android.daq.AcquisitionTime;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -75,10 +74,6 @@ public abstract class RawCameraFrame {
 
         FrameType bFrameType;
 
-        // Deprecated
-        private byte[] bBytes;
-        private Camera bCamera;
-
         // Camera2 YUV
         private Allocation bRaw;
         private TotalCaptureResult bResult;
@@ -99,36 +94,12 @@ public abstract class RawCameraFrame {
         private Allocation bOut;
 
         /**
-         * Method for configuring Builder to create RawCameraDeprecatedFrames
-         *
-         * @param camera Camera
-         * @param rs RenderScript context
-         * @return Builder
-         */
-        public Builder setCamera(Camera camera, RenderScript rs) {
-
-            bFrameType = FrameType.DEPRECATED;
-            bCamera = camera;
-            Camera.Parameters params = camera.getParameters();
-            Camera.Size sz = params.getPreviewSize();
-
-            setRSBuffers(rs, sz.width, sz.height);
-            return this;
-        }
-
-        public Builder setBytes(byte[] bytes) {
-            bBytes = bytes;
-            return this;
-        }
-
-        /**
          * Method for configuring Builder to create RawCamera2Frames
          *
          * @param  buf Allocation camera buffer
          * @param rs RenderScript context
          * @return Builder
          */
-        @TargetApi(21)
         public Builder setCamera2(Allocation buf, RenderScript rs) {
 
             bFrameType = FrameType.CAMERA2;
@@ -198,10 +169,6 @@ public abstract class RawCameraFrame {
 
         public RawCameraFrame build() {
             switch (bFrameType) {
-                case DEPRECATED:
-                    return new RawCameraDeprecatedFrame(bBytes, bCamera,
-                            bAcquisitionTime, bTimestamp, bLocation, bOrientation, bRotationZZ, bPressure,
-                            bExposureBlock, bResX, bResY, bScriptIntrinsicHistogram, bWeighted, bOut);
                 case CAMERA2:
                     return new RawCamera2Frame(bRaw, bAcquisitionTime,
                             bResult, bLocation, bOrientation, bRotationZZ, bPressure,

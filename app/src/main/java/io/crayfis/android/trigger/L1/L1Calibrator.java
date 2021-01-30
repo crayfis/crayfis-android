@@ -3,9 +3,9 @@ package io.crayfis.android.trigger.L1;
 import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.FrameHistogram;
@@ -50,7 +50,7 @@ public class L1Calibrator {
         // first, find the target L1 efficiency
         TriggerProcessor.Config L1Config = CFConfig.getInstance().getL1Trigger();
         if(L1Config.getBoolean(L1Processor.KEY_TRIGGER_LOCK)) return;
-        double fps = CFCamera.getInstance().getFPS();
+        double fps = DAQManager.getInstance().getFPS();
 
         if (fps == 0) {
             CFLog.w("Warning! Got 0 fps in threshold calculation.");
@@ -92,7 +92,7 @@ public class L1Calibrator {
 
         // and commit it to the output stream
         CFLog.i("DAQService Committing new calibration result.");
-        UploadExposureService.submitMessage(mApplication, CFCamera.getInstance().getCameraId(), cal.build());
+        UploadExposureService.submitMessage(mApplication, DAQManager.getInstance().getCameraId(), cal.build());
     }
 
 }

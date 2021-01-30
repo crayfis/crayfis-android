@@ -1,6 +1,5 @@
 package io.crayfis.android.exposure;
 
-import android.annotation.TargetApi;
 import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
@@ -15,13 +14,12 @@ import org.opencv.core.MatOfByte;
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.camera.AcquisitionTime;
+import io.crayfis.android.daq.AcquisitionTime;
 
 /**
  * Created by Jeff on 9/2/2017.
  */
 
-@TargetApi(21)
 class RawCamera2Frame extends RawCameraFrame {
 
     private Allocation aRaw;

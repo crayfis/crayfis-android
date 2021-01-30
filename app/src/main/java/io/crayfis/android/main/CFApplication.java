@@ -25,7 +25,7 @@ import java.util.Calendar;
 import java.util.UUID;
 
 import io.crayfis.android.R;
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L1.L1Processor;
@@ -76,7 +76,7 @@ public class CFApplication extends Application {
                 if(handleUnresponsive()) return;
             }
             if(CFConfig.getInstance().getQualTrigger().getName().equals("facedown")
-                    || CFCamera.getInstance().isFlat()) {
+                    || DAQManager.getInstance().isPhoneFlat()) {
                 mWaitingForSurvey = false;
                 setApplicationState(CFApplication.State.SURVEY);
             } else {

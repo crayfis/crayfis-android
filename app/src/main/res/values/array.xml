@@ -27,6 +27,7 @@
         <item>@string/resolution_qhd</item>
         <item>@string/resolution_uhd</item>
         <item>@string/resolution_max</item>
+        <item>@string/resolution_raw</item>
     </string-array>
     <string-array name="pref_resolution_vals" translatable="false">
         <item>Low</item>
@@ -36,11 +37,14 @@
         <item>1440p</item>
         <item>2160p</item>
         <item>MAX</item>
+        <item>RAW</item>
     </string-array>
 
     <string-array name="pref_fps_entries" translatable="false">
         <item>1</item>
-        <item>5</item>
+        <item>2</item>
+        <item>4</item>
+        <item>7</item>
         <item>10</item>
         <item>15</item>
         <item>20</item>

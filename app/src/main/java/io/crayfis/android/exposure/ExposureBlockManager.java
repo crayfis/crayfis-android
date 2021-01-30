@@ -8,11 +8,11 @@ import androidx.annotation.NonNull;
 
 import java.util.LinkedHashSet;
 
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.TriggerChain;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.server.UploadExposureService;
 import io.crayfis.android.trigger.L2.L2Processor;
 import io.crayfis.android.util.CFLog;
@@ -105,7 +105,7 @@ public final class ExposureBlockManager {
         mXBHandler.post(new Runnable() {
             @Override
             public void run() {
-                CFCamera camera = CFCamera.getInstance();
+                DAQManager daq = DAQManager.getInstance();
 
                 // need to check battery BEFORE freezing to set final battery temp
                 mApplication.checkBatteryStats();
@@ -129,20 +129,20 @@ public final class ExposureBlockManager {
                                 precalConfig.getHotHash() : -1,
                         precalConfig != null ?
                                 precalConfig.getWeightHash() : -1,
-                        camera.getCameraId(),
-                        camera.isFacingBack(),
+                        daq.getCameraId(),
+                        daq.isCameraFacingBack(),
                         precalConfig != null ?
                                 precalConfig.getScriptCWeight(mApplication.getRenderScript())
                                 : null,
                         new TriggerChain(mApplication, state),
-                        camera.getLastKnownLocation(),
+                        daq.getLastKnownLocation(),
                         mApplication.getBatteryTemp(),
                         state,
-                        camera.getResX(),
-                        camera.getResY());
+                        daq.getResX(),
+                        daq.getResY());
 
                 // start assigning frames to new xb
-                camera.setExposureBlock(newXB);
+                daq.setExposureBlock(newXB);
 
                 if (current_xb != null) {
                     current_xb.freeze();

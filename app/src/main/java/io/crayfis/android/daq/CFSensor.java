@@ -1,4 +1,4 @@
-package io.crayfis.android.camera;
+package io.crayfis.android.daq;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -12,7 +12,6 @@ import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
 import io.crayfis.android.trigger.quality.QualityProcessor;
 import io.crayfis.android.ui.navdrawer.status.LayoutStatus;
-import io.crayfis.android.util.CFLog;
 
 /**
  * Created by Jeff on 4/15/2017.

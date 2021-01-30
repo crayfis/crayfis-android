@@ -24,10 +24,10 @@ import java.util.UUID;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.R;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Calibrator;
-import io.crayfis.android.camera.CFCamera;
 import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
@@ -65,7 +65,7 @@ public class DAQService extends Service {
     public static final String CHANNEL_ID = "io.crayfis.android";
     public static final String CHANNEL_NAME = "CRAYFIS Data Acquisition";
 
-    private CFCamera mCFCamera;
+    private DAQManager mDAQManager;
 
     private ExposureBlockManager xbManager;
 
@@ -190,8 +190,8 @@ public class DAQService extends Service {
 
                 // start camera
 
-                mCFCamera = CFCamera.getInstance();
-                mCFCamera.register(mApplication);
+                mDAQManager = DAQManager.getInstance();
+                mDAQManager.register(mApplication);
                 break;
             default:
                 throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
@@ -209,7 +209,7 @@ public class DAQService extends Service {
         CONFIG.setThresholds(255);
         switch (previousState) {
             case IDLE:
-                mCFCamera.changeCamera();
+                mDAQManager.changeCamera();
             case INIT:
                 xbManager.newExposureBlock(CFApplication.State.SURVEY);
                 break;
@@ -256,7 +256,7 @@ public class DAQService extends Service {
             case CALIBRATION:
             case DATA:
                 // for calibration or data, mark the block as aborted
-                mCFCamera.changeCamera();
+                mDAQManager.changeCamera();
                 xbManager.abortExposureBlock();
                 break;
             default:
@@ -269,9 +269,9 @@ public class DAQService extends Service {
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
         // first generate runconfig for specific camera
-        int cameraId = mCFCamera.getCameraId();
-        int resX = mCFCamera.getResX();
-        int resY = mCFCamera.getResY();
+        int cameraId = mDAQManager.getCameraId();
+        int resX = mDAQManager.getResX();
+        int resY = mDAQManager.getResY();
 
         if (run_config == null || cameraId != run_config.getCameraId()) {
             generateRunConfig();
@@ -317,7 +317,7 @@ public class DAQService extends Service {
 
                 xbManager.newExposureBlock(CFApplication.State.FINISHED);
                 xbManager.flushCommittedBlocks();
-                mCFCamera.unregister();
+                mDAQManager.unregister();
                 xbManager.unregister();
                 UploadExposureService.uploadFileCache(this);
 
@@ -354,8 +354,8 @@ public class DAQService extends Service {
         b.setCrayfisBuild(build.getBuildVersion());
 
         /* get a bunch of camera info */
-        b.setCameraId(mCFCamera.getCameraId());
-        b.setCameraParams(mCFCamera.getParams());
+        b.setCameraId(mDAQManager.getCameraId());
+        b.setCameraParams(mDAQManager.getCameraParams());
 
 
 
@@ -424,7 +424,7 @@ public class DAQService extends Service {
         }
 
         public long getTotalPixelsScanned() {
-            return (long)L1Processor.L1CountData * mCFCamera.getResX() * mCFCamera.getResY();
+            return (long)L1Processor.L1CountData * mDAQManager.getResX() * mDAQManager.getResY();
         }
 
         public long getTotalFrames() {
@@ -433,7 +433,7 @@ public class DAQService extends Service {
 
         public String getDevText() {
 
-            double lastFPS = mCFCamera.getFPS();
+            double lastFPS = mDAQManager.getFPS();
             double targetL1Rate = CONFIG.getTargetEventsPerMinute() / 60.0 / lastFPS;
 
             String devtxt = "@@ Developer View @@\n"
@@ -446,7 +446,7 @@ public class DAQService extends Service {
                     + "Battery temp = " + String.format("%1.1f", mApplication.getBatteryTemp()/10.) + "C\n"
                     + "\n";
 
-            devtxt += mCFCamera.getStatus() + "\n";
+            devtxt += mDAQManager.getStatus() + "\n";
 
             devtxt += "L0 trig: " + CONFIG.getL0Trigger() + "\n"
                     + "Qual trig: " + CONFIG.getQualTrigger() + "\n"

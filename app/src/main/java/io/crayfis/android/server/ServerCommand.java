@@ -5,7 +5,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
-import io.crayfis.android.camera.CFCamera;
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.trigger.L2.L2Processor;
@@ -54,11 +54,11 @@ class ServerCommand {
         @SerializedName("wgt_hash") private Integer mWeightHash;
 
         boolean isApplicable() {
-            CFCamera camera = CFCamera.getInstance();
+            DAQManager daq = DAQManager.getInstance();
             PreCalibrationService.Config cfg = CFConfig.getInstance().getPrecalConfig();
-            return mCameraId == camera.getCameraId()
-                    && mResX == camera.getResX()
-                    && mResY == camera.getResY()
+            return mCameraId == daq.getCameraId()
+                    && mResX == daq.getResX()
+                    && mResY == daq.getResY()
                     && (mHotHash != null && mHotHash != cfg.getHotHash()
                     || mWeightHash != null && mWeightHash != cfg.getWeightHash());
         }
@@ -77,7 +77,7 @@ class ServerCommand {
         @SerializedName("increase") private Boolean mShouldIncrease;
 
         boolean isApplicable() {
-            CFCamera camera = CFCamera.getInstance();
+            DAQManager camera = DAQManager.getInstance();
             return mResX == camera.getResX()
                     && mResY == camera.getResY()
                     && mShouldIncrease != null;
