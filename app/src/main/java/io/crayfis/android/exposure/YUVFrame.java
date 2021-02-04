@@ -3,7 +3,6 @@ package io.crayfis.android.exposure;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
-import android.os.Build;
 import android.os.Handler;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -91,7 +90,10 @@ public class YUVFrame extends Frame {
         static final String TAG = "YuvFrameProducer";
 
         private static final AtomicInteger nBuffersQueued = new AtomicInteger();
-        private Allocation mReadyAlloc; // already called ioReceive()
+        private Allocation aReady; // already called ioReceive()
+        private final Allocation aBurner; // receives buffers to be dropped
+
+        private static final int MAX_BUFFERS = 2;
 
         Producer(RenderScript rs,
                  Size size,
@@ -102,9 +104,9 @@ public class YUVFrame extends Frame {
             super(rs, size, callback, handler, builder);
 
             // all of mAlloc should have the same surface
-            Allocation a0 = mAllocs.peek();
-            a0.setOnBufferAvailableListener(this);
-            mSurfaces.add(a0.getSurface());
+            aBurner = mAllocs.peek();
+            aBurner.setOnBufferAvailableListener(this);
+            mSurfaces.add(aBurner.getSurface());
 
             nBuffersQueued.set(0);
         }
@@ -117,36 +119,35 @@ public class YUVFrame extends Frame {
                     .setYuvFormat(ImageFormat.YUV_420_888)
                     .create();
 
+            // make an extra for the burner allocation
             return Allocation.createAllocations(rs, t,
-                    Allocation.USAGE_SCRIPT | Allocation.USAGE_IO_INPUT, n);
+                    Allocation.USAGE_SCRIPT | Allocation.USAGE_IO_INPUT, n+1);
         }
 
         // Callback for Buffer Available:
         @Override
         public void onBufferAvailable(final Allocation alloc) {
-            nBuffersQueued.incrementAndGet();
+            if(nBuffersQueued.get() > MAX_BUFFERS) {
+                aBurner.ioReceive();
+                mDroppedImages++;
+            } else {
+                nBuffersQueued.incrementAndGet();
+            }
             //CFLog.d("onBufferAvailable() " + nBuffersQueued.get());
             buildFrames();
         }
 
         synchronized void buildFrames() {
 
-            while ((nBuffersQueued.get() > 0 && !mAllocs.isEmpty()) || mReadyAlloc != null) {
+            while ((nBuffersQueued.get() > 0 && !mAllocs.isEmpty()) || aReady != null) {
 
-                if(mReadyAlloc == null) {
-                    mReadyAlloc = mAllocs.poll();
-                    mReadyAlloc.ioReceive();
+                if(aReady == null) {
+                    aReady = mAllocs.poll();
+                    aReady.ioReceive();
                     nBuffersQueued.decrementAndGet();
                 }
 
-                long allocTimestamp = mReadyAlloc.getTimeStamp();
-
-                // if we can't actually match these, make sure the queue doesn't
-                // outgrow CaptureResults
-                if(allocTimestamp == -1 || allocTimestamp == 0 && nBuffersQueued.get() > 2) {
-                    mReadyAlloc.ioReceive();
-                    nBuffersQueued.decrementAndGet();
-                }
+                long allocTimestamp = aReady.getTimeStamp();
 
                 try {
                     Pair<TotalCaptureResult, AcquisitionTime> pair = mResultCollector.findMatch(allocTimestamp);
@@ -160,11 +161,11 @@ public class YUVFrame extends Frame {
                     TotalCaptureResult result = pair.first;
                     AcquisitionTime t = pair.second;
 
-                    dispatchFrame(FRAME_BUILDER.setCapture(mReadyAlloc, result)
+                    dispatchFrame(FRAME_BUILDER.setCapture(aReady, result)
                             .setAcquisitionTime(t)
                             .build());
 
-                    mReadyAlloc = null;
+                    aReady = null;
 
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     Log.e(TAG, "stale allocation timestamp encountered, discarding image.");
