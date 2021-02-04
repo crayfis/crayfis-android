@@ -21,6 +21,8 @@ import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+
+import android.renderscript.RenderScript;
 import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
@@ -211,12 +213,12 @@ class CFCamera {
                 configureCameraPreviewSession();
 
                 boolean raw = (RAW_FORMATS.contains(mFormat));
-                int nAlloc = CONFIG.getNAlloc();
-                mFrameProducer = Frame.Producer.create(raw, mApplication.getRenderScript(), nAlloc,
+                mFrameProducer = Frame.Producer.create(raw, mApplication.getRenderScript(),
                         mPreviewSize, mFrameCallback, mFrameHandler, FRAME_BUILDER);
 
-                if(raw) FRAME_BUILDER.configureRAW(mApplication.getRenderScript(), mPreviewSize);
-                else FRAME_BUILDER.configureYUV(mApplication.getRenderScript(), mPreviewSize);
+                RenderScript rs = mApplication.getRenderScript();
+                if(raw) FRAME_BUILDER.configureRAW(rs, mPreviewSize, mFrameProducer);
+                else FRAME_BUILDER.configureYUV(rs, mPreviewSize, mFrameProducer);
 
                 List<Surface> outputs = mFrameProducer.getSurfaces();
                 for(Surface s: outputs) {

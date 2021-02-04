@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
 
@@ -16,7 +15,6 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
-import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.server.CFConfig;
@@ -126,7 +124,6 @@ public class ExposureBlock {
         synchronized (assignedFrames) {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
-                frame.retire();
                 return false;
             }
             if(!assignedFrames.add(frame)) {

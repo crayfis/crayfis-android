@@ -17,16 +17,15 @@ import androidx.annotation.NonNull;
 
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
-import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.ScriptC_histogramRAW;
 import io.crayfis.android.daq.AcquisitionTime;
+import io.crayfis.android.util.CFLog;
 
 class RAWFrame extends Frame {
 
@@ -34,7 +33,7 @@ class RAWFrame extends Frame {
 
     RAWFrame(@NonNull final Allocation alloc,
              final TotalCaptureResult result,
-             final Semaphore lock,
+             final Frame.Producer producer,
              final AcquisitionTime acquisitionTime,
              final Location location,
              final float[] orientation,
@@ -47,7 +46,7 @@ class RAWFrame extends Frame {
              final Allocation hist,
              final Lock histLock) {
 
-        super(alloc, result, lock, acquisitionTime, location, orientation, rotationZZ,
+        super(alloc, result, producer, acquisitionTime, location, orientation, rotationZZ,
                 pressure, exposureBlock, resX, resY, hist, histLock);
 
         mFormat = Format.RAW;
@@ -92,13 +91,12 @@ class RAWFrame extends Frame {
         private final Lock mShortArrayLock = new ReentrantLock();
 
         Producer(RenderScript rs,
-                 int maxAllocations,
                  Size size,
                  OnFrameCallback callback,
                  Handler handler,
                  Frame.Builder builder) {
             
-            super(rs, maxAllocations, size, callback, handler, builder);
+            super(rs, size, callback, handler, builder);
 
             mImageReader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.RAW_SENSOR, MAX_IMAGES);
             mImageReader.setOnImageAvailableListener(this, handler);
@@ -106,16 +104,19 @@ class RAWFrame extends Frame {
             mShortArrayBuf = new short[size.getWidth() * size.getHeight()];
 
             mSurfaces.add(mImageReader.getSurface());
+
             nImagesOutstanding.set(0);
         }
 
         @Override
-        Allocation buildAlloc(Size sz, RenderScript rs) {
-            return Allocation.createTyped(rs, new Type.Builder(rs, Element.U16(rs))
-                            .setX(sz.getWidth())
-                            .setY(sz.getHeight())
-                            .create(),
-                    Allocation.USAGE_SCRIPT);
+        Allocation[] buildAllocs(Size sz, RenderScript rs, int n) {
+
+            Type t = new Type.Builder(rs, Element.U16(rs))
+                    .setX(sz.getWidth())
+                    .setY(sz.getHeight())
+                    .create();
+
+            return Allocation.createAllocations(rs, t, Allocation.USAGE_SCRIPT, n);
         }
 
 
@@ -124,6 +125,7 @@ class RAWFrame extends Frame {
             while(!mImageQueue.isEmpty()) {
                 nImagesOutstanding.incrementAndGet();
                 Image i = mImageQueue.poll();
+
                 try {
                     Pair<TotalCaptureResult, AcquisitionTime> pair = mResultCollector.findMatch(i.getTimestamp());
 
@@ -137,37 +139,32 @@ class RAWFrame extends Frame {
                     TotalCaptureResult result = pair.first;
                     AcquisitionTime t = pair.second;
 
-                    // cycle through allocations
-                    Allocation alloc = mAllocs.poll();
-                    Semaphore lock = mLocks.get(alloc);
-                    mAllocs.add(alloc);
-
                     // insert the image buffer into an Allocation
                     Image.Plane plane = i.getPlanes()[0];
                     ByteBuffer buf = plane.getBuffer();
 
                     ShortBuffer sbuf = buf.asShortBuffer();
-                    //short[] vals = new short[sbuf.capacity()];
                     mShortArrayLock.lock();
                     sbuf.get(mShortArrayBuf);
                     i.close();
                     nImagesOutstanding.decrementAndGet();
 
-                    synchronized (mLocks) {
-                        if (lock.availablePermits() > 0) {
-                            lock.acquireUninterruptibly();
-                            alloc.copyFromUnchecked(mShortArrayBuf);
-                            mShortArrayLock.unlock();
-                        } else {
-                            mDroppedImages++;
-                            mShortArrayLock.unlock();
-                            return;
-                        }
+                    //CFLog.d("buildFrames() " + mAllocs.size());
+                    if(!mAllocs.isEmpty()) {
+                        Allocation alloc = mAllocs.poll();
+                        alloc.copyFromUnchecked(mShortArrayBuf);
+                        mShortArrayLock.unlock();
+
+                        dispatchFrame(FRAME_BUILDER.setCapture(alloc, result)
+                                .setAcquisitionTime(t)
+                                .build());
+
+                    } else {
+                        mShortArrayLock.unlock();
+                        mDroppedImages++;
+                        CFLog.w("dropped: " + mDroppedImages);
                     }
 
-                    dispatchFrame(FRAME_BUILDER.setCapture(alloc, result, lock)
-                            .setAcquisitionTime(t)
-                            .build());
 
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     i.close();
@@ -180,6 +177,7 @@ class RAWFrame extends Frame {
         // Callback for Image Available
         @Override
         public void onImageAvailable(ImageReader mImageReader) {
+            //CFLog.d("onImageAvailable() " + (mImageQueue.size() + nImagesOutstanding.get() + 1));
             if(mImageQueue.size() + nImagesOutstanding.get() >= MAX_IMAGES) {
                 if(mImageQueue.size() == 0) return;
                 mImageQueue.poll()

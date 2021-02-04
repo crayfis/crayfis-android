@@ -11,7 +11,6 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
 import android.renderscript.Type;
-import android.util.Pair;
 import android.util.Size;
 import android.view.Surface;
 
@@ -21,11 +20,11 @@ import androidx.annotation.Nullable;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,6 +32,7 @@ import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_histogramRAW;
 import io.crayfis.android.ScriptC_weight;
 import io.crayfis.android.daq.AcquisitionTime;
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
 
 /**
@@ -50,7 +50,6 @@ public abstract class Frame {
 
     final Allocation aBuf;
     final TotalCaptureResult mResult;
-    final Semaphore mAllocLock;
 
     private int[] mHist;
 
@@ -73,6 +72,7 @@ public abstract class Frame {
     private final float mPressure;
 
     final ExposureBlock mExposureBlock;
+    private final Producer mFrameProducer;
 
     int mPixMax = -1;
     double mPixAvg = -1;
@@ -82,7 +82,7 @@ public abstract class Frame {
     private DataProtos.Event mEvent;
     private boolean mUploadRequested;
     private boolean mCommitted;
-    private boolean mRetired;
+    private final AtomicBoolean mRetired = new AtomicBoolean(false);
 
     public interface OnFrameCallback {
         void onFrame(Frame frame);
@@ -90,7 +90,7 @@ public abstract class Frame {
 
     Frame(final Allocation alloc,
           final TotalCaptureResult result,
-          final Semaphore allocLock,
+          final Frame.Producer producer,
           final AcquisitionTime acquisitionTime,
           final Location location,
           final float[] orientation,
@@ -104,7 +104,7 @@ public abstract class Frame {
 
         aBuf = alloc;
         mResult = result;
-        mAllocLock = allocLock;
+        mFrameProducer = producer;
         mAcquiredTime = acquisitionTime;
         mLocation = location;
         mOrientation = orientation;
@@ -121,6 +121,7 @@ public abstract class Frame {
     // get raw data in region with inclusive edges at xc +/- dx and yc +/- dy
     // non-existent pixels are set to zero
     public void copyRegion(int xc, int yc, int dx, int dy, short[] array, int offset) {
+
         int xmin = Math.max(xc - dx, 0);
         int ymin = Math.max(yc - dy, 0);
         int xmax = Math.min(xc + dx, mResX - 1);
@@ -167,7 +168,7 @@ public abstract class Frame {
      */
     @Nullable
     public Allocation getAllocation() {
-        if(mRetired) return null;
+        if(mRetired.get()) return null;
         return aBuf;
     }
 
@@ -182,31 +183,21 @@ public abstract class Frame {
         if(mExposureBlock != null && !mCommitted && mExposureBlock.tryAssignFrame(this)) {
             mCommitted = true;
             mExposureBlock.TRIGGER_CHAIN.submitFrame(this);
+        } else {
+            retire();
         }
-    }
-
-    /**
-     * Replenish image buffer after sending frame for L2 processing
-     */
-    @CallSuper
-    public boolean claim() {
-        // TODO: do we ACTUALLY want to do something here?
-        return true;
     }
 
     /**
      * Return the image buffer to be used by the camera, and free all locks
      */
     @CallSuper
-    public synchronized void retire() {
+    public void retire() {
         // make this idempotent
-        if(!mRetired) {
-            mRetired = true;
+        if(mRetired.compareAndSet(false, true)) {
 
-            synchronized (mAllocLock) {
-                //CFLog.d("Permits: " + this.hashCode() + " " + mAllocLock.availablePermits());
-                mAllocLock.release(1);
-            }
+            //CFLog.d("retire() " + this.hashCode());
+            mFrameProducer.replenish(aBuf);
 
             if(mCommitted)
                 mExposureBlock.clearFrame(this);
@@ -421,7 +412,7 @@ public abstract class Frame {
      */
     public abstract static class Producer extends CameraCaptureSession.CaptureCallback {
         // externally provided via constructor:
-        final int mMaxAllocations;
+        final int mNAlloc;
         final OnFrameCallback mCallback;
         final Handler mFrameHandler;
         
@@ -430,9 +421,8 @@ public abstract class Frame {
         // Collection of recent TotalCaptureResults
         final CaptureResultCollector mResultCollector = new CaptureResultCollector();
 
-        final Queue<Allocation> mAllocs;
+        final Deque<Allocation> mAllocs;
         final List<Surface> mSurfaces;
-        final HashMap<Allocation, Semaphore> mLocks;
 
         // statistics on frame building
         int mDroppedImages = 0;
@@ -442,50 +432,45 @@ public abstract class Frame {
         boolean mStopCalled = false;
 
         Producer(RenderScript rs,
-                 int maxAllocations,
                  Size sz,
                  OnFrameCallback callback,
                  Handler handler,
                  Builder builder) {
-            
-            mMaxAllocations = maxAllocations;
+
+            mNAlloc = CFConfig.getInstance().getNAlloc();
             mCallback = callback;
             mFrameHandler = handler;
             FRAME_BUILDER = builder;
 
-            mAllocs = new ArrayBlockingQueue<>(maxAllocations);
-            mSurfaces = new ArrayList<>(maxAllocations);
-            mLocks = new HashMap<>();
+            mAllocs = new ConcurrentLinkedDeque<>();
+            mSurfaces = new ArrayList<>();
 
-            for(int i=0; i<maxAllocations; i++) {
-                Allocation a = buildAlloc(sz, rs);
-                mAllocs.add(a);
-                mLocks.put(a, new Semaphore(2));
-            }
+            Allocation[] allocs = buildAllocs(sz, rs, mNAlloc);
+            mAllocs.addAll(Arrays.asList(allocs));
         }
 
         public static Producer create(boolean raw, 
-                                      RenderScript rs, 
-                                      int maxAllocations, 
+                                      RenderScript rs,
                                       Size sz,
                                       OnFrameCallback callback,
                                       Handler handler,
                                       Builder builder) {
             if(raw) {
-                return new RAWFrame.Producer(rs, maxAllocations, sz, callback, handler, builder);
+                return new RAWFrame.Producer(rs, sz, callback, handler, builder);
             } else {
-                return new YUVFrame.Producer(rs, maxAllocations, sz, callback, handler, builder);
+                return new YUVFrame.Producer(rs, sz, callback, handler, builder);
             }
         }
 
         /**
-         * Assemble an Allocation buffer to fit the Frame data
+         * Assemble Allocation buffers to fit the Frame data.  For input Allocations, these
+         * share the same BufferQueue
          *
          * @param sz Resolution Size
          * @param rs RenderScript context
          * @return RenderScript Allocation
          */
-        abstract Allocation buildAlloc(Size sz, RenderScript rs);
+        abstract Allocation[] buildAllocs(Size sz, RenderScript rs, int n);
 
         /**
          * Attempt to package TotalCaptureResults and buffers into a
@@ -494,11 +479,20 @@ public abstract class Frame {
         abstract void buildFrames();
 
         /**
+         * Return an allocation to the buffer queue to be rewritten
+         * @param alloc The allocation to be replenished
+         */
+        void replenish(Allocation alloc) {
+            mAllocs.add(alloc);
+        }
+
+        /**
          * Pass a frame to mCallback through mFrameHandler
          *
          * @param frame the Frame to be submitted
          */
         final void dispatchFrame(final Frame frame) {
+            //CFLog.d("dispatchFrame() " + frame.hashCode());
             if(frame != null) {
                 if(mStopCalled) {
                     frame.retire();
@@ -556,7 +550,7 @@ public abstract class Frame {
 
         private Allocation aBuf;
         private TotalCaptureResult bResult;
-        private Semaphore bAllocLock;
+        private Frame.Producer bProducer;
 
         private int bResX;
         private int bResY;
@@ -577,19 +571,22 @@ public abstract class Frame {
         private Allocation bWeighted;
         private Allocation bHist;
 
-        public Builder setCapture(Allocation buf, TotalCaptureResult result, Semaphore lock) {
+        public Builder setCapture(Allocation buf, TotalCaptureResult result) {
             aBuf = buf;
             bResult = result;
-            bAllocLock = lock;
             return this;
         }
 
 
-        public Builder configureRAW(RenderScript rs, Size sz) {
+        public Builder configureRAW(RenderScript rs, Size sz, Producer producer) {
+            if(!(producer instanceof RAWFrame.Producer)) throw new IllegalArgumentException();
+
             bFormat = Format.RAW;
 
             bResX = sz.getWidth();
             bResY = sz.getHeight();
+
+            bProducer = producer;
 
             bScriptCHistogram = new ScriptC_histogramRAW(rs);
             bHist = Allocation.createSized(rs, Element.U32(rs), 1024, Allocation.USAGE_SCRIPT);
@@ -613,11 +610,15 @@ public abstract class Frame {
             return this;
         }
 
-        public Builder configureYUV(RenderScript rs, Size sz) {
+        public Builder configureYUV(RenderScript rs, Size sz, Producer producer) {
+            if(!(producer instanceof YUVFrame.Producer)) throw new IllegalArgumentException();
+
             bFormat = Format.YUV;
 
             bResX = sz.getWidth();
             bResY = sz.getHeight();
+
+            bProducer = producer;
 
             Type.Builder tb = new Type.Builder(rs, Element.U8(rs));
             Type type = tb.setX(bResX)
@@ -677,11 +678,11 @@ public abstract class Frame {
         public Frame build() {
             switch (bFormat) {
                 case YUV:
-                    return new YUVFrame(aBuf, bResult, bAllocLock, bAcquisitionTime, bLocation,
+                    return new YUVFrame(aBuf, bResult, bProducer, bAcquisitionTime, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock, bResX, bResY,
                             bScriptCWeight, bScriptIntrinsicHistogram, bWeighted, bHist, bHistLock);
                 case RAW:
-                    return new RAWFrame(aBuf, bResult, bAllocLock, bAcquisitionTime, bLocation,
+                    return new RAWFrame(aBuf, bResult, bProducer, bAcquisitionTime, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock, bResX, bResY,
                             bScriptCHistogram, bHist, bHistLock);
                 default:

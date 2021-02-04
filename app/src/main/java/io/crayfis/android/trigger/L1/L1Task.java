@@ -63,15 +63,7 @@ class L1Task extends TriggerProcessor.Task {
                 // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
                 // have changed.
 
-                // add a new buffer to the queue to make up for this one which
-                // will not return
-                if(frame.claim()) {
-                    // this frame has passed the L1 threshold, put it on the
-                    // L2 processing queue.
-                    return 1;
-                } else {
-                    throw new OutOfMemoryError();
-                }
+                return 1;
 
             }
         }

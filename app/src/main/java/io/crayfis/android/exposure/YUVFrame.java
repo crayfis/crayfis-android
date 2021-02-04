@@ -16,9 +16,7 @@ import android.util.Size;
 
 import androidx.annotation.NonNull;
 
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
 import io.crayfis.android.ScriptC_weight;
@@ -38,7 +36,7 @@ public class YUVFrame extends Frame {
 
     YUVFrame(@NonNull final Allocation alloc,
              final TotalCaptureResult result,
-             final Semaphore lock,
+             final Frame.Producer producer,
              final AcquisitionTime acquisitionTime,
              final Location location,
              final float[] orientation,
@@ -53,7 +51,7 @@ public class YUVFrame extends Frame {
              final Allocation hist,
              final Lock histLock) {
 
-        super(alloc, result, lock, acquisitionTime, location, orientation, rotationZZ,
+        super(alloc, result, producer, acquisitionTime, location, orientation, rotationZZ,
                 pressure, exposureBlock, resX, resY, hist, histLock);
 
         mFormat = Format.YUV;
@@ -92,106 +90,85 @@ public class YUVFrame extends Frame {
     static class Producer extends Frame.Producer implements Allocation.OnBufferAvailableListener {
         static final String TAG = "YuvFrameProducer";
 
-        private final Deque<Allocation> allocationQueue = new ConcurrentLinkedDeque<>();
+        private static final AtomicInteger nBuffersQueued = new AtomicInteger();
+        private Allocation mReadyAlloc; // already called ioReceive()
 
-        Producer(RenderScript rs, 
-                 int maxAllocations, 
+        Producer(RenderScript rs,
                  Size size,
                  OnFrameCallback callback,
                  Handler handler,
                  Frame.Builder builder) {
             
-            super(rs, maxAllocations, size, callback, handler, builder);
-            for (Allocation a : mAllocs) {
-                a.setOnBufferAvailableListener(this);
-                mSurfaces.add(a.getSurface());
-            }
+            super(rs, size, callback, handler, builder);
+
+            // all of mAlloc should have the same surface
+            Allocation a0 = mAllocs.peek();
+            a0.setOnBufferAvailableListener(this);
+            mSurfaces.add(a0.getSurface());
+
+            nBuffersQueued.set(0);
         }
 
         @Override
-        Allocation buildAlloc(Size sz, RenderScript rs) {
-            return Allocation.createTyped(rs, new Type.Builder(rs, Element.U8(rs))
-                            .setX(sz.getWidth())
-                            .setY(sz.getHeight())
-                            .setYuvFormat(ImageFormat.YUV_420_888)
-                            .create(),
-                    Allocation.USAGE_SCRIPT | Allocation.USAGE_IO_INPUT);
+        Allocation[] buildAllocs(Size sz, RenderScript rs, int n) {
+            Type t = new Type.Builder(rs, Element.U8(rs))
+                    .setX(sz.getWidth())
+                    .setY(sz.getHeight())
+                    .setYuvFormat(ImageFormat.YUV_420_888)
+                    .create();
+
+            return Allocation.createAllocations(rs, t,
+                    Allocation.USAGE_SCRIPT | Allocation.USAGE_IO_INPUT, n);
         }
 
         // Callback for Buffer Available:
         @Override
         public void onBufferAvailable(final Allocation alloc) {
-            allocationQueue.add(alloc);
-            //CFLog.d("onBufferAvailable() " + allocationQueue.size());
+            nBuffersQueued.incrementAndGet();
+            //CFLog.d("onBufferAvailable() " + nBuffersQueued.get());
             buildFrames();
         }
 
         synchronized void buildFrames() {
 
-            while (!allocationQueue.isEmpty()) {
+            while ((nBuffersQueued.get() > 0 && !mAllocs.isEmpty()) || mReadyAlloc != null) {
 
-                Allocation alloc = allocationQueue.poll();
-                final Semaphore lock = mLocks.get(alloc);
-
-                synchronized (lock) {
-                    /*
-                     Set two locks, one to be removed by creating the frame and the other
-                     by retiring it.  This distinguishes between an Allocation awaiting a
-                     CaptureResult to be packaged as a Frame and an Allocation still being
-                     used by a Frame
-                     */
-                    switch (lock.availablePermits()) {
-                        case 2:
-                            // the Allocation is free and empty, so acquire the new buffer
-                            lock.acquireUninterruptibly(2);
-                            alloc.ioReceive();
-                            break;
-                        case 1:
-                            // this Allocation is still held by another frame, so wait
-                            allocationQueue.offerFirst(alloc);
-                            return;
-                        case 0:
-                            // the Allocation is free, but the buffer has already been acquired,
-                            // so nothing to do
-                            break;
-                        default:
-                            throw new IllegalMonitorStateException("YUVFrame.Producer has too many locks");
-                    }
+                if(mReadyAlloc == null) {
+                    mReadyAlloc = mAllocs.poll();
+                    mReadyAlloc.ioReceive();
+                    nBuffersQueued.decrementAndGet();
                 }
 
-                long allocTimestamp = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
-                        ? alloc.getTimeStamp() : -1;
+                long allocTimestamp = mReadyAlloc.getTimeStamp();
 
                 // if we can't actually match these, make sure the queue doesn't
                 // outgrow CaptureResults
-                if((allocTimestamp == -1 || allocTimestamp == 0) && allocationQueue.contains(alloc)) {
-                    alloc.ioReceive();
-                    allocationQueue.removeFirstOccurrence(alloc);
+                if(allocTimestamp == -1 || allocTimestamp == 0 && nBuffersQueued.get() > 2) {
+                    mReadyAlloc.ioReceive();
+                    nBuffersQueued.decrementAndGet();
                 }
 
                 try {
                     Pair<TotalCaptureResult, AcquisitionTime> pair = mResultCollector.findMatch(allocTimestamp);
 
                     if (pair == null) {
-                        // re-insert allocation in queue
-                        allocationQueue.offerFirst(alloc);
+                        // wait for a CaptureResult
                         return;
                     }
 
                     // we have a match, so build a frame
                     TotalCaptureResult result = pair.first;
                     AcquisitionTime t = pair.second;
-                    lock.release(1);
 
-                    dispatchFrame(FRAME_BUILDER.setCapture(alloc, result, lock)
+                    dispatchFrame(FRAME_BUILDER.setCapture(mReadyAlloc, result)
                             .setAcquisitionTime(t)
                             .build());
+
+                    mReadyAlloc = null;
 
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     Log.e(TAG, "stale allocation timestamp encountered, discarding image.");
                     mDroppedImages++;
-                    // this allows the buffer to be overwritten
-                    lock.release(2);
                 }
             }
         }
