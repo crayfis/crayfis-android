@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.crayfis.android.daq.DAQManager;
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
@@ -52,17 +53,17 @@ public class PreCalibrator extends TriggerProcessor {
     private static int sConfigStep = 0;
     static final DataProtos.PreCalibrationResult.Builder BUILDER = DataProtos.PreCalibrationResult.newBuilder();
 
-    private PreCalibrator(CFApplication app, Config config) {
-        super(app, config, false);
+    private PreCalibrator(CFApplication app, ExposureBlock xb, Config config) {
+        super(app, xb, config, false);
     }
 
-    public static TriggerProcessor makeProcessor(CFApplication application) {
+    public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
         if(sConfigStep == 0) {
             BUILDER.clear();
             sConfigList = CFConfig.getInstance().getPrecalTrigger();
         }
 
-        return new PreCalibrator(application, sConfigList.get(sConfigStep));
+        return new PreCalibrator(application, xb, sConfigList.get(sConfigStep));
     }
 
     public static ConfigList makeConfig(String configStr) {
@@ -107,7 +108,7 @@ public class PreCalibrator extends TriggerProcessor {
         } else {
             submitPrecalibrationResult();
             sConfigStep = 0;
-            mApplication.setApplicationState(CFApplication.State.CALIBRATION);
+            application.setApplicationState(CFApplication.State.CALIBRATION);
         }
     }
 
@@ -160,18 +161,18 @@ public class PreCalibrator extends TriggerProcessor {
 
         CFConfig.getInstance().setPrecalConfig(result);
 
-        BUILDER.setRunId(mApplication.getBuildInformation().getRunId().getLeastSignificantBits())
-                .setRunIdHi(mApplication.getBuildInformation().getRunId().getMostSignificantBits())
+        BUILDER.setRunId(application.getBuildInformation().getRunId().getLeastSignificantBits())
+                .setRunIdHi(application.getBuildInformation().getRunId().getMostSignificantBits())
                 .setHotHash(hotHash)
                 .setWgtHash(weightHash)
                 .setEndTime(System.currentTimeMillis())
-                .setBatteryTemp(mApplication.getBatteryTemp())
+                .setBatteryTemp(application.getBatteryTemp())
                 .setInterpolation(PreCalibrationService.INTER)
                 .setPrecalConfig(sConfigList.toString());
 
         // submit the PreCalibrationResult object
 
-        UploadExposureService.submitMessage(mApplication, cameraId, BUILDER.build());
+        UploadExposureService.submitMessage(application, cameraId, BUILDER.build());
 
     }
 

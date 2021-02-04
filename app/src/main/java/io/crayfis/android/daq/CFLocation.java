@@ -16,7 +16,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.R;
 import io.crayfis.android.util.CFLog;
@@ -76,14 +76,17 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         public void onProviderDisabled(String provider) {
         }
     };
+    
+    private final Frame.Builder FRAME_BUILDER;
+    
+    private Context mContext;
+    
+    CFLocation(Frame.Builder builder) {
+        FRAME_BUILDER = builder;
+    }
 
-
-    private final RawCameraFrame.Builder RCF_BUILDER;
-    private final Context CONTEXT;
-
-    CFLocation(Context context, final RawCameraFrame.Builder frameBuilder) {
-        CONTEXT = context;
-        RCF_BUILDER = frameBuilder;
+    void register(Context context) {
+        mContext = context;
 
         updateLocation(new Location("BLANK"), false);
 
@@ -130,7 +133,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
             locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
             LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, locationRequest, mLocationListener);
         } catch (SecurityException e) {
-            CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+            CFApplication application = (CFApplication) mContext.getApplicationContext();
             application.userErrorMessage(true, R.string.quit_permission);
         }
 
@@ -153,7 +156,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
     private void useDeprecated() {
         if (mLocationManager == null) {
             // backup location if Google play isn't working or installed
-            mLocationManager = (LocationManager) CONTEXT.getSystemService(Context.LOCATION_SERVICE);
+            mLocationManager = (LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
 
             try {
                 // ask for updates from network and GPS
@@ -170,7 +173,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 }
                 mLastLocationDeprecated = location;
             } catch(SecurityException e) {
-                CFApplication application = (CFApplication) CONTEXT.getApplicationContext();
+                CFApplication application = (CFApplication) mContext.getApplicationContext();
                 application.userErrorMessage(true, R.string.quit_permission);
             }
         }
@@ -212,14 +215,17 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
 
         }
 
-        RCF_BUILDER.setLocation(currentLocation);
+        FRAME_BUILDER.setLocation(currentLocation);
     }
 
     boolean isReceivingUpdates() {
 
+        // obviously not if this hasn't been registered
+        if(mContext == null) return false;
+
         // first see if location services are on
         try {
-            int locationMode = Settings.Secure.getInt(CONTEXT.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            int locationMode = Settings.Secure.getInt(mContext.getContentResolver(), Settings.Secure.LOCATION_MODE);
             if(locationMode == Settings.Secure.LOCATION_MODE_OFF) return false;
 
         } catch (Settings.SettingNotFoundException e) {
@@ -228,8 +234,7 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
         }
 
         // then make sure we have the right permissions
-        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-                CONTEXT.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        return mContext.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
                         == PackageManager.PERMISSION_GRANTED;
 
     }
@@ -240,16 +245,16 @@ class CFLocation implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient
                 + ", " + mLastLocation.getLatitude() + ")\n"
                 + "provider = " + mLastLocation.getProvider() + "\n"
                 + "accuracy = " + mLastLocation.getAccuracy()
-                + ", time=" + mLastLocation.getTime() : "") + "\n"
+                + ", time=" + mLastLocation.getTime() + "\n" : "")
                 + (mLastLocationDeprecated != null ? "Android location: \n"
                 + "(" + mLastLocationDeprecated.getLongitude()
                 + ", " + mLastLocationDeprecated.getLatitude() + ")\n"
                 + "provider = " + mLastLocationDeprecated.getProvider() + "\n"
                 + "accuracy = " + mLastLocationDeprecated.getAccuracy()
-                + ", time=" + mLastLocationDeprecated.getTime() : "") + "\n"
+                + ", time=" + mLastLocationDeprecated.getTime() + "\n" : "")
                 + (currentLocation != null ? "Official location:\n"
                 + "(" + currentLocation.getLongitude()
-                + ", " + currentLocation.getLatitude() + ")" : "") + "\n";
+                + ", " + currentLocation.getLatitude() + ")" : "null") + "\n";
 
     }
 

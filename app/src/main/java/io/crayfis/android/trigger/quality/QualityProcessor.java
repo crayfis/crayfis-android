@@ -4,7 +4,8 @@ import java.util.HashMap;
 
 import io.crayfis.android.R;
 import io.crayfis.android.daq.DAQManager;
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
@@ -21,12 +22,12 @@ public class QualityProcessor extends TriggerProcessor {
     public static final String KEY_ORIENT_THRESH = "orient";
     public static final String KEY_BACKLOCK = "back";
 
-    private QualityProcessor(CFApplication application, Config config) {
-        super(application, config, false);
+    private QualityProcessor(CFApplication application, ExposureBlock xb, Config config) {
+        super(application, xb, config, false);
     }
 
-    public static TriggerProcessor makeProcessor(CFApplication application) {
-        return new QualityProcessor(application, CFConfig.getInstance().getQualTrigger());
+    public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
+        return new QualityProcessor(application, xb, CFConfig.getInstance().getQualTrigger());
     }
 
     public static Config makeConfig(String configStr) {
@@ -49,15 +50,15 @@ public class QualityProcessor extends TriggerProcessor {
     }
 
     @Override
-    public void onFrameResult(RawCameraFrame frame, boolean pass) {
+    public void onFrameResult(Frame frame, boolean pass) {
         if(!pass) {
             DAQManager daq = DAQManager.getInstance();
             daq.changeCameraFrom(frame.getCameraId());
             CFLog.d("Flat: " + daq.isPhoneFlat());
             if (!daq.isPhoneFlat()) {
-                mApplication.userErrorMessage(false, R.string.warning_facedown);
+                application.userErrorMessage(false, R.string.warning_facedown);
             } else {
-                mApplication.userErrorMessage(false, R.string.warning_bright);
+                application.userErrorMessage(false, R.string.warning_bright);
             }
         }
 
@@ -66,8 +67,8 @@ public class QualityProcessor extends TriggerProcessor {
     @Override
     public void onMaxReached() {
         // we have a sufficient number of good frames, so switch to CALIBRATION from SURVEY
-        if(mApplication.getApplicationState() == CFApplication.State.SURVEY) {
-            mApplication.setApplicationState(CFApplication.State.PRECALIBRATION);
+        if(application.getApplicationState() == CFApplication.State.SURVEY) {
+            application.setApplicationState(CFApplication.State.PRECALIBRATION);
         }
     }
 

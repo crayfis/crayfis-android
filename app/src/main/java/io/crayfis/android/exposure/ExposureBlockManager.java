@@ -132,9 +132,8 @@ public final class ExposureBlockManager {
                         daq.getCameraId(),
                         daq.isCameraFacingBack(),
                         precalConfig != null ?
-                                precalConfig.getScriptCWeight(mApplication.getRenderScript())
+                                precalConfig.generateWeights(mApplication.getRenderScript())
                                 : null,
-                        new TriggerChain(mApplication, state),
                         daq.getLastKnownLocation(),
                         mApplication.getBatteryTemp(),
                         state,

@@ -2,7 +2,7 @@ package io.crayfis.android.trigger.quality;
 
 import java.util.HashMap;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -48,7 +48,7 @@ class QualityTaskLock extends TriggerProcessor.Task {
     }
 
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
         return (frame.isFacingBack() == mConfig.backLock) ? 1 : 0;
     }
 }

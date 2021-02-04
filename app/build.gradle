@@ -54,9 +54,9 @@ android {
 
     defaultConfig {
         applicationId "io.crayfis.android"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 28
-        renderscriptTargetApi 21
+        renderscriptTargetApi 23
         versionCode getVersionCode()
         versionName getVersionName()
 

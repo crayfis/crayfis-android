@@ -40,6 +40,7 @@ class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private Float mTargetFPS;
+    @SerializedName("set_n_alloc") private Integer mNAlloc;
     @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
     @SerializedName("set_datachunk_size") private Long mDataChunkSize;
@@ -77,9 +78,10 @@ class ServerCommand {
         @SerializedName("increase") private Boolean mShouldIncrease;
 
         boolean isApplicable() {
-            DAQManager camera = DAQManager.getInstance();
-            return mResX == camera.getResX()
-                    && mResY == camera.getResY()
+            DAQManager daq = DAQManager.getInstance();
+            return mResX == daq.getResX()
+                    && mResY == daq.getResY()
+                    && mFPS == daq.getFPS()
                     && mShouldIncrease != null;
         }
 
@@ -242,8 +244,6 @@ class ServerCommand {
 
     @Nullable
     TrigCommand getL2Trigger() {
-        if(mL2Trigger != null)
-            CFLog.d(mL2Trigger.toString());
         return mL2Trigger;
     }
 
@@ -285,6 +285,11 @@ class ServerCommand {
     @Nullable
     Float getTargetFPS() {
         return mTargetFPS;
+    }
+
+    @Nullable
+    Integer getNAlloc() {
+        return mNAlloc;
     }
 
     @Nullable

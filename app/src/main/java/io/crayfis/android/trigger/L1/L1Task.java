@@ -2,8 +2,8 @@ package io.crayfis.android.trigger.L1;
 
 import java.util.HashMap;
 
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
-import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -51,7 +51,7 @@ class L1Task extends TriggerProcessor.Task {
 
 
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
 
         int max = frame.getPixMax();
         L1Calibrator.addStatistic(max);

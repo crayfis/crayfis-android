@@ -16,9 +16,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import io.crayfis.android.daq.DAQManager;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_findSecond;
-import io.crayfis.android.exposure.RawCameraFrame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -64,20 +64,22 @@ class SecondMaxTask extends TriggerProcessor.Task {
     private final Set<Integer> HOTCELL_COORDS;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
+    private final boolean mRAW = DAQManager.getInstance().isStreamingRAW();
 
     private final RenderScript RS;
-    private ScriptC_findSecond mScriptCFindSecond;
+    private final ScriptC_findSecond mScriptCFindSecond;
+    private final Allocation aWeights;
     private Allocation aMax;
     private Allocation aSecond;
 
-    private Config mConfig;
+    private final Config mConfig;
 
     SecondMaxTask(TriggerProcessor processor, Config config) {
         super(processor);
 
         mConfig = config;
 
-        RS = mProcessor.mApplication.getRenderScript();
+        RS = mProcessor.application.getRenderScript();
         CFLog.i("SecondMaxTask created");
         mScriptCFindSecond = new ScriptC_findSecond(RS);
 
@@ -89,6 +91,7 @@ class SecondMaxTask extends TriggerProcessor.Task {
                 .create();
         aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
+        aWeights = CONFIG.getPrecalConfig().generateWeights(RS);
         mScriptCFindSecond.set_aMax(aMax);
         mScriptCFindSecond.set_aSecond(aSecond);
         HOTCELL_COORDS = new HashSet<>();
@@ -97,15 +100,18 @@ class SecondMaxTask extends TriggerProcessor.Task {
     /**
      * Keeps allocations of running largest and second-largest values for each pixel
      *
-     * @param frame RawCameraFrame
+     * @param frame Frame
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    protected int processFrame(RawCameraFrame frame) {
-        mScriptCFindSecond.forEach_order(frame.getWeightedAllocation());
+    protected int processFrame(Frame frame) {
+        if(mRAW)
+            mScriptCFindSecond.forEach_order_ushort(frame.getAllocation(), aWeights);
+        else
+            mScriptCFindSecond.forEach_order_uchar(frame.getAllocation(), aWeights);
         if(frame.getExposureBlock().count.intValue()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
-            mProcessor.mApplication.checkBatteryStats();
+            mProcessor.application.checkBatteryStats();
         }
         return 1;
     }

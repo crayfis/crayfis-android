@@ -6,7 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.R;
@@ -26,12 +26,15 @@ class CFSensor implements SensorEventListener {
     private float[] gravity;
     private float pressure = 0;
 
-    private final CFApplication APPLICATION;
-    private final RawCameraFrame.Builder RCF_BUILDER;
+    private CFApplication mApplication;
+    private final Frame.Builder FRAME_BUILDER;
+    
+    CFSensor(Frame.Builder builder) {
+        FRAME_BUILDER = builder;
+    }
 
-    CFSensor(Context context, final RawCameraFrame.Builder frameBuilder) {
-        RCF_BUILDER = frameBuilder;
-        APPLICATION = (CFApplication)context.getApplicationContext();
+    void register(Context context) {
+        mApplication = (CFApplication)context.getApplicationContext();
 
         mSensorManager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         Sensor rotationSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
@@ -63,7 +66,7 @@ class CFSensor implements SensorEventListener {
         switch(event.sensor.getType()) {
             case Sensor.TYPE_PRESSURE:
                 pressure = event.values[0];
-                RCF_BUILDER.setPressure(pressure);
+                FRAME_BUILDER.setPressure(pressure);
                 return;
             case Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
@@ -78,7 +81,7 @@ class CFSensor implements SensorEventListener {
         }
 
         SensorManager.getOrientation(rotationMatrix, orientation);
-        RCF_BUILDER.setOrientation(orientation)
+        FRAME_BUILDER.setOrientation(orientation)
                 .setRotationZZ(rotationMatrix[8]);
     }
 
@@ -89,8 +92,8 @@ class CFSensor implements SensorEventListener {
             case Sensor.TYPE_ROTATION_VECTOR:
                 if (accuracy < SensorManager.SENSOR_STATUS_ACCURACY_HIGH
                         && CFConfig.getInstance().getQualTrigger().getName().equals("facedown")) {
-                    LayoutStatus.updateIdleStatus(APPLICATION.getResources().getString(R.string.idle_sensors));
-                    APPLICATION.setApplicationState(CFApplication.State.IDLE);
+                    LayoutStatus.updateIdleStatus(mApplication.getResources().getString(R.string.idle_sensors));
+                    mApplication.setApplicationState(CFApplication.State.IDLE);
                 }
         }
     }
@@ -101,11 +104,13 @@ class CFSensor implements SensorEventListener {
     }
 
     String getStatus() {
-        return "Orientation = " + String.format("%1.2f", orientation[0]*180/Math.PI) + ", "
+        String devtxt = "Sensors:\n";
+        devtxt += "Orientation = " + String.format("%1.2f", orientation[0]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[1]*180/Math.PI) + ", "
                 + String.format("%1.2f", orientation[2]*180/Math.PI) + " -> "
-                + String.format("%1.2f", rotationMatrix[8])+ "\n"
-                + "Pressure = " + pressure + "\n";
+                + String.format("%1.2f", rotationMatrix[8])+ "\n";
+        devtxt += "Pressure = " + pressure + "\n";
+        return devtxt;
     }
 
 }

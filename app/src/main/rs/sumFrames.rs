@@ -19,7 +19,18 @@ static uint gFudgeFactor = 5;
 
 
 // keeps a running sum of frames
-void RS_KERNEL update(uchar in, uint32_t x, uint32_t y) {
+void RS_KERNEL update_uchar(uchar in, uint32_t x, uint32_t y) {
+
+    int in32 = (int) in;
+
+    int old_sum = rsGetElementAt_int(gSum, x, y);
+    rsSetElementAt_int(gSum, old_sum + in32, x, y);
+
+    int old_ssq = rsGetElementAt_int(gSsq, x, y);
+    rsSetElementAt_int(gSsq, old_ssq + in32*in32, x, y);
+}
+
+void RS_KERNEL update_ushort(ushort in, uint32_t x, uint32_t y) {
 
     int in32 = (int) in;
 

@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 import io.crayfis.android.DataProtos;
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 
 /**
@@ -66,33 +66,29 @@ class L0Task extends TriggerProcessor.Task {
     }
 
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
 
         L0Processor.L0Count.incrementAndGet();
 
         if (isZeroBias()) {
             // do the zero bias things!
-            Mat grayMat = frame.getGrayMat();
-            if(grayMat == null) return 0;
 
             // find a random pixel to be upper left corner
             Random r = new Random();
             int windowSize = mConfig.windowSize;
-            int xMin = r.nextInt(grayMat.width() - windowSize + 1);
-            int yMin = r.nextInt(grayMat.height() - windowSize + 1);
-            Mat window = grayMat.submat(yMin, yMin + windowSize, xMin, xMin + windowSize);
+            int xMin = r.nextInt(frame.getWidth() - windowSize + 1);
+            int yMin = r.nextInt(frame.getHeight() - windowSize + 1);
+
+            short[] buf = new short[windowSize*windowSize];
+            frame.copyRange(xMin, yMin, windowSize, windowSize, buf);
 
             // save block to the frame
             DataProtos.ZeroBiasSquare.Builder zeroBiasBuilder = DataProtos.ZeroBiasSquare.newBuilder();
             zeroBiasBuilder.setXMin(xMin);
             zeroBiasBuilder.setYMin(yMin);
-            for(int iy=0; iy<window.width(); iy++) {
-                for(int ix=0; ix<window.height(); ix++) {
-                    zeroBiasBuilder.addVal((int)window.get(ix, iy)[0]);
-                }
-            }
+            for(short val : buf)
+                zeroBiasBuilder.addVal(val);
             frame.setZeroBias(zeroBiasBuilder.build());
-            window.release();
         }
 
         return 1;

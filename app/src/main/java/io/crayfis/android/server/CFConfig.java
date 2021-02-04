@@ -33,6 +33,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final String KEY_ACCOUNT_SCORE = "account_score";
     private static final String KEY_TARGET_RESOLUTION_STR = "prefResolution";
     private static final String KEY_TARGET_FPS = "prefFPS";
+    private static final String KEY_N_ALLOC = "nAlloc";
     private static final String KEY_FRAC_DEAD_TIME = "prefDeadTime";
     private static final String KEY_BATTERY_OVERHEAT_TEMP = "battery_overheat_temp";
     private static final String KEY_DATACHUNK_SIZE = "datachunk_size";
@@ -50,6 +51,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final PreCalibrationService.Config DEFAULT_PRECAL_CONFIG = null;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final Float DEFAULT_TARGET_FPS = 30f;
+    private static final int DEFAULT_N_ALLOC = 2;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
     private static final long DEFAULT_DATACHUNK_SIZE = 50000L;
@@ -67,6 +69,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private PreCalibrationService.Config mPrecalConfig;
     private String mTargetResolutionStr;
     private Float mTargetFPS;
+    private int mNAlloc;
     private float mFracDeadTime;
     private int mBatteryOverheatTemp;
     private long mDataChunkSize;
@@ -85,6 +88,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalConfig = DEFAULT_PRECAL_CONFIG;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mTargetFPS = DEFAULT_TARGET_FPS;
+        mNAlloc = DEFAULT_N_ALLOC;
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
         mDataChunkSize = DEFAULT_DATACHUNK_SIZE;
@@ -197,12 +201,24 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mTargetResolutionStr = new ResolutionSpec(resX, resY).toString();
     }
 
+    public void setTargetResolution(ResolutionSpec res) {
+        mTargetResolutionStr = res.toString();
+    }
+
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
+
+    public void setTargetFPS(float fps) {
+        mTargetFPS = fps;
+    }
 
     public double getTargetFPS() {
         if(mTargetFPS == null) mTargetFPS = DEFAULT_TARGET_FPS;
         return mTargetFPS;
+    }
+
+    public int getNAlloc() {
+        return mNAlloc;
     }
 
     public double getFracDeadTime() {
@@ -311,6 +327,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mTargetFPS = serverCommand.getTargetFPS();
             changeCamera = true;
         }
+        if(serverCommand.getNAlloc() != null) {
+            mNAlloc = serverCommand.getNAlloc();
+            changeCamera = true;
+        }
         if(serverCommand.getFracDeadTime() != null) {
             mFracDeadTime = serverCommand.getFracDeadTime();
             changeCamera = true;
@@ -343,11 +363,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mAccountName = sharedPreferences.getString(KEY_ACCOUNT_NAME, DEFAULT_ACCOUNT_NAME);
         mAccountScore = sharedPreferences.getFloat(KEY_ACCOUNT_SCORE, DEFAULT_ACCOUNT_SCORE);
         mTargetResolutionStr = sharedPreferences.getString(KEY_TARGET_RESOLUTION_STR, DEFAULT_TARGET_RESOLUTION_STR);
+        // this is necessary to make this configurable in the settings
         try {
             mTargetFPS = Float.parseFloat(sharedPreferences.getString(KEY_TARGET_FPS, DEFAULT_TARGET_FPS.toString()));
         } catch (NumberFormatException e) {
             mTargetFPS = DEFAULT_TARGET_FPS;
         }
+        mNAlloc = sharedPreferences.getInt(KEY_N_ALLOC, DEFAULT_N_ALLOC);
         mFracDeadTime = sharedPreferences.getFloat(KEY_FRAC_DEAD_TIME, DEFAULT_FRAC_DEAD_TIME);
         mBatteryOverheatTemp = sharedPreferences.getInt(KEY_BATTERY_OVERHEAT_TEMP, DEFAULT_BATTERY_OVERHEAT_TEMP);
         mDataChunkSize = sharedPreferences.getLong(KEY_DATACHUNK_SIZE, DEFAULT_DATACHUNK_SIZE);
@@ -368,6 +390,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
                 .putFloat(KEY_ACCOUNT_SCORE,mAccountScore)
                 .putString(KEY_TARGET_RESOLUTION_STR,mTargetResolutionStr)
                 .putString(KEY_TARGET_FPS, mTargetFPS.toString())
+                .putInt(KEY_N_ALLOC, mNAlloc)
                 .putFloat(KEY_FRAC_DEAD_TIME, mFracDeadTime)
                 .putInt(KEY_BATTERY_OVERHEAT_TEMP, mBatteryOverheatTemp)
                 .putLong(KEY_DATACHUNK_SIZE, mDataChunkSize)

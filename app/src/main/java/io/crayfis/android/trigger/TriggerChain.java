@@ -4,7 +4,8 @@ import androidx.annotation.NonNull;
 
 import java.util.Iterator;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.trigger.L0.L0Processor;
 import io.crayfis.android.trigger.L1.L1Processor;
@@ -29,41 +30,41 @@ public class TriggerChain implements Iterable<TriggerProcessor> {
      * Constructor
      *
      * @param application Application instance
-     * @param state The state of the Exposure Block for which the processor is configured
+     * @param xb The ExposureBlock sending frames to this TriggerChain
      */
-    public TriggerChain(CFApplication application, CFApplication.State state) {
+    public TriggerChain(CFApplication application, ExposureBlock xb) {
 
-        switch (state) {
+        switch (xb.daq_state) {
             case SURVEY:
-                mFirst = QualityProcessor.makeProcessor(application);
+                mFirst = QualityProcessor.makeProcessor(application, xb);
                 break;
             case PRECALIBRATION:
-                mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application)
-                        .setNext(PreCalibrator.makeProcessor(application)));
+                mFirst = L0Processor.makeProcessor(application, xb)
+                        .setNext(QualityProcessor.makeProcessor(application, xb)
+                        .setNext(PreCalibrator.makeProcessor(application, xb)));
                 break;
             case CALIBRATION:
-                mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application)
-                        .setNext(L1Processor.makeProcessor(application)));
+                mFirst = L0Processor.makeProcessor(application, xb)
+                        .setNext(QualityProcessor.makeProcessor(application, xb)
+                        .setNext(L1Processor.makeProcessor(application, xb)));
                 break;
             case DATA:
-                mFirst = L0Processor.makeProcessor(application)
-                        .setNext(QualityProcessor.makeProcessor(application)
-                        .setNext(L1Processor.makeProcessor(application)
-                        .setNext(L2Processor.makeProcessor(application))));
+                mFirst = L0Processor.makeProcessor(application, xb)
+                        .setNext(QualityProcessor.makeProcessor(application, xb)
+                        .setNext(L1Processor.makeProcessor(application, xb)
+                        .setNext(L2Processor.makeProcessor(application, xb))));
                 break;
             default:
-                mFirst = L0Processor.makeProcessor(application);
+                mFirst = L0Processor.makeProcessor(application, xb);
         }
     }
 
     /**
      * Add frame to the processing pipeline
      *
-     * @param frame RawCameraFrame to be processed
+     * @param frame Frame to be processed
      */
-    public final void submitFrame(RawCameraFrame frame) {
+    public final void submitFrame(Frame frame) {
         mFirst.submitFrame(frame);
     }
 

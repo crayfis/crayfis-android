@@ -7,8 +7,10 @@ import java.util.HashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.ExposureBlock;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by jswaney on 1/10/18.
@@ -19,15 +21,16 @@ import io.crayfis.android.main.CFApplication;
  */
 public abstract class TriggerProcessor {
 
-    public final CFApplication mApplication;
+    public final CFApplication application;
     public final Config config;
+    public final ExposureBlock xb;
     TriggerProcessor mNextProcessor;
-    private Executor mExecutor;
+    private final Executor mExecutor;
     private final Task mTask;
 
-    private AtomicInteger processed = new AtomicInteger();
-    private AtomicInteger pass = new AtomicInteger();
-    private AtomicInteger skip = new AtomicInteger();
+    private final  AtomicInteger processed = new AtomicInteger();
+    private final AtomicInteger pass = new AtomicInteger();
+    private final AtomicInteger skip = new AtomicInteger();
 
     /**
      * Constructor
@@ -37,9 +40,10 @@ public abstract class TriggerProcessor {
      * @param serial Determines the type of AsyncTask Executor to use: SERIAL_EXECUTOR if true,
      *               THREAD_POOL_EXECUTOR if false
      */
-    protected TriggerProcessor(CFApplication application, Config config, boolean serial) {
-        mApplication = application;
+    protected TriggerProcessor(CFApplication application, ExposureBlock xb, Config config, boolean serial) {
+        this.application = application;
         this.config = config;
+        this.xb = xb;
         mExecutor = (serial) ? AsyncTask.SERIAL_EXECUTOR : AsyncTask.THREAD_POOL_EXECUTOR;
         mTask = config.makeTask(this);
     }
@@ -73,16 +77,16 @@ public abstract class TriggerProcessor {
     /**
      * Hands frame to the Task to be executed
      *
-     * @param frame RawCameraFrame to be processed
+     * @param frame Frame to be processed
      */
-    protected void submitFrame(final RawCameraFrame frame) {
+    protected void submitFrame(final Frame frame) {
         mExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 Integer maxFrames = config.getInt(Config.KEY_MAXFRAMES);
 
                 if(maxFrames != null && processed.intValue() > maxFrames && mNextProcessor == null) {
-                    frame.clear();
+                    frame.retire();
                     return;
                 }
 
@@ -94,7 +98,7 @@ public abstract class TriggerProcessor {
                         mNextProcessor.submitFrame(frame);
                     } else {
                         onFrameResult(frame, passes > 0);
-                        frame.clear();
+                        frame.retire();
                     }
 
                     if(maxFrames != null && nFrames == maxFrames) {
@@ -122,10 +126,10 @@ public abstract class TriggerProcessor {
     /**
      * Callback after frame is processed by this TriggerProcessor
      *
-     * @param frame RawCameraFrame processed
+     * @param frame Frame processed
      * @param pass Whether the Task returned true or false
      */
-    protected void onFrameResult(RawCameraFrame frame, boolean pass) { }
+    protected void onFrameResult(Frame frame, boolean pass) { }
 
     /**
      * Callback after the TriggerProcessor has processed the number of frames given by
@@ -380,10 +384,10 @@ public abstract class TriggerProcessor {
         /**
          * Method assigning the number of "passes" to associate with this frame
          *
-         * @param frame RawCameraFrame to be processed
+         * @param frame Frame to be processed
          * @return integer number of "passes"
          */
-        protected abstract int processFrame(RawCameraFrame frame);
+        protected abstract int processFrame(Frame frame);
 
         /**
          * Callback after the TriggerProcessor has processed the number of frames given by

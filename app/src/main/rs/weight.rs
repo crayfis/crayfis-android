@@ -3,17 +3,11 @@
 #pragma rs_fp_relaxed
 
 rs_allocation gWeights;
-rs_allocation gInYuv;
-static const float gOffset = 0.5; // maximum value that camera is presumed to round down
+rs_allocation gIn;
+static const float gOffset = 0.5;
 static const uchar gOffsetByte = (uchar)(gOffset * 255);
 static const uchar gMaxByte = (uchar)255;
 
-// multiplies input allocation by weights and rounds
-uchar RS_KERNEL weight(uchar in, uint32_t x, uint32_t y) {
-    return ((uint)in * rsGetElementAt_uchar(gWeights, x, y) + gOffsetByte)/gMaxByte;
-}
-
-// same as above, but for a YUV format input allocation
-uchar RS_KERNEL weightYuv(uint32_t x, uint32_t y) {
-    return ((uint)rsGetElementAtYuv_uchar_Y(gInYuv, x, y) * rsGetElementAt_uchar(gWeights, x, y) + gOffsetByte)/gMaxByte;
+uchar RS_KERNEL weightYUV(uchar wgt, uint32_t x, uint32_t y) {
+    return ((uint)rsGetElementAtYuv_uchar_Y(gIn, x, y) * wgt + gOffsetByte)/gMaxByte;
 }

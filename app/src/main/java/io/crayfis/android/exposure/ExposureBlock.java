@@ -6,6 +6,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.renderscript.Allocation;
+
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -50,9 +52,9 @@ public class ExposureBlock {
 	public final int res_x;
 	public final int res_y;
 
-	final ScriptC_weight weights;
+	public final Allocation weights;
 	public final TriggerChain TRIGGER_CHAIN;
-	
+
 	private int total_pixels;
 	
 	// the exposure block number within the given run
@@ -68,7 +70,7 @@ public class ExposureBlock {
     public final Histogram underflow_hist;
 
     // list of raw frames that have been assigned to this XB (but not yet processed)
-    private final LinkedHashSet<RawCameraFrame> assignedFrames = new LinkedHashSet<>();
+    private final LinkedHashSet<Frame> assignedFrames = new LinkedHashSet<>();
 
     // list of reconstructed events to be uploaded
     private final ArrayList<DataProtos.Event> events = new ArrayList<>();
@@ -80,8 +82,7 @@ public class ExposureBlock {
                          int wgt_hash,
                          int camera_id,
                          @Nullable Boolean camera_facing_back,
-                         ScriptC_weight weights,
-                         TriggerChain TRIGGER_CHAIN,
+                         Allocation weights,
                          Location start_loc,
                          int batteryTemp,
                          CFApplication.State daq_state,
@@ -97,7 +98,6 @@ public class ExposureBlock {
         this.camera_id = camera_id;
         this.camera_facing_back = camera_facing_back;
         this.weights = weights;
-        this.TRIGGER_CHAIN = TRIGGER_CHAIN;
         this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
@@ -107,6 +107,8 @@ public class ExposureBlock {
 
         total_pixels = 0;
 
+        this.TRIGGER_CHAIN = new TriggerChain(APPLICATION, this);
+
     }
 
     /***
@@ -114,9 +116,9 @@ public class ExposureBlock {
      * If the XB is already frozen and the camera timestamp is after the frame's end time, it will
      * be rejected. Note that frames from before the XB started are still accepted.
      * @param frame
-     * @return True if successfully assigned; false if the
+     *
      */
-    public void tryAssignFrame(RawCameraFrame frame) {
+    public boolean tryAssignFrame(Frame frame) {
 
         count.incrementAndGet();
 
@@ -125,7 +127,7 @@ public class ExposureBlock {
             if (frozen && frame_time > end_time.Nano) {
                 CFLog.e("Received frame after XB was frozen! Rejecting frame.");
                 frame.retire();
-                return;
+                return false;
             }
             if(!assignedFrames.add(frame)) {
                 // Somebody is doing something wrong! We'll ignore it but this could be bad if a frame
@@ -137,7 +139,7 @@ public class ExposureBlock {
         // If we made it here, we can submit the XB to the L1Processor.
         // It will pop the assigned frame from the XB's internal list, and will also handle
         // recycling the buffers.
-        TRIGGER_CHAIN.submitFrame(frame);
+        return true;
     }
 
     /**
@@ -173,7 +175,7 @@ public class ExposureBlock {
         }
     }
 
-    public void clearFrame(RawCameraFrame frame) {
+    public void clearFrame(Frame frame) {
         synchronized (assignedFrames) {
             if (frame.uploadRequested()) {
                 // this frame passed some trigger, so add it to the XB
@@ -189,8 +191,7 @@ public class ExposureBlock {
                         || event.hasByteBlock() && event.getByteBlock().getXCount() >= LayoutGallery.getGalleryCount()) {
                     SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(APPLICATION);
                     if(sharedPrefs.getBoolean(APPLICATION.getString(R.string.prefEnableGallery), false)
-                            && (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
-                            || APPLICATION.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            && (APPLICATION.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             == PackageManager.PERMISSION_GRANTED)) {
 
                         GalleryUtil.saveImage(event);

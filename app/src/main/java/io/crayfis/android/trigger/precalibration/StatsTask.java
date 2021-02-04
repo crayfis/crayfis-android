@@ -23,7 +23,7 @@ import java.util.Set;
 import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ScriptC_sumFrames;
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -76,6 +76,7 @@ class StatsTask extends TriggerProcessor.Task {
     private ScriptC_sumFrames mScriptCSumFrames;
     private final RenderScript RS;
 
+    private final boolean mRAW = DAQManager.getInstance().isStreamingRAW();
     private final Config mConfig;
 
     private int mNCut = 0;
@@ -88,7 +89,7 @@ class StatsTask extends TriggerProcessor.Task {
 
         mConfig = config;
 
-        RS = processor.mApplication.getRenderScript();
+        RS = processor.application.getRenderScript();
 
         CFLog.i("StatsTask created");
         mScriptCSumFrames = new ScriptC_sumFrames(RS);
@@ -108,16 +109,19 @@ class StatsTask extends TriggerProcessor.Task {
     /**
      * Performs a running element-wise addition for each pixel in the frame
      *
-     * @param frame RawCameraFrame
+     * @param frame Frame
      * @return true if we have reached the requisite number of frames, false otherwise
      */
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
         if(frame.getExposureBlock().count.intValue()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
-            mProcessor.mApplication.checkBatteryStats();
+            mProcessor.application.checkBatteryStats();
         }
-        mScriptCSumFrames.forEach_update(frame.getWeightedAllocation());
+        if(mRAW)
+            mScriptCSumFrames.forEach_update_ushort(frame.getAllocation());
+        else
+            mScriptCSumFrames.forEach_update_uchar(frame.getAllocation());
         return 1;
     }
 

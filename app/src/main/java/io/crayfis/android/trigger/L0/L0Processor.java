@@ -3,6 +3,7 @@ package io.crayfis.android.trigger.L0;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
@@ -20,12 +21,12 @@ public class L0Processor extends TriggerProcessor {
 
     public static AtomicInteger L0Count = new AtomicInteger();
 
-    private L0Processor(CFApplication application, Config config) {
-        super(application, config, true);
+    private L0Processor(CFApplication application, ExposureBlock xb, Config config) {
+        super(application, xb, config, true);
     }
 
-    public static TriggerProcessor makeProcessor(CFApplication application) {
-        return new L0Processor(application, CFConfig.getInstance().getL0Trigger());
+    public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
+        return new L0Processor(application, xb, CFConfig.getInstance().getL0Trigger());
     }
 
     public static Config makeConfig(String configStr) {

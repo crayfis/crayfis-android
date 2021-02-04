@@ -12,7 +12,6 @@ import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.ColorSpaceTransform;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.hardware.camera2.params.TonemapCurve;
@@ -20,26 +19,24 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.preference.PreferenceManager;
 import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.Type;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import android.util.Range;
 import android.util.Size;
 import android.view.Surface;
 
-import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.crayfis.android.R;
 import io.crayfis.android.exposure.ExposureBlockManager;
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
@@ -52,18 +49,25 @@ import io.crayfis.android.util.FrameHistory;
 
 class CFCamera {
 
-    private final CFApplication mApplication;
-    private final RenderScript mRS;
-    private final RawCameraFrame.Builder RCF_BUILDER;
+    // workable RAW formats with SDK 21
+    public static final Set<Integer> RAW_FORMATS = new HashSet<>
+            (Arrays.asList(ImageFormat.RAW10,
+                    ImageFormat.RAW12,
+                    ImageFormat.RAW_SENSOR));
+
+    private final Frame.Builder FRAME_BUILDER;
     private final CFConfig CONFIG;
+    
+    private CFApplication mApplication;
 
     private final Semaphore mCameraOpenCloseLock = new Semaphore(1);
     private CameraDevice mCameraDevice;
     private CameraManager mCameraManager;
     private CameraCharacteristics mCameraCharacteristics;
+    private StreamConfigurationMap mConfigMap;
 
     private CaptureRequest.Builder mPreviewRequestBuilder;
-    private CaptureRequest mPreviewRequest;
+    private List<CaptureRequest> mPreviewRequests = new ArrayList<>();
     private Size mPreviewSize;
     private CameraCaptureSession mCaptureSession;
 
@@ -73,17 +77,15 @@ class CFCamera {
 
     // thread for posting jobs handling frames
     protected Handler mFrameHandler;
-    protected final HandlerThread mFrameThread = new HandlerThread("RawCameraFrame");
+    protected final HandlerThread mFrameThread = new HandlerThread("Frame");
 
     int mCameraId = -1;
     int mResX;
     int mResY;
+    int mFormat;
 
-    private Allocation ain;
-    private static final int YUV_FORMAT = ImageFormat.YUV_420_888;
-    
-    private final AtomicInteger mBuffersQueued = new AtomicInteger();
-    private final ArrayDeque<TotalCaptureResult> mQueuedCaptureResults = new ArrayDeque<>();
+    // CaptureCallback depending on RAW/YUV format
+    private Frame.Producer mFrameProducer;
     private final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
     interface ConfiguredCallback {
@@ -93,11 +95,13 @@ class CFCamera {
 
     private ConfiguredCallback mConfiguredCallback;
 
-    CFCamera(CFApplication app, RawCameraFrame.Builder builder) {
-        mApplication = app;
-        mRS = mApplication.getRenderScript();
-        RCF_BUILDER = builder;
+    CFCamera(Frame.Builder builder) {
+        FRAME_BUILDER = builder;
         CONFIG = CFConfig.getInstance();
+    }
+
+    void register(Context context) {
+        mApplication = (CFApplication)context.getApplicationContext();
 
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
@@ -205,12 +209,23 @@ class CFCamera {
             try {
 
                 configureCameraPreviewSession();
-                RCF_BUILDER.setCamera2(ain, mApplication.getRenderScript());
 
-                ain.setOnBufferAvailableListener(mOnBufferAvailableListener);
-                Surface surface = ain.getSurface();
-                mPreviewRequestBuilder.addTarget(surface);
-                mCameraDevice.createCaptureSession(Collections.singletonList(surface), mStateCallback, null);
+                boolean raw = (RAW_FORMATS.contains(mFormat));
+                int nAlloc = CONFIG.getNAlloc();
+                mFrameProducer = Frame.Producer.create(raw, mApplication.getRenderScript(), nAlloc,
+                        mPreviewSize, mFrameCallback, mFrameHandler, FRAME_BUILDER);
+
+                if(raw) FRAME_BUILDER.configureRAW(mApplication.getRenderScript(), mPreviewSize);
+                else FRAME_BUILDER.configureYUV(mApplication.getRenderScript(), mPreviewSize);
+
+                List<Surface> outputs = mFrameProducer.getSurfaces();
+                for(Surface s: outputs) {
+                    mPreviewRequestBuilder.addTarget(s);
+                    mPreviewRequests.add(mPreviewRequestBuilder.build());
+                    mPreviewRequestBuilder.removeTarget(s); // just one per request
+                }
+
+                mCameraDevice.createCaptureSession(outputs, mStateCallback, mCameraHandler);
 
             } catch (CameraAccessException e) {
                 mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
@@ -240,10 +255,11 @@ class CFCamera {
     /**
      * Callback for creating a CameraCaptureSession
      */
-    private CameraCaptureSession.StateCallback mStateCallback = new CameraCaptureSession.StateCallback() {
+    private final CameraCaptureSession.StateCallback mStateCallback = new CameraCaptureSession.StateCallback() {
 
         @Override
         public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+
             // The camera is already closed
             if (null == mCameraDevice) {
                 return;
@@ -254,10 +270,12 @@ class CFCamera {
             // When the session is ready, we start displaying the preview.
             mCaptureSession = cameraCaptureSession;
             try {
-
-                mPreviewRequest = mPreviewRequestBuilder.build();
                 // Finally, we start displaying the camera preview.
-                mCaptureSession.setRepeatingRequest(mPreviewRequest, mCaptureCallback, mCameraHandler);
+                if(mPreviewRequests.size() == 1) {
+                    mCaptureSession.setRepeatingRequest(mPreviewRequests.get(0), mFrameProducer, mFrameHandler);
+                } else {
+                    mCaptureSession.setRepeatingBurst(mPreviewRequests, mFrameProducer, mFrameHandler);
+                }
             } catch (CameraAccessException e) {
                 mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
             } catch (IllegalStateException e) {
@@ -273,63 +291,18 @@ class CFCamera {
             changeCameraFrom(mCameraId, false);
         }
     };
-    
 
-    /**
-     * Callback for buffers added to queue
-     */
-    private final Allocation.OnBufferAvailableListener mOnBufferAvailableListener
-            = new Allocation.OnBufferAvailableListener() {
+
+    private final Frame.OnFrameCallback mFrameCallback = new Frame.OnFrameCallback() {
         @Override
-        public void onBufferAvailable(Allocation a) {
-            mBuffersQueued.incrementAndGet();
-            createFrames();
-        }
-    };
-
-    /**
-     * Callback for captured frames
-     */
-    private final CameraCaptureSession.CaptureCallback mCaptureCallback =  new CameraCaptureSession.CaptureCallback() {
-
-        @Override
-        public void onCaptureCompleted(@NonNull CameraCaptureSession session,
-                                       @NonNull CaptureRequest request,
-                                       @NonNull TotalCaptureResult result) {
-
-            super.onCaptureCompleted(session, request, result);
-
-            mQueuedCaptureResults.add(result);
-            createFrames();
-        }
-    };
-
-    /**
-     * If timestamp/buffer pairs are available, use to create RawCameraFrame and send to
-     * RawCameraFrame.Callback in a HandlerThread
-     */
-    private void createFrames() {
-
-        // make sure the timestamp queues aren't cleared underneath us
-        synchronized (mTimestampHistory) {
-
-            if(mBuffersQueued.intValue() > 0 && !mQueuedCaptureResults.isEmpty()) {
-                final RawCameraFrame frame = RCF_BUILDER.setAcquisitionTime(new AcquisitionTime())
-                        .setCaptureResult(mQueuedCaptureResults.poll())
-                        .build();
-
+        public void onFrame(Frame frame) {
+            // make sure the timestamp queues aren't cleared underneath us
+            synchronized (mTimestampHistory) {
                 mTimestampHistory.addValue(frame.getAcquiredTimeNano());
-                mFrameHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        frame.commit();
-                    }
-                });
-                mBuffersQueued.decrementAndGet();
-
             }
+            frame.commit();
         }
-    }
+    };
 
     private void configureManualSettings() {
 
@@ -369,10 +342,103 @@ class CFCamera {
 
     }
 
-    private long findTargetDuration(Size size) {
+
+    /**
+     * Configures and starts CameraCaptureSession with a CaptureRequest.Builder
+     */
+    private void configureCameraPreviewSession() throws CameraAccessException {
+
+
+        // We set up a CaptureRequest.Builder with the output Surface.
+        mPreviewRequestBuilder
+                = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+
+        ResolutionSpec resolutionSpec = CONFIG.getTargetResolution();
+
+        // make preview as close to RAW as possible
+        configureManualSettings();
+
+        if(resolutionSpec.name.equals(ResolutionSpec.RAW)) {
+            mFormat = findRAWFormat();
+            if(mFormat == ImageFormat.YUV_420_888) {
+                // no RAW capabilities, so switch to MAX
+                resolutionSpec = ResolutionSpec.fromString("MAX");
+                CONFIG.setTargetResolution(resolutionSpec);
+            }
+        } else {
+            mFormat = ImageFormat.YUV_420_888;
+        }
+
+
+        mPreviewSize = getClosestSize(mConfigMap, resolutionSpec, mFormat);
+        long requestedDuration = findTargetDuration();
+
+        mResX = mPreviewSize.getWidth();
+        mResY = mPreviewSize.getHeight();
+
+
+        // set the frame length and exposure time
+        mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, requestedDuration);
+
+        Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
+        if(exposureTimes != null) {
+            // allow 1 ns/pix dead time for internal processing
+            long requestedExpTime = (long) (Math.min(exposureTimes.getUpper(), requestedDuration)
+                    * (1-CONFIG.getFracDeadTime()));
+
+            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, requestedExpTime);
+        }
+
+    }
+
+    private int findRAWFormat() {
+
+        // check RAW capabilities
+        int[] caps = mCameraCharacteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+        if(caps == null) return ImageFormat.YUV_420_888;
+
+        boolean rawCaps = false;
+        for(int i : caps) {
+            if (i == CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) {
+                rawCaps = true;
+                break;
+            }
+        }
+        if(!rawCaps) return ImageFormat.YUV_420_888;
+
+        for (int fmt : mConfigMap.getOutputFormats()) {
+            if(RAW_FORMATS.contains(fmt)) return fmt;
+        }
+
+        return ImageFormat.YUV_420_888;
+    }
+
+    private static Size getClosestSize(@NonNull StreamConfigurationMap map, ResolutionSpec res, int format) {
+
+        Size[] outputSizes = map.getOutputSizes(format);
+        if (outputSizes == null) return null;
+
+        List<Size> availableSizes = Arrays.asList(outputSizes);
+        // sort to match the total # of pixels in the requested spec.
+        final int targetArea = res.width*res.height;
+        Collections.sort(availableSizes, new Comparator<Size>() {
+            @Override
+            public int compare(Size s0, Size s1) {
+                return Math.abs(targetArea - s0.getWidth()*s0.getHeight())
+                        - Math.abs(targetArea - s1.getWidth()*s1.getHeight());
+            }
+        });
+
+        // return the elt with the smallest difference from the requested # of pixels.
+        return availableSizes.get(0);
+
+
+    }
+
+    private long findTargetDuration() {
 
         // go through ranges known to be supported
-        Long requestedDuration = 33000000L;
+        long requestedDuration = 33000000L;
         Range<Integer>[] availableFpsRanges
                 = mCameraCharacteristics.get(CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES);
 
@@ -401,80 +467,34 @@ class CFCamera {
         // seems to work better when rounded to ms
         requestedDuration = 1000000L * Math.round(requestedDuration/1000000.);
 
-        StreamConfigurationMap map = mCameraCharacteristics.get(
-                CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-
         // now make sure this is above the minimum for the format
-        long minDuration = map.getOutputMinFrameDuration(YUV_FORMAT, size);
+        long minDuration = mConfigMap.getOutputMinFrameDuration(mFormat, mPreviewSize);
 
         CFLog.d("requestedDuration = " + requestedDuration);
-        CFLog.d("Target FPS = " + (int)(1000000000./requestedDuration));
+        CFLog.d("Target FPS = " + (1000000000./requestedDuration));
 
         return Math.max(requestedDuration, minDuration);
-    }
-
-
-    /**
-     * Configures and starts CameraCaptureSession with a CaptureRequest.Builder
-     */
-    private void configureCameraPreviewSession() throws CameraAccessException {
-
-
-        // We set up a CaptureRequest.Builder with the output Surface.
-        mPreviewRequestBuilder
-                = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-
-        // make preview as close to RAW as possible
-        configureManualSettings();
-
-        mPreviewSize = CONFIG.getTargetResolution().getClosestSize(mCameraCharacteristics);
-        mResX = mPreviewSize.getWidth();
-        mResY = mPreviewSize.getHeight();
-
-        long requestedDuration = findTargetDuration(mPreviewSize);
-
-        // set the frame length and exposure time
-        mPreviewRequestBuilder.set(CaptureRequest.SENSOR_FRAME_DURATION, requestedDuration);
-
-        Range<Long> exposureTimes = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_INFO_EXPOSURE_TIME_RANGE);
-        if(exposureTimes != null) {
-            // allow 1 ns/pix dead time for internal processing
-            long requestedExpTime = (long) (Math.min(exposureTimes.getUpper(), requestedDuration)
-                    * (1-CONFIG.getFracDeadTime()));
-
-            mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, requestedExpTime);
-        }
-
-        ain = Allocation.createTyped(mRS, new Type.Builder(mRS, Element.YUV(mRS))
-                .setX(mPreviewSize.getWidth())
-                .setY(mPreviewSize.getHeight())
-                .setYuvFormat(YUV_FORMAT)
-                .create(), Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
     }
 
     void configure(ConfiguredCallback callback) {
 
         mConfiguredCallback = callback;
 
-        synchronized (mQueuedCaptureResults) {
-            mQueuedCaptureResults.clear();
-        }
-
         // get rid of old camera setup
 
         mCameraOpenCloseLock.acquireUninterruptibly();
 
-        if (null != mCaptureSession) {
+        if (mCaptureSession != null) {
             mCaptureSession.close();
             mCaptureSession = null;
         }
-        if (null != mCameraDevice) {
+        if (mCameraDevice != null) {
             mCameraDevice.close();
             mCameraDevice = null;
         }
-        if (null != ain) {
-            ain.destroy();
-            ain = null;
+        if (mFrameProducer !=  null) {
+            mFrameProducer.close();
+            mFrameProducer = null;
         }
         mPreviewSize = null;
         mCameraOpenCloseLock.release();
@@ -501,6 +521,8 @@ class CFCamera {
             String idString = idList[mCameraId];
 
             mCameraCharacteristics = mCameraManager.getCameraCharacteristics(idString);
+            mConfigMap = mCameraCharacteristics.get(
+                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
             mCameraManager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
 
         } catch (CameraAccessException e) {
@@ -541,6 +563,10 @@ class CFCamera {
             Size newSize = sizes.get(index);
             CONFIG.setTargetResolution(newSize.getWidth(), newSize.getHeight());
         }
+    }
+
+    boolean isStreamingRAW() {
+        return RAW_FORMATS.contains(mFormat);
     }
 
     int getCameraId() {
@@ -592,12 +618,13 @@ class CFCamera {
         if(mPreviewSize == null) return "";
         StringBuilder paramtxt = new StringBuilder("Size: " + mPreviewSize.toString() + ", ");
 
-        if(mPreviewRequest != null) {
-            for (CaptureRequest.Key<?> k : mPreviewRequest.getKeys()) {
+        if(mPreviewRequests.size() > 0) {
+            CaptureRequest request = mPreviewRequests.get(0);
+            for (CaptureRequest.Key<?> k : request.getKeys()) {
                 paramtxt.append(k.getName())
                         .append(": ")
-                        .append((mPreviewRequest.get(k) != null ?
-                        mPreviewRequest.get(k).toString() : "null"))
+                        .append((request.get(k) != null ?
+                        request.get(k).toString() : "null"))
                         .append(", ");
             }
         }
@@ -605,15 +632,14 @@ class CFCamera {
     }
 
     String getStatus() {
-        String devtxt = "Camera API: Camera2 \n";
-        if (mPreviewSize != null) {
-            ResolutionSpec targetRes = CONFIG.getTargetResolution();
+        String devtxt = "Camera:\n";
+        ResolutionSpec targetRes = CONFIG.getTargetResolution();
+        devtxt += "Image dimensions = " + (mPreviewSize == null ? "0x0" : mPreviewSize.toString())
+                + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
 
-            devtxt += "Image dimensions = " + mPreviewSize.toString()
-                    + " (" + (targetRes.name.isEmpty() ? targetRes : targetRes.name) + ")\n";
-        }
 
-        devtxt += "Camera ID: " + mCameraId + ", FPS = " + String.format("%.02f", getFPS()) + "\n";
+        devtxt += "Camera ID: " + mCameraId + ", FPS = " + String.format("%.02f", getFPS())
+                + "(" + CONFIG.getTargetFPS() + ")\n";
 
         return devtxt;
     }

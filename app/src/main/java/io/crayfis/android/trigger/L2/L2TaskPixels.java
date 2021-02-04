@@ -5,8 +5,8 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.util.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,16 +16,16 @@ import io.crayfis.android.ScriptC_l2Trigger;
 import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
+import io.crayfis.android.util.CFLog;
 
 /**
- * Created by jswaney on 1/6/18.
+ * Created by cshimmin on 5/12/16.
  */
-
-class L2TaskByteBlock extends TriggerProcessor.Task {
+class L2TaskPixels extends TriggerProcessor.Task {
 
     static class Config extends TriggerProcessor.Config {
 
-        static final String NAME = "byteblock";
+        static final String NAME = "default";
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {
@@ -33,20 +33,18 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
             KEY_DEFAULT.put(L2Processor.KEY_L2_THRESH, 255);
             KEY_DEFAULT.put(L2Processor.KEY_NPIX, 120);
             KEY_DEFAULT.put(L2Processor.KEY_MAXN, false);
-            KEY_DEFAULT.put(L2Processor.KEY_RADIUS, 2);
         }
 
         final int thresh;
         final int npix;
         final boolean maxn;
-        final int radius;
+
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
             thresh = getInt(L2Processor.KEY_L2_THRESH);
             npix = getInt(L2Processor.KEY_NPIX);
             maxn = getBoolean(L2Processor.KEY_MAXN);
-            radius = getInt(L2Processor.KEY_RADIUS);
         }
 
         @Override
@@ -56,20 +54,17 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
 
         @Override
         public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
-            return new L2TaskByteBlock(processor, this);
+            return new L2TaskPixels(processor, this);
         }
     }
 
     private final Config mConfig;
-    private final int mSideLength;
     private final ScriptC_l2Trigger mTrigger;
     private final Lock mLock = new ReentrantLock();
 
-
-    L2TaskByteBlock(TriggerProcessor processor, Config cfg) {
+    L2TaskPixels(TriggerProcessor processor, Config cfg) {
         super(processor);
         mConfig = cfg;
-        mSideLength = 2*mConfig.radius + 1;
 
         RenderScript rs = processor.application.getRenderScript();
         mTrigger = new ScriptC_l2Trigger(rs);
@@ -85,54 +80,96 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         mTrigger.bind_gPixN(pixN);
 
         mTrigger.set_gWeights(processor.xb.weights);
-
     }
 
-    @Override
+
     protected int processFrame(Frame frame) {
 
         L2Processor.L2Count++;
 
-        DataProtos.ByteBlock.Builder builder = DataProtos.ByteBlock.newBuilder();
-        builder.setSideLength(mSideLength);
+        ArrayList<DataProtos.Pixel> pixels = new ArrayList<>();
+        List<Pair<Integer, Integer>> l2PixelCoords = getL2PixelCoords(frame, mTrigger, mLock);
 
-        LinkedHashSet<Pair<Integer, Integer>> blockXY = new LinkedHashSet<>();
-
-        List<Pair<Integer, Integer>> l2PixelCoords = L2TaskPixels.getL2PixelCoords(frame, mTrigger, mLock);
-
-        for(Pair<Integer, Integer> xy : l2PixelCoords) {
+        for(Pair<Integer, Integer> xy: l2PixelCoords) {
 
             int ix = xy.first;
             int iy = xy.second;
 
-            // copy region from frame
-            short[] regionBuf = new short[mSideLength*mSideLength];
+            short[] regionBuf = new short[25];
             frame.copyRegion(ix, iy, 2, 2, regionBuf, 0);
+            short val = regionBuf[12];
 
-            builder.addX(ix)
-                    .addY(iy);
+            CFLog.d("val = " + val + " at (" + ix + "," + iy +")");
 
-            short val = regionBuf[regionBuf.length / 2];
             LayoutData.appendData(val);
 
-            // add pixels not yet in the ByteBlock
-            for(int dy=-mConfig.radius; dy<=mConfig.radius; dy++) {
-                for(int dx=-mConfig.radius; dx<=mConfig.radius; dx++) {
-                    Pair<Integer, Integer> coords = Pair.create(dx, dy);
-                    if(!blockXY.contains(coords)) {
-                        blockXY.add(Pair.create(dx, dy));
-                        val = regionBuf[dx * mSideLength*dy];
-                        if(val >= 0) {
-                            builder.addVal(val);
-                        }
+            double sum3 = 0;
+            double sum5 = 0;
+            int nearMax = 0;
+
+            for(int dx = -2; dx <= 2; dx++) {
+                for(int dy = -2; dy <= 2; dy++) {
+                    int idx = dx + 5*dy;
+                    int ival = regionBuf[idx];
+                    sum5 += ival;
+                    if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
+                        sum3 += ival;
+                    }
+                    if(ival > nearMax) {
+                        nearMax = ival;
                     }
                 }
             }
 
+            DataProtos.Pixel.Builder pixBuilder = DataProtos.Pixel.newBuilder();
+
+            pixBuilder.setX(ix)
+                    .setY(iy)
+                    .setVal(val)
+                    .setAvg3((float)(sum3 / 9))
+                    .setAvg5((float)(sum5 / 25))
+                    .setNearMax(nearMax);
+
+            pixels.add(pixBuilder.build());
+
         }
 
-        frame.setByteBlock(builder.build());
+        frame.setPixels(pixels);
 
         return l2PixelCoords.size();
+    }
+
+    static List<Pair<Integer, Integer>> getL2PixelCoords(Frame frame,
+                                                         ScriptC_l2Trigger trig,
+                                                         Lock lock) {
+
+        List<Pair<Integer, Integer>> l2Coords = new ArrayList<>();
+        Allocation buf = frame.getAllocation();
+        int[] pixN = new int[1];
+
+        lock.lock();
+
+        if (frame.getFormat() == Frame.Format.RAW) {
+            trig.forEach_trigger_uchar(buf);
+        } else {
+            trig.forEach_trigger_uchar(buf);
+        }
+
+        // first count the number of hits and construct buffers
+        trig.get_gPixN().copyTo(pixN);
+        int[] pixIdx = new int[pixN[0]];
+        trig.get_gPixIdx().copy1DRangeTo(0, pixN[0], pixIdx);
+
+        lock.unlock();
+
+        // now split coords into x and y
+        for (int i = 0; i < pixN[0]; i++) {
+            int x = pixIdx[i] % frame.getWidth();
+            int y = pixIdx[i] / frame.getWidth();
+            l2Coords.add(Pair.create(x, y));
+        }
+
+
+        return l2Coords;
     }
 }

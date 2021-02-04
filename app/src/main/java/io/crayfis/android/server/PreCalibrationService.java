@@ -318,7 +318,7 @@ public class PreCalibrationService extends IntentService {
                     config.mWeightHash >= 0 ? config.mWeightHash : mWeightHash);
         }
 
-        public ScriptC_weight getScriptCWeight(RenderScript RS) {
+        public Allocation generateWeights(RenderScript RS) {
             // configure weights in RS as well
             byte[] weightArray;
             if(mB64Weights != null && !mB64Weights.isEmpty()) {
@@ -364,9 +364,7 @@ public class PreCalibrationService extends IntentService {
             Allocation weights = Allocation.createTyped(RS, weightType, Allocation.USAGE_SCRIPT);
             weights.copyFrom(weightArray);
 
-            ScriptC_weight scriptCWeight = new ScriptC_weight(RS);
-            scriptCWeight.set_gWeights(weights);
-            return scriptCWeight;
+            return weights;
         }
     }
 }

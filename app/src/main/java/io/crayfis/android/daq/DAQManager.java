@@ -3,7 +3,7 @@ package io.crayfis.android.daq;
 import android.location.Location;
 
 import io.crayfis.android.exposure.ExposureBlock;
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 
 /**
@@ -16,15 +16,24 @@ public class DAQManager {
 
     private CFApplication mApplication;
 
-    private CFCamera mCFCamera;
-    private CFSensor mCFSensor;
-    private CFLocation mCFLocation;
+    private final CFCamera mCFCamera;
+    private final CFSensor mCFSensor;
+    private final CFLocation mCFLocation;
 
     private static DAQManager sInstance;
 
-    final RawCameraFrame.Builder RCF_BUILDER = new RawCameraFrame.Builder();
+    final Frame.Builder FRAME_BUILDER = new Frame.Builder();
 
-    DAQManager() { }
+    DAQManager() {
+        // initialize these before starting DAQ to avoid NullPointers
+        // from getter methods
+
+        // this also avoids the possibility of multiple Frame.Builders
+
+        mCFCamera = new CFCamera(FRAME_BUILDER);
+        mCFSensor = new CFSensor(FRAME_BUILDER);
+        mCFLocation = new CFLocation(FRAME_BUILDER);
+    }
 
     /**
      * Gets the current instance
@@ -39,7 +48,7 @@ public class DAQManager {
     }
 
     /**
-     * Instates camera, sensors, and location services
+     * Instantiates camera, sensors, and location services
      *
      * @param app the application
      */
@@ -49,9 +58,9 @@ public class DAQManager {
 
         mApplication = app;
 
-        mCFCamera = new CFCamera(app, RCF_BUILDER);
-        mCFSensor = new CFSensor(app, RCF_BUILDER);
-        mCFLocation = new CFLocation(app, RCF_BUILDER);
+        mCFCamera.register(app);
+        mCFSensor.register(app);
+        mCFLocation.register(app);
 
         changeCamera();
     }
@@ -94,7 +103,11 @@ public class DAQManager {
     }
 
     public void setExposureBlock(ExposureBlock xb) {
-        RCF_BUILDER.setExposureBlock(xb);
+        FRAME_BUILDER.setExposureBlock(xb);
+    }
+
+    public boolean isStreamingRAW() {
+        return mCFCamera.isStreamingRAW();
     }
 
     public int getCameraId() {

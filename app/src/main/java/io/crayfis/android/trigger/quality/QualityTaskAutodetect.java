@@ -2,7 +2,7 @@ package io.crayfis.android.trigger.quality;
 
 import java.util.HashMap;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -52,7 +52,7 @@ class QualityTaskAutodetect extends TriggerProcessor.Task {
     }
 
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
         if (frame.getPixAvg() > mConfig.avgCut
                 || frame.getPixStd() > mConfig.stdCut) {
             CFLog.w("Bad event: Pix avg = " + frame.getPixAvg() + ">" + mConfig.avgCut);

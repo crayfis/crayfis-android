@@ -2,7 +2,7 @@ package io.crayfis.android.trigger.quality;
 
 import java.util.HashMap;
 
-import io.crayfis.android.exposure.RawCameraFrame;
+import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.util.CFLog;
 
@@ -55,7 +55,7 @@ class QualityTaskFacedown extends TriggerProcessor.Task {
     }
 
     @Override
-    protected int processFrame(RawCameraFrame frame) {
+    protected int processFrame(Frame frame) {
         if (frame.getOrientation() == null) {
             CFLog.e("Orientation not found");
         } else {

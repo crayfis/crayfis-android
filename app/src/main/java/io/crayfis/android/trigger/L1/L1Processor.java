@@ -2,6 +2,7 @@ package io.crayfis.android.trigger.L1;
 
 import java.util.HashMap;
 
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.trigger.TriggerProcessor;
@@ -20,14 +21,14 @@ public class L1Processor extends TriggerProcessor {
     public static int L1CountData;
     private final L1Calibrator mL1Cal;
 
-    private L1Processor(CFApplication application, Config config) {
-        super(application, config, false);
+    private L1Processor(CFApplication application, ExposureBlock xb, Config config) {
+        super(application, xb, config, false);
         mL1Cal = new L1Calibrator(application, config);
     }
 
-    public static TriggerProcessor makeProcessor(CFApplication application) {
+    public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
         L1Calibrator.updateThresholds();
-        return new L1Processor(application, CFConfig.getInstance().getL1Trigger());
+        return new L1Processor(application, xb, CFConfig.getInstance().getL1Trigger());
     }
 
     public static Config makeConfig(String configStr) {
@@ -55,9 +56,9 @@ public class L1Processor extends TriggerProcessor {
 
     @Override
     public void onMaxReached() {
-        if(mApplication.getApplicationState() == CFApplication.State.CALIBRATION) {
+        if(application.getApplicationState() == CFApplication.State.CALIBRATION) {
             mL1Cal.submitCalibrationResult();
-            mApplication.setApplicationState(CFApplication.State.DATA);
+            application.setApplicationState(CFApplication.State.DATA);
         }
     }
 }
