@@ -68,9 +68,8 @@ class SecondMaxTask extends TriggerProcessor.Task {
 
     private final RenderScript RS;
     private final ScriptC_findSecond mScriptCFindSecond;
-    private final Allocation aWeights;
-    private Allocation aMax;
-    private Allocation aSecond;
+    private final Allocation aMax;
+    private final Allocation aSecond;
 
     private final Config mConfig;
 
@@ -91,9 +90,9 @@ class SecondMaxTask extends TriggerProcessor.Task {
                 .create();
         aMax = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
-        aWeights = CONFIG.getPrecalConfig().generateWeights(RS);
         mScriptCFindSecond.set_aMax(aMax);
         mScriptCFindSecond.set_aSecond(aSecond);
+        mScriptCFindSecond.set_gWeights(CONFIG.getPrecalConfig().generateWeights(RS));
         HOTCELL_COORDS = new HashSet<>();
     }
 
@@ -106,9 +105,9 @@ class SecondMaxTask extends TriggerProcessor.Task {
     @Override
     protected int processFrame(Frame frame) {
         if(mRAW)
-            mScriptCFindSecond.forEach_order_ushort(frame.getAllocation(), aWeights);
+            mScriptCFindSecond.forEach_order_ushort(frame.getAllocation());
         else
-            mScriptCFindSecond.forEach_order_uchar(frame.getAllocation(), aWeights);
+            mScriptCFindSecond.forEach_order_uchar(frame.getAllocation());
         if(frame.getExposureBlock().count.intValue()
                 % (CONFIG.getTargetFPS()*CONFIG.getExposureBlockPeriod()) == 0) {
             mProcessor.application.checkBatteryStats();

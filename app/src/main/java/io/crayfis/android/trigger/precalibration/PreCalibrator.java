@@ -32,7 +32,6 @@ public class PreCalibrator extends TriggerProcessor {
     public static final String KEY_SECOND_MAX_THRESH = "second_max_thresh";
     public static final String KEY_HOTCELL_LIMIT = "hotcell_thresh";
     public static final String KEY_WEIGHT_GRID_SIZE = "grid_size";
-    public static final String KEY_HOTCELLS_N_DEVIATIONS = "n_deviations";
 
     public static class ConfigList extends ArrayList<Config> {
 
