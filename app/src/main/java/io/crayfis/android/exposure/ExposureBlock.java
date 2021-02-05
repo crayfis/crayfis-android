@@ -60,6 +60,7 @@ public class ExposureBlock {
 
 	public final CFApplication.State daq_state;
     public final AtomicInteger count = new AtomicInteger();
+    public final AtomicInteger dropped = new AtomicInteger();
 
 	private boolean frozen = false;
 	boolean aborted = false;
@@ -265,7 +266,8 @@ public class ExposureBlock {
                 .setBatteryTemp(batteryTemp)
                 .setBatteryEndTemp(batteryEndTemp)
                 .setXbn(xbn)
-                .setAborted(aborted);
+                .setAborted(aborted)
+                .setFramesDropped(dropped.intValue());
 
         if (start_loc.hasAccuracy()) {
             buf.setGpsAccuracy(start_loc.getAccuracy());

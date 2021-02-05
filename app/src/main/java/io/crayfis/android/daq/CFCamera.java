@@ -304,6 +304,17 @@ class CFCamera {
             }
             frame.commit();
         }
+
+        @Override
+        public void onDropped() {
+            CFLog.w("dropped frame");
+            ExposureBlockManager.getInstance()
+                    .getCurrentExposureBlock()
+                    .dropped
+                    .incrementAndGet();
+
+            // TODO: should we lower the data rate if there are too many drops?
+        }
     };
 
     private void configureManualSettings() {

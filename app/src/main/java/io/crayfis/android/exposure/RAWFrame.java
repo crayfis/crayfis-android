@@ -161,15 +161,14 @@ class RAWFrame extends Frame {
 
                     } else {
                         mShortArrayLock.unlock();
-                        mDroppedImages++;
-                        CFLog.w("dropped: " + mDroppedImages);
+                        mCallback.onDropped();
                     }
 
 
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     i.close();
                     nImagesOutstanding.decrementAndGet();
-                    mDroppedImages++;
+                    mCallback.onDropped();
                 }
             }
         }
@@ -182,7 +181,7 @@ class RAWFrame extends Frame {
                 if(mImageQueue.size() == 0) return;
                 mImageQueue.poll()
                         .close();
-                mDroppedImages++;
+                mCallback.onDropped();
             }
 
             mImageQueue.offer(mImageReader.acquireNextImage());

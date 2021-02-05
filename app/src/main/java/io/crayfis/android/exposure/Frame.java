@@ -86,6 +86,7 @@ public abstract class Frame {
 
     public interface OnFrameCallback {
         void onFrame(Frame frame);
+        void onDropped();
     }
 
     Frame(final Allocation alloc,
@@ -424,10 +425,6 @@ public abstract class Frame {
         final Deque<Allocation> mAllocs;
         final List<Surface> mSurfaces;
 
-        // statistics on frame building
-        int mDroppedImages = 0;
-        int mMatches = 0;
-
         // stop has been called
         boolean mStopCalled = false;
 
@@ -499,8 +496,6 @@ public abstract class Frame {
                     return;
                 }
 
-                mMatches++;
-                
                 // operate in the same thread as the CaptureCallback
                 mFrameHandler.post(new Runnable() {
                     @Override

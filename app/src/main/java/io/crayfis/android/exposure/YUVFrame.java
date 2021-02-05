@@ -129,7 +129,7 @@ public class YUVFrame extends Frame {
         public void onBufferAvailable(final Allocation alloc) {
             if(nBuffersQueued.get() > MAX_BUFFERS) {
                 aBurner.ioReceive();
-                mDroppedImages++;
+                mCallback.onDropped();
             } else {
                 nBuffersQueued.incrementAndGet();
             }
@@ -165,12 +165,13 @@ public class YUVFrame extends Frame {
                             .setAcquisitionTime(t)
                             .build());
 
-                    aReady = null;
-
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     Log.e(TAG, "stale allocation timestamp encountered, discarding image.");
-                    mDroppedImages++;
+                    mAllocs.offer(aReady);
+                    mCallback.onDropped();
                 }
+
+                aReady = null;
             }
         }
     }
