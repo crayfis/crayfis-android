@@ -83,19 +83,14 @@ public class DAQManager {
         changeCameraFrom(getCameraId());
     }
 
-    public void changeCameraFrom(final int currentId) {
-        changeCameraFrom(currentId, false);
-    }
-
     /**
      * The same as changeCamera(), except marks the ID of a bad frame to avoid changing camera
      * multiple times unnecessarily
      *
      * @param currentId The cameraId of the bad frame
-     * @param quit Whether we quit the thread after changing the camera
      */
-    public void changeCameraFrom(final int currentId, final boolean quit) {
-        mCFCamera.changeCameraFrom(currentId, quit);
+    public void changeCameraFrom(final int currentId) {
+        mCFCamera.changeCameraFrom(currentId);
     }
 
     public void changeDataRate(boolean increase) {

@@ -238,7 +238,8 @@ public class LayoutStatus extends NavDrawerFragment {
 
         }
 
-        if (application.getApplicationState() == CFApplication.State.FINISHED) {
+        CFApplication.State state = application.getApplicationState();
+        if (state == CFApplication.State.FINISHED || state == CFApplication.State.IDLE) {
             setErrorMessage(0);
         } else if (!DAQManager.getInstance().isUpdatingLocation()) {
             setErrorMessage(R.string.location_warning);

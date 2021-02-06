@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import io.crayfis.android.R;
+import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
 import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
@@ -92,7 +93,6 @@ class CFCamera {
 
     interface ConfiguredCallback {
         void onConfigured();
-        void onStopped();
     }
 
     private ConfiguredCallback mConfiguredCallback;
@@ -104,6 +104,7 @@ class CFCamera {
 
     void register(Context context) {
         mApplication = (CFApplication)context.getApplicationContext();
+        mCameraManager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
 
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
@@ -113,11 +114,25 @@ class CFCamera {
     }
 
     void unregister() {
-        if(!mCameraThread.isAlive()) return; // already unregistered
-        changeCameraFrom(mCameraId, true);
+
+        changeCameraFrom(mCameraId);
+
+        // now get rid of the threads
+        mCameraThread.quitSafely();
+        mFrameThread.quitSafely();
+        try {
+            mCameraThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+            mFrameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
-    synchronized void changeCameraFrom(final int currentId, final boolean quit) {
+    synchronized void changeCameraFrom(final int currentId) {
 
         if (currentId != mCameraId || !mCameraThread.isAlive()) return;
 
@@ -126,73 +141,46 @@ class CFCamera {
         }
         CFConfig.getInstance().setPrecalConfig(null);
 
-        mCameraHandler.post(new Runnable() {
-            @Override
-            public void run() {
+        // find next camera based on DAQ state
+        int nextId = -1;
+        CFApplication.State state = mApplication.getApplicationState();
 
-                // find next camera based on DAQ state
-                int nextId = -1;
-                CFApplication.State state = mApplication.getApplicationState();
-                if(!quit) {
-                    switch (state) {
-                        case INIT:
-                            nextId = 0;
-                            break;
-                        case SURVEY:
-                            // switch cameras and try again
-                            nextId = currentId + 1;
-                            if (nextId >= getNumberOfCameras()) {
-                                nextId = -1;
-                            } else {
-                                // need a new SURVEY XB for next camera
-                                ExposureBlockManager.getInstance().abortExposureBlock();
-                            }
-                            break;
-                        case PRECALIBRATION:
-                        case CALIBRATION:
-                        case DATA:
-                        case IDLE:
-                        case FINISHED:
-                            // take a break for a while
-                    }
-
-                    if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
-                        mApplication.startSurveyTimer();
-                    }
+        switch (state) {
+            case INIT:
+                nextId = 0;
+                break;
+            case SURVEY:
+                // switch cameras and try again
+                nextId = currentId + 1;
+                if (nextId >= getNumberOfCameras()) {
+                    nextId = -1;
+                } else {
+                    // need a new SURVEY XB for next camera
+                    ExposureBlockManager.getInstance().abortExposureBlock();
                 }
+                break;
+            case PRECALIBRATION:
+            case CALIBRATION:
+            case DATA:
+            case IDLE:
+            case FINISHED:
+                // take a break for a while
+        }
 
-                mCameraId = nextId;
+        if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
+            mApplication.startInitTimer();
+        }
 
-                CFLog.i("cameraId:" + currentId + " -> " + nextId);
+        mCameraId = nextId;
 
-                configure(new ConfiguredCallback() {
-                    @Override
-                    public void onConfigured() {
-                        if(state == CFApplication.State.INIT) {
-                            mApplication.setApplicationState(CFApplication.State.SURVEY);
-                        }
-                    }
+        CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
-                    @Override
-                    public void onStopped() {
-                        if (quit) {
-                            // if we are unregistering the camera
-                            mCameraThread.quitSafely();
-                            mFrameThread.quitSafely();
-                            try {
-                                mCameraThread.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            try {
-                                mFrameThread.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                    }
-                });
+        configure(new ConfiguredCallback() {
+            @Override
+            public void onConfigured() {
+                if(state == CFApplication.State.INIT) {
+                    mApplication.setApplicationState(CFApplication.State.SURVEY);
+                }
             }
         });
 
@@ -210,6 +198,7 @@ class CFCamera {
 
             try {
 
+                mPreviewRequests.clear();
                 configureCameraPreviewSession();
 
                 boolean raw = (RAW_FORMATS.contains(mFormat));
@@ -226,6 +215,7 @@ class CFCamera {
                     mPreviewRequests.add(mPreviewRequestBuilder.build());
                     mPreviewRequestBuilder.removeTarget(s); // just one per request
                 }
+
 
                 mCameraDevice.createCaptureSession(outputs, mStateCallback, mCameraHandler);
 
@@ -290,7 +280,7 @@ class CFCamera {
         public void onConfigureFailed(
                 @NonNull CameraCaptureSession cameraCaptureSession) {
             CFLog.e("Configure failed");
-            changeCameraFrom(mCameraId, false);
+            changeCameraFrom(mCameraId);
         }
     };
 
@@ -308,10 +298,9 @@ class CFCamera {
         @Override
         public void onDropped() {
             CFLog.w("dropped frame");
-            ExposureBlockManager.getInstance()
-                    .getCurrentExposureBlock()
-                    .dropped
-                    .incrementAndGet();
+            ExposureBlock xb = ExposureBlockManager.getInstance().getCurrentExposureBlock();
+            if(xb != null)
+                xb.dropped.incrementAndGet();
 
             // TODO: should we lower the data rate if there are too many drops?
         }
@@ -343,6 +332,7 @@ class CFCamera {
 
 
         mPreviewRequestBuilder.set(CaptureRequest.EDGE_MODE, CameraMetadata.EDGE_MODE_OFF);
+        mPreviewRequestBuilder.set(CaptureRequest.HOT_PIXEL_MODE, CameraMetadata.HOT_PIXEL_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CameraMetadata.NOISE_REDUCTION_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,
                 mCameraCharacteristics.get(CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY));
@@ -494,9 +484,10 @@ class CFCamera {
         mConfiguredCallback = callback;
 
         // get rid of old camera setup
-
         mCameraOpenCloseLock.acquireUninterruptibly();
 
+        // since these are configured with mCameraHandler, close them in
+        // the main thread to avoid a race condition with unregister()
         if (mCaptureSession != null) {
             mCaptureSession.close();
             mCaptureSession = null;
@@ -513,36 +504,40 @@ class CFCamera {
         mCameraOpenCloseLock.release();
 
         if(mCameraId == -1) {
-            mConfiguredCallback.onStopped();
             return;
         }
 
-        // make sure we have permission to use the camera
-        if (ContextCompat.checkSelfPermission(mApplication, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            mApplication.userErrorMessage(true, R.string.quit_permission);
-            return;
-        }
+        mCameraHandler.post(new Runnable() {
+            @Override
+            public void run() {
 
-        // open the camera in the thread we have created
-        mCameraManager = (CameraManager) mApplication.getSystemService(Context.CAMERA_SERVICE);
+                // make sure we have permission to use the camera
+                if (ContextCompat.checkSelfPermission(mApplication, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    mApplication.userErrorMessage(true, R.string.quit_permission);
+                    return;
+                }
 
-        try {
-            mCameraOpenCloseLock.acquireUninterruptibly();
+                // open the camera in the thread we have created
+                try {
+                    mCameraOpenCloseLock.acquireUninterruptibly();
 
-            String[] idList = mCameraManager.getCameraIdList();
-            String idString = idList[mCameraId];
+                    String[] idList = mCameraManager.getCameraIdList();
+                    String idString = idList[mCameraId];
 
-            mCameraCharacteristics = mCameraManager.getCameraCharacteristics(idString);
-            mConfigMap = mCameraCharacteristics.get(
-                    CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-            mCameraManager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
+                    mCameraCharacteristics = mCameraManager.getCameraCharacteristics(idString);
+                    mConfigMap = mCameraCharacteristics.get(
+                            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+                    mCameraManager.openCamera(idString, mCameraDeviceCallback, mCameraHandler);
 
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
-            mCameraOpenCloseLock.release();
-            mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
-        }
+                } catch (CameraAccessException e) {
+                    e.printStackTrace();
+                    mCameraOpenCloseLock.release();
+                    mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());
+                }
+            }
+        });
+
     }
 
     void changeDataRate(boolean increase) {

@@ -52,12 +52,12 @@ public class CFApplication extends Application {
     private static final long SURVEY_COUNTDOWN_TICK = 1000; // ms
     private static final long SURVEY_DELAY = 10000; // ms
 
-    private boolean mWaitingForSurvey = false;
+    private boolean mWaitingForInit = false;
     public int consecutiveIdles = 0;
 
     private final CFConfig CONFIG = CFConfig.getInstance();
 
-    private CountDownTimer mSurveyTimer = new CountDownTimer(SURVEY_DELAY, SURVEY_COUNTDOWN_TICK) {
+    private final CountDownTimer mInitTimer = new CountDownTimer(SURVEY_DELAY, SURVEY_COUNTDOWN_TICK) {
         @Override
         public void onTick(long millisUntilFinished) {
             CFLog.d(Long.toString(millisUntilFinished));
@@ -77,8 +77,8 @@ public class CFApplication extends Application {
             }
             if(CFConfig.getInstance().getQualTrigger().getName().equals("facedown")
                     || DAQManager.getInstance().isPhoneFlat()) {
-                mWaitingForSurvey = false;
-                setApplicationState(CFApplication.State.SURVEY);
+                mWaitingForInit = false;
+                setApplicationState(CFApplication.State.INIT);
             } else {
                 // continue waiting
                 userErrorMessage(false, R.string.warning_facedown);
@@ -337,21 +337,20 @@ public class CFApplication extends Application {
                     newTemp / 10.));
         }
 
+        boolean healthy = !mBatteryLow && !mBatteryOverheated;
 
         // go into idle mode if necessary
         if (mApplicationState != CFApplication.State.IDLE && mApplicationState != State.FINISHED
-                && (mBatteryLow || mBatteryOverheated)) {
+                && !healthy) {
             setApplicationState(CFApplication.State.IDLE);
         }
 
         // if we are in idle mode, restart if everything is okay
-        else if (mApplicationState == CFApplication.State.IDLE
-                && !mBatteryLow && !mBatteryOverheated && !mWaitingForSurvey) {
-
-            setApplicationState(CFApplication.State.SURVEY);
+        else if (mApplicationState == CFApplication.State.IDLE && healthy && !mWaitingForInit) {
+            setApplicationState(CFApplication.State.INIT);
         }
 
-        return !mBatteryLow && !mBatteryOverheated;
+        return healthy;
 
     }
 
@@ -457,14 +456,18 @@ public class CFApplication extends Application {
         }
     }
 
-    public void startSurveyTimer() {
+    public void startInitTimer() {
+        mWaitingForInit = true;
         setApplicationState(State.IDLE);
-        mSurveyTimer.start();
-        mWaitingForSurvey = true;
+        mInitTimer.start();
+    }
+
+    public boolean isWaitingForInit() {
+        return mWaitingForInit;
     }
 
     public void killTimer() {
-        mSurveyTimer.cancel();
+        mInitTimer.cancel();
     }
 
     /**

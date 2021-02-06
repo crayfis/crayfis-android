@@ -480,7 +480,12 @@ public abstract class Frame {
          * @param alloc The allocation to be replenished
          */
         void replenish(Allocation alloc) {
-            mAllocs.add(alloc);
+            if(mStopCalled) {
+                // we're getting rid of the producer, so destroy this
+                alloc.destroy();
+            } else {
+                mAllocs.add(alloc);
+            }
         }
 
         /**

@@ -67,7 +67,7 @@ public class DAQService extends Service {
 
     private DAQManager mDAQManager;
 
-    private ExposureBlockManager xbManager;
+    private ExposureBlockManager mXBManager;
 
     @Override
     public void onCreate() {
@@ -182,11 +182,12 @@ public class DAQService extends Service {
     private void doStateTransitionInitialization(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
 
         switch (previousState) {
+            case IDLE:
             case FINISHED:
 
-                xbManager = ExposureBlockManager.getInstance();
-                xbManager.register(mApplication);
-                xbManager.newExposureBlock(CFApplication.State.INIT);
+                mXBManager = ExposureBlockManager.getInstance();
+                mXBManager.register(mApplication);
+                mXBManager.newExposureBlock(CFApplication.State.INIT);
 
                 // start camera
 
@@ -205,64 +206,14 @@ public class DAQService extends Service {
      * @throws IllegalFsmStateException
      */
     private void doStateTransitionSurvey(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+        if(previousState != CFApplication.State.INIT)
+            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
         CONFIG.setThresholds(255);
-        switch (previousState) {
-            case IDLE:
-                mDAQManager.changeCamera();
-            case INIT:
-                xbManager.newExposureBlock(CFApplication.State.SURVEY);
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
+        mXBManager.newExposureBlock(CFApplication.State.SURVEY);
 
     }
 
-    /**
-     * This mode is basically just used to cleanly close out any current exposure blocks.
-     * For example, we transition here when the phone is locked or the app is suspended.
-     *
-     * @param previousState Previous {@link CFApplication.State}
-     * @throws IllegalFsmStateException
-     */
-    private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-
-        // notify user that we are no longer running
-        mNotificationManager.notify(FOREGROUND_ID, mNotificationBuilder
-                .setContentText(getString(R.string.notification_idle))
-                .build());
-
-        // schedule a timer to check battery
-        Timer idleTimer = new Timer();
-        TimerTask idleTimerTask = new TimerTask() {
-            @Override
-            public void run() {
-                if(mApplication.checkBatteryStats() == Boolean.TRUE) {
-                    this.cancel();
-                }
-            }
-        };
-        idleTimer.schedule(idleTimerTask,
-                CONFIG.getExposureBlockPeriod() * 1000,
-                CONFIG.getExposureBlockPeriod() * 1000);
-
-        switch(previousState) {
-            case INIT:
-                // starting with low battery, but finish initialization first
-                break;
-            case SURVEY:
-            case PRECALIBRATION:
-            case CALIBRATION:
-            case DATA:
-                // for calibration or data, mark the block as aborted
-                mDAQManager.changeCamera();
-                xbManager.abortExposureBlock();
-                break;
-            default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-        }
-    }
 
     private void doStateTransitionPrecalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         if(previousState != CFApplication.State.SURVEY)
@@ -290,7 +241,7 @@ public class DAQService extends Service {
         if(previousState != CFApplication.State.PRECALIBRATION)
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-        xbManager.newExposureBlock(CFApplication.State.CALIBRATION);
+        mXBManager.newExposureBlock(CFApplication.State.CALIBRATION);
     }
 
     /**
@@ -303,7 +254,58 @@ public class DAQService extends Service {
         if(previousState != CFApplication.State.CALIBRATION)
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-        xbManager.newExposureBlock(CFApplication.State.DATA);
+        mXBManager.newExposureBlock(CFApplication.State.DATA);
+    }
+
+    /**
+     * This mode is basically just used to cleanly close out any current exposure blocks.
+     * For example, we transition here when the phone is locked or the app is suspended.
+     *
+     * @param previousState Previous {@link CFApplication.State}
+     * @throws IllegalFsmStateException
+     */
+    private void doStateTransitionIdle(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
+
+        // stop camera, sensors, and location
+        mDAQManager.unregister();
+
+        // notify user that we are no longer running
+        mNotificationManager.notify(FOREGROUND_ID, mNotificationBuilder
+                .setContentText(getString(R.string.notification_idle))
+                .build());
+
+        // schedule a timer to check battery unless the DAQ just failed SURVEY
+        if(!mApplication.isWaitingForInit()) {
+            Timer idleTimer = new Timer();
+            TimerTask idleTimerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    if (mApplication.checkBatteryStats() == Boolean.TRUE) {
+                        this.cancel();
+                    }
+                }
+            };
+            idleTimer.schedule(idleTimerTask,
+                    CONFIG.getExposureBlockPeriod() * 1000,
+                    CONFIG.getExposureBlockPeriod() * 1000);
+        }
+
+        switch(previousState) {
+            case INIT:
+                // starting with low battery, but finish initialization first
+                mXBManager.newExposureBlock(CFApplication.State.IDLE);
+                break;
+            case SURVEY:
+            case PRECALIBRATION:
+            case CALIBRATION:
+            case DATA:
+                // for calibration or data, mark the block as aborted
+                mXBManager.abortExposureBlock();
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+        }
+        mXBManager.unregister();
     }
 
     private void doStateTransitionFinished(CFApplication.State previous) {
@@ -315,10 +317,10 @@ public class DAQService extends Service {
             case DATA:
             case IDLE:
 
-                xbManager.newExposureBlock(CFApplication.State.FINISHED);
-                xbManager.flushCommittedBlocks();
+                mXBManager.newExposureBlock(CFApplication.State.FINISHED);
+                mXBManager.flushCommittedBlocks();
                 mDAQManager.unregister();
-                xbManager.unregister();
+                mXBManager.unregister();
                 UploadExposureService.uploadFileCache(this);
 
                 mApplication.killTimer();
@@ -442,7 +444,7 @@ public class DAQService extends Service {
                     + "target eff=" +String.format("%1.2f", targetL1Rate)+ "\n"
                     + "L1 pass rate=" + String.format("%1.2f", L2Processor.getPassRateFPM())
                     + ", target=" + String.format("%1.2f",CONFIG.getTargetEventsPerMinute())+"\n"
-                    + "Exposure Blocks:" + (xbManager != null ? xbManager.getTotalXBs() : -1) + "\n"
+                    + "Exposure Blocks:" + (mXBManager != null ? mXBManager.getTotalXBs() : -1) + "\n"
                     + "Battery temp = " + String.format("%1.1f", mApplication.getBatteryTemp()/10.) + "C\n"
                     + "\n";
 
@@ -454,7 +456,7 @@ public class DAQService extends Service {
                     + "L1 trig: " + CONFIG.getL1Trigger() + "\n"
                     + "L2 trig: " + CONFIG.getL2Trigger() + "\n";
 
-            ExposureBlock xb = xbManager.getCurrentExposureBlock();
+            ExposureBlock xb = mXBManager.getCurrentExposureBlock();
             if(xb != null) {
                 devtxt += xb.underflow_hist.toString();
             }

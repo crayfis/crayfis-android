@@ -104,7 +104,7 @@ public class YUVFrame extends Frame {
             super(rs, size, callback, handler, builder);
 
             // all of mAlloc should have the same surface
-            aBurner = mAllocs.peek();
+            aBurner = mAllocs.pop();
             aBurner.setOnBufferAvailableListener(this);
             mSurfaces.add(aBurner.getSurface());
 
@@ -173,6 +173,12 @@ public class YUVFrame extends Frame {
 
                 aReady = null;
             }
+        }
+
+        @Override
+        public void close() {
+            super.close();
+            aBurner.destroy();
         }
     }
 
