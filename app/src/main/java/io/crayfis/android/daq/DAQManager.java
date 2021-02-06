@@ -136,7 +136,7 @@ public class DAQManager {
 
     public Location getLastKnownLocation() {
         if(mCFLocation == null) return null;
-        return mCFLocation.currentLocation;
+        return mCFLocation.getLastKnownLocation();
     }
 
     public boolean isUpdatingLocation() {

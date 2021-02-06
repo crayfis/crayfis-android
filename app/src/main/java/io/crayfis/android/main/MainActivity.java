@@ -122,7 +122,7 @@ public class MainActivity extends Activity  {
      *  Request relevant permissions if not already enabled
      */
     private void checkPermissions() {
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasPermissions(this)) {
+        if(!hasPermissions(this)) {
             requestPermissions(permissions, REQUEST_CODE_PERMISSIONS);
         } else {
             // ready to start DAQActivity
@@ -133,7 +133,6 @@ public class MainActivity extends Activity  {
     }
 
 	@Override
-    @TargetApi(23)
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
         // loop through requested permissions and see if any were denied
@@ -209,11 +208,10 @@ public class MainActivity extends Activity  {
                     Manifest.permission.ACCESS_FINE_LOCATION
             };
         }
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            for (String p : permissions) {
-                if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
-                    return false;
-                }
+
+        for (String p : permissions) {
+            if (context.checkSelfPermission(p) != PackageManager.PERMISSION_GRANTED) {
+                return false;
             }
         }
         return true;
