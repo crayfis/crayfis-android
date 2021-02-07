@@ -249,6 +249,8 @@ public class LayoutStatus extends NavDrawerFragment {
             setErrorMessage(R.string.bad_user_code);
         } else if (!UploadExposureService.sPermitUpload.get()) {
             setErrorMessage(R.string.server_overload);
+        } else if (!UploadExposureService.sValidHash.get()) {
+            setErrorMessage(R.string.bad_hash);
         } else {
             setErrorMessage(0);
         }

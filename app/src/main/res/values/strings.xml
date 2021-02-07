@@ -113,8 +113,9 @@
     <string name="status_pct" translatable="false">%d%% complete\n%d:%02d remaining</string>
     <string name="status_server" translatable="false">Attempting connection to the server...</string>
 
-    <string name="bad_user_code">Invalid user code.</string>
-    <string name="server_overload">Server overloaded</string>
+    <string name="bad_user_code">Upload error: invalid user code</string>
+    <string name="server_overload">Upload error: server overloaded</string>
+    <string name="bad_hash" translatable="false">Upload error: corrupted data</string>
     <string name="ignored">Ignored</string>
     <string name="toast_leader">This pane shows the active network map and leaderboard.</string>
     <string name="toast_hist_zero">When the app has finished calibrating, this pane will show a histogram of the particle candidates.</string>

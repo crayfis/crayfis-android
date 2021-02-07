@@ -3,6 +3,8 @@ package io.crayfis.android.server;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
+import android.util.Base64;
+
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
@@ -134,9 +136,10 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             ByteString bytesSecret = ByteString.copyFromUtf8(BuildConfig.SECRET_SALT);
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
-                md.digest(bytesSecret.toByteArray());
-                md.digest(rawData.toByteArray());
-                c.setRequestProperty("Hash-code", md.toString());
+                md.update(bytesSecret.toByteArray());
+                md.update(rawData.toByteArray());
+                String b64Hash = Base64.encodeToString(md.digest(), Base64.DEFAULT);
+                c.setRequestProperty("Hash-code", b64Hash);
             } catch (NoSuchAlgorithmException e) {
                 e.printStackTrace();
             }
@@ -168,6 +171,7 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         c.connect();
 
         final int serverResponseCode = c.getResponseCode();
+        CFLog.i("Connected! Status = " + serverResponseCode);
 
         SharedPreferences.Editor editor = sharedprefs.edit();
         switch (serverResponseCode) {
@@ -191,6 +195,13 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
 
                 UploadExposureService.sPermitUpload.set(false);
                 return Boolean.FALSE;
+            case 422:
+                // invalid hashcode, presumably on a debug device
+                UploadExposureService.sValidHash.set(false);
+                return Boolean.FALSE;
+            default:
+                return Boolean.FALSE;
+
         }
 
         BufferedReader reader = new BufferedReader(new InputStreamReader(c.getInputStream()));
@@ -204,7 +215,6 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         CFConfig.getInstance().updateFromServer(serverCommand);
         mApplication.savePreferences();
 
-        CFLog.i("Connected! Status = " + serverResponseCode);
         CFLog.d("Received json response:\n" + sb.toString());
 
         // and now disconnect
@@ -214,6 +224,6 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
     }
 
     private boolean canUpload() {
-        return mApplication.isNetworkAvailable() && UploadExposureService.sPermitUpload.get() && UploadExposureService.sValidId.get();
+        return mApplication.isNetworkAvailable() && UploadExposureService.sPermitUpload.get();
     }
 }

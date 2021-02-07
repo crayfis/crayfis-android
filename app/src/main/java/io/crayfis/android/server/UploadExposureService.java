@@ -39,6 +39,7 @@ public class UploadExposureService extends IntentService {
 
     public static final AtomicBoolean sPermitUpload = new AtomicBoolean(true);
     public static final AtomicBoolean sValidId = new AtomicBoolean(true);
+    public static final AtomicBoolean sValidHash = new AtomicBoolean(true);
 
     public static final String EXTRA_CAMERA_ID = "camera_id";
 
