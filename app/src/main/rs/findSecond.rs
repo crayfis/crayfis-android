@@ -25,7 +25,7 @@ static void reorder(uchar in, uint32_t x, uint32_t y) {
 
 // given the largest value, second largest value, and a new allocation,
 // updates the ordering
-void RS_KERNEL order_uchar(uchar in, uint32_t x, uint32_t y) {
+void RS_KERNEL order_weighted_uchar(uchar in, uint32_t x, uint32_t y) {
 
     uchar wgt = rsGetElementAt_uchar(gWeights, x, y);
     uchar adj = (uchar) ((uint32_t) in * wgt / 255);
@@ -34,13 +34,21 @@ void RS_KERNEL order_uchar(uchar in, uint32_t x, uint32_t y) {
 
 }
 
-void RS_KERNEL order_ushort(ushort in, uint32_t x, uint32_t y) {
+void RS_KERNEL order_weighted_ushort(ushort in, uint32_t x, uint32_t y) {
     uchar wgt = rsGetElementAt_uchar(gWeights, x, y);
-
     // for finding hotcells, we shouldn't need the extra bits of precision
     uchar adj = (uchar) max((uint32_t)in * wgt / 255, (uint32_t)255);
 
     reorder(adj, x, y);
 
+}
+
+void RS_KERNEL order_uchar(uchar in, uint32_t x, uint32_t y) {
+    reorder(in, x, y);
+}
+
+void RS_KERNEL order_ushort(ushort in, uint32_t x, uint32_t y) {
+    uchar in8 = (uchar)(max((uint32_t)in, (uint32_t)255));
+    reorder(in8, x, y);
 }
 

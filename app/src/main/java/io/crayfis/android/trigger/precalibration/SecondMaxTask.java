@@ -92,7 +92,8 @@ class SecondMaxTask extends TriggerProcessor.Task {
         aSecond = Allocation.createTyped(RS, type, Allocation.USAGE_SCRIPT);
         mScriptCFindSecond.set_aMax(aMax);
         mScriptCFindSecond.set_aSecond(aSecond);
-        mScriptCFindSecond.set_gWeights(CONFIG.getPrecalConfig().generateWeights(RS));
+        if(processor.xb.weights != null)
+            mScriptCFindSecond.set_gWeights(processor.xb.weights);
         HOTCELL_COORDS = new HashSet<>();
     }
 
