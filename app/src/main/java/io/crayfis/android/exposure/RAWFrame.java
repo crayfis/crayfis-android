@@ -59,7 +59,6 @@ class RAWFrame extends Frame {
         int[] hist = new int[1024];
 
         // apply weights if necessary
-        mHistLock.lock();
         if(mExposureBlock.weights != null) {
             mScriptCHist.forEach_histogram_weighted(aBuf, mExposureBlock.weights);
         } else {
@@ -68,8 +67,6 @@ class RAWFrame extends Frame {
 
         aHist.copyTo(hist);
         mScriptCHist.invoke_clear();
-
-        mHistLock.unlock();
 
         return hist;
     }

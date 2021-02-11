@@ -8,5 +8,6 @@ static const uchar gOffsetByte = (uchar)(gOffset * 255);
 static const uchar gMaxByte = (uchar)255;
 
 uchar RS_KERNEL weightYUV(uchar wgt, uint32_t x, uint32_t y) {
-    return (uchar)((uint)rsGetElementAtYuv_uchar_Y(gIn, x, y) * wgt + gOffsetByte)/gMaxByte;
+    uint in = (uint)rsGetElementAtYuv_uchar_Y(gIn, x, y);
+    return (uchar)((in * wgt + gOffsetByte)/gMaxByte);
 }

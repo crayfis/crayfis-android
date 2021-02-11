@@ -57,7 +57,7 @@ public abstract class Frame {
 
     // these are kept as instance variables in case the scripts
     // are rebuilt by the Builder (e.g. for changing cameras)
-    final Lock mHistLock;
+    private final Lock mHistLock;
 
     final Allocation aHist;
 
@@ -120,7 +120,7 @@ public abstract class Frame {
 
 
     // get raw data in region with inclusive edges at xc +/- dx and yc +/- dy
-    // non-existent pixels are set to zero
+    // non-existent pixels are set to -1
     public void copyRegion(int xc, int yc, int dx, int dy, short[] array, int offset) {
 
         int xmin = Math.max(xc - dx, 0);
@@ -208,12 +208,14 @@ public abstract class Frame {
     abstract int[] histogram();
 
     void calculateStatistics() {
+        mHistLock.lock();
         if (mHist != null) {
             // somebody beat us to it! nothing to do.
             return;
         }
 
         mHist = histogram();
+        mHistLock.unlock();
 
         mExposureBlock.underflow_hist.fill(mHist);
 

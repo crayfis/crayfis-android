@@ -66,7 +66,6 @@ public class YUVFrame extends Frame {
         int[] hist = new int[256];
 
         // apply weights if necessary
-        mHistLock.lock();
 
         if(mExposureBlock.weights != null) {
             mScriptCWeight.set_gIn(aBuf);
@@ -77,7 +76,6 @@ public class YUVFrame extends Frame {
         }
 
         aHist.copyTo(hist);
-        mHistLock.unlock();
 
         return hist;
     }
