@@ -37,7 +37,7 @@ void RS_KERNEL order_weighted_uchar(uchar in, uint32_t x, uint32_t y) {
 void RS_KERNEL order_weighted_ushort(ushort in, uint32_t x, uint32_t y) {
     uchar wgt = rsGetElementAt_uchar(gWeights, x, y);
     // for finding hotcells, we shouldn't need the extra bits of precision
-    uchar adj = (uchar) max((uint32_t)in * wgt / 255, (uint32_t)255);
+    uchar adj = (uchar) min((uint32_t)in * wgt / 255, (uint32_t)255);
 
     reorder(adj, x, y);
 
@@ -48,7 +48,7 @@ void RS_KERNEL order_uchar(uchar in, uint32_t x, uint32_t y) {
 }
 
 void RS_KERNEL order_ushort(ushort in, uint32_t x, uint32_t y) {
-    uchar in8 = (uchar)(max((uint32_t)in, (uint32_t)255));
+    uchar in8 = (uchar)(min((uint32_t)in, (uint32_t)255));
     reorder(in8, x, y);
 }
 
