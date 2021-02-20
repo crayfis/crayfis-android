@@ -60,8 +60,8 @@ public class Histogram implements Iterable<Long> {
         double n_total = getIntegral();
         int nprint = 0;
         for (int i=0;i<values.length && nprint<10;i++) {
-            double rate = getIntegral(i, 256) / (1.0*n_total);
             if (values[i] == 0) { continue; }
+            double rate = getIntegral(i, nbins) / (1.0*n_total);
             nprint++;
             res += "[ bin " + i + " = " + values[i] + " eff = " + String.format("%.3f", rate) + "] \n";
         }

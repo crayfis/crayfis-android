@@ -5,6 +5,7 @@ import java.util.HashMap;
 import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.trigger.TriggerProcessor;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by cshimmin on 5/12/16.
@@ -54,7 +55,7 @@ class L1Task extends TriggerProcessor.Task {
     protected int processFrame(Frame frame) {
 
         int max = frame.getPixMax();
-        L1Calibrator.addStatistic(max);
+        L1Processor.getCalibrator().addValue(max);
 
         if(frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
             L1Processor.L1CountData++;

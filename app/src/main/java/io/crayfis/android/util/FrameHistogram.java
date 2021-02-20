@@ -6,10 +6,13 @@ package io.crayfis.android.util;
 
 public class FrameHistogram extends FrameHistory<Integer> {
 
-    private Histogram h = new Histogram(256);
+    private final Histogram h;
+    public final int nBins;
 
-    public FrameHistogram(int n) {
-        super(n);
+    public FrameHistogram(int nFrames, int nBins) {
+        super(nFrames);
+        this.nBins = nBins;
+        h = new Histogram(nBins);
     }
 
     @Override

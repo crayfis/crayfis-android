@@ -2,6 +2,7 @@ package io.crayfis.android.trigger.L1;
 
 import java.util.HashMap;
 
+import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.main.CFApplication;
 import io.crayfis.android.server.CFConfig;
@@ -16,18 +17,35 @@ public class L1Processor extends TriggerProcessor {
 
     public static final String KEY_TARGET_EPM = "target_epm";
     public static final String KEY_TRIGGER_LOCK = "trig_lock";
+
     public static final String KEY_L1_THRESH = "l1thresh";
 
     public static int L1CountData;
-    private final L1Calibrator mL1Cal;
+
+    private static L1Calibrator sCalibrator = new L1Calibrator(1,1);
 
     private L1Processor(CFApplication application, ExposureBlock xb, Config config) {
         super(application, xb, config, false);
-        mL1Cal = new L1Calibrator(application, config);
     }
 
     public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
-        L1Calibrator.updateThresholds();
+        CFConfig config = CFConfig.getInstance();
+        Config l1Config = config.getL1Trigger();
+        int nFrames = l1Config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
+        int nBins = DAQManager.getInstance().isStreamingRAW() ? 1024 : 256;
+
+        // update L1Calibrator
+        if(sCalibrator.nBins  != nBins) {
+            sCalibrator = new L1Calibrator(nFrames, nBins);
+            config.setThresholds(nBins-1);
+        } else if(sCalibrator.size() != nFrames) {
+            sCalibrator.updateThresholds();
+            sCalibrator.resize(nFrames); // resize after updating thresholds
+        } else {
+            sCalibrator.updateThresholds();
+        }
+
+        // now use updated trigger
         return new L1Processor(application, xb, CFConfig.getInstance().getL1Trigger());
     }
 
@@ -57,8 +75,12 @@ public class L1Processor extends TriggerProcessor {
     @Override
     public void onMaxReached() {
         if(application.getApplicationState() == CFApplication.State.CALIBRATION) {
-            mL1Cal.submitCalibrationResult();
+            sCalibrator.submitCalibrationResult(application);
             application.setApplicationState(CFApplication.State.DATA);
         }
+    }
+
+    public static L1Calibrator getCalibrator() {
+        return sCalibrator;
     }
 }

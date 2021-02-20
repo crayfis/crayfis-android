@@ -71,6 +71,10 @@ class RAWFrame extends Frame {
         return hist;
     }
 
+    @Override
+    public void copyRange(int xOffset, int yOffset, int w, int h, short[] array) {
+        aBuf.copy2DRangeTo(xOffset, yOffset, w, h, array);
+    }
 
     /**
      * Surface generator for RAW frames
@@ -96,7 +100,7 @@ class RAWFrame extends Frame {
             super(rs, size, callback, handler, builder);
 
             mImageReader = ImageReader.newInstance(size.getWidth(), size.getHeight(), ImageFormat.RAW_SENSOR, MAX_IMAGES);
-            mImageReader.setOnImageAvailableListener(this, handler);
+            mImageReader.setOnImageAvailableListener(this, null);
 
             mShortArrayBuf = new short[size.getWidth() * size.getHeight()];
 

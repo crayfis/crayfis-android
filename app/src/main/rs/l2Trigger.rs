@@ -20,13 +20,12 @@ static const uchar gOffsetByte = (uchar) (gOffset * 255);
 static const uchar gMaxByte = (uchar) 255;
 
 void set_L2Thresh(int l2Thresh) {
-    gL2Thresh = l2Thresh * gMaxByte + gOffsetByte;
+    gL2Thresh = l2Thresh * gMaxByte - gOffsetByte;
 }
 
 // multiplies input allocation by weights and rounds
-static void trigger_default(uint in, uint32_t x, uint32_t y) {
-    uchar weight = rsGetElementAt_uchar(gWeights, x, y);
-    uint adjusted = in * weight;
+static void trigger_default(uint in, uchar wgt, uint32_t x, uint32_t y) {
+    uint adjusted = in * wgt;
 
     if (adjusted > gL2Thresh) {
         uint pixN = rsAtomicInc(gPixN);
@@ -37,9 +36,9 @@ static void trigger_default(uint in, uint32_t x, uint32_t y) {
     }
 }
 
-static void trigger_maxn(uint in, uint32_t x, uint32_t y) {
-    uchar weight = rsGetElementAt_uchar(gWeights, x, y);
-    uint adjusted = (uint)in * weight;
+static void trigger_maxn(uint in, uchar wgt, uint32_t x, uint32_t y) {
+
+    uint adjusted = (uint)in * wgt;
 
     if (adjusted > gL2Thresh && (*gPixN < gNPixMax || adjusted > *(gPixVal + gNPixMax - 1))) {
 
@@ -63,18 +62,21 @@ static void trigger_maxn(uint in, uint32_t x, uint32_t y) {
 }
 
 void RS_KERNEL trigger_uchar(uchar in, uint32_t x, uint32_t y) {
+    uchar wgt = rsGetElementAt_uchar(gWeights, x, y);
     if(gMaxN) {
-        trigger_maxn((uint) in, x, y);
+        trigger_maxn((uint) in, wgt, x, y);
     } else {
-        trigger_default((uint) in, x, y);
+        trigger_default((uint) in, wgt, x, y);
     }
+
 }
 
 void RS_KERNEL trigger_ushort(ushort in, uint32_t x, uint32_t y) {
+    uchar wgt = rsGetElementAt_uchar(gWeights, x, y);
     if(gMaxN) {
-        trigger_maxn((uint) in, x, y);
+        trigger_maxn((uint) in, wgt, x, y);
     } else {
-        trigger_default((uint) in, x, y);
+        trigger_default((uint) in, wgt, x, y);
     }
 }
 

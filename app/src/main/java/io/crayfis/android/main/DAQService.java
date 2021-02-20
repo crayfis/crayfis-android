@@ -209,7 +209,8 @@ public class DAQService extends Service {
         if(previousState != CFApplication.State.INIT)
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-        CONFIG.setThresholds(255);
+        int maxThresh = DAQManager.getInstance().isStreamingRAW() ? 1023 : 255;
+        CONFIG.setThresholds(maxThresh);
         mXBManager.newExposureBlock(CFApplication.State.SURVEY);
 
     }
@@ -241,6 +242,7 @@ public class DAQService extends Service {
         if(previousState != CFApplication.State.PRECALIBRATION)
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
+        L1Processor.getCalibrator().clear();
         mXBManager.newExposureBlock(CFApplication.State.CALIBRATION);
     }
 
@@ -460,7 +462,7 @@ public class DAQService extends Service {
             if(xb != null) {
                 devtxt += xb.underflow_hist.toString();
             }
-            devtxt += "L1 hist = "+ L1Calibrator.getHistogram().toString()+"\n";
+            devtxt += "L1 hist = "+ L1Processor.getCalibrator().getHistogram().toString()+"\n";
             return devtxt;
 
         }

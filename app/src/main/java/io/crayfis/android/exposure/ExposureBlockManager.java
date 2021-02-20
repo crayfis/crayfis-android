@@ -56,7 +56,7 @@ public final class ExposureBlockManager {
         @Override
         public void onTick(long millisUntilFinished) {
             // do nothing the first time
-            if(CONFIG.getExposureBlockPeriod() - millisUntilFinished < PASS_RATE_CHECK_TIME) {
+            if(CONFIG.getExposureBlockPeriod()*1000L - millisUntilFinished < PASS_RATE_CHECK_TIME) {
                 return;
             }
             // check whether the threshold has drifted

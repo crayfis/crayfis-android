@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 
-import io.crayfis.android.ScriptC_weight;
+import io.crayfis.android.ScriptC_yuv;
 import io.crayfis.android.daq.AcquisitionTime;
 import io.crayfis.android.util.CFLog;
 
@@ -30,7 +30,7 @@ public class YUVFrame extends Frame {
 
     // RenderScript objects
     private final ScriptIntrinsicHistogram mScriptIntrinsicHistogram;
-    private final ScriptC_weight mScriptCWeight;
+    private final ScriptC_yuv mScriptCYuv;
     private final Allocation aWeighted;
 
     YUVFrame(@NonNull final Allocation alloc,
@@ -44,7 +44,7 @@ public class YUVFrame extends Frame {
              final ExposureBlock exposureBlock,
              final int resX,
              final int resY,
-             final ScriptC_weight scriptCWeight,
+             final ScriptC_yuv scriptCYuv,
              final ScriptIntrinsicHistogram scriptIntrinsicHistogram,
              final Allocation weighted,
              final Allocation hist,
@@ -53,9 +53,14 @@ public class YUVFrame extends Frame {
         super(alloc, result, producer, acquisitionTime, location, orientation, rotationZZ,
                 pressure, exposureBlock, resX, resY, hist, histLock);
 
+        // first load grayscale data into aBuf so ain can receive another buffer
+        // N.B. since buildFrames() is synchronized, the next ioReceive() will be called after
+        // this terminates, and RS will respect this synchronization
+        scriptCYuv.forEach_grayscale(alloc);
+
         mFormat = Format.YUV;
 
-        mScriptCWeight = scriptCWeight;
+        mScriptCYuv = scriptCYuv;
         mScriptIntrinsicHistogram = scriptIntrinsicHistogram;
         aWeighted = weighted;
     }
@@ -68,8 +73,7 @@ public class YUVFrame extends Frame {
         // apply weights if necessary
 
         if(mExposureBlock.weights != null) {
-            mScriptCWeight.set_gIn(aBuf);
-            mScriptCWeight.forEach_weightYUV(mExposureBlock.weights, aWeighted);
+            mScriptCYuv.forEach_weightYUV(aBuf, mExposureBlock.weights, aWeighted);
             mScriptIntrinsicHistogram.forEach(aWeighted);
         } else {
             mScriptIntrinsicHistogram.forEach(aBuf);
@@ -80,6 +84,15 @@ public class YUVFrame extends Frame {
         return hist;
     }
 
+    @Override
+    public void copyRange(int xOffset, int yOffset, int w, int h, short[] array) {
+        byte[] buf = new byte[w*h];
+        aBuf.copy2DRangeTo(xOffset, yOffset, w, h, buf);
+        for(int i=0; i<buf.length; i++) {
+            array[i] = (short) (buf[i] & 0xFF);
+        }
+    }
+
 
     /**
      * Surface generator for YUV frames
@@ -88,8 +101,8 @@ public class YUVFrame extends Frame {
         static final String TAG = "YuvFrameProducer";
 
         private static final AtomicInteger nBuffersQueued = new AtomicInteger();
-        private Allocation aReady; // already called ioReceive()
-        private final Allocation aBurner; // receives buffers to be dropped
+        private boolean aReady; // already called ioReceive()
+        final Allocation ain; // receives buffers to be converted to grayscale
 
         private static final int MAX_BUFFERS = 2;
 
@@ -101,12 +114,22 @@ public class YUVFrame extends Frame {
             
             super(rs, size, callback, handler, builder);
 
-            // all of mAlloc should have the same surface
-            aBurner = mAllocs.pop();
-            aBurner.setOnBufferAvailableListener(this);
-            mSurfaces.add(aBurner.getSurface());
+            ain = Allocation.createTyped(rs, new Type.Builder(rs, Element.U8(rs))
+                    .setX(size.getWidth())
+                    .setY(size.getHeight())
+                    .setYuvFormat(ImageFormat.YUV_420_888)
+                    .create(),
+                    Allocation.USAGE_IO_INPUT | Allocation.USAGE_SCRIPT);
+
+            mSurfaces.add(ain.getSurface());
 
             nBuffersQueued.set(0);
+            handler.postAtFrontOfQueue(new Runnable() {
+                @Override
+                public void run() {
+                    ain.setOnBufferAvailableListener(Producer.this);
+                }
+            });
         }
 
         @Override
@@ -114,19 +137,20 @@ public class YUVFrame extends Frame {
             Type t = new Type.Builder(rs, Element.U8(rs))
                     .setX(sz.getWidth())
                     .setY(sz.getHeight())
-                    .setYuvFormat(ImageFormat.YUV_420_888)
                     .create();
 
-            // make an extra for the burner allocation
             return Allocation.createAllocations(rs, t,
-                    Allocation.USAGE_SCRIPT | Allocation.USAGE_IO_INPUT, n+1);
+                    Allocation.USAGE_SCRIPT, n);
         }
 
         // Callback for Buffer Available:
         @Override
         public void onBufferAvailable(final Allocation alloc) {
             if(nBuffersQueued.get() > MAX_BUFFERS) {
-                aBurner.ioReceive();
+                // make sure this isn't called during buildFrames()
+                synchronized (this) {
+                    ain.ioReceive();
+                }
                 mCallback.onDropped();
             } else {
                 nBuffersQueued.incrementAndGet();
@@ -137,15 +161,15 @@ public class YUVFrame extends Frame {
 
         synchronized void buildFrames() {
 
-            while ((nBuffersQueued.get() > 0 && !mAllocs.isEmpty()) || aReady != null) {
+            while ((nBuffersQueued.get() > 0 || aReady) && !mAllocs.isEmpty()) {
 
-                if(aReady == null) {
-                    aReady = mAllocs.poll();
-                    aReady.ioReceive();
+                if(!aReady) {
+                    ain.ioReceive();
+                    aReady = true;
                     nBuffersQueued.decrementAndGet();
                 }
 
-                long allocTimestamp = aReady.getTimeStamp();
+                long allocTimestamp = ain.getTimeStamp();
 
                 try {
                     Pair<TotalCaptureResult, AcquisitionTime> pair = mResultCollector.findMatch(allocTimestamp);
@@ -159,24 +183,23 @@ public class YUVFrame extends Frame {
                     TotalCaptureResult result = pair.first;
                     AcquisitionTime t = pair.second;
 
-                    dispatchFrame(FRAME_BUILDER.setCapture(aReady, result)
+                    dispatchFrame(FRAME_BUILDER.setCapture(mAllocs.pop(), result)
                             .setAcquisitionTime(t)
                             .build());
 
                 } catch (CaptureResultCollector.StaleTimeStampException e) {
                     Log.e(TAG, "stale allocation timestamp encountered, discarding image.");
-                    mAllocs.offer(aReady);
                     mCallback.onDropped();
                 }
 
-                aReady = null;
+                aReady = false;
             }
         }
 
         @Override
         public void close() {
             super.close();
-            aBurner.destroy();
+            ain.destroy();
         }
     }
 

@@ -76,11 +76,11 @@ class CFCamera {
 
     // thread for Camera callbacks
     protected Handler mCameraHandler;
-    protected final HandlerThread mCameraThread = new HandlerThread("CFCamera");;
+    protected final HandlerThread mCameraThread = new HandlerThread("CFCamera");
 
-    // thread for posting jobs handling frames
-    protected Handler mFrameHandler;
-    protected final HandlerThread mFrameThread = new HandlerThread("Frame");
+    // thread for receiving buffers and CaptureResults
+    protected Handler mResultHandler;
+    protected final HandlerThread mResultThread = new HandlerThread("Result");
 
     int mCameraId = -1;
     int mResX;
@@ -109,8 +109,8 @@ class CFCamera {
         mCameraThread.start();
         mCameraHandler = new Handler(mCameraThread.getLooper());
 
-        mFrameThread.start();
-        mFrameHandler = new Handler(mFrameThread.getLooper());
+        mResultThread.start();
+        mResultHandler = new Handler(mResultThread.getLooper());
     }
 
     void unregister() {
@@ -119,14 +119,14 @@ class CFCamera {
 
         // now get rid of the threads
         mCameraThread.quitSafely();
-        mFrameThread.quitSafely();
+        mResultThread.quitSafely();
         try {
             mCameraThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         try {
-            mFrameThread.join();
+            mResultThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -203,7 +203,7 @@ class CFCamera {
 
                 boolean raw = (RAW_FORMATS.contains(mFormat));
                 mFrameProducer = Frame.Producer.create(raw, mApplication.getRenderScript(),
-                        mPreviewSize, mFrameCallback, mFrameHandler, FRAME_BUILDER);
+                        mPreviewSize, mFrameCallback, mResultHandler, FRAME_BUILDER);
 
                 RenderScript rs = mApplication.getRenderScript();
                 if(raw) FRAME_BUILDER.configureRAW(rs, mPreviewSize, mFrameProducer);
@@ -264,9 +264,9 @@ class CFCamera {
             try {
                 // Finally, we start displaying the camera preview.
                 if(mPreviewRequests.size() == 1) {
-                    mCaptureSession.setRepeatingRequest(mPreviewRequests.get(0), mFrameProducer, mFrameHandler);
+                    mCaptureSession.setRepeatingRequest(mPreviewRequests.get(0), mFrameProducer, mResultHandler);
                 } else {
-                    mCaptureSession.setRepeatingBurst(mPreviewRequests, mFrameProducer, mFrameHandler);
+                    mCaptureSession.setRepeatingBurst(mPreviewRequests, mFrameProducer, mResultHandler);
                 }
             } catch (CameraAccessException e) {
                 mApplication.userErrorMessage(true, R.string.camera_error, 100 + e.getReason());

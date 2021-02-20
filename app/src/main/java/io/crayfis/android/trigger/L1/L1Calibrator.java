@@ -12,40 +12,19 @@ import io.crayfis.android.util.FrameHistogram;
 import io.crayfis.android.util.Histogram;
 import io.crayfis.android.util.CFLog;
 
-public class L1Calibrator {
+public class L1Calibrator extends FrameHistogram {
 
-    private final CFApplication mApplication;
-    private static String sTaskName;
-    private static final FrameHistogram sFrameStatistics = new FrameHistogram(1000);
-
-    L1Calibrator(CFApplication application, TriggerProcessor.Config config) {
-        mApplication = application;
-        if(!config.getName().equals(sTaskName)
-                || config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES) != sFrameStatistics.size()) {
-            synchronized (sFrameStatistics) {
-                sTaskName = config.getName();
-                sFrameStatistics.resize(config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES));
-            }
-        }
+    L1Calibrator(int nFrames, int nBins) {
+        super(nFrames, nBins);
     }
 
-    public static Integer[] getFrameStatistics() { return sFrameStatistics.toArray(new Integer[sFrameStatistics.size()]); }
-
-    static void addStatistic(int stat) {
-        synchronized (sFrameStatistics) {
-            sFrameStatistics.addValue(stat);
-        }
-    }
-
-    public static Histogram getHistogram() {
-        return sFrameStatistics.getHistogram();
-    }
+    public Integer[] getFrameStatistics() { return this.toArray(new Integer[this.size()]); }
 
     /**
      *  Find an integer L1 threshold s.t. the average L1 rate is less than
      *  or equal to the specified value and write to CFConfig
      */
-    static void updateThresholds() {
+    void updateThresholds() {
 
         // first, find the target L1 efficiency
         TriggerProcessor.Config L1Config = CFConfig.getInstance().getL1Trigger();
@@ -57,14 +36,14 @@ public class L1Calibrator {
         }
         double targetL1Rate = L1Config.getFloat(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
 
-        Histogram h = sFrameStatistics.getHistogram();
+        Histogram h = getHistogram();
         long[] histValues = h.getValues();
         long nTotal = h.getEntries();
-        int nTarget = (int) (nTotal * targetL1Rate);
+        int nTarget = (int) (nTotal * targetL1Rate); // note: this is 0 when the calibrator is empty
 
         int thresh;
 
-        for (thresh = 0; thresh < 255; thresh++) {
+        for (thresh = 0; thresh < histValues.length-1; thresh++) {
             nTotal -= histValues[thresh];
             //if (thresh<20) CFLog.d(" L1Calibrator. Thresh="+thresh+" integral="+h.getIntegral(thresh, 256)+" rate="+rate+" compare to "+target_eff);
             if (nTotal < nTarget) {
@@ -77,22 +56,22 @@ public class L1Calibrator {
         CFConfig.getInstance().setThresholds(thresh);
     }
 
-    void submitCalibrationResult() {
+    void submitCalibrationResult(CFApplication application) {
         // build the calibration result object
-        UUID runId = mApplication.getBuildInformation().getRunId();
+        UUID runId = application.getBuildInformation().getRunId();
 
         DataProtos.CalibrationResult.Builder cal = DataProtos.CalibrationResult.newBuilder()
                 .setRunId(runId.getLeastSignificantBits())
                 .setRunIdHi(runId.getMostSignificantBits())
                 .setEndTime(System.currentTimeMillis());
 
-        for (long v : sFrameStatistics.getHistogram()) {
+        for (long v : getHistogram()) {
             cal.addHistMaxpixel((int)v);
         }
 
         // and commit it to the output stream
         CFLog.i("DAQService Committing new calibration result.");
-        UploadExposureService.submitMessage(mApplication, DAQManager.getInstance().getCameraId(), cal.build());
+        UploadExposureService.submitMessage(application, DAQManager.getInstance().getCameraId(), cal.build());
     }
 
 }

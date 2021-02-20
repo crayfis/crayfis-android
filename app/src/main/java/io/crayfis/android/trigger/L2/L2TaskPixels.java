@@ -75,6 +75,7 @@ class L2TaskPixels extends TriggerProcessor.Task {
         mTrigger.invoke_set_L2Thresh(mConfig.thresh);
         mTrigger.set_gMaxN(mConfig.maxn);
         mTrigger.set_gNPixMax(mConfig.npix);
+        mTrigger.set_gResX(processor.xb.res_x);
         mTrigger.bind_gPixIdx(pixIdx);
         mTrigger.bind_gPixVal(pixVal);
         mTrigger.bind_gPixN(pixN);
@@ -109,7 +110,7 @@ class L2TaskPixels extends TriggerProcessor.Task {
 
             for(int dx = -2; dx <= 2; dx++) {
                 for(int dy = -2; dy <= 2; dy++) {
-                    int idx = dx + 5*dy;
+                    int idx = (dx+2) + 5*(dy+2);
                     int ival = regionBuf[idx];
                     sum5 += ival;
                     if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1) {
@@ -150,15 +151,24 @@ class L2TaskPixels extends TriggerProcessor.Task {
         lock.lock();
 
         if (frame.getFormat() == Frame.Format.RAW) {
-            trig.forEach_trigger_uchar(buf);
+            trig.forEach_trigger_ushort(buf);
         } else {
             trig.forEach_trigger_uchar(buf);
         }
 
         // first count the number of hits and construct buffers
         trig.get_gPixN().copyTo(pixN);
+
+        if(pixN[0] == 0) {
+            CFLog.e("No triggers found! " + frame.getAllocation().hashCode());
+            trig.invoke_reset();
+            lock.unlock();
+            return l2Coords;
+        }
         int[] pixIdx = new int[pixN[0]];
         trig.get_gPixIdx().copy1DRangeTo(0, pixN[0], pixIdx);
+
+        trig.invoke_reset();
 
         lock.unlock();
 
@@ -167,8 +177,8 @@ class L2TaskPixels extends TriggerProcessor.Task {
             int x = pixIdx[i] % frame.getWidth();
             int y = pixIdx[i] / frame.getWidth();
             l2Coords.add(Pair.create(x, y));
+            //CFLog.d("rs (" + x + ", " + y + ", " + pixVal[i] + ")");
         }
-
 
         return l2Coords;
     }

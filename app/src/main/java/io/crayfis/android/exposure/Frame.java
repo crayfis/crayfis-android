@@ -6,6 +6,7 @@ import android.hardware.camera2.CaptureResult;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -30,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.crayfis.android.DataProtos;
 import io.crayfis.android.ScriptC_histogramRAW;
-import io.crayfis.android.ScriptC_weight;
+import io.crayfis.android.ScriptC_yuv;
 import io.crayfis.android.daq.AcquisitionTime;
 import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.util.CFLog;
@@ -153,14 +154,7 @@ public abstract class Frame {
         }
     }
 
-    public void copyRange(int xOffset, int yOffset, int w, int h, short[] array) {
-        Object buf = (mFormat == Format.RAW) ? new short[w*h] : new byte[w*h];
-        aBuf.copy2DRangeTo(xOffset, yOffset, w, h, buf);
-        for(int i=0; i<w*h; i++) {
-            array[i] = (mFormat == Format.RAW) ? ((short[]) buf)[i]
-                    : (short)(((byte[]) buf)[i] & 0xFF);
-        }
-    }
+    public abstract void copyRange(int xOffset, int yOffset, int w, int h, short[] array);
 
     /**
      * Return Allocation of Y/RAW channel
@@ -197,7 +191,7 @@ public abstract class Frame {
         // make this idempotent
         if(mRetired.compareAndSet(false, true)) {
 
-            //CFLog.d("retire() " + this.hashCode());
+            //CFLog.d("retire() " + aBuf.hashCode());
             mFrameProducer.replenish(aBuf);
 
             if(mCommitted)
@@ -211,6 +205,7 @@ public abstract class Frame {
         mHistLock.lock();
         if (mHist != null) {
             // somebody beat us to it! nothing to do.
+            mHistLock.unlock();
             return;
         }
 
@@ -236,6 +231,7 @@ public abstract class Frame {
         int npix = mResX * mResY;
 
         mPixMax = max;
+        //CFLog.d("" + aBuf.hashCode() + " max = " + max);
         mPixAvg = (double)sum/npix;
 
         for(int i=0; i<=max; i++) {
@@ -417,8 +413,13 @@ public abstract class Frame {
         // externally provided via constructor:
         final int mNAlloc;
         final OnFrameCallback mCallback;
+
+        final Handler mBufferHandler;
+
+        // thread for posting frames to trigger
         final Handler mFrameHandler;
-        
+        final HandlerThread mFrameThread = new HandlerThread("Frame");
+
         final Builder FRAME_BUILDER;
 
         // Collection of recent TotalCaptureResults
@@ -438,7 +439,6 @@ public abstract class Frame {
 
             mNAlloc = CFConfig.getInstance().getNAlloc();
             mCallback = callback;
-            mFrameHandler = handler;
             FRAME_BUILDER = builder;
 
             mAllocs = new ConcurrentLinkedDeque<>();
@@ -446,18 +446,24 @@ public abstract class Frame {
 
             Allocation[] allocs = buildAllocs(sz, rs, mNAlloc);
             mAllocs.addAll(Arrays.asList(allocs));
+
+            mBufferHandler = handler;
+
+            mFrameThread.start();
+            mFrameHandler = new Handler(mFrameThread.getLooper());
         }
 
-        public static Producer create(boolean raw, 
+        public static Producer create(boolean raw,
                                       RenderScript rs,
                                       Size sz,
                                       OnFrameCallback callback,
-                                      Handler handler,
+                                      Handler inputHandler,
                                       Builder builder) {
+
             if(raw) {
-                return new RAWFrame.Producer(rs, sz, callback, handler, builder);
+                return new RAWFrame.Producer(rs, sz, callback, inputHandler, builder);
             } else {
-                return new YUVFrame.Producer(rs, sz, callback, handler, builder);
+                return new YUVFrame.Producer(rs, sz, callback, inputHandler, builder);
             }
         }
 
@@ -496,7 +502,7 @@ public abstract class Frame {
          * @param frame the Frame to be submitted
          */
         final void dispatchFrame(final Frame frame) {
-            //CFLog.d("dispatchFrame() " + frame.hashCode());
+            //CFLog.d("dispatchFrame() " + frame.getAllocation().hashCode());
             if(frame != null) {
                 if(mStopCalled) {
                     frame.retire();
@@ -533,6 +539,13 @@ public abstract class Frame {
                 a.destroy();
             }
             mAllocs.clear();
+
+            mFrameThread.quitSafely();
+            try {
+                mFrameThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -567,8 +580,8 @@ public abstract class Frame {
         private Lock bHistLock;
 
         private ScriptC_histogramRAW bScriptCHistogram;
-        private ScriptC_weight bScriptCWeight;
         private ScriptIntrinsicHistogram bScriptIntrinsicHistogram;
+        private ScriptC_yuv bScriptCYuv;
 
         private Allocation bWeighted;
         private Allocation bHist;
@@ -601,11 +614,11 @@ public abstract class Frame {
             // get rid of YUV objects
             if(bScriptIntrinsicHistogram != null) {
                 bScriptIntrinsicHistogram.destroy();
-                bScriptCWeight.destroy();
+                bScriptCYuv.destroy();
                 bWeighted.destroy();
 
                 bScriptIntrinsicHistogram = null;
-                bScriptCWeight = null;
+                bScriptCYuv = null;
                 bWeighted = null;
             }
 
@@ -627,8 +640,9 @@ public abstract class Frame {
                     .setY(bResY)
                     .create();
 
-            bScriptCWeight = new ScriptC_weight(rs);
+            bScriptCYuv = new ScriptC_yuv(rs);
             bScriptIntrinsicHistogram = ScriptIntrinsicHistogram.create(rs, Element.U8(rs));
+            bScriptCYuv.set_gIn(((YUVFrame.Producer)producer).ain);
 
             bWeighted = Allocation.createTyped(rs, type, Allocation.USAGE_SCRIPT);
             bHist = Allocation.createSized(rs, Element.U32(rs), 256, Allocation.USAGE_SCRIPT);
@@ -682,7 +696,7 @@ public abstract class Frame {
                 case YUV:
                     return new YUVFrame(aBuf, bResult, bProducer, bAcquisitionTime, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock, bResX, bResY,
-                            bScriptCWeight, bScriptIntrinsicHistogram, bWeighted, bHist, bHistLock);
+                            bScriptCYuv, bScriptIntrinsicHistogram, bWeighted, bHist, bHistLock);
                 case RAW:
                     return new RAWFrame(aBuf, bResult, bProducer, bAcquisitionTime, bLocation,
                             bOrientation, bRotationZZ, bPressure, bExposureBlock, bResX, bResY,

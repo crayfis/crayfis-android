@@ -118,10 +118,10 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
             // add pixels not yet in the ByteBlock
             for(int dy=-mConfig.radius; dy<=mConfig.radius; dy++) {
                 for(int dx=-mConfig.radius; dx<=mConfig.radius; dx++) {
-                    Pair<Integer, Integer> coords = Pair.create(dx, dy);
+                    Pair<Integer, Integer> coords = Pair.create(ix+dx, iy+dy);
                     if(!blockXY.contains(coords)) {
-                        blockXY.add(Pair.create(dx, dy));
-                        val = regionBuf[dx * mSideLength*dy];
+                        blockXY.add(coords);
+                        val = regionBuf[(dx+mConfig.radius) + mSideLength*(dy+mConfig.radius)];
                         if(val >= 0) {
                             builder.addVal(val);
                         }

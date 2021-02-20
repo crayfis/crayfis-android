@@ -1,6 +1,7 @@
 package io.crayfis.android.ui.navdrawer.dosimeter;
 
 import io.crayfis.android.R;
+import io.crayfis.android.trigger.L1.L1Processor;
 import io.crayfis.android.ui.navdrawer.NavDrawerFragment;
 
 import io.crayfis.android.trigger.L1.L1Calibrator;
@@ -143,7 +144,7 @@ public class LayoutDosimeter extends NavDrawerFragment {
     public void update() {
 
         if (mGraphSeriesTime !=null) {
-            Integer[] values = L1Calibrator.getFrameStatistics();
+            Integer[] values = L1Processor.getCalibrator().getFrameStatistics();
             mGraphSeriesTime.resetData(makeGraphData(values));
             // dosimeter average
             float mean = 0;
