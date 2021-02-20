@@ -3,6 +3,7 @@ package io.crayfis.android.exposure;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.TotalCaptureResult;
 import android.location.Location;
+import android.os.Build;
 import android.os.Handler;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
@@ -133,14 +134,13 @@ public class YUVFrame extends Frame {
         }
 
         @Override
-        Allocation[] buildAllocs(Size sz, RenderScript rs, int n) {
+        Allocation buildAlloc(Size sz, RenderScript rs) {
             Type t = new Type.Builder(rs, Element.U8(rs))
                     .setX(sz.getWidth())
                     .setY(sz.getHeight())
                     .create();
 
-            return Allocation.createAllocations(rs, t,
-                    Allocation.USAGE_SCRIPT, n);
+            return Allocation.createTyped(rs, t, Allocation.USAGE_SCRIPT);
         }
 
         // Callback for Buffer Available:
@@ -169,7 +169,9 @@ public class YUVFrame extends Frame {
                     nBuffersQueued.decrementAndGet();
                 }
 
-                long allocTimestamp = ain.getTimeStamp();
+                long allocTimestamp = 0;
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+                    allocTimestamp = ain.getTimeStamp();
 
                 try {
                     Pair<TotalCaptureResult, AcquisitionTime> pair = mResultCollector.findMatch(allocTimestamp);

@@ -444,8 +444,9 @@ public abstract class Frame {
             mAllocs = new ConcurrentLinkedDeque<>();
             mSurfaces = new ArrayList<>();
 
-            Allocation[] allocs = buildAllocs(sz, rs, mNAlloc);
-            mAllocs.addAll(Arrays.asList(allocs));
+            for(int i=0; i<mNAlloc; i++) {
+                mAllocs.add(buildAlloc(sz, rs));
+            }
 
             mBufferHandler = handler;
 
@@ -468,14 +469,13 @@ public abstract class Frame {
         }
 
         /**
-         * Assemble Allocation buffers to fit the Frame data.  For input Allocations, these
-         * share the same BufferQueue
+         * Assemble Allocation buffers to fit the Frame data.
          *
          * @param sz Resolution Size
          * @param rs RenderScript context
          * @return RenderScript Allocation
          */
-        abstract Allocation[] buildAllocs(Size sz, RenderScript rs, int n);
+        abstract Allocation buildAlloc(Size sz, RenderScript rs);
 
         /**
          * Attempt to package TotalCaptureResults and buffers into a

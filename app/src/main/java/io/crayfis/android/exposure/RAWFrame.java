@@ -110,14 +110,14 @@ class RAWFrame extends Frame {
         }
 
         @Override
-        Allocation[] buildAllocs(Size sz, RenderScript rs, int n) {
+        Allocation buildAlloc(Size sz, RenderScript rs) {
 
             Type t = new Type.Builder(rs, Element.U16(rs))
                     .setX(sz.getWidth())
                     .setY(sz.getHeight())
                     .create();
 
-            return Allocation.createAllocations(rs, t, Allocation.USAGE_SCRIPT, n);
+            return Allocation.createTyped(rs, t, Allocation.USAGE_SCRIPT);
         }
 
 
