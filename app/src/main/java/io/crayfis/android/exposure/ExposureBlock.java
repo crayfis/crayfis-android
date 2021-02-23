@@ -241,7 +241,8 @@ public class ExposureBlock {
 
         if(L1 != null) {
             float thresh = L1.config.getFloat(L1Processor.KEY_L1_THRESH);
-            buf.setL1Thresh((int) thresh + 1);
+            buf.setL1Thresh((int) thresh);
+            buf.setL1Prescale(thresh - (int)thresh);
         }
 
         TriggerProcessor L2 = TRIGGER_CHAIN.getProcessor(L2Processor.class);

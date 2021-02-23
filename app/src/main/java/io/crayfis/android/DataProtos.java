@@ -113,6 +113,30 @@ public final class DataProtos {
      */
     io.crayfis.android.DataProtos.PreCalibrationResultOrBuilder getPrecalibrationResultsOrBuilder(
         int index);
+
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate> 
+        getPrecalibrationUpdatesList();
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    io.crayfis.android.DataProtos.PreCalibrationUpdate getPrecalibrationUpdates(int index);
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    int getPrecalibrationUpdatesCount();
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    java.util.List<? extends io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder> 
+        getPrecalibrationUpdatesOrBuilderList();
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder getPrecalibrationUpdatesOrBuilder(
+        int index);
   }
   /**
    * <pre>
@@ -136,6 +160,7 @@ public final class DataProtos {
       exposureBlocks_ = java.util.Collections.emptyList();
       calibrationResults_ = java.util.Collections.emptyList();
       precalibrationResults_ = java.util.Collections.emptyList();
+      precalibrationUpdates_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -162,13 +187,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 runConfigs_ = new java.util.ArrayList<io.crayfis.android.DataProtos.RunConfig>();
@@ -205,6 +223,22 @@ public final class DataProtos {
                   input.readMessage(io.crayfis.android.DataProtos.PreCalibrationResult.PARSER, extensionRegistry));
               break;
             }
+            case 42: {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                precalibrationUpdates_ = new java.util.ArrayList<io.crayfis.android.DataProtos.PreCalibrationUpdate>();
+                mutable_bitField0_ |= 0x00000010;
+              }
+              precalibrationUpdates_.add(
+                  input.readMessage(io.crayfis.android.DataProtos.PreCalibrationUpdate.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -225,6 +259,9 @@ public final class DataProtos {
         if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
           precalibrationResults_ = java.util.Collections.unmodifiableList(precalibrationResults_);
         }
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+          precalibrationUpdates_ = java.util.Collections.unmodifiableList(precalibrationUpdates_);
+        }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
       }
@@ -234,6 +271,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_DataChunk_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_DataChunk_fieldAccessorTable
@@ -381,7 +419,43 @@ public final class DataProtos {
       return precalibrationResults_.get(index);
     }
 
+    public static final int PRECALIBRATION_UPDATES_FIELD_NUMBER = 5;
+    private java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate> precalibrationUpdates_;
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    public java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate> getPrecalibrationUpdatesList() {
+      return precalibrationUpdates_;
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    public java.util.List<? extends io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder> 
+        getPrecalibrationUpdatesOrBuilderList() {
+      return precalibrationUpdates_;
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    public int getPrecalibrationUpdatesCount() {
+      return precalibrationUpdates_.size();
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    public io.crayfis.android.DataProtos.PreCalibrationUpdate getPrecalibrationUpdates(int index) {
+      return precalibrationUpdates_.get(index);
+    }
+    /**
+     * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+     */
+    public io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder getPrecalibrationUpdatesOrBuilder(
+        int index) {
+      return precalibrationUpdates_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -391,6 +465,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < runConfigs_.size(); i++) {
@@ -405,9 +480,13 @@ public final class DataProtos {
       for (int i = 0; i < precalibrationResults_.size(); i++) {
         output.writeMessage(4, precalibrationResults_.get(i));
       }
+      for (int i = 0; i < precalibrationUpdates_.size(); i++) {
+        output.writeMessage(5, precalibrationUpdates_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -428,6 +507,10 @@ public final class DataProtos {
       for (int i = 0; i < precalibrationResults_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, precalibrationResults_.get(i));
+      }
+      for (int i = 0; i < precalibrationUpdates_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, precalibrationUpdates_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -453,6 +536,8 @@ public final class DataProtos {
           .equals(other.getCalibrationResultsList());
       result = result && getPrecalibrationResultsList()
           .equals(other.getPrecalibrationResultsList());
+      result = result && getPrecalibrationUpdatesList()
+          .equals(other.getPrecalibrationUpdatesList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -479,6 +564,10 @@ public final class DataProtos {
       if (getPrecalibrationResultsCount() > 0) {
         hash = (37 * hash) + PRECALIBRATION_RESULTS_FIELD_NUMBER;
         hash = (53 * hash) + getPrecalibrationResultsList().hashCode();
+      }
+      if (getPrecalibrationUpdatesCount() > 0) {
+        hash = (37 * hash) + PRECALIBRATION_UPDATES_FIELD_NUMBER;
+        hash = (53 * hash) + getPrecalibrationUpdatesList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -555,6 +644,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -562,6 +652,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.DataChunk prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -590,6 +681,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_DataChunk_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_DataChunk_fieldAccessorTable
@@ -614,8 +706,10 @@ public final class DataProtos {
           getExposureBlocksFieldBuilder();
           getCalibrationResultsFieldBuilder();
           getPrecalibrationResultsFieldBuilder();
+          getPrecalibrationUpdatesFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (runConfigsBuilder_ == null) {
@@ -642,18 +736,27 @@ public final class DataProtos {
         } else {
           precalibrationResultsBuilder_.clear();
         }
+        if (precalibrationUpdatesBuilder_ == null) {
+          precalibrationUpdates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          precalibrationUpdatesBuilder_.clear();
+        }
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_DataChunk_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.DataChunk getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.DataChunk.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.DataChunk build() {
         io.crayfis.android.DataProtos.DataChunk result = buildPartial();
         if (!result.isInitialized()) {
@@ -662,6 +765,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.DataChunk buildPartial() {
         io.crayfis.android.DataProtos.DataChunk result = new io.crayfis.android.DataProtos.DataChunk(this);
         int from_bitField0_ = bitField0_;
@@ -701,36 +805,52 @@ public final class DataProtos {
         } else {
           result.precalibrationResults_ = precalibrationResultsBuilder_.build();
         }
+        if (precalibrationUpdatesBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            precalibrationUpdates_ = java.util.Collections.unmodifiableList(precalibrationUpdates_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.precalibrationUpdates_ = precalibrationUpdates_;
+        } else {
+          result.precalibrationUpdates_ = precalibrationUpdatesBuilder_.build();
+        }
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.DataChunk) {
           return mergeFrom((io.crayfis.android.DataProtos.DataChunk)other);
@@ -846,15 +966,43 @@ public final class DataProtos {
             }
           }
         }
+        if (precalibrationUpdatesBuilder_ == null) {
+          if (!other.precalibrationUpdates_.isEmpty()) {
+            if (precalibrationUpdates_.isEmpty()) {
+              precalibrationUpdates_ = other.precalibrationUpdates_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensurePrecalibrationUpdatesIsMutable();
+              precalibrationUpdates_.addAll(other.precalibrationUpdates_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.precalibrationUpdates_.isEmpty()) {
+            if (precalibrationUpdatesBuilder_.isEmpty()) {
+              precalibrationUpdatesBuilder_.dispose();
+              precalibrationUpdatesBuilder_ = null;
+              precalibrationUpdates_ = other.precalibrationUpdates_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              precalibrationUpdatesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getPrecalibrationUpdatesFieldBuilder() : null;
+            } else {
+              precalibrationUpdatesBuilder_.addAllMessages(other.precalibrationUpdates_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1833,11 +1981,253 @@ public final class DataProtos {
         }
         return precalibrationResultsBuilder_;
       }
+
+      private java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate> precalibrationUpdates_ =
+        java.util.Collections.emptyList();
+      private void ensurePrecalibrationUpdatesIsMutable() {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+          precalibrationUpdates_ = new java.util.ArrayList<io.crayfis.android.DataProtos.PreCalibrationUpdate>(precalibrationUpdates_);
+          bitField0_ |= 0x00000010;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          io.crayfis.android.DataProtos.PreCalibrationUpdate, io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder, io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder> precalibrationUpdatesBuilder_;
+
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate> getPrecalibrationUpdatesList() {
+        if (precalibrationUpdatesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(precalibrationUpdates_);
+        } else {
+          return precalibrationUpdatesBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public int getPrecalibrationUpdatesCount() {
+        if (precalibrationUpdatesBuilder_ == null) {
+          return precalibrationUpdates_.size();
+        } else {
+          return precalibrationUpdatesBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public io.crayfis.android.DataProtos.PreCalibrationUpdate getPrecalibrationUpdates(int index) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          return precalibrationUpdates_.get(index);
+        } else {
+          return precalibrationUpdatesBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder setPrecalibrationUpdates(
+          int index, io.crayfis.android.DataProtos.PreCalibrationUpdate value) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.set(index, value);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder setPrecalibrationUpdates(
+          int index, io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder builderForValue) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder addPrecalibrationUpdates(io.crayfis.android.DataProtos.PreCalibrationUpdate value) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.add(value);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder addPrecalibrationUpdates(
+          int index, io.crayfis.android.DataProtos.PreCalibrationUpdate value) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.add(index, value);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder addPrecalibrationUpdates(
+          io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder builderForValue) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.add(builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder addPrecalibrationUpdates(
+          int index, io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder builderForValue) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder addAllPrecalibrationUpdates(
+          java.lang.Iterable<? extends io.crayfis.android.DataProtos.PreCalibrationUpdate> values) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          ensurePrecalibrationUpdatesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, precalibrationUpdates_);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder clearPrecalibrationUpdates() {
+        if (precalibrationUpdatesBuilder_ == null) {
+          precalibrationUpdates_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public Builder removePrecalibrationUpdates(int index) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          ensurePrecalibrationUpdatesIsMutable();
+          precalibrationUpdates_.remove(index);
+          onChanged();
+        } else {
+          precalibrationUpdatesBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder getPrecalibrationUpdatesBuilder(
+          int index) {
+        return getPrecalibrationUpdatesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder getPrecalibrationUpdatesOrBuilder(
+          int index) {
+        if (precalibrationUpdatesBuilder_ == null) {
+          return precalibrationUpdates_.get(index);  } else {
+          return precalibrationUpdatesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public java.util.List<? extends io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder> 
+           getPrecalibrationUpdatesOrBuilderList() {
+        if (precalibrationUpdatesBuilder_ != null) {
+          return precalibrationUpdatesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(precalibrationUpdates_);
+        }
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder addPrecalibrationUpdatesBuilder() {
+        return getPrecalibrationUpdatesFieldBuilder().addBuilder(
+            io.crayfis.android.DataProtos.PreCalibrationUpdate.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder addPrecalibrationUpdatesBuilder(
+          int index) {
+        return getPrecalibrationUpdatesFieldBuilder().addBuilder(
+            index, io.crayfis.android.DataProtos.PreCalibrationUpdate.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .crayfis.PreCalibrationUpdate precalibration_updates = 5;</code>
+       */
+      public java.util.List<io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder> 
+           getPrecalibrationUpdatesBuilderList() {
+        return getPrecalibrationUpdatesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          io.crayfis.android.DataProtos.PreCalibrationUpdate, io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder, io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder> 
+          getPrecalibrationUpdatesFieldBuilder() {
+        if (precalibrationUpdatesBuilder_ == null) {
+          precalibrationUpdatesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              io.crayfis.android.DataProtos.PreCalibrationUpdate, io.crayfis.android.DataProtos.PreCalibrationUpdate.Builder, io.crayfis.android.DataProtos.PreCalibrationUpdateOrBuilder>(
+                  precalibrationUpdates_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          precalibrationUpdates_ = null;
+        }
+        return precalibrationUpdatesBuilder_;
+      }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1859,6 +2249,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DataChunk>
         PARSER = new com.google.protobuf.AbstractParser<DataChunk>() {
+      @java.lang.Override
       public DataChunk parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1876,6 +2267,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.DataChunk getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2025,13 +2417,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               idHi_ = input.readUInt64();
@@ -2076,6 +2461,13 @@ public final class DataProtos {
               cameraId_ = input.readUInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2093,6 +2485,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_RunConfig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_RunConfig_fieldAccessorTable
@@ -2330,6 +2723,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2339,6 +2733,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2368,6 +2763,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2578,6 +2974,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2585,6 +2982,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.RunConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2608,6 +3006,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_RunConfig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_RunConfig_fieldAccessorTable
@@ -2630,6 +3029,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         idHi_ = 0L;
@@ -2651,15 +3051,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_RunConfig_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.RunConfig getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.RunConfig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.RunConfig build() {
         io.crayfis.android.DataProtos.RunConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -2668,6 +3071,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.RunConfig buildPartial() {
         io.crayfis.android.DataProtos.RunConfig result = new io.crayfis.android.DataProtos.RunConfig(this);
         int from_bitField0_ = bitField0_;
@@ -2709,32 +3113,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.RunConfig) {
           return mergeFrom((io.crayfis.android.DataProtos.RunConfig)other);
@@ -2783,10 +3194,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3237,11 +3650,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3263,6 +3678,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<RunConfig>
         PARSER = new com.google.protobuf.AbstractParser<RunConfig>() {
+      @java.lang.Override
       public RunConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3280,6 +3696,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.RunConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3564,6 +3981,15 @@ public final class DataProtos {
     int getL2Thresh();
 
     /**
+     * <code>optional float L1_prescale = 48;</code>
+     */
+    boolean hasL1Prescale();
+    /**
+     * <code>optional float L1_prescale = 48;</code>
+     */
+    float getL1Prescale();
+
+    /**
      * <pre>
      * these should not be used anymore
      * </pre>
@@ -3835,6 +4261,7 @@ public final class DataProtos {
       events_ = java.util.Collections.emptyList();
       l1Thresh_ = 0;
       l2Thresh_ = 0;
+      l1Prescale_ = 0F;
       l0Conf_ = "";
       l1Conf_ = "";
       l2Conf_ = "";
@@ -3882,13 +4309,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               runId_ = input.readUInt64();
@@ -3916,6 +4336,7 @@ public final class DataProtos {
             }
             case 48: {
               int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
               io.crayfis.android.DataProtos.ExposureBlock.State value = io.crayfis.android.DataProtos.ExposureBlock.State.valueOf(rawValue);
               if (value == null) {
                 unknownFields.mergeVarintField(6, rawValue);
@@ -3945,47 +4366,47 @@ public final class DataProtos {
               break;
             }
             case 80: {
-              bitField0_ |= 0x20000000;
+              bitField0_ |= 0x40000000;
               l1Processed_ = input.readUInt32();
               break;
             }
             case 88: {
-              bitField0_ |= 0x40000000;
+              bitField0_ |= 0x80000000;
               l2Processed_ = input.readUInt32();
               break;
             }
             case 96: {
-              bitField1_ |= 0x00000020;
+              bitField1_ |= 0x00000040;
               framesDropped_ = input.readUInt32();
               break;
             }
             case 104: {
-              bitField1_ |= 0x00000001;
+              bitField1_ |= 0x00000002;
               l1Pass_ = input.readUInt32();
               break;
             }
             case 112: {
-              bitField1_ |= 0x00000008;
+              bitField1_ |= 0x00000010;
               l1Skip_ = input.readUInt32();
               break;
             }
             case 120: {
-              bitField1_ |= 0x00000002;
+              bitField1_ |= 0x00000004;
               l2Pass_ = input.readUInt32();
               break;
             }
             case 128: {
-              bitField1_ |= 0x00000010;
+              bitField1_ |= 0x00000020;
               l2Skip_ = input.readUInt32();
               break;
             }
             case 136: {
-              bitField1_ |= 0x00000040;
+              bitField1_ |= 0x00000080;
               xbn_ = input.readUInt32();
               break;
             }
             case 144: {
-              bitField1_ |= 0x00000080;
+              bitField1_ |= 0x00000100;
               aborted_ = input.readBool();
               break;
             }
@@ -4041,13 +4462,13 @@ public final class DataProtos {
             }
             case 234: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x04000000;
+              bitField0_ |= 0x08000000;
               l1Conf_ = bs;
               break;
             }
             case 242: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x08000000;
+              bitField0_ |= 0x10000000;
               l2Conf_ = bs;
               break;
             }
@@ -4067,9 +4488,9 @@ public final class DataProtos {
               break;
             }
             case 280: {
-              if (!((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+              if (!((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
                 hist_ = new java.util.ArrayList<java.lang.Long>();
-                mutable_bitField1_ |= 0x00000800;
+                mutable_bitField1_ |= 0x00001000;
               }
               hist_.add(input.readUInt64());
               break;
@@ -4077,9 +4498,9 @@ public final class DataProtos {
             case 282: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField1_ & 0x00000800) == 0x00000800) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField1_ & 0x00001000) == 0x00001000) && input.getBytesUntilLimit() > 0) {
                 hist_ = new java.util.ArrayList<java.lang.Long>();
-                mutable_bitField1_ |= 0x00000800;
+                mutable_bitField1_ |= 0x00001000;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hist_.add(input.readUInt64());
@@ -4089,7 +4510,7 @@ public final class DataProtos {
             }
             case 290: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x02000000;
+              bitField0_ |= 0x04000000;
               l0Conf_ = bs;
               break;
             }
@@ -4104,33 +4525,33 @@ public final class DataProtos {
               break;
             }
             case 312: {
-              bitField0_ |= 0x10000000;
+              bitField0_ |= 0x20000000;
               l0Processed_ = input.readUInt32();
               break;
             }
             case 320: {
-              bitField0_ |= 0x80000000;
+              bitField1_ |= 0x00000001;
               l0Pass_ = input.readUInt32();
               break;
             }
             case 328: {
-              bitField1_ |= 0x00000004;
+              bitField1_ |= 0x00000008;
               l0Skip_ = input.readUInt32();
               break;
             }
             case 338: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField1_ & 0x00000040) == 0x00000040)) {
+              if (!((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
                 config_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField1_ |= 0x00000040;
+                mutable_bitField1_ |= 0x00000080;
               }
               config_.add(bs);
               break;
             }
             case 344: {
-              if (!((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
+              if (!((mutable_bitField1_ & 0x00000100) == 0x00000100)) {
                 processed_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000080;
+                mutable_bitField1_ |= 0x00000100;
               }
               processed_.add(input.readUInt32());
               break;
@@ -4138,9 +4559,9 @@ public final class DataProtos {
             case 346: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField1_ & 0x00000080) == 0x00000080) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField1_ & 0x00000100) == 0x00000100) && input.getBytesUntilLimit() > 0) {
                 processed_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000080;
+                mutable_bitField1_ |= 0x00000100;
               }
               while (input.getBytesUntilLimit() > 0) {
                 processed_.add(input.readUInt32());
@@ -4149,9 +4570,9 @@ public final class DataProtos {
               break;
             }
             case 352: {
-              if (!((mutable_bitField1_ & 0x00000100) == 0x00000100)) {
+              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
                 pass_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000100;
+                mutable_bitField1_ |= 0x00000200;
               }
               pass_.add(input.readUInt32());
               break;
@@ -4159,9 +4580,9 @@ public final class DataProtos {
             case 354: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField1_ & 0x00000100) == 0x00000100) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
                 pass_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000100;
+                mutable_bitField1_ |= 0x00000200;
               }
               while (input.getBytesUntilLimit() > 0) {
                 pass_.add(input.readUInt32());
@@ -4170,9 +4591,9 @@ public final class DataProtos {
               break;
             }
             case 360: {
-              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
+              if (!((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
                 skip_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000200;
+                mutable_bitField1_ |= 0x00000400;
               }
               skip_.add(input.readUInt32());
               break;
@@ -4180,9 +4601,9 @@ public final class DataProtos {
             case 362: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField1_ & 0x00000200) == 0x00000200) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField1_ & 0x00000400) == 0x00000400) && input.getBytesUntilLimit() > 0) {
                 skip_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField1_ |= 0x00000200;
+                mutable_bitField1_ |= 0x00000400;
               }
               while (input.getBytesUntilLimit() > 0) {
                 skip_.add(input.readUInt32());
@@ -4200,6 +4621,18 @@ public final class DataProtos {
               wgtHash_ = input.readInt32();
               break;
             }
+            case 389: {
+              bitField0_ |= 0x02000000;
+              l1Prescale_ = input.readFloat();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4211,19 +4644,19 @@ public final class DataProtos {
         if (((mutable_bitField0_ & 0x00800000) == 0x00800000)) {
           events_ = java.util.Collections.unmodifiableList(events_);
         }
-        if (((mutable_bitField1_ & 0x00000800) == 0x00000800)) {
+        if (((mutable_bitField1_ & 0x00001000) == 0x00001000)) {
           hist_ = java.util.Collections.unmodifiableList(hist_);
         }
-        if (((mutable_bitField1_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
           config_ = config_.getUnmodifiableView();
         }
-        if (((mutable_bitField1_ & 0x00000080) == 0x00000080)) {
+        if (((mutable_bitField1_ & 0x00000100) == 0x00000100)) {
           processed_ = java.util.Collections.unmodifiableList(processed_);
         }
-        if (((mutable_bitField1_ & 0x00000100) == 0x00000100)) {
+        if (((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
           pass_ = java.util.Collections.unmodifiableList(pass_);
         }
-        if (((mutable_bitField1_ & 0x00000200) == 0x00000200)) {
+        if (((mutable_bitField1_ & 0x00000400) == 0x00000400)) {
           skip_ = java.util.Collections.unmodifiableList(skip_);
         }
         this.unknownFields = unknownFields.build();
@@ -4235,6 +4668,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ExposureBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ExposureBlock_fieldAccessorTable
@@ -4688,6 +5122,7 @@ public final class DataProtos {
      * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
      */
     public io.crayfis.android.DataProtos.ExposureBlock.State getDaqState() {
+      @SuppressWarnings("deprecation")
       io.crayfis.android.DataProtos.ExposureBlock.State result = io.crayfis.android.DataProtos.ExposureBlock.State.valueOf(daqState_);
       return result == null ? io.crayfis.android.DataProtos.ExposureBlock.State.INIT : result;
     }
@@ -4787,6 +5222,21 @@ public final class DataProtos {
       return l2Thresh_;
     }
 
+    public static final int L1_PRESCALE_FIELD_NUMBER = 48;
+    private float l1Prescale_;
+    /**
+     * <code>optional float L1_prescale = 48;</code>
+     */
+    public boolean hasL1Prescale() {
+      return ((bitField0_ & 0x02000000) == 0x02000000);
+    }
+    /**
+     * <code>optional float L1_prescale = 48;</code>
+     */
+    public float getL1Prescale() {
+      return l1Prescale_;
+    }
+
     public static final int L0_CONF_FIELD_NUMBER = 36;
     private volatile java.lang.Object l0Conf_;
     /**
@@ -4797,7 +5247,7 @@ public final class DataProtos {
      * <code>optional string L0_conf = 36;</code>
      */
     public boolean hasL0Conf() {
-      return ((bitField0_ & 0x02000000) == 0x02000000);
+      return ((bitField0_ & 0x04000000) == 0x04000000);
     }
     /**
      * <pre>
@@ -4847,7 +5297,7 @@ public final class DataProtos {
      * <code>optional string L1_conf = 29;</code>
      */
     public boolean hasL1Conf() {
-      return ((bitField0_ & 0x04000000) == 0x04000000);
+      return ((bitField0_ & 0x08000000) == 0x08000000);
     }
     /**
      * <code>optional string L1_conf = 29;</code>
@@ -4889,7 +5339,7 @@ public final class DataProtos {
      * <code>optional string L2_conf = 30;</code>
      */
     public boolean hasL2Conf() {
-      return ((bitField0_ & 0x08000000) == 0x08000000);
+      return ((bitField0_ & 0x10000000) == 0x10000000);
     }
     /**
      * <code>optional string L2_conf = 30;</code>
@@ -4931,7 +5381,7 @@ public final class DataProtos {
      * <code>optional uint32 L0_processed = 39;</code>
      */
     public boolean hasL0Processed() {
-      return ((bitField0_ & 0x10000000) == 0x10000000);
+      return ((bitField0_ & 0x20000000) == 0x20000000);
     }
     /**
      * <code>optional uint32 L0_processed = 39;</code>
@@ -4946,7 +5396,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_processed = 10;</code>
      */
     public boolean hasL1Processed() {
-      return ((bitField0_ & 0x20000000) == 0x20000000);
+      return ((bitField0_ & 0x40000000) == 0x40000000);
     }
     /**
      * <code>optional uint32 L1_processed = 10;</code>
@@ -4961,7 +5411,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_processed = 11;</code>
      */
     public boolean hasL2Processed() {
-      return ((bitField0_ & 0x40000000) == 0x40000000);
+      return ((bitField0_ & 0x80000000) == 0x80000000);
     }
     /**
      * <code>optional uint32 L2_processed = 11;</code>
@@ -4976,7 +5426,7 @@ public final class DataProtos {
      * <code>optional uint32 L0_pass = 40;</code>
      */
     public boolean hasL0Pass() {
-      return ((bitField0_ & 0x80000000) == 0x80000000);
+      return ((bitField1_ & 0x00000001) == 0x00000001);
     }
     /**
      * <code>optional uint32 L0_pass = 40;</code>
@@ -4991,7 +5441,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_pass = 13;</code>
      */
     public boolean hasL1Pass() {
-      return ((bitField1_ & 0x00000001) == 0x00000001);
+      return ((bitField1_ & 0x00000002) == 0x00000002);
     }
     /**
      * <code>optional uint32 L1_pass = 13;</code>
@@ -5006,7 +5456,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_pass = 15;</code>
      */
     public boolean hasL2Pass() {
-      return ((bitField1_ & 0x00000002) == 0x00000002);
+      return ((bitField1_ & 0x00000004) == 0x00000004);
     }
     /**
      * <code>optional uint32 L2_pass = 15;</code>
@@ -5021,7 +5471,7 @@ public final class DataProtos {
      * <code>optional uint32 L0_skip = 41;</code>
      */
     public boolean hasL0Skip() {
-      return ((bitField1_ & 0x00000004) == 0x00000004);
+      return ((bitField1_ & 0x00000008) == 0x00000008);
     }
     /**
      * <code>optional uint32 L0_skip = 41;</code>
@@ -5036,7 +5486,7 @@ public final class DataProtos {
      * <code>optional uint32 L1_skip = 14;</code>
      */
     public boolean hasL1Skip() {
-      return ((bitField1_ & 0x00000008) == 0x00000008);
+      return ((bitField1_ & 0x00000010) == 0x00000010);
     }
     /**
      * <code>optional uint32 L1_skip = 14;</code>
@@ -5051,7 +5501,7 @@ public final class DataProtos {
      * <code>optional uint32 L2_skip = 16;</code>
      */
     public boolean hasL2Skip() {
-      return ((bitField1_ & 0x00000010) == 0x00000010);
+      return ((bitField1_ & 0x00000020) == 0x00000020);
     }
     /**
      * <code>optional uint32 L2_skip = 16;</code>
@@ -5161,7 +5611,7 @@ public final class DataProtos {
      * <code>optional uint32 frames_dropped = 12;</code>
      */
     public boolean hasFramesDropped() {
-      return ((bitField1_ & 0x00000020) == 0x00000020);
+      return ((bitField1_ & 0x00000040) == 0x00000040);
     }
     /**
      * <code>optional uint32 frames_dropped = 12;</code>
@@ -5198,7 +5648,7 @@ public final class DataProtos {
      * <code>optional uint32 xbn = 17;</code>
      */
     public boolean hasXbn() {
-      return ((bitField1_ & 0x00000040) == 0x00000040);
+      return ((bitField1_ & 0x00000080) == 0x00000080);
     }
     /**
      * <code>optional uint32 xbn = 17;</code>
@@ -5213,7 +5663,7 @@ public final class DataProtos {
      * <code>optional bool aborted = 18;</code>
      */
     public boolean hasAborted() {
-      return ((bitField1_ & 0x00000080) == 0x00000080);
+      return ((bitField1_ & 0x00000100) == 0x00000100);
     }
     /**
      * <code>optional bool aborted = 18;</code>
@@ -5223,6 +5673,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5232,6 +5683,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5261,31 +5713,31 @@ public final class DataProtos {
       if (((bitField0_ & 0x01000000) == 0x01000000)) {
         output.writeInt32(9, l2Thresh_);
       }
-      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+      if (((bitField0_ & 0x40000000) == 0x40000000)) {
         output.writeUInt32(10, l1Processed_);
       }
-      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+      if (((bitField0_ & 0x80000000) == 0x80000000)) {
         output.writeUInt32(11, l2Processed_);
       }
-      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+      if (((bitField1_ & 0x00000040) == 0x00000040)) {
         output.writeUInt32(12, framesDropped_);
       }
-      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+      if (((bitField1_ & 0x00000002) == 0x00000002)) {
         output.writeUInt32(13, l1Pass_);
       }
-      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+      if (((bitField1_ & 0x00000010) == 0x00000010)) {
         output.writeUInt32(14, l1Skip_);
       }
-      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+      if (((bitField1_ & 0x00000004) == 0x00000004)) {
         output.writeUInt32(15, l2Pass_);
       }
-      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+      if (((bitField1_ & 0x00000020) == 0x00000020)) {
         output.writeUInt32(16, l2Skip_);
       }
-      if (((bitField1_ & 0x00000040) == 0x00000040)) {
+      if (((bitField1_ & 0x00000080) == 0x00000080)) {
         output.writeUInt32(17, xbn_);
       }
-      if (((bitField1_ & 0x00000080) == 0x00000080)) {
+      if (((bitField1_ & 0x00000100) == 0x00000100)) {
         output.writeBool(18, aborted_);
       }
       if (((bitField0_ & 0x00004000) == 0x00004000)) {
@@ -5318,10 +5770,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00020000) == 0x00020000)) {
         output.writeUInt64(28, gpsFixtimeNano_);
       }
-      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 29, l1Conf_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 30, l2Conf_);
       }
       if (((bitField0_ & 0x00040000) == 0x00040000)) {
@@ -5336,7 +5788,7 @@ public final class DataProtos {
       for (int i = 0; i < hist_.size(); i++) {
         output.writeUInt64(35, hist_.get(i));
       }
-      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+      if (((bitField0_ & 0x04000000) == 0x04000000)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 36, l0Conf_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
@@ -5345,13 +5797,13 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeUInt64(38, precalIdHi_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
         output.writeUInt32(39, l0Processed_);
       }
-      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+      if (((bitField1_ & 0x00000001) == 0x00000001)) {
         output.writeUInt32(40, l0Pass_);
       }
-      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+      if (((bitField1_ & 0x00000008) == 0x00000008)) {
         output.writeUInt32(41, l0Skip_);
       }
       for (int i = 0; i < config_.size(); i++) {
@@ -5372,9 +5824,13 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         output.writeInt32(47, wgtHash_);
       }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        output.writeFloat(48, l1Prescale_);
+      }
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5416,39 +5872,39 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(9, l2Thresh_);
       }
-      if (((bitField0_ & 0x20000000) == 0x20000000)) {
+      if (((bitField0_ & 0x40000000) == 0x40000000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(10, l1Processed_);
       }
-      if (((bitField0_ & 0x40000000) == 0x40000000)) {
+      if (((bitField0_ & 0x80000000) == 0x80000000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(11, l2Processed_);
       }
-      if (((bitField1_ & 0x00000020) == 0x00000020)) {
+      if (((bitField1_ & 0x00000040) == 0x00000040)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(12, framesDropped_);
       }
-      if (((bitField1_ & 0x00000001) == 0x00000001)) {
+      if (((bitField1_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(13, l1Pass_);
       }
-      if (((bitField1_ & 0x00000008) == 0x00000008)) {
+      if (((bitField1_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(14, l1Skip_);
       }
-      if (((bitField1_ & 0x00000002) == 0x00000002)) {
+      if (((bitField1_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(15, l2Pass_);
       }
-      if (((bitField1_ & 0x00000010) == 0x00000010)) {
+      if (((bitField1_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(16, l2Skip_);
       }
-      if (((bitField1_ & 0x00000040) == 0x00000040)) {
+      if (((bitField1_ & 0x00000080) == 0x00000080)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(17, xbn_);
       }
-      if (((bitField1_ & 0x00000080) == 0x00000080)) {
+      if (((bitField1_ & 0x00000100) == 0x00000100)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBoolSize(18, aborted_);
       }
@@ -5492,10 +5948,10 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(28, gpsFixtimeNano_);
       }
-      if (((bitField0_ & 0x04000000) == 0x04000000)) {
+      if (((bitField0_ & 0x08000000) == 0x08000000)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(29, l1Conf_);
       }
-      if (((bitField0_ & 0x08000000) == 0x08000000)) {
+      if (((bitField0_ & 0x10000000) == 0x10000000)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(30, l2Conf_);
       }
       if (((bitField0_ & 0x00040000) == 0x00040000)) {
@@ -5519,7 +5975,7 @@ public final class DataProtos {
         size += dataSize;
         size += 2 * getHistList().size();
       }
-      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+      if (((bitField0_ & 0x04000000) == 0x04000000)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(36, l0Conf_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
@@ -5530,15 +5986,15 @@ public final class DataProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt64Size(38, precalIdHi_);
       }
-      if (((bitField0_ & 0x10000000) == 0x10000000)) {
+      if (((bitField0_ & 0x20000000) == 0x20000000)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(39, l0Processed_);
       }
-      if (((bitField0_ & 0x80000000) == 0x80000000)) {
+      if (((bitField1_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(40, l0Pass_);
       }
-      if (((bitField1_ & 0x00000004) == 0x00000004)) {
+      if (((bitField1_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeUInt32Size(41, l0Skip_);
       }
@@ -5584,6 +6040,10 @@ public final class DataProtos {
       if (((bitField0_ & 0x00000020) == 0x00000020)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(47, wgtHash_);
+      }
+      if (((bitField0_ & 0x02000000) == 0x02000000)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeFloatSize(48, l1Prescale_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5734,6 +6194,13 @@ public final class DataProtos {
       if (hasL2Thresh()) {
         result = result && (getL2Thresh()
             == other.getL2Thresh());
+      }
+      result = result && (hasL1Prescale() == other.hasL1Prescale());
+      if (hasL1Prescale()) {
+        result = result && (
+            java.lang.Float.floatToIntBits(getL1Prescale())
+            == java.lang.Float.floatToIntBits(
+                other.getL1Prescale()));
       }
       result = result && (hasL0Conf() == other.hasL0Conf());
       if (hasL0Conf()) {
@@ -5951,6 +6418,11 @@ public final class DataProtos {
         hash = (37 * hash) + L2_THRESH_FIELD_NUMBER;
         hash = (53 * hash) + getL2Thresh();
       }
+      if (hasL1Prescale()) {
+        hash = (37 * hash) + L1_PRESCALE_FIELD_NUMBER;
+        hash = (53 * hash) + java.lang.Float.floatToIntBits(
+            getL1Prescale());
+      }
       if (hasL0Conf()) {
         hash = (37 * hash) + L0_CONF_FIELD_NUMBER;
         hash = (53 * hash) + getL0Conf().hashCode();
@@ -6107,6 +6579,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6114,6 +6587,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.ExposureBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6137,6 +6611,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ExposureBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ExposureBlock_fieldAccessorTable
@@ -6160,6 +6635,7 @@ public final class DataProtos {
           getEventsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         runId_ = 0L;
@@ -6218,58 +6694,63 @@ public final class DataProtos {
         bitField0_ = (bitField0_ & ~0x01000000);
         l2Thresh_ = 0;
         bitField0_ = (bitField0_ & ~0x02000000);
-        l0Conf_ = "";
+        l1Prescale_ = 0F;
         bitField0_ = (bitField0_ & ~0x04000000);
-        l1Conf_ = "";
+        l0Conf_ = "";
         bitField0_ = (bitField0_ & ~0x08000000);
-        l2Conf_ = "";
+        l1Conf_ = "";
         bitField0_ = (bitField0_ & ~0x10000000);
-        l0Processed_ = 0;
+        l2Conf_ = "";
         bitField0_ = (bitField0_ & ~0x20000000);
-        l1Processed_ = 0;
+        l0Processed_ = 0;
         bitField0_ = (bitField0_ & ~0x40000000);
-        l2Processed_ = 0;
+        l1Processed_ = 0;
         bitField0_ = (bitField0_ & ~0x80000000);
-        l0Pass_ = 0;
+        l2Processed_ = 0;
         bitField1_ = (bitField1_ & ~0x00000001);
-        l1Pass_ = 0;
+        l0Pass_ = 0;
         bitField1_ = (bitField1_ & ~0x00000002);
-        l2Pass_ = 0;
+        l1Pass_ = 0;
         bitField1_ = (bitField1_ & ~0x00000004);
-        l0Skip_ = 0;
+        l2Pass_ = 0;
         bitField1_ = (bitField1_ & ~0x00000008);
-        l1Skip_ = 0;
+        l0Skip_ = 0;
         bitField1_ = (bitField1_ & ~0x00000010);
-        l2Skip_ = 0;
+        l1Skip_ = 0;
         bitField1_ = (bitField1_ & ~0x00000020);
-        config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+        l2Skip_ = 0;
         bitField1_ = (bitField1_ & ~0x00000040);
-        processed_ = java.util.Collections.emptyList();
+        config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         bitField1_ = (bitField1_ & ~0x00000080);
-        pass_ = java.util.Collections.emptyList();
+        processed_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000100);
-        skip_ = java.util.Collections.emptyList();
+        pass_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000200);
-        framesDropped_ = 0;
+        skip_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00000400);
-        hist_ = java.util.Collections.emptyList();
+        framesDropped_ = 0;
         bitField1_ = (bitField1_ & ~0x00000800);
-        xbn_ = 0;
+        hist_ = java.util.Collections.emptyList();
         bitField1_ = (bitField1_ & ~0x00001000);
-        aborted_ = false;
+        xbn_ = 0;
         bitField1_ = (bitField1_ & ~0x00002000);
+        aborted_ = false;
+        bitField1_ = (bitField1_ & ~0x00004000);
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ExposureBlock_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ExposureBlock getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.ExposureBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ExposureBlock build() {
         io.crayfis.android.DataProtos.ExposureBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -6278,6 +6759,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ExposureBlock buildPartial() {
         io.crayfis.android.DataProtos.ExposureBlock result = new io.crayfis.android.DataProtos.ExposureBlock(this);
         int from_bitField0_ = bitField0_;
@@ -6396,86 +6878,90 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x04000000) == 0x04000000)) {
           to_bitField0_ |= 0x02000000;
         }
-        result.l0Conf_ = l0Conf_;
+        result.l1Prescale_ = l1Prescale_;
         if (((from_bitField0_ & 0x08000000) == 0x08000000)) {
           to_bitField0_ |= 0x04000000;
         }
-        result.l1Conf_ = l1Conf_;
+        result.l0Conf_ = l0Conf_;
         if (((from_bitField0_ & 0x10000000) == 0x10000000)) {
           to_bitField0_ |= 0x08000000;
         }
-        result.l2Conf_ = l2Conf_;
+        result.l1Conf_ = l1Conf_;
         if (((from_bitField0_ & 0x20000000) == 0x20000000)) {
           to_bitField0_ |= 0x10000000;
         }
-        result.l0Processed_ = l0Processed_;
+        result.l2Conf_ = l2Conf_;
         if (((from_bitField0_ & 0x40000000) == 0x40000000)) {
           to_bitField0_ |= 0x20000000;
         }
-        result.l1Processed_ = l1Processed_;
+        result.l0Processed_ = l0Processed_;
         if (((from_bitField0_ & 0x80000000) == 0x80000000)) {
           to_bitField0_ |= 0x40000000;
         }
-        result.l2Processed_ = l2Processed_;
+        result.l1Processed_ = l1Processed_;
         if (((from_bitField1_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x80000000;
         }
-        result.l0Pass_ = l0Pass_;
+        result.l2Processed_ = l2Processed_;
         if (((from_bitField1_ & 0x00000002) == 0x00000002)) {
           to_bitField1_ |= 0x00000001;
         }
-        result.l1Pass_ = l1Pass_;
+        result.l0Pass_ = l0Pass_;
         if (((from_bitField1_ & 0x00000004) == 0x00000004)) {
           to_bitField1_ |= 0x00000002;
         }
-        result.l2Pass_ = l2Pass_;
+        result.l1Pass_ = l1Pass_;
         if (((from_bitField1_ & 0x00000008) == 0x00000008)) {
           to_bitField1_ |= 0x00000004;
         }
-        result.l0Skip_ = l0Skip_;
+        result.l2Pass_ = l2Pass_;
         if (((from_bitField1_ & 0x00000010) == 0x00000010)) {
           to_bitField1_ |= 0x00000008;
         }
-        result.l1Skip_ = l1Skip_;
+        result.l0Skip_ = l0Skip_;
         if (((from_bitField1_ & 0x00000020) == 0x00000020)) {
           to_bitField1_ |= 0x00000010;
         }
-        result.l2Skip_ = l2Skip_;
-        if (((bitField1_ & 0x00000040) == 0x00000040)) {
-          config_ = config_.getUnmodifiableView();
-          bitField1_ = (bitField1_ & ~0x00000040);
-        }
-        result.config_ = config_;
-        if (((bitField1_ & 0x00000080) == 0x00000080)) {
-          processed_ = java.util.Collections.unmodifiableList(processed_);
-          bitField1_ = (bitField1_ & ~0x00000080);
-        }
-        result.processed_ = processed_;
-        if (((bitField1_ & 0x00000100) == 0x00000100)) {
-          pass_ = java.util.Collections.unmodifiableList(pass_);
-          bitField1_ = (bitField1_ & ~0x00000100);
-        }
-        result.pass_ = pass_;
-        if (((bitField1_ & 0x00000200) == 0x00000200)) {
-          skip_ = java.util.Collections.unmodifiableList(skip_);
-          bitField1_ = (bitField1_ & ~0x00000200);
-        }
-        result.skip_ = skip_;
-        if (((from_bitField1_ & 0x00000400) == 0x00000400)) {
+        result.l1Skip_ = l1Skip_;
+        if (((from_bitField1_ & 0x00000040) == 0x00000040)) {
           to_bitField1_ |= 0x00000020;
         }
-        result.framesDropped_ = framesDropped_;
-        if (((bitField1_ & 0x00000800) == 0x00000800)) {
-          hist_ = java.util.Collections.unmodifiableList(hist_);
-          bitField1_ = (bitField1_ & ~0x00000800);
+        result.l2Skip_ = l2Skip_;
+        if (((bitField1_ & 0x00000080) == 0x00000080)) {
+          config_ = config_.getUnmodifiableView();
+          bitField1_ = (bitField1_ & ~0x00000080);
         }
-        result.hist_ = hist_;
-        if (((from_bitField1_ & 0x00001000) == 0x00001000)) {
+        result.config_ = config_;
+        if (((bitField1_ & 0x00000100) == 0x00000100)) {
+          processed_ = java.util.Collections.unmodifiableList(processed_);
+          bitField1_ = (bitField1_ & ~0x00000100);
+        }
+        result.processed_ = processed_;
+        if (((bitField1_ & 0x00000200) == 0x00000200)) {
+          pass_ = java.util.Collections.unmodifiableList(pass_);
+          bitField1_ = (bitField1_ & ~0x00000200);
+        }
+        result.pass_ = pass_;
+        if (((bitField1_ & 0x00000400) == 0x00000400)) {
+          skip_ = java.util.Collections.unmodifiableList(skip_);
+          bitField1_ = (bitField1_ & ~0x00000400);
+        }
+        result.skip_ = skip_;
+        if (((from_bitField1_ & 0x00000800) == 0x00000800)) {
           to_bitField1_ |= 0x00000040;
         }
-        result.xbn_ = xbn_;
+        result.framesDropped_ = framesDropped_;
+        if (((bitField1_ & 0x00001000) == 0x00001000)) {
+          hist_ = java.util.Collections.unmodifiableList(hist_);
+          bitField1_ = (bitField1_ & ~0x00001000);
+        }
+        result.hist_ = hist_;
         if (((from_bitField1_ & 0x00002000) == 0x00002000)) {
           to_bitField1_ |= 0x00000080;
+        }
+        result.xbn_ = xbn_;
+        if (((from_bitField1_ & 0x00004000) == 0x00004000)) {
+          to_bitField1_ |= 0x00000100;
         }
         result.aborted_ = aborted_;
         result.bitField0_ = to_bitField0_;
@@ -6484,32 +6970,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.ExposureBlock) {
           return mergeFrom((io.crayfis.android.DataProtos.ExposureBlock)other);
@@ -6622,18 +7115,21 @@ public final class DataProtos {
         if (other.hasL2Thresh()) {
           setL2Thresh(other.getL2Thresh());
         }
+        if (other.hasL1Prescale()) {
+          setL1Prescale(other.getL1Prescale());
+        }
         if (other.hasL0Conf()) {
-          bitField0_ |= 0x04000000;
+          bitField0_ |= 0x08000000;
           l0Conf_ = other.l0Conf_;
           onChanged();
         }
         if (other.hasL1Conf()) {
-          bitField0_ |= 0x08000000;
+          bitField0_ |= 0x10000000;
           l1Conf_ = other.l1Conf_;
           onChanged();
         }
         if (other.hasL2Conf()) {
-          bitField0_ |= 0x10000000;
+          bitField0_ |= 0x20000000;
           l2Conf_ = other.l2Conf_;
           onChanged();
         }
@@ -6667,7 +7163,7 @@ public final class DataProtos {
         if (!other.config_.isEmpty()) {
           if (config_.isEmpty()) {
             config_ = other.config_;
-            bitField1_ = (bitField1_ & ~0x00000040);
+            bitField1_ = (bitField1_ & ~0x00000080);
           } else {
             ensureConfigIsMutable();
             config_.addAll(other.config_);
@@ -6677,7 +7173,7 @@ public final class DataProtos {
         if (!other.processed_.isEmpty()) {
           if (processed_.isEmpty()) {
             processed_ = other.processed_;
-            bitField1_ = (bitField1_ & ~0x00000080);
+            bitField1_ = (bitField1_ & ~0x00000100);
           } else {
             ensureProcessedIsMutable();
             processed_.addAll(other.processed_);
@@ -6687,7 +7183,7 @@ public final class DataProtos {
         if (!other.pass_.isEmpty()) {
           if (pass_.isEmpty()) {
             pass_ = other.pass_;
-            bitField1_ = (bitField1_ & ~0x00000100);
+            bitField1_ = (bitField1_ & ~0x00000200);
           } else {
             ensurePassIsMutable();
             pass_.addAll(other.pass_);
@@ -6697,7 +7193,7 @@ public final class DataProtos {
         if (!other.skip_.isEmpty()) {
           if (skip_.isEmpty()) {
             skip_ = other.skip_;
-            bitField1_ = (bitField1_ & ~0x00000200);
+            bitField1_ = (bitField1_ & ~0x00000400);
           } else {
             ensureSkipIsMutable();
             skip_.addAll(other.skip_);
@@ -6710,7 +7206,7 @@ public final class DataProtos {
         if (!other.hist_.isEmpty()) {
           if (hist_.isEmpty()) {
             hist_ = other.hist_;
-            bitField1_ = (bitField1_ & ~0x00000800);
+            bitField1_ = (bitField1_ & ~0x00001000);
           } else {
             ensureHistIsMutable();
             hist_.addAll(other.hist_);
@@ -6728,10 +7224,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7451,6 +7949,7 @@ public final class DataProtos {
        * <code>optional .crayfis.ExposureBlock.State daq_state = 6;</code>
        */
       public io.crayfis.android.DataProtos.ExposureBlock.State getDaqState() {
+        @SuppressWarnings("deprecation")
         io.crayfis.android.DataProtos.ExposureBlock.State result = io.crayfis.android.DataProtos.ExposureBlock.State.valueOf(daqState_);
         return result == null ? io.crayfis.android.DataProtos.ExposureBlock.State.INIT : result;
       }
@@ -7844,6 +8343,38 @@ public final class DataProtos {
         return this;
       }
 
+      private float l1Prescale_ ;
+      /**
+       * <code>optional float L1_prescale = 48;</code>
+       */
+      public boolean hasL1Prescale() {
+        return ((bitField0_ & 0x04000000) == 0x04000000);
+      }
+      /**
+       * <code>optional float L1_prescale = 48;</code>
+       */
+      public float getL1Prescale() {
+        return l1Prescale_;
+      }
+      /**
+       * <code>optional float L1_prescale = 48;</code>
+       */
+      public Builder setL1Prescale(float value) {
+        bitField0_ |= 0x04000000;
+        l1Prescale_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional float L1_prescale = 48;</code>
+       */
+      public Builder clearL1Prescale() {
+        bitField0_ = (bitField0_ & ~0x04000000);
+        l1Prescale_ = 0F;
+        onChanged();
+        return this;
+      }
+
       private java.lang.Object l0Conf_ = "";
       /**
        * <pre>
@@ -7853,7 +8384,7 @@ public final class DataProtos {
        * <code>optional string L0_conf = 36;</code>
        */
       public boolean hasL0Conf() {
-        return ((bitField0_ & 0x04000000) == 0x04000000);
+        return ((bitField0_ & 0x08000000) == 0x08000000);
       }
       /**
        * <pre>
@@ -7908,7 +8439,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x04000000;
+  bitField0_ |= 0x08000000;
         l0Conf_ = value;
         onChanged();
         return this;
@@ -7921,7 +8452,7 @@ public final class DataProtos {
        * <code>optional string L0_conf = 36;</code>
        */
       public Builder clearL0Conf() {
-        bitField0_ = (bitField0_ & ~0x04000000);
+        bitField0_ = (bitField0_ & ~0x08000000);
         l0Conf_ = getDefaultInstance().getL0Conf();
         onChanged();
         return this;
@@ -7938,7 +8469,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x04000000;
+  bitField0_ |= 0x08000000;
         l0Conf_ = value;
         onChanged();
         return this;
@@ -7949,7 +8480,7 @@ public final class DataProtos {
        * <code>optional string L1_conf = 29;</code>
        */
       public boolean hasL1Conf() {
-        return ((bitField0_ & 0x08000000) == 0x08000000);
+        return ((bitField0_ & 0x10000000) == 0x10000000);
       }
       /**
        * <code>optional string L1_conf = 29;</code>
@@ -7992,7 +8523,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x08000000;
+  bitField0_ |= 0x10000000;
         l1Conf_ = value;
         onChanged();
         return this;
@@ -8001,7 +8532,7 @@ public final class DataProtos {
        * <code>optional string L1_conf = 29;</code>
        */
       public Builder clearL1Conf() {
-        bitField0_ = (bitField0_ & ~0x08000000);
+        bitField0_ = (bitField0_ & ~0x10000000);
         l1Conf_ = getDefaultInstance().getL1Conf();
         onChanged();
         return this;
@@ -8014,7 +8545,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x08000000;
+  bitField0_ |= 0x10000000;
         l1Conf_ = value;
         onChanged();
         return this;
@@ -8025,7 +8556,7 @@ public final class DataProtos {
        * <code>optional string L2_conf = 30;</code>
        */
       public boolean hasL2Conf() {
-        return ((bitField0_ & 0x10000000) == 0x10000000);
+        return ((bitField0_ & 0x20000000) == 0x20000000);
       }
       /**
        * <code>optional string L2_conf = 30;</code>
@@ -8068,7 +8599,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x10000000;
+  bitField0_ |= 0x20000000;
         l2Conf_ = value;
         onChanged();
         return this;
@@ -8077,7 +8608,7 @@ public final class DataProtos {
        * <code>optional string L2_conf = 30;</code>
        */
       public Builder clearL2Conf() {
-        bitField0_ = (bitField0_ & ~0x10000000);
+        bitField0_ = (bitField0_ & ~0x20000000);
         l2Conf_ = getDefaultInstance().getL2Conf();
         onChanged();
         return this;
@@ -8090,7 +8621,7 @@ public final class DataProtos {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x10000000;
+  bitField0_ |= 0x20000000;
         l2Conf_ = value;
         onChanged();
         return this;
@@ -8101,7 +8632,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_processed = 39;</code>
        */
       public boolean hasL0Processed() {
-        return ((bitField0_ & 0x20000000) == 0x20000000);
+        return ((bitField0_ & 0x40000000) == 0x40000000);
       }
       /**
        * <code>optional uint32 L0_processed = 39;</code>
@@ -8113,7 +8644,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_processed = 39;</code>
        */
       public Builder setL0Processed(int value) {
-        bitField0_ |= 0x20000000;
+        bitField0_ |= 0x40000000;
         l0Processed_ = value;
         onChanged();
         return this;
@@ -8122,7 +8653,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_processed = 39;</code>
        */
       public Builder clearL0Processed() {
-        bitField0_ = (bitField0_ & ~0x20000000);
+        bitField0_ = (bitField0_ & ~0x40000000);
         l0Processed_ = 0;
         onChanged();
         return this;
@@ -8133,7 +8664,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public boolean hasL1Processed() {
-        return ((bitField0_ & 0x40000000) == 0x40000000);
+        return ((bitField0_ & 0x80000000) == 0x80000000);
       }
       /**
        * <code>optional uint32 L1_processed = 10;</code>
@@ -8145,7 +8676,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public Builder setL1Processed(int value) {
-        bitField0_ |= 0x40000000;
+        bitField0_ |= 0x80000000;
         l1Processed_ = value;
         onChanged();
         return this;
@@ -8154,7 +8685,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_processed = 10;</code>
        */
       public Builder clearL1Processed() {
-        bitField0_ = (bitField0_ & ~0x40000000);
+        bitField0_ = (bitField0_ & ~0x80000000);
         l1Processed_ = 0;
         onChanged();
         return this;
@@ -8165,7 +8696,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public boolean hasL2Processed() {
-        return ((bitField0_ & 0x80000000) == 0x80000000);
+        return ((bitField1_ & 0x00000001) == 0x00000001);
       }
       /**
        * <code>optional uint32 L2_processed = 11;</code>
@@ -8177,7 +8708,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public Builder setL2Processed(int value) {
-        bitField0_ |= 0x80000000;
+        bitField1_ |= 0x00000001;
         l2Processed_ = value;
         onChanged();
         return this;
@@ -8186,7 +8717,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_processed = 11;</code>
        */
       public Builder clearL2Processed() {
-        bitField0_ = (bitField0_ & ~0x80000000);
+        bitField1_ = (bitField1_ & ~0x00000001);
         l2Processed_ = 0;
         onChanged();
         return this;
@@ -8197,7 +8728,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_pass = 40;</code>
        */
       public boolean hasL0Pass() {
-        return ((bitField1_ & 0x00000001) == 0x00000001);
+        return ((bitField1_ & 0x00000002) == 0x00000002);
       }
       /**
        * <code>optional uint32 L0_pass = 40;</code>
@@ -8209,7 +8740,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_pass = 40;</code>
        */
       public Builder setL0Pass(int value) {
-        bitField1_ |= 0x00000001;
+        bitField1_ |= 0x00000002;
         l0Pass_ = value;
         onChanged();
         return this;
@@ -8218,7 +8749,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_pass = 40;</code>
        */
       public Builder clearL0Pass() {
-        bitField1_ = (bitField1_ & ~0x00000001);
+        bitField1_ = (bitField1_ & ~0x00000002);
         l0Pass_ = 0;
         onChanged();
         return this;
@@ -8229,7 +8760,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public boolean hasL1Pass() {
-        return ((bitField1_ & 0x00000002) == 0x00000002);
+        return ((bitField1_ & 0x00000004) == 0x00000004);
       }
       /**
        * <code>optional uint32 L1_pass = 13;</code>
@@ -8241,7 +8772,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public Builder setL1Pass(int value) {
-        bitField1_ |= 0x00000002;
+        bitField1_ |= 0x00000004;
         l1Pass_ = value;
         onChanged();
         return this;
@@ -8250,7 +8781,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_pass = 13;</code>
        */
       public Builder clearL1Pass() {
-        bitField1_ = (bitField1_ & ~0x00000002);
+        bitField1_ = (bitField1_ & ~0x00000004);
         l1Pass_ = 0;
         onChanged();
         return this;
@@ -8261,7 +8792,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public boolean hasL2Pass() {
-        return ((bitField1_ & 0x00000004) == 0x00000004);
+        return ((bitField1_ & 0x00000008) == 0x00000008);
       }
       /**
        * <code>optional uint32 L2_pass = 15;</code>
@@ -8273,7 +8804,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public Builder setL2Pass(int value) {
-        bitField1_ |= 0x00000004;
+        bitField1_ |= 0x00000008;
         l2Pass_ = value;
         onChanged();
         return this;
@@ -8282,7 +8813,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_pass = 15;</code>
        */
       public Builder clearL2Pass() {
-        bitField1_ = (bitField1_ & ~0x00000004);
+        bitField1_ = (bitField1_ & ~0x00000008);
         l2Pass_ = 0;
         onChanged();
         return this;
@@ -8293,7 +8824,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_skip = 41;</code>
        */
       public boolean hasL0Skip() {
-        return ((bitField1_ & 0x00000008) == 0x00000008);
+        return ((bitField1_ & 0x00000010) == 0x00000010);
       }
       /**
        * <code>optional uint32 L0_skip = 41;</code>
@@ -8305,7 +8836,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_skip = 41;</code>
        */
       public Builder setL0Skip(int value) {
-        bitField1_ |= 0x00000008;
+        bitField1_ |= 0x00000010;
         l0Skip_ = value;
         onChanged();
         return this;
@@ -8314,7 +8845,7 @@ public final class DataProtos {
        * <code>optional uint32 L0_skip = 41;</code>
        */
       public Builder clearL0Skip() {
-        bitField1_ = (bitField1_ & ~0x00000008);
+        bitField1_ = (bitField1_ & ~0x00000010);
         l0Skip_ = 0;
         onChanged();
         return this;
@@ -8325,7 +8856,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public boolean hasL1Skip() {
-        return ((bitField1_ & 0x00000010) == 0x00000010);
+        return ((bitField1_ & 0x00000020) == 0x00000020);
       }
       /**
        * <code>optional uint32 L1_skip = 14;</code>
@@ -8337,7 +8868,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public Builder setL1Skip(int value) {
-        bitField1_ |= 0x00000010;
+        bitField1_ |= 0x00000020;
         l1Skip_ = value;
         onChanged();
         return this;
@@ -8346,7 +8877,7 @@ public final class DataProtos {
        * <code>optional uint32 L1_skip = 14;</code>
        */
       public Builder clearL1Skip() {
-        bitField1_ = (bitField1_ & ~0x00000010);
+        bitField1_ = (bitField1_ & ~0x00000020);
         l1Skip_ = 0;
         onChanged();
         return this;
@@ -8357,7 +8888,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public boolean hasL2Skip() {
-        return ((bitField1_ & 0x00000020) == 0x00000020);
+        return ((bitField1_ & 0x00000040) == 0x00000040);
       }
       /**
        * <code>optional uint32 L2_skip = 16;</code>
@@ -8369,7 +8900,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public Builder setL2Skip(int value) {
-        bitField1_ |= 0x00000020;
+        bitField1_ |= 0x00000040;
         l2Skip_ = value;
         onChanged();
         return this;
@@ -8378,7 +8909,7 @@ public final class DataProtos {
        * <code>optional uint32 L2_skip = 16;</code>
        */
       public Builder clearL2Skip() {
-        bitField1_ = (bitField1_ & ~0x00000020);
+        bitField1_ = (bitField1_ & ~0x00000040);
         l2Skip_ = 0;
         onChanged();
         return this;
@@ -8386,9 +8917,9 @@ public final class DataProtos {
 
       private com.google.protobuf.LazyStringList config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureConfigIsMutable() {
-        if (!((bitField1_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField1_ & 0x00000080) == 0x00000080)) {
           config_ = new com.google.protobuf.LazyStringArrayList(config_);
-          bitField1_ |= 0x00000040;
+          bitField1_ |= 0x00000080;
          }
       }
       /**
@@ -8459,7 +8990,7 @@ public final class DataProtos {
        */
       public Builder clearConfig() {
         config_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField1_ = (bitField1_ & ~0x00000040);
+        bitField1_ = (bitField1_ & ~0x00000080);
         onChanged();
         return this;
       }
@@ -8479,9 +9010,9 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Integer> processed_ = java.util.Collections.emptyList();
       private void ensureProcessedIsMutable() {
-        if (!((bitField1_ & 0x00000080) == 0x00000080)) {
+        if (!((bitField1_ & 0x00000100) == 0x00000100)) {
           processed_ = new java.util.ArrayList<java.lang.Integer>(processed_);
-          bitField1_ |= 0x00000080;
+          bitField1_ |= 0x00000100;
          }
       }
       /**
@@ -8538,16 +9069,16 @@ public final class DataProtos {
        */
       public Builder clearProcessed() {
         processed_ = java.util.Collections.emptyList();
-        bitField1_ = (bitField1_ & ~0x00000080);
+        bitField1_ = (bitField1_ & ~0x00000100);
         onChanged();
         return this;
       }
 
       private java.util.List<java.lang.Integer> pass_ = java.util.Collections.emptyList();
       private void ensurePassIsMutable() {
-        if (!((bitField1_ & 0x00000100) == 0x00000100)) {
+        if (!((bitField1_ & 0x00000200) == 0x00000200)) {
           pass_ = new java.util.ArrayList<java.lang.Integer>(pass_);
-          bitField1_ |= 0x00000100;
+          bitField1_ |= 0x00000200;
          }
       }
       /**
@@ -8604,16 +9135,16 @@ public final class DataProtos {
        */
       public Builder clearPass() {
         pass_ = java.util.Collections.emptyList();
-        bitField1_ = (bitField1_ & ~0x00000100);
+        bitField1_ = (bitField1_ & ~0x00000200);
         onChanged();
         return this;
       }
 
       private java.util.List<java.lang.Integer> skip_ = java.util.Collections.emptyList();
       private void ensureSkipIsMutable() {
-        if (!((bitField1_ & 0x00000200) == 0x00000200)) {
+        if (!((bitField1_ & 0x00000400) == 0x00000400)) {
           skip_ = new java.util.ArrayList<java.lang.Integer>(skip_);
-          bitField1_ |= 0x00000200;
+          bitField1_ |= 0x00000400;
          }
       }
       /**
@@ -8670,7 +9201,7 @@ public final class DataProtos {
        */
       public Builder clearSkip() {
         skip_ = java.util.Collections.emptyList();
-        bitField1_ = (bitField1_ & ~0x00000200);
+        bitField1_ = (bitField1_ & ~0x00000400);
         onChanged();
         return this;
       }
@@ -8680,7 +9211,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public boolean hasFramesDropped() {
-        return ((bitField1_ & 0x00000400) == 0x00000400);
+        return ((bitField1_ & 0x00000800) == 0x00000800);
       }
       /**
        * <code>optional uint32 frames_dropped = 12;</code>
@@ -8692,7 +9223,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder setFramesDropped(int value) {
-        bitField1_ |= 0x00000400;
+        bitField1_ |= 0x00000800;
         framesDropped_ = value;
         onChanged();
         return this;
@@ -8701,7 +9232,7 @@ public final class DataProtos {
        * <code>optional uint32 frames_dropped = 12;</code>
        */
       public Builder clearFramesDropped() {
-        bitField1_ = (bitField1_ & ~0x00000400);
+        bitField1_ = (bitField1_ & ~0x00000800);
         framesDropped_ = 0;
         onChanged();
         return this;
@@ -8709,9 +9240,9 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Long> hist_ = java.util.Collections.emptyList();
       private void ensureHistIsMutable() {
-        if (!((bitField1_ & 0x00000800) == 0x00000800)) {
+        if (!((bitField1_ & 0x00001000) == 0x00001000)) {
           hist_ = new java.util.ArrayList<java.lang.Long>(hist_);
-          bitField1_ |= 0x00000800;
+          bitField1_ |= 0x00001000;
          }
       }
       /**
@@ -8768,7 +9299,7 @@ public final class DataProtos {
        */
       public Builder clearHist() {
         hist_ = java.util.Collections.emptyList();
-        bitField1_ = (bitField1_ & ~0x00000800);
+        bitField1_ = (bitField1_ & ~0x00001000);
         onChanged();
         return this;
       }
@@ -8778,7 +9309,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public boolean hasXbn() {
-        return ((bitField1_ & 0x00001000) == 0x00001000);
+        return ((bitField1_ & 0x00002000) == 0x00002000);
       }
       /**
        * <code>optional uint32 xbn = 17;</code>
@@ -8790,7 +9321,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder setXbn(int value) {
-        bitField1_ |= 0x00001000;
+        bitField1_ |= 0x00002000;
         xbn_ = value;
         onChanged();
         return this;
@@ -8799,7 +9330,7 @@ public final class DataProtos {
        * <code>optional uint32 xbn = 17;</code>
        */
       public Builder clearXbn() {
-        bitField1_ = (bitField1_ & ~0x00001000);
+        bitField1_ = (bitField1_ & ~0x00002000);
         xbn_ = 0;
         onChanged();
         return this;
@@ -8810,7 +9341,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public boolean hasAborted() {
-        return ((bitField1_ & 0x00002000) == 0x00002000);
+        return ((bitField1_ & 0x00004000) == 0x00004000);
       }
       /**
        * <code>optional bool aborted = 18;</code>
@@ -8822,7 +9353,7 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder setAborted(boolean value) {
-        bitField1_ |= 0x00002000;
+        bitField1_ |= 0x00004000;
         aborted_ = value;
         onChanged();
         return this;
@@ -8831,16 +9362,18 @@ public final class DataProtos {
        * <code>optional bool aborted = 18;</code>
        */
       public Builder clearAborted() {
-        bitField1_ = (bitField1_ & ~0x00002000);
+        bitField1_ = (bitField1_ & ~0x00004000);
         aborted_ = false;
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8862,6 +9395,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ExposureBlock>
         PARSER = new com.google.protobuf.AbstractParser<ExposureBlock>() {
+      @java.lang.Override
       public ExposureBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8879,6 +9413,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.ExposureBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9173,13 +9708,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               timestamp_ = input.readUInt64();
@@ -9326,6 +9854,13 @@ public final class DataProtos {
               exposureTime_ = input.readUInt64();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -9349,6 +9884,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_Event_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_Event_fieldAccessorTable
@@ -9727,6 +10263,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9736,6 +10273,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9807,6 +10345,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10236,6 +10775,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10243,6 +10783,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.Event prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10266,6 +10807,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Event_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Event_fieldAccessorTable
@@ -10291,6 +10833,7 @@ public final class DataProtos {
           getByteBlockFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         timestamp_ = 0L;
@@ -10352,15 +10895,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Event_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Event getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.Event.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Event build() {
         io.crayfis.android.DataProtos.Event result = buildPartial();
         if (!result.isInitialized()) {
@@ -10369,6 +10915,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Event buildPartial() {
         io.crayfis.android.DataProtos.Event result = new io.crayfis.android.DataProtos.Event(this);
         int from_bitField0_ = bitField0_;
@@ -10480,32 +11027,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.Event) {
           return mergeFrom((io.crayfis.android.DataProtos.Event)other);
@@ -10618,10 +11172,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11758,11 +12314,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11784,6 +12342,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Event>
         PARSER = new com.google.protobuf.AbstractParser<Event>() {
+      @java.lang.Override
       public Event parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11801,6 +12360,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.Event getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11920,13 +12480,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               x_ = input.readUInt32();
@@ -11962,6 +12515,13 @@ public final class DataProtos {
               adjustedVal_ = input.readUInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -11979,6 +12539,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_Pixel_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_Pixel_fieldAccessorTable
@@ -12093,6 +12654,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12102,6 +12664,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12128,6 +12691,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12332,6 +12896,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12339,6 +12904,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.Pixel prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12362,6 +12928,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Pixel_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Pixel_fieldAccessorTable
@@ -12384,6 +12951,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         x_ = 0;
@@ -12403,15 +12971,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_Pixel_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Pixel getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.Pixel.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Pixel build() {
         io.crayfis.android.DataProtos.Pixel result = buildPartial();
         if (!result.isInitialized()) {
@@ -12420,6 +12991,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.Pixel buildPartial() {
         io.crayfis.android.DataProtos.Pixel result = new io.crayfis.android.DataProtos.Pixel(this);
         int from_bitField0_ = bitField0_;
@@ -12457,32 +13029,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.Pixel) {
           return mergeFrom((io.crayfis.android.DataProtos.Pixel)other);
@@ -12520,10 +13099,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12766,11 +13347,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12792,6 +13375,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Pixel>
         PARSER = new com.google.protobuf.AbstractParser<Pixel>() {
+      @java.lang.Override
       public Pixel parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12809,6 +13393,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.Pixel getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12910,13 +13495,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 x_ = new java.util.ArrayList<java.lang.Integer>();
@@ -12985,6 +13563,13 @@ public final class DataProtos {
               sideLength_ = input.readUInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -13011,6 +13596,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ByteBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ByteBlock_fieldAccessorTable
@@ -13101,6 +13687,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13110,6 +13697,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < x_.size(); i++) {
@@ -13127,6 +13715,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13292,6 +13881,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13299,6 +13889,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.ByteBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13322,6 +13913,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ByteBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ByteBlock_fieldAccessorTable
@@ -13344,6 +13936,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         x_ = java.util.Collections.emptyList();
@@ -13357,15 +13950,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ByteBlock_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ByteBlock getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.ByteBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ByteBlock build() {
         io.crayfis.android.DataProtos.ByteBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -13374,6 +13970,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ByteBlock buildPartial() {
         io.crayfis.android.DataProtos.ByteBlock result = new io.crayfis.android.DataProtos.ByteBlock(this);
         int from_bitField0_ = bitField0_;
@@ -13402,32 +13999,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.ByteBlock) {
           return mergeFrom((io.crayfis.android.DataProtos.ByteBlock)other);
@@ -13477,10 +14081,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13729,11 +14335,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13755,6 +14363,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ByteBlock>
         PARSER = new com.google.protobuf.AbstractParser<ByteBlock>() {
+      @java.lang.Override
       public ByteBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13772,6 +14381,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.ByteBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13865,13 +14475,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               xMin_ = input.readUInt32();
@@ -13908,6 +14511,13 @@ public final class DataProtos {
               frameNumber_ = input.readUInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -13928,6 +14538,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ZeroBiasSquare_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_ZeroBiasSquare_fieldAccessorTable
@@ -14004,6 +14615,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -14013,6 +14625,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -14030,6 +14643,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -14191,6 +14805,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -14198,6 +14813,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.ZeroBiasSquare prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -14221,6 +14837,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ZeroBiasSquare_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ZeroBiasSquare_fieldAccessorTable
@@ -14243,6 +14860,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         xMin_ = 0;
@@ -14256,15 +14874,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_ZeroBiasSquare_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ZeroBiasSquare getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.ZeroBiasSquare.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ZeroBiasSquare build() {
         io.crayfis.android.DataProtos.ZeroBiasSquare result = buildPartial();
         if (!result.isInitialized()) {
@@ -14273,6 +14894,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.ZeroBiasSquare buildPartial() {
         io.crayfis.android.DataProtos.ZeroBiasSquare result = new io.crayfis.android.DataProtos.ZeroBiasSquare(this);
         int from_bitField0_ = bitField0_;
@@ -14299,32 +14921,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.ZeroBiasSquare) {
           return mergeFrom((io.crayfis.android.DataProtos.ZeroBiasSquare)other);
@@ -14360,10 +14989,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14544,11 +15175,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -14570,6 +15203,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ZeroBiasSquare>
         PARSER = new com.google.protobuf.AbstractParser<ZeroBiasSquare>() {
+      @java.lang.Override
       public ZeroBiasSquare parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14587,6 +15221,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.ZeroBiasSquare getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -14732,13 +15367,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               runId_ = input.readUInt64();
@@ -14843,6 +15471,13 @@ public final class DataProtos {
               runIdHi_ = input.readUInt64();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -14872,6 +15507,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_CalibrationResult_fieldAccessorTable
@@ -15029,6 +15665,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -15038,6 +15675,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -15067,6 +15705,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -15290,6 +15929,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -15297,6 +15937,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.CalibrationResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -15320,6 +15961,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CalibrationResult_fieldAccessorTable
@@ -15342,6 +15984,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         runId_ = 0L;
@@ -15363,15 +16006,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CalibrationResult_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CalibrationResult getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.CalibrationResult.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CalibrationResult build() {
         io.crayfis.android.DataProtos.CalibrationResult result = buildPartial();
         if (!result.isInitialized()) {
@@ -15380,6 +16026,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CalibrationResult buildPartial() {
         io.crayfis.android.DataProtos.CalibrationResult result = new io.crayfis.android.DataProtos.CalibrationResult(this);
         int from_bitField0_ = bitField0_;
@@ -15425,32 +16072,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.CalibrationResult) {
           return mergeFrom((io.crayfis.android.DataProtos.CalibrationResult)other);
@@ -15519,10 +16173,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15933,11 +16589,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -15959,6 +16617,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CalibrationResult>
         PARSER = new com.google.protobuf.AbstractParser<CalibrationResult>() {
+      @java.lang.Override
       public CalibrationResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15976,6 +16635,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.CalibrationResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -16213,13 +16873,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               runId_ = input.readUInt64();
@@ -16339,6 +16992,13 @@ public final class DataProtos {
               wgtHash_ = input.readInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -16362,6 +17022,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationResult_fieldAccessorTable
@@ -16694,6 +17355,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -16703,6 +17365,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -16759,6 +17422,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -17095,6 +17759,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -17102,6 +17767,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.PreCalibrationResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -17125,6 +17791,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationResult_fieldAccessorTable
@@ -17147,6 +17814,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         runId_ = 0L;
@@ -17186,15 +17854,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationResult_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationResult getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.PreCalibrationResult.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationResult build() {
         io.crayfis.android.DataProtos.PreCalibrationResult result = buildPartial();
         if (!result.isInitialized()) {
@@ -17203,6 +17874,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationResult buildPartial() {
         io.crayfis.android.DataProtos.PreCalibrationResult result = new io.crayfis.android.DataProtos.PreCalibrationResult(this);
         int from_bitField0_ = bitField0_;
@@ -17282,32 +17954,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.PreCalibrationResult) {
           return mergeFrom((io.crayfis.android.DataProtos.PreCalibrationResult)other);
@@ -17393,10 +18072,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18118,11 +18799,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -18144,6 +18827,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PreCalibrationResult>
         PARSER = new com.google.protobuf.AbstractParser<PreCalibrationResult>() {
+      @java.lang.Override
       public PreCalibrationResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18161,6 +18845,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.PreCalibrationResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -18172,71 +18857,85 @@ public final class DataProtos {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional int32 hot_hash = 1;</code>
+     * <code>optional string device_id = 1;</code>
      */
-    boolean hasHotHash();
+    boolean hasDeviceId();
     /**
-     * <code>optional int32 hot_hash = 1;</code>
+     * <code>optional string device_id = 1;</code>
      */
-    int getHotHash();
+    java.lang.String getDeviceId();
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    com.google.protobuf.ByteString
+        getDeviceIdBytes();
 
     /**
-     * <code>optional int32 wgt_hash = 2;</code>
-     */
-    boolean hasWgtHash();
-    /**
-     * <code>optional int32 wgt_hash = 2;</code>
-     */
-    int getWgtHash();
-
-    /**
-     * <code>optional int32 camera_id = 3;</code>
+     * <code>optional int32 camera_id = 2;</code>
      */
     boolean hasCameraId();
     /**
-     * <code>optional int32 camera_id = 3;</code>
+     * <code>optional int32 camera_id = 2;</code>
      */
     int getCameraId();
 
     /**
-     * <code>optional uint32 res_x = 4;</code>
+     * <code>optional uint32 res_x = 3;</code>
      */
     boolean hasResX();
     /**
-     * <code>optional uint32 res_x = 4;</code>
+     * <code>optional uint32 res_x = 3;</code>
      */
     int getResX();
 
     /**
-     * <code>optional uint32 res_y = 5;</code>
+     * <code>optional uint32 res_y = 4;</code>
      */
     boolean hasResY();
     /**
-     * <code>optional uint32 res_y = 5;</code>
+     * <code>optional uint32 res_y = 4;</code>
      */
     int getResY();
 
     /**
-     * <code>optional bytes weights = 6;</code>
+     * <code>optional bytes weights = 5;</code>
      */
     boolean hasWeights();
     /**
-     * <code>optional bytes weights = 6;</code>
+     * <code>optional bytes weights = 5;</code>
      */
     com.google.protobuf.ByteString getWeights();
 
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     java.util.List<java.lang.Integer> getHotcellsList();
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     int getHotcellsCount();
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     int getHotcells(int index);
+
+    /**
+     * <code>optional int32 hot_hash = 7;</code>
+     */
+    boolean hasHotHash();
+    /**
+     * <code>optional int32 hot_hash = 7;</code>
+     */
+    int getHotHash();
+
+    /**
+     * <code>optional int32 wgt_hash = 8;</code>
+     */
+    boolean hasWgtHash();
+    /**
+     * <code>optional int32 wgt_hash = 8;</code>
+     */
+    int getWgtHash();
   }
   /**
    * Protobuf type {@code crayfis.PreCalibrationUpdate}
@@ -18251,13 +18950,14 @@ public final class DataProtos {
       super(builder);
     }
     private PreCalibrationUpdate() {
-      hotHash_ = 0;
-      wgtHash_ = 0;
+      deviceId_ = "";
       cameraId_ = 0;
       resX_ = 0;
       resY_ = 0;
       weights_ = com.google.protobuf.ByteString.EMPTY;
       hotcells_ = java.util.Collections.emptyList();
+      hotHash_ = 0;
+      wgtHash_ = 0;
     }
 
     @java.lang.Override
@@ -18284,62 +18984,68 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 8: {
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
-              hotHash_ = input.readInt32();
+              deviceId_ = bs;
               break;
             }
             case 16: {
               bitField0_ |= 0x00000002;
-              wgtHash_ = input.readInt32();
+              cameraId_ = input.readInt32();
               break;
             }
             case 24: {
               bitField0_ |= 0x00000004;
-              cameraId_ = input.readInt32();
+              resX_ = input.readUInt32();
               break;
             }
             case 32: {
               bitField0_ |= 0x00000008;
-              resX_ = input.readUInt32();
-              break;
-            }
-            case 40: {
-              bitField0_ |= 0x00000010;
               resY_ = input.readUInt32();
               break;
             }
-            case 50: {
-              bitField0_ |= 0x00000020;
+            case 42: {
+              bitField0_ |= 0x00000010;
               weights_ = input.readBytes();
               break;
             }
-            case 56: {
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+            case 48: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
                 hotcells_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000020;
               }
               hotcells_.add(input.readUInt32());
               break;
             }
-            case 58: {
+            case 50: {
               int length = input.readRawVarint32();
               int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000040) == 0x00000040) && input.getBytesUntilLimit() > 0) {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020) && input.getBytesUntilLimit() > 0) {
                 hotcells_ = new java.util.ArrayList<java.lang.Integer>();
-                mutable_bitField0_ |= 0x00000040;
+                mutable_bitField0_ |= 0x00000020;
               }
               while (input.getBytesUntilLimit() > 0) {
                 hotcells_.add(input.readUInt32());
               }
               input.popLimit(limit);
+              break;
+            }
+            case 56: {
+              bitField0_ |= 0x00000020;
+              hotHash_ = input.readInt32();
+              break;
+            }
+            case 64: {
+              bitField0_ |= 0x00000040;
+              wgtHash_ = input.readInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -18350,7 +19056,7 @@ public final class DataProtos {
         throw new com.google.protobuf.InvalidProtocolBufferException(
             e).setUnfinishedMessage(this);
       } finally {
-        if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           hotcells_ = java.util.Collections.unmodifiableList(hotcells_);
         }
         this.unknownFields = unknownFields.build();
@@ -18362,6 +19068,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationUpdate_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationUpdate_fieldAccessorTable
@@ -18370,119 +19077,162 @@ public final class DataProtos {
     }
 
     private int bitField0_;
-    public static final int HOT_HASH_FIELD_NUMBER = 1;
-    private int hotHash_;
+    public static final int DEVICE_ID_FIELD_NUMBER = 1;
+    private volatile java.lang.Object deviceId_;
     /**
-     * <code>optional int32 hot_hash = 1;</code>
+     * <code>optional string device_id = 1;</code>
      */
-    public boolean hasHotHash() {
+    public boolean hasDeviceId() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional int32 hot_hash = 1;</code>
+     * <code>optional string device_id = 1;</code>
      */
-    public int getHotHash() {
-      return hotHash_;
+    public java.lang.String getDeviceId() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          deviceId_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string device_id = 1;</code>
+     */
+    public com.google.protobuf.ByteString
+        getDeviceIdBytes() {
+      java.lang.Object ref = deviceId_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        deviceId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
     }
 
-    public static final int WGT_HASH_FIELD_NUMBER = 2;
-    private int wgtHash_;
+    public static final int CAMERA_ID_FIELD_NUMBER = 2;
+    private int cameraId_;
     /**
-     * <code>optional int32 wgt_hash = 2;</code>
+     * <code>optional int32 camera_id = 2;</code>
      */
-    public boolean hasWgtHash() {
+    public boolean hasCameraId() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional int32 wgt_hash = 2;</code>
-     */
-    public int getWgtHash() {
-      return wgtHash_;
-    }
-
-    public static final int CAMERA_ID_FIELD_NUMBER = 3;
-    private int cameraId_;
-    /**
-     * <code>optional int32 camera_id = 3;</code>
-     */
-    public boolean hasCameraId() {
-      return ((bitField0_ & 0x00000004) == 0x00000004);
-    }
-    /**
-     * <code>optional int32 camera_id = 3;</code>
+     * <code>optional int32 camera_id = 2;</code>
      */
     public int getCameraId() {
       return cameraId_;
     }
 
-    public static final int RES_X_FIELD_NUMBER = 4;
+    public static final int RES_X_FIELD_NUMBER = 3;
     private int resX_;
     /**
-     * <code>optional uint32 res_x = 4;</code>
+     * <code>optional uint32 res_x = 3;</code>
      */
     public boolean hasResX() {
-      return ((bitField0_ & 0x00000008) == 0x00000008);
+      return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional uint32 res_x = 4;</code>
+     * <code>optional uint32 res_x = 3;</code>
      */
     public int getResX() {
       return resX_;
     }
 
-    public static final int RES_Y_FIELD_NUMBER = 5;
+    public static final int RES_Y_FIELD_NUMBER = 4;
     private int resY_;
     /**
-     * <code>optional uint32 res_y = 5;</code>
+     * <code>optional uint32 res_y = 4;</code>
      */
     public boolean hasResY() {
-      return ((bitField0_ & 0x00000010) == 0x00000010);
+      return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional uint32 res_y = 5;</code>
+     * <code>optional uint32 res_y = 4;</code>
      */
     public int getResY() {
       return resY_;
     }
 
-    public static final int WEIGHTS_FIELD_NUMBER = 6;
+    public static final int WEIGHTS_FIELD_NUMBER = 5;
     private com.google.protobuf.ByteString weights_;
     /**
-     * <code>optional bytes weights = 6;</code>
+     * <code>optional bytes weights = 5;</code>
      */
     public boolean hasWeights() {
-      return ((bitField0_ & 0x00000020) == 0x00000020);
+      return ((bitField0_ & 0x00000010) == 0x00000010);
     }
     /**
-     * <code>optional bytes weights = 6;</code>
+     * <code>optional bytes weights = 5;</code>
      */
     public com.google.protobuf.ByteString getWeights() {
       return weights_;
     }
 
-    public static final int HOTCELLS_FIELD_NUMBER = 7;
+    public static final int HOTCELLS_FIELD_NUMBER = 6;
     private java.util.List<java.lang.Integer> hotcells_;
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     public java.util.List<java.lang.Integer>
         getHotcellsList() {
       return hotcells_;
     }
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     public int getHotcellsCount() {
       return hotcells_.size();
     }
     /**
-     * <code>repeated uint32 hotcells = 7;</code>
+     * <code>repeated uint32 hotcells = 6;</code>
      */
     public int getHotcells(int index) {
       return hotcells_.get(index);
     }
 
+    public static final int HOT_HASH_FIELD_NUMBER = 7;
+    private int hotHash_;
+    /**
+     * <code>optional int32 hot_hash = 7;</code>
+     */
+    public boolean hasHotHash() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <code>optional int32 hot_hash = 7;</code>
+     */
+    public int getHotHash() {
+      return hotHash_;
+    }
+
+    public static final int WGT_HASH_FIELD_NUMBER = 8;
+    private int wgtHash_;
+    /**
+     * <code>optional int32 wgt_hash = 8;</code>
+     */
+    public boolean hasWgtHash() {
+      return ((bitField0_ & 0x00000040) == 0x00000040);
+    }
+    /**
+     * <code>optional int32 wgt_hash = 8;</code>
+     */
+    public int getWgtHash() {
+      return wgtHash_;
+    }
+
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -18492,60 +19242,60 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, hotHash_);
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 1, deviceId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, wgtHash_);
+        output.writeInt32(2, cameraId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, cameraId_);
+        output.writeUInt32(3, resX_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeUInt32(4, resX_);
+        output.writeUInt32(4, resY_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
-        output.writeUInt32(5, resY_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        output.writeBytes(6, weights_);
+        output.writeBytes(5, weights_);
       }
       for (int i = 0; i < hotcells_.size(); i++) {
-        output.writeUInt32(7, hotcells_.get(i));
+        output.writeUInt32(6, hotcells_.get(i));
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeInt32(7, hotHash_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        output.writeInt32(8, wgtHash_);
       }
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, hotHash_);
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, deviceId_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, wgtHash_);
+          .computeInt32Size(2, cameraId_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, cameraId_);
+          .computeUInt32Size(3, resX_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(4, resX_);
+          .computeUInt32Size(4, resY_);
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeUInt32Size(5, resY_);
-      }
-      if (((bitField0_ & 0x00000020) == 0x00000020)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(6, weights_);
+          .computeBytesSize(5, weights_);
       }
       {
         int dataSize = 0;
@@ -18555,6 +19305,14 @@ public final class DataProtos {
         }
         size += dataSize;
         size += 1 * getHotcellsList().size();
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(7, hotHash_);
+      }
+      if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(8, wgtHash_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -18572,15 +19330,10 @@ public final class DataProtos {
       io.crayfis.android.DataProtos.PreCalibrationUpdate other = (io.crayfis.android.DataProtos.PreCalibrationUpdate) obj;
 
       boolean result = true;
-      result = result && (hasHotHash() == other.hasHotHash());
-      if (hasHotHash()) {
-        result = result && (getHotHash()
-            == other.getHotHash());
-      }
-      result = result && (hasWgtHash() == other.hasWgtHash());
-      if (hasWgtHash()) {
-        result = result && (getWgtHash()
-            == other.getWgtHash());
+      result = result && (hasDeviceId() == other.hasDeviceId());
+      if (hasDeviceId()) {
+        result = result && getDeviceId()
+            .equals(other.getDeviceId());
       }
       result = result && (hasCameraId() == other.hasCameraId());
       if (hasCameraId()) {
@@ -18604,6 +19357,16 @@ public final class DataProtos {
       }
       result = result && getHotcellsList()
           .equals(other.getHotcellsList());
+      result = result && (hasHotHash() == other.hasHotHash());
+      if (hasHotHash()) {
+        result = result && (getHotHash()
+            == other.getHotHash());
+      }
+      result = result && (hasWgtHash() == other.hasWgtHash());
+      if (hasWgtHash()) {
+        result = result && (getWgtHash()
+            == other.getWgtHash());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -18615,13 +19378,9 @@ public final class DataProtos {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasHotHash()) {
-        hash = (37 * hash) + HOT_HASH_FIELD_NUMBER;
-        hash = (53 * hash) + getHotHash();
-      }
-      if (hasWgtHash()) {
-        hash = (37 * hash) + WGT_HASH_FIELD_NUMBER;
-        hash = (53 * hash) + getWgtHash();
+      if (hasDeviceId()) {
+        hash = (37 * hash) + DEVICE_ID_FIELD_NUMBER;
+        hash = (53 * hash) + getDeviceId().hashCode();
       }
       if (hasCameraId()) {
         hash = (37 * hash) + CAMERA_ID_FIELD_NUMBER;
@@ -18642,6 +19401,14 @@ public final class DataProtos {
       if (getHotcellsCount() > 0) {
         hash = (37 * hash) + HOTCELLS_FIELD_NUMBER;
         hash = (53 * hash) + getHotcellsList().hashCode();
+      }
+      if (hasHotHash()) {
+        hash = (37 * hash) + HOT_HASH_FIELD_NUMBER;
+        hash = (53 * hash) + getHotHash();
+      }
+      if (hasWgtHash()) {
+        hash = (37 * hash) + WGT_HASH_FIELD_NUMBER;
+        hash = (53 * hash) + getWgtHash();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -18718,6 +19485,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -18725,6 +19493,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.PreCalibrationUpdate prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -18748,6 +19517,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationUpdate_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationUpdate_fieldAccessorTable
@@ -18770,34 +19540,40 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
-        hotHash_ = 0;
+        deviceId_ = "";
         bitField0_ = (bitField0_ & ~0x00000001);
-        wgtHash_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000002);
         cameraId_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         resX_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         resY_ = 0;
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         weights_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         hotcells_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);
+        hotHash_ = 0;
         bitField0_ = (bitField0_ & ~0x00000040);
+        wgtHash_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000080);
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_PreCalibrationUpdate_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationUpdate getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.PreCalibrationUpdate.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationUpdate build() {
         io.crayfis.android.DataProtos.PreCalibrationUpdate result = buildPartial();
         if (!result.isInitialized()) {
@@ -18806,6 +19582,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.PreCalibrationUpdate buildPartial() {
         io.crayfis.android.DataProtos.PreCalibrationUpdate result = new io.crayfis.android.DataProtos.PreCalibrationUpdate(this);
         int from_bitField0_ = bitField0_;
@@ -18813,63 +19590,74 @@ public final class DataProtos {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.hotHash_ = hotHash_;
+        result.deviceId_ = deviceId_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.wgtHash_ = wgtHash_;
+        result.cameraId_ = cameraId_;
         if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
           to_bitField0_ |= 0x00000004;
         }
-        result.cameraId_ = cameraId_;
+        result.resX_ = resX_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
         }
-        result.resX_ = resX_;
+        result.resY_ = resY_;
         if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
           to_bitField0_ |= 0x00000010;
         }
-        result.resY_ = resY_;
-        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
-          to_bitField0_ |= 0x00000020;
-        }
         result.weights_ = weights_;
-        if (((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (((bitField0_ & 0x00000020) == 0x00000020)) {
           hotcells_ = java.util.Collections.unmodifiableList(hotcells_);
-          bitField0_ = (bitField0_ & ~0x00000040);
+          bitField0_ = (bitField0_ & ~0x00000020);
         }
         result.hotcells_ = hotcells_;
+        if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.hotHash_ = hotHash_;
+        if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
+          to_bitField0_ |= 0x00000040;
+        }
+        result.wgtHash_ = wgtHash_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.PreCalibrationUpdate) {
           return mergeFrom((io.crayfis.android.DataProtos.PreCalibrationUpdate)other);
@@ -18881,11 +19669,10 @@ public final class DataProtos {
 
       public Builder mergeFrom(io.crayfis.android.DataProtos.PreCalibrationUpdate other) {
         if (other == io.crayfis.android.DataProtos.PreCalibrationUpdate.getDefaultInstance()) return this;
-        if (other.hasHotHash()) {
-          setHotHash(other.getHotHash());
-        }
-        if (other.hasWgtHash()) {
-          setWgtHash(other.getWgtHash());
+        if (other.hasDeviceId()) {
+          bitField0_ |= 0x00000001;
+          deviceId_ = other.deviceId_;
+          onChanged();
         }
         if (other.hasCameraId()) {
           setCameraId(other.getCameraId());
@@ -18902,22 +19689,30 @@ public final class DataProtos {
         if (!other.hotcells_.isEmpty()) {
           if (hotcells_.isEmpty()) {
             hotcells_ = other.hotcells_;
-            bitField0_ = (bitField0_ & ~0x00000040);
+            bitField0_ = (bitField0_ & ~0x00000020);
           } else {
             ensureHotcellsIsMutable();
             hotcells_.addAll(other.hotcells_);
           }
           onChanged();
         }
+        if (other.hasHotHash()) {
+          setHotHash(other.getHotHash());
+        }
+        if (other.hasWgtHash()) {
+          setWgtHash(other.getWgtHash());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18937,97 +19732,109 @@ public final class DataProtos {
       }
       private int bitField0_;
 
-      private int hotHash_ ;
+      private java.lang.Object deviceId_ = "";
       /**
-       * <code>optional int32 hot_hash = 1;</code>
+       * <code>optional string device_id = 1;</code>
        */
-      public boolean hasHotHash() {
+      public boolean hasDeviceId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional int32 hot_hash = 1;</code>
+       * <code>optional string device_id = 1;</code>
        */
-      public int getHotHash() {
-        return hotHash_;
+      public java.lang.String getDeviceId() {
+        java.lang.Object ref = deviceId_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            deviceId_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
       }
       /**
-       * <code>optional int32 hot_hash = 1;</code>
+       * <code>optional string device_id = 1;</code>
        */
-      public Builder setHotHash(int value) {
-        bitField0_ |= 0x00000001;
-        hotHash_ = value;
+      public com.google.protobuf.ByteString
+          getDeviceIdBytes() {
+        java.lang.Object ref = deviceId_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          deviceId_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string device_id = 1;</code>
+       */
+      public Builder setDeviceId(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 hot_hash = 1;</code>
+       * <code>optional string device_id = 1;</code>
        */
-      public Builder clearHotHash() {
+      public Builder clearDeviceId() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        hotHash_ = 0;
-        onChanged();
-        return this;
-      }
-
-      private int wgtHash_ ;
-      /**
-       * <code>optional int32 wgt_hash = 2;</code>
-       */
-      public boolean hasWgtHash() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>optional int32 wgt_hash = 2;</code>
-       */
-      public int getWgtHash() {
-        return wgtHash_;
-      }
-      /**
-       * <code>optional int32 wgt_hash = 2;</code>
-       */
-      public Builder setWgtHash(int value) {
-        bitField0_ |= 0x00000002;
-        wgtHash_ = value;
+        deviceId_ = getDefaultInstance().getDeviceId();
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 wgt_hash = 2;</code>
+       * <code>optional string device_id = 1;</code>
        */
-      public Builder clearWgtHash() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        wgtHash_ = 0;
+      public Builder setDeviceIdBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        deviceId_ = value;
         onChanged();
         return this;
       }
 
       private int cameraId_ ;
       /**
-       * <code>optional int32 camera_id = 3;</code>
+       * <code>optional int32 camera_id = 2;</code>
        */
       public boolean hasCameraId() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
+        return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional int32 camera_id = 3;</code>
+       * <code>optional int32 camera_id = 2;</code>
        */
       public int getCameraId() {
         return cameraId_;
       }
       /**
-       * <code>optional int32 camera_id = 3;</code>
+       * <code>optional int32 camera_id = 2;</code>
        */
       public Builder setCameraId(int value) {
-        bitField0_ |= 0x00000004;
+        bitField0_ |= 0x00000002;
         cameraId_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional int32 camera_id = 3;</code>
+       * <code>optional int32 camera_id = 2;</code>
        */
       public Builder clearCameraId() {
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000002);
         cameraId_ = 0;
         onChanged();
         return this;
@@ -19035,31 +19842,31 @@ public final class DataProtos {
 
       private int resX_ ;
       /**
-       * <code>optional uint32 res_x = 4;</code>
+       * <code>optional uint32 res_x = 3;</code>
        */
       public boolean hasResX() {
-        return ((bitField0_ & 0x00000008) == 0x00000008);
+        return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional uint32 res_x = 4;</code>
+       * <code>optional uint32 res_x = 3;</code>
        */
       public int getResX() {
         return resX_;
       }
       /**
-       * <code>optional uint32 res_x = 4;</code>
+       * <code>optional uint32 res_x = 3;</code>
        */
       public Builder setResX(int value) {
-        bitField0_ |= 0x00000008;
+        bitField0_ |= 0x00000004;
         resX_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional uint32 res_x = 4;</code>
+       * <code>optional uint32 res_x = 3;</code>
        */
       public Builder clearResX() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000004);
         resX_ = 0;
         onChanged();
         return this;
@@ -19067,31 +19874,31 @@ public final class DataProtos {
 
       private int resY_ ;
       /**
-       * <code>optional uint32 res_y = 5;</code>
+       * <code>optional uint32 res_y = 4;</code>
        */
       public boolean hasResY() {
-        return ((bitField0_ & 0x00000010) == 0x00000010);
+        return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional uint32 res_y = 5;</code>
+       * <code>optional uint32 res_y = 4;</code>
        */
       public int getResY() {
         return resY_;
       }
       /**
-       * <code>optional uint32 res_y = 5;</code>
+       * <code>optional uint32 res_y = 4;</code>
        */
       public Builder setResY(int value) {
-        bitField0_ |= 0x00000010;
+        bitField0_ |= 0x00000008;
         resY_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional uint32 res_y = 5;</code>
+       * <code>optional uint32 res_y = 4;</code>
        */
       public Builder clearResY() {
-        bitField0_ = (bitField0_ & ~0x00000010);
+        bitField0_ = (bitField0_ & ~0x00000008);
         resY_ = 0;
         onChanged();
         return this;
@@ -19099,34 +19906,34 @@ public final class DataProtos {
 
       private com.google.protobuf.ByteString weights_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>optional bytes weights = 6;</code>
+       * <code>optional bytes weights = 5;</code>
        */
       public boolean hasWeights() {
-        return ((bitField0_ & 0x00000020) == 0x00000020);
+        return ((bitField0_ & 0x00000010) == 0x00000010);
       }
       /**
-       * <code>optional bytes weights = 6;</code>
+       * <code>optional bytes weights = 5;</code>
        */
       public com.google.protobuf.ByteString getWeights() {
         return weights_;
       }
       /**
-       * <code>optional bytes weights = 6;</code>
+       * <code>optional bytes weights = 5;</code>
        */
       public Builder setWeights(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000020;
+  bitField0_ |= 0x00000010;
         weights_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>optional bytes weights = 6;</code>
+       * <code>optional bytes weights = 5;</code>
        */
       public Builder clearWeights() {
-        bitField0_ = (bitField0_ & ~0x00000020);
+        bitField0_ = (bitField0_ & ~0x00000010);
         weights_ = getDefaultInstance().getWeights();
         onChanged();
         return this;
@@ -19134,32 +19941,32 @@ public final class DataProtos {
 
       private java.util.List<java.lang.Integer> hotcells_ = java.util.Collections.emptyList();
       private void ensureHotcellsIsMutable() {
-        if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
           hotcells_ = new java.util.ArrayList<java.lang.Integer>(hotcells_);
-          bitField0_ |= 0x00000040;
+          bitField0_ |= 0x00000020;
          }
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public java.util.List<java.lang.Integer>
           getHotcellsList() {
         return java.util.Collections.unmodifiableList(hotcells_);
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public int getHotcellsCount() {
         return hotcells_.size();
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public int getHotcells(int index) {
         return hotcells_.get(index);
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public Builder setHotcells(
           int index, int value) {
@@ -19169,7 +19976,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public Builder addHotcells(int value) {
         ensureHotcellsIsMutable();
@@ -19178,7 +19985,7 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public Builder addAllHotcells(
           java.lang.Iterable<? extends java.lang.Integer> values) {
@@ -19189,19 +19996,85 @@ public final class DataProtos {
         return this;
       }
       /**
-       * <code>repeated uint32 hotcells = 7;</code>
+       * <code>repeated uint32 hotcells = 6;</code>
        */
       public Builder clearHotcells() {
         hotcells_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000040);
+        bitField0_ = (bitField0_ & ~0x00000020);
         onChanged();
         return this;
       }
+
+      private int hotHash_ ;
+      /**
+       * <code>optional int32 hot_hash = 7;</code>
+       */
+      public boolean hasHotHash() {
+        return ((bitField0_ & 0x00000040) == 0x00000040);
+      }
+      /**
+       * <code>optional int32 hot_hash = 7;</code>
+       */
+      public int getHotHash() {
+        return hotHash_;
+      }
+      /**
+       * <code>optional int32 hot_hash = 7;</code>
+       */
+      public Builder setHotHash(int value) {
+        bitField0_ |= 0x00000040;
+        hotHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 hot_hash = 7;</code>
+       */
+      public Builder clearHotHash() {
+        bitField0_ = (bitField0_ & ~0x00000040);
+        hotHash_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int wgtHash_ ;
+      /**
+       * <code>optional int32 wgt_hash = 8;</code>
+       */
+      public boolean hasWgtHash() {
+        return ((bitField0_ & 0x00000080) == 0x00000080);
+      }
+      /**
+       * <code>optional int32 wgt_hash = 8;</code>
+       */
+      public int getWgtHash() {
+        return wgtHash_;
+      }
+      /**
+       * <code>optional int32 wgt_hash = 8;</code>
+       */
+      public Builder setWgtHash(int value) {
+        bitField0_ |= 0x00000080;
+        wgtHash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional int32 wgt_hash = 8;</code>
+       */
+      public Builder clearWgtHash() {
+        bitField0_ = (bitField0_ & ~0x00000080);
+        wgtHash_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -19223,6 +20096,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PreCalibrationUpdate>
         PARSER = new com.google.protobuf.AbstractParser<PreCalibrationUpdate>() {
+      @java.lang.Override
       public PreCalibrationUpdate parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -19240,6 +20114,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.PreCalibrationUpdate getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -19343,6 +20218,10 @@ public final class DataProtos {
     int getCameraId();
   }
   /**
+   * <pre>
+   * this is deprecated thanks to redis streams
+   * </pre>
+   *
    * Protobuf type {@code crayfis.CrayonMessage}
    */
   public  static final class CrayonMessage extends
@@ -19389,13 +20268,6 @@ public final class DataProtos {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               payload_ = input.readBytes();
@@ -19440,6 +20312,13 @@ public final class DataProtos {
               cameraId_ = input.readInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -19457,6 +20336,7 @@ public final class DataProtos {
       return io.crayfis.android.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return io.crayfis.android.DataProtos.internal_static_crayfis_CrayonMessage_fieldAccessorTable
@@ -19694,6 +20574,7 @@ public final class DataProtos {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -19703,6 +20584,7 @@ public final class DataProtos {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -19732,6 +20614,7 @@ public final class DataProtos {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -19939,6 +20822,7 @@ public final class DataProtos {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -19946,6 +20830,7 @@ public final class DataProtos {
     public static Builder newBuilder(io.crayfis.android.DataProtos.CrayonMessage prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -19958,6 +20843,10 @@ public final class DataProtos {
       return builder;
     }
     /**
+     * <pre>
+     * this is deprecated thanks to redis streams
+     * </pre>
+     *
      * Protobuf type {@code crayfis.CrayonMessage}
      */
     public static final class Builder extends
@@ -19969,6 +20858,7 @@ public final class DataProtos {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CrayonMessage_fieldAccessorTable
@@ -19991,6 +20881,7 @@ public final class DataProtos {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         payload_ = com.google.protobuf.ByteString.EMPTY;
@@ -20012,15 +20903,18 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return io.crayfis.android.DataProtos.internal_static_crayfis_CrayonMessage_descriptor;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CrayonMessage getDefaultInstanceForType() {
         return io.crayfis.android.DataProtos.CrayonMessage.getDefaultInstance();
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CrayonMessage build() {
         io.crayfis.android.DataProtos.CrayonMessage result = buildPartial();
         if (!result.isInitialized()) {
@@ -20029,6 +20923,7 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public io.crayfis.android.DataProtos.CrayonMessage buildPartial() {
         io.crayfis.android.DataProtos.CrayonMessage result = new io.crayfis.android.DataProtos.CrayonMessage(this);
         int from_bitField0_ = bitField0_;
@@ -20070,32 +20965,39 @@ public final class DataProtos {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof io.crayfis.android.DataProtos.CrayonMessage) {
           return mergeFrom((io.crayfis.android.DataProtos.CrayonMessage)other);
@@ -20144,10 +21046,12 @@ public final class DataProtos {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -20601,11 +21505,13 @@ public final class DataProtos {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -20627,6 +21533,7 @@ public final class DataProtos {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CrayonMessage>
         PARSER = new com.google.protobuf.AbstractParser<CrayonMessage>() {
+      @java.lang.Override
       public CrayonMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -20644,6 +21551,7 @@ public final class DataProtos {
       return PARSER;
     }
 
+    @java.lang.Override
     public io.crayfis.android.DataProtos.CrayonMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -20714,84 +21622,87 @@ public final class DataProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\022crayfis_data.proto\022\007crayfis\"\335\001\n\tDataCh" +
+      "\n\022crayfis_data.proto\022\007crayfis\"\234\002\n\tDataCh" +
       "unk\022\'\n\013run_configs\030\001 \003(\0132\022.crayfis.RunCo" +
       "nfig\022/\n\017exposure_blocks\030\002 \003(\0132\026.crayfis." +
       "ExposureBlock\0227\n\023calibration_results\030\003 \003" +
       "(\0132\032.crayfis.CalibrationResult\022=\n\026precal" +
       "ibration_results\030\004 \003(\0132\035.crayfis.PreCali" +
-      "brationResult\"\244\001\n\tRunConfig\022\r\n\005id_hi\030\001 \001" +
-      "(\004\022\r\n\005id_lo\030\002 \001(\004\022\022\n\nstart_time\030\003 \001(\004\022\025\n" +
-      "\rcrayfis_build\030\004 \001(\t\022\021\n\thw_params\030\005 \001(\t\022" +
-      "\021\n\tos_params\030\006 \001(\t\022\025\n\rcamera_params\030\007 \001(" +
-      "\t\022\021\n\tcamera_id\030\010 \001(\r\"\363\007\n\rExposureBlock\022\016" +
-      "\n\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030% \001(\004\022\021\n\tpre" +
-      "cal_id\030! \001(\004\022\024\n\014precal_id_hi\030& \001(\004\022\020\n\010ho" +
-      "t_hash\030. \001(\005\022\020\n\010wgt_hash\030/ \001(\005\022\022\n\nstart_" +
-      "time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\027\n\017start_ti" +
-      "me_nano\030\026 \001(\004\022\025\n\rend_time_nano\030\027 \001(\004\022\026\n\016" +
-      "start_time_ntp\030\030 \001(\004\022\024\n\014end_time_ntp\030\031 \001" +
-      "(\004\022\017\n\007gps_lat\030\004 \001(\001\022\017\n\007gps_lon\030\005 \001(\001\022\024\n\014" +
-      "gps_altitude\030\023 \001(\001\022\024\n\014gps_accuracy\030\024 \001(\002" +
-      "\022\023\n\013gps_fixtime\030\025 \001(\004\022\030\n\020gps_fixtime_nan" +
-      "o\030\034 \001(\004\022\024\n\014battery_temp\030  \001(\r\022\030\n\020battery" +
-      "_end_temp\030\" \001(\r\022/\n\tdaq_state\030\006 \001(\0162\034.cra" +
-      "yfis.ExposureBlock.State\022\r\n\005res_x\030\032 \001(\r\022" +
-      "\r\n\005res_y\030\033 \001(\r\022\036\n\006events\030\007 \003(\0132\016.crayfis" +
-      ".Event\022\021\n\tL1_thresh\030\010 \001(\005\022\021\n\tL2_thresh\030\t" +
-      " \001(\005\022\017\n\007L0_conf\030$ \001(\t\022\017\n\007L1_conf\030\035 \001(\t\022\017" +
-      "\n\007L2_conf\030\036 \001(\t\022\024\n\014L0_processed\030\' \001(\r\022\024\n" +
-      "\014L1_processed\030\n \001(\r\022\024\n\014L2_processed\030\013 \001(" +
-      "\r\022\017\n\007L0_pass\030( \001(\r\022\017\n\007L1_pass\030\r \001(\r\022\017\n\007L" +
-      "2_pass\030\017 \001(\r\022\017\n\007L0_skip\030) \001(\r\022\017\n\007L1_skip" +
-      "\030\016 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\016\n\006config\030* \003(\t\022" +
-      "\021\n\tprocessed\030+ \003(\r\022\014\n\004pass\030, \003(\r\022\014\n\004skip" +
-      "\030- \003(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\014\n\004hist\030#" +
-      " \003(\004\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\"@\n\005St" +
-      "ate\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DATA\020\002" +
-      "\022\022\n\016PRECALIBRATION\020\003J\004\010\037\020 R\006bg_avg\"\374\003\n\005E" +
-      "vent\022\021\n\ttimestamp\030\001 \001(\004\022\026\n\016timestamp_nan" +
-      "o\030\016 \001(\004\022\025\n\rtimestamp_ntp\030\017 \001(\004\022\030\n\020timest" +
-      "amp_target\030\023 \001(\004\022\025\n\rexposure_time\030\027 \001(\004\022" +
-      "\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\024\n\014gps" +
-      "_altitude\030\013 \001(\001\022\024\n\014gps_accuracy\030\014 \001(\002\022\023\n" +
-      "\013gps_fixtime\030\r \001(\004\022\030\n\020gps_fixtime_nano\030\020" +
-      " \001(\004\022*\n\tzero_bias\030\025 \001(\0132\027.crayfis.ZeroBi" +
-      "asSquare\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.Pixel" +
-      "\022&\n\nbyte_block\030\026 \001(\0132\022.crayfis.ByteBlock" +
-      "\022\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\014\n\004hist\030\024 \003(\r" +
-      "\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020\n\010orien" +
-      "t_y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\022\020\n\010pressure\030" +
-      "\022 \001(\002J\004\010\021\020\022R\014battery_temp\"p\n\005Pixel\022\t\n\001x\030" +
-      "\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adjuste" +
-      "d_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg_3\030\005" +
-      " \001(\002\022\r\n\005avg_5\030\006 \001(\002\"C\n\tByteBlock\022\t\n\001x\030\001 " +
-      "\003(\r\022\t\n\001y\030\002 \003(\r\022\013\n\003val\030\003 \003(\r\022\023\n\013side_leng" +
-      "th\030\004 \001(\r\"Q\n\016ZeroBiasSquare\022\r\n\005x_min\030\001 \001(" +
-      "\r\022\r\n\005y_min\030\002 \001(\r\022\013\n\003val\030\003 \003(\r\022\024\n\014frame_n" +
-      "umber\030\004 \001(\r\"\264\001\n\021CalibrationResult\022\016\n\006run" +
-      "_id\030\001 \001(\004\022\021\n\trun_id_hi\030\010 \001(\004\022\022\n\nstart_ti" +
-      "me\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_pixel" +
-      "\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist_max" +
-      "pixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\361\002\n\024P" +
-      "reCalibrationResult\022\016\n\006run_id\030\001 \001(\004\022\021\n\tr" +
-      "un_id_hi\030\022 \001(\004\022\021\n\tprecal_id\030\023 \001(\004\022\024\n\014pre" +
-      "cal_id_hi\030\024 \001(\004\022\020\n\010hot_hash\030\027 \001(\005\022\020\n\010wgt" +
-      "_hash\030\030 \001(\005\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end_t" +
-      "ime\030\003 \001(\004\022\025\n\rinterpolation\030\013 \001(\r\022\024\n\014batt" +
-      "ery_temp\030\014 \001(\r\022\032\n\022compressed_weights\030\r \001" +
-      "(\014\022\031\n\021compressed_format\030\016 \001(\t\022\023\n\013second_" +
-      "hist\030\017 \003(\r\022\017\n\007hotcell\030\020 \003(\r\022\r\n\005res_x\030\021 \001" +
-      "(\r\022\r\n\005res_y\030\026 \001(\r\022\025\n\rprecal_config\030\025 \001(\t" +
-      "J\004\010\004\020\t\"\216\001\n\024PreCalibrationUpdate\022\020\n\010hot_h" +
-      "ash\030\001 \001(\005\022\020\n\010wgt_hash\030\002 \001(\005\022\021\n\tcamera_id" +
-      "\030\003 \001(\005\022\r\n\005res_x\030\004 \001(\r\022\r\n\005res_y\030\005 \001(\r\022\017\n\007" +
-      "weights\030\006 \001(\014\022\020\n\010hotcells\030\007 \003(\r\"\243\001\n\rCray" +
-      "onMessage\022\017\n\007payload\030\001 \001(\014\022\016\n\006run_id\030\002 \001" +
-      "(\t\022\021\n\tdevice_id\030\003 \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020" +
-      "\n\010app_code\030\005 \001(\t\022\023\n\013remote_addr\030\006 \001(\t\022\023\n" +
-      "\013submit_time\030\007 \001(\r\022\021\n\tcamera_id\030\010 \001(\005B \n" +
-      "\022io.crayfis.androidB\nDataProtos"
+      "brationResult\022=\n\026precalibration_updates\030" +
+      "\005 \003(\0132\035.crayfis.PreCalibrationUpdate\"\244\001\n" +
+      "\tRunConfig\022\r\n\005id_hi\030\001 \001(\004\022\r\n\005id_lo\030\002 \001(\004" +
+      "\022\022\n\nstart_time\030\003 \001(\004\022\025\n\rcrayfis_build\030\004 " +
+      "\001(\t\022\021\n\thw_params\030\005 \001(\t\022\021\n\tos_params\030\006 \001(" +
+      "\t\022\025\n\rcamera_params\030\007 \001(\t\022\021\n\tcamera_id\030\010 " +
+      "\001(\r\"\210\010\n\rExposureBlock\022\016\n\006run_id\030\001 \001(\004\022\021\n" +
+      "\trun_id_hi\030% \001(\004\022\021\n\tprecal_id\030! \001(\004\022\024\n\014p" +
+      "recal_id_hi\030& \001(\004\022\020\n\010hot_hash\030. \001(\005\022\020\n\010w" +
+      "gt_hash\030/ \001(\005\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010end" +
+      "_time\030\003 \001(\004\022\027\n\017start_time_nano\030\026 \001(\004\022\025\n\r" +
+      "end_time_nano\030\027 \001(\004\022\026\n\016start_time_ntp\030\030 " +
+      "\001(\004\022\024\n\014end_time_ntp\030\031 \001(\004\022\017\n\007gps_lat\030\004 \001" +
+      "(\001\022\017\n\007gps_lon\030\005 \001(\001\022\024\n\014gps_altitude\030\023 \001(" +
+      "\001\022\024\n\014gps_accuracy\030\024 \001(\002\022\023\n\013gps_fixtime\030\025" +
+      " \001(\004\022\030\n\020gps_fixtime_nano\030\034 \001(\004\022\024\n\014batter" +
+      "y_temp\030  \001(\r\022\030\n\020battery_end_temp\030\" \001(\r\022/" +
+      "\n\tdaq_state\030\006 \001(\0162\034.crayfis.ExposureBloc" +
+      "k.State\022\r\n\005res_x\030\032 \001(\r\022\r\n\005res_y\030\033 \001(\r\022\036\n" +
+      "\006events\030\007 \003(\0132\016.crayfis.Event\022\021\n\tL1_thre" +
+      "sh\030\010 \001(\005\022\021\n\tL2_thresh\030\t \001(\005\022\023\n\013L1_presca" +
+      "le\0300 \001(\002\022\017\n\007L0_conf\030$ \001(\t\022\017\n\007L1_conf\030\035 \001" +
+      "(\t\022\017\n\007L2_conf\030\036 \001(\t\022\024\n\014L0_processed\030\' \001(" +
+      "\r\022\024\n\014L1_processed\030\n \001(\r\022\024\n\014L2_processed\030" +
+      "\013 \001(\r\022\017\n\007L0_pass\030( \001(\r\022\017\n\007L1_pass\030\r \001(\r\022" +
+      "\017\n\007L2_pass\030\017 \001(\r\022\017\n\007L0_skip\030) \001(\r\022\017\n\007L1_" +
+      "skip\030\016 \001(\r\022\017\n\007L2_skip\030\020 \001(\r\022\016\n\006config\030* " +
+      "\003(\t\022\021\n\tprocessed\030+ \003(\r\022\014\n\004pass\030, \003(\r\022\014\n\004" +
+      "skip\030- \003(\r\022\026\n\016frames_dropped\030\014 \001(\r\022\014\n\004hi" +
+      "st\030# \003(\004\022\013\n\003xbn\030\021 \001(\r\022\017\n\007aborted\030\022 \001(\010\"@" +
+      "\n\005State\022\010\n\004INIT\020\000\022\017\n\013CALIBRATION\020\001\022\010\n\004DA" +
+      "TA\020\002\022\022\n\016PRECALIBRATION\020\003J\004\010\037\020 R\006bg_avg\"\374" +
+      "\003\n\005Event\022\021\n\ttimestamp\030\001 \001(\004\022\026\n\016timestamp" +
+      "_nano\030\016 \001(\004\022\025\n\rtimestamp_ntp\030\017 \001(\004\022\030\n\020ti" +
+      "mestamp_target\030\023 \001(\004\022\025\n\rexposure_time\030\027 " +
+      "\001(\004\022\017\n\007gps_lat\030\002 \001(\001\022\017\n\007gps_lon\030\003 \001(\001\022\024\n" +
+      "\014gps_altitude\030\013 \001(\001\022\024\n\014gps_accuracy\030\014 \001(" +
+      "\002\022\023\n\013gps_fixtime\030\r \001(\004\022\030\n\020gps_fixtime_na" +
+      "no\030\020 \001(\004\022*\n\tzero_bias\030\025 \001(\0132\027.crayfis.Ze" +
+      "roBiasSquare\022\036\n\006pixels\030\004 \003(\0132\016.crayfis.P" +
+      "ixel\022&\n\nbyte_block\030\026 \001(\0132\022.crayfis.ByteB" +
+      "lock\022\013\n\003avg\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\014\n\004hist\030\024" +
+      " \003(\r\022\013\n\003xbn\030\007 \001(\r\022\020\n\010orient_x\030\010 \001(\002\022\020\n\010o" +
+      "rient_y\030\t \001(\002\022\020\n\010orient_z\030\n \001(\002\022\020\n\010press" +
+      "ure\030\022 \001(\002J\004\010\021\020\022R\014battery_temp\"p\n\005Pixel\022\t" +
+      "\n\001x\030\001 \001(\r\022\t\n\001y\030\002 \001(\r\022\013\n\003val\030\003 \001(\r\022\024\n\014adj" +
+      "usted_val\030\007 \001(\r\022\020\n\010near_max\030\004 \001(\r\022\r\n\005avg" +
+      "_3\030\005 \001(\002\022\r\n\005avg_5\030\006 \001(\002\"C\n\tByteBlock\022\t\n\001" +
+      "x\030\001 \003(\r\022\t\n\001y\030\002 \003(\r\022\013\n\003val\030\003 \003(\r\022\023\n\013side_" +
+      "length\030\004 \001(\r\"Q\n\016ZeroBiasSquare\022\r\n\005x_min\030" +
+      "\001 \001(\r\022\r\n\005y_min\030\002 \001(\r\022\013\n\003val\030\003 \003(\r\022\024\n\014fra" +
+      "me_number\030\004 \001(\r\"\264\001\n\021CalibrationResult\022\016\n" +
+      "\006run_id\030\001 \001(\004\022\021\n\trun_id_hi\030\010 \001(\004\022\022\n\nstar" +
+      "t_time\030\002 \001(\004\022\020\n\010end_time\030\003 \001(\004\022\022\n\nhist_p" +
+      "ixel\030\004 \003(\r\022\024\n\014hist_l2pixel\030\005 \003(\r\022\025\n\rhist" +
+      "_maxpixel\030\006 \003(\r\022\025\n\rhist_numpixel\030\007 \003(\r\"\361" +
+      "\002\n\024PreCalibrationResult\022\016\n\006run_id\030\001 \001(\004\022" +
+      "\021\n\trun_id_hi\030\022 \001(\004\022\021\n\tprecal_id\030\023 \001(\004\022\024\n" +
+      "\014precal_id_hi\030\024 \001(\004\022\020\n\010hot_hash\030\027 \001(\005\022\020\n" +
+      "\010wgt_hash\030\030 \001(\005\022\022\n\nstart_time\030\002 \001(\004\022\020\n\010e" +
+      "nd_time\030\003 \001(\004\022\025\n\rinterpolation\030\013 \001(\r\022\024\n\014" +
+      "battery_temp\030\014 \001(\r\022\032\n\022compressed_weights" +
+      "\030\r \001(\014\022\031\n\021compressed_format\030\016 \001(\t\022\023\n\013sec" +
+      "ond_hist\030\017 \003(\r\022\017\n\007hotcell\030\020 \003(\r\022\r\n\005res_x" +
+      "\030\021 \001(\r\022\r\n\005res_y\030\026 \001(\r\022\025\n\rprecal_config\030\025" +
+      " \001(\tJ\004\010\004\020\t\"\241\001\n\024PreCalibrationUpdate\022\021\n\td" +
+      "evice_id\030\001 \001(\t\022\021\n\tcamera_id\030\002 \001(\005\022\r\n\005res" +
+      "_x\030\003 \001(\r\022\r\n\005res_y\030\004 \001(\r\022\017\n\007weights\030\005 \001(\014" +
+      "\022\020\n\010hotcells\030\006 \003(\r\022\020\n\010hot_hash\030\007 \001(\005\022\020\n\010" +
+      "wgt_hash\030\010 \001(\005\"\243\001\n\rCrayonMessage\022\017\n\007payl" +
+      "oad\030\001 \001(\014\022\016\n\006run_id\030\002 \001(\t\022\021\n\tdevice_id\030\003" +
+      " \001(\t\022\017\n\007user_id\030\004 \001(\r\022\020\n\010app_code\030\005 \001(\t\022" +
+      "\023\n\013remote_addr\030\006 \001(\t\022\023\n\013submit_time\030\007 \001(" +
+      "\r\022\021\n\tcamera_id\030\010 \001(\005B \n\022io.crayfis.andro" +
+      "idB\nDataProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -20810,7 +21721,7 @@ public final class DataProtos {
     internal_static_crayfis_DataChunk_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_DataChunk_descriptor,
-        new java.lang.String[] { "RunConfigs", "ExposureBlocks", "CalibrationResults", "PrecalibrationResults", });
+        new java.lang.String[] { "RunConfigs", "ExposureBlocks", "CalibrationResults", "PrecalibrationResults", "PrecalibrationUpdates", });
     internal_static_crayfis_RunConfig_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_crayfis_RunConfig_fieldAccessorTable = new
@@ -20822,7 +21733,7 @@ public final class DataProtos {
     internal_static_crayfis_ExposureBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_ExposureBlock_descriptor,
-        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "HotHash", "WgtHash", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "BatteryTemp", "BatteryEndTemp", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L0Conf", "L1Conf", "L2Conf", "L0Processed", "L1Processed", "L2Processed", "L0Pass", "L1Pass", "L2Pass", "L0Skip", "L1Skip", "L2Skip", "Config", "Processed", "Pass", "Skip", "FramesDropped", "Hist", "Xbn", "Aborted", });
+        new java.lang.String[] { "RunId", "RunIdHi", "PrecalId", "PrecalIdHi", "HotHash", "WgtHash", "StartTime", "EndTime", "StartTimeNano", "EndTimeNano", "StartTimeNtp", "EndTimeNtp", "GpsLat", "GpsLon", "GpsAltitude", "GpsAccuracy", "GpsFixtime", "GpsFixtimeNano", "BatteryTemp", "BatteryEndTemp", "DaqState", "ResX", "ResY", "Events", "L1Thresh", "L2Thresh", "L1Prescale", "L0Conf", "L1Conf", "L2Conf", "L0Processed", "L1Processed", "L2Processed", "L0Pass", "L1Pass", "L2Pass", "L0Skip", "L1Skip", "L2Skip", "Config", "Processed", "Pass", "Skip", "FramesDropped", "Hist", "Xbn", "Aborted", });
     internal_static_crayfis_Event_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_crayfis_Event_fieldAccessorTable = new
@@ -20864,7 +21775,7 @@ public final class DataProtos {
     internal_static_crayfis_PreCalibrationUpdate_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_crayfis_PreCalibrationUpdate_descriptor,
-        new java.lang.String[] { "HotHash", "WgtHash", "CameraId", "ResX", "ResY", "Weights", "Hotcells", });
+        new java.lang.String[] { "DeviceId", "CameraId", "ResX", "ResY", "Weights", "Hotcells", "HotHash", "WgtHash", });
     internal_static_crayfis_CrayonMessage_descriptor =
       getDescriptor().getMessageTypes().get(10);
     internal_static_crayfis_CrayonMessage_fieldAccessorTable = new
