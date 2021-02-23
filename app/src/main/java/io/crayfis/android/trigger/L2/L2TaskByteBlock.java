@@ -80,12 +80,14 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         mTrigger.invoke_set_L2Thresh(mConfig.thresh);
         mTrigger.set_gMaxN(mConfig.maxn);
         mTrigger.set_gNPixMax(mConfig.npix);
+        mTrigger.set_gResX(processor.xb.res_x);
+        mTrigger.set_gWeights(processor.xb.weights);
         mTrigger.bind_gPixIdx(pixIdx);
         mTrigger.bind_gPixVal(pixVal);
         mTrigger.bind_gPixN(pixN);
 
-        mTrigger.set_gWeights(processor.xb.weights);
-
+        // make sure pixN is initialized to 0
+        mTrigger.invoke_reset();
     }
 
     @Override

@@ -76,11 +76,13 @@ class L2TaskPixels extends TriggerProcessor.Task {
         mTrigger.set_gMaxN(mConfig.maxn);
         mTrigger.set_gNPixMax(mConfig.npix);
         mTrigger.set_gResX(processor.xb.res_x);
+        mTrigger.set_gWeights(processor.xb.weights);
         mTrigger.bind_gPixIdx(pixIdx);
         mTrigger.bind_gPixVal(pixVal);
         mTrigger.bind_gPixN(pixN);
 
-        mTrigger.set_gWeights(processor.xb.weights);
+        // make sure pixN is initialized to 0
+        mTrigger.invoke_reset();
     }
 
 
@@ -160,11 +162,12 @@ class L2TaskPixels extends TriggerProcessor.Task {
         trig.get_gPixN().copyTo(pixN);
 
         if(pixN[0] == 0) {
-            CFLog.e("No triggers found! " + frame.getAllocation().hashCode());
+            CFLog.e("No triggers found!");
             trig.invoke_reset();
             lock.unlock();
             return l2Coords;
         }
+
         int[] pixIdx = new int[pixN[0]];
         trig.get_gPixIdx().copy1DRangeTo(0, pixN[0], pixIdx);
 

@@ -6,7 +6,7 @@ rs_allocation gWeights;
 
 uint32_t* gPixIdx; // these need to be 32-bit, otherwise the addresses get complicated
 uint32_t* gPixVal;
-volatile uint32_t* gPixN;
+uint32_t* gPixN;
 
 uint gNPixMax;
 bool gMaxN;
