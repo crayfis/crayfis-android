@@ -92,11 +92,10 @@ public class CFApplication extends Application {
     private int mBatteryTemp = -1;
     private static final int BATTERY_START_TEMP = 350;
     private static final float BATTERY_START_PCT = .80f;
-    private boolean mBatteryLow;
-    private boolean mBatteryOverheated;
+    private boolean mBatteryLow = false;
+    private boolean mBatteryOverheated = false;
 
-
-    private State mApplicationState;
+    private State mApplicationState = State.FINISHED;
 
     private AppBuild mAppBuild;
 
@@ -114,10 +113,6 @@ public class CFApplication extends Application {
         // FIXME This is not needed when dependency injection is done, this can be handled in the constructor.
         //config.onSharedPreferenceChanged(localPrefs, null);
         config.onSharedPreferenceChanged(defaultPrefs, null);
-
-        setApplicationState(State.FINISHED);
-        mBatteryLow = false;
-        mBatteryOverheated = false;
 
         // DEBUG
         final Intent intent = new Intent(this, UploadExposureService.class);
