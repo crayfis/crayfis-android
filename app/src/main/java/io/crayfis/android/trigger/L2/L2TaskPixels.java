@@ -23,7 +23,7 @@ import io.crayfis.android.util.CFLog;
  */
 class L2TaskPixels extends TriggerProcessor.Task {
 
-    static class Config extends TriggerProcessor.Config {
+    static class Config extends L2Processor.Config {
 
         static final String NAME = "default";
         static final HashMap<String, Object> KEY_DEFAULT;
@@ -55,6 +55,12 @@ class L2TaskPixels extends TriggerProcessor.Task {
         @Override
         public TriggerProcessor.Task makeTask(TriggerProcessor processor) {
             return new L2TaskPixels(processor, this);
+        }
+
+        @Override
+        public int generateL2Threshold(float l1Thresh) {
+            if(l1Thresh > 5) return (int) l1Thresh - 1;
+            return (int) l1Thresh;
         }
     }
 

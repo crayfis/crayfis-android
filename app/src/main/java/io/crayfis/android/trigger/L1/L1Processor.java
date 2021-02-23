@@ -17,8 +17,8 @@ public class L1Processor extends TriggerProcessor {
 
     public static final String KEY_TARGET_EPM = "target_epm";
     public static final String KEY_TRIGGER_LOCK = "trig_lock";
-
     public static final String KEY_L1_THRESH = "l1thresh";
+    public static final String KEY_PRESCALE = "prescale";
 
     public static int L1CountData;
 
@@ -31,6 +31,7 @@ public class L1Processor extends TriggerProcessor {
     public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
         CFConfig config = CFConfig.getInstance();
         Config l1Config = config.getL1Trigger();
+        boolean prescale = l1Config.getBoolean(KEY_PRESCALE);
         int nFrames = l1Config.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
         int nBins = DAQManager.getInstance().isStreamingRAW() ? 1024 : 256;
 
@@ -44,10 +45,10 @@ public class L1Processor extends TriggerProcessor {
                 application.setApplicationState(CFApplication.State.CALIBRATION);
 
         } else if(sCalibrator.size() != nFrames) {
-            sCalibrator.updateThresholds();
+            sCalibrator.updateThresholds(prescale);
             sCalibrator.resize(nFrames); // resize after updating thresholds
         } else {
-            sCalibrator.updateThresholds();
+            sCalibrator.updateThresholds(prescale);
         }
 
         // now use updated trigger

@@ -24,7 +24,7 @@ public class L1Calibrator extends FrameHistogram {
      *  Find an integer L1 threshold s.t. the average L1 rate is less than
      *  or equal to the specified value and write to CFConfig
      */
-    void updateThresholds() {
+    void updateThresholds(boolean prescale) {
 
         // if we have a trigger lock, just set the thresholds
         TriggerProcessor.Config L1Config = CFConfig.getInstance().getL1Trigger();
@@ -47,19 +47,24 @@ public class L1Calibrator extends FrameHistogram {
         long nTotal = h.getEntries();
         int nTarget = (int) (nTotal * targetL1Rate); // note: this is 0 when the calibrator is empty
 
-        int thresh;
+        int threshBase;
+        double threshPrescale = 0;
 
-        for (thresh = 0; thresh < histValues.length-1; thresh++) {
-            nTotal -= histValues[thresh];
-            //if (thresh<20) CFLog.d(" L1Calibrator. Thresh="+thresh+" integral="+h.getIntegral(thresh, 256)+" rate="+rate+" compare to "+target_eff);
+        for (threshBase = 0; threshBase < histValues.length-1; threshBase++) {
+            nTotal -= histValues[threshBase];
             if (nTotal < nTarget) {
+                // take as much of the bin as necessary to give the desired rate
+                threshPrescale = (double) (nTarget - nTotal) / histValues[threshBase--];
                 break;
             }
         }
 
-        CFLog.i("Setting new L1 threshold: {" + L1Config.getInt(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
+        double thresh = threshBase + threshPrescale;
+        if(!prescale || thresh < 5) thresh = Math.ceil(thresh);
 
-        CFConfig.getInstance().setThresholds(thresh);
+        CFLog.i("Setting new L1 threshold: {" + L1Config.getFloat(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
+
+        CFConfig.getInstance().setThresholds((float) thresh);
     }
 
     void submitCalibrationResult(CFApplication application) {

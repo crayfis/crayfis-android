@@ -154,7 +154,7 @@ class ServerCommand {
 
     private class L1TrigCommand extends TrigCommand {
         @SerializedName(TriggerProcessor.Config.KEY_MAXFRAMES) private Integer mMaxFrames;
-        @SerializedName(L1Processor.KEY_L1_THRESH) private Integer mL1Thresh;
+        @SerializedName(L1Processor.KEY_L1_THRESH) private Float mL1Thresh;
         @SerializedName(L1Processor.KEY_TARGET_EPM) private Float mTargetEpm;
         @SerializedName(L1Processor.KEY_TRIGGER_LOCK) private Boolean mTriggerLock;
 

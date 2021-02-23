@@ -22,12 +22,24 @@ public class L2Processor extends TriggerProcessor {
     private static final int PASS_TIME_CAPACITY = 25;
     private static final FrameHistory<Long> sPassTimes = new FrameHistory<>(PASS_TIME_CAPACITY);
 
-    private L2Processor(CFApplication application, ExposureBlock xb, Config config) {
+    private L2Processor(CFApplication application, ExposureBlock xb, TriggerProcessor.Config config) {
         super(application, xb, config, false);
     }
 
     public static TriggerProcessor makeProcessor(CFApplication application, ExposureBlock xb) {
         return new L2Processor(application, xb, CFConfig.getInstance().getL2Trigger());
+    }
+
+    /**
+     * Derived Config class to generate L2 thresholds from L1
+     */
+    public static abstract class Config extends TriggerProcessor.Config {
+
+        public Config(String taskName, HashMap<String, String> keyVal, HashMap<String, Object> keyDefault) {
+            super(taskName, keyVal, keyDefault);
+        }
+
+        public abstract int generateL2Threshold(float l1Thresh);
     }
 
     public static Config makeConfig(String configStr) {
@@ -72,12 +84,12 @@ public class L2Processor extends TriggerProcessor {
         }
     }
 
-    public static int generateL2Threshold(int l1thresh, Config l2config) {
+    public static int generateL2Threshold(float l1thresh, Config l2config) {
         if((l2config instanceof L2TaskPixels.Config)
                 && l1thresh > 3) {
-            return l1thresh - 1;
+            return (int) Math.ceil(l1thresh) - 1;
         }
 
-        return l1thresh;
+        return (int) Math.ceil(l1thresh);
     }
 }

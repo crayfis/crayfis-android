@@ -97,7 +97,7 @@ public class ExposureBlock {
         this.camera_id = camera_id;
         this.camera_facing_back = camera_facing_back;
         this.weights = weights;
-        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold()+1);
+        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold().intValue()+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;
@@ -240,7 +240,8 @@ public class ExposureBlock {
         TriggerProcessor L1 = TRIGGER_CHAIN.getProcessor(L1Processor.class);
 
         if(L1 != null) {
-            buf.setL1Thresh(L1.config.getInt(L1Processor.KEY_L1_THRESH));
+            float thresh = L1.config.getFloat(L1Processor.KEY_L1_THRESH);
+            buf.setL1Thresh((int) thresh + 1);
         }
 
         TriggerProcessor L2 = TRIGGER_CHAIN.getProcessor(L2Processor.class);

@@ -1,6 +1,7 @@
 package io.crayfis.android.trigger.L1;
 
 import java.util.HashMap;
+import java.util.Random;
 
 import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.main.CFApplication;
@@ -19,17 +20,23 @@ class L1Task extends TriggerProcessor.Task {
 
         static {
             KEY_DEFAULT = new HashMap<>();
-            KEY_DEFAULT.put(L1Processor.KEY_L1_THRESH, 255);
+            KEY_DEFAULT.put(L1Processor.KEY_L1_THRESH, 255f);
             KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
             KEY_DEFAULT.put(L1Processor.KEY_TARGET_EPM, 30f);
             KEY_DEFAULT.put(L1Processor.KEY_TRIGGER_LOCK, false);
+            KEY_DEFAULT.put(L1Processor.KEY_PRESCALE, false);
         }
 
-        final int thresh;
+        final double thresh;
+        final int threshBase;
+        final double threshPrescale;
+
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            thresh = getInt(L1Processor.KEY_L1_THRESH);
+            thresh = getFloat(L1Processor.KEY_L1_THRESH);
+            threshBase = (int) thresh;
+            threshPrescale = thresh - threshBase;
         }
 
         @Override
@@ -60,13 +67,9 @@ class L1Task extends TriggerProcessor.Task {
         if(frame.getExposureBlock().daq_state == CFApplication.State.DATA) {
             L1Processor.L1CountData++;
 
-            if (max > mConfig.thresh) {
-                // NB: we compare to the XB's L1_thresh, as the global L1 thresh may
-                // have changed.
-
-                return 1;
-
-            }
+            boolean pass = (max > mConfig.threshBase + 1 ||
+                    max == mConfig.threshBase + 1 && Math.random() < mConfig.threshPrescale);
+            return pass ? 1 : 0;
         }
 
         return 0;

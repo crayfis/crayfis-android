@@ -113,9 +113,9 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // set the threshold at max if we haven't calibrated it yet
         if(mThresholdsSet) return mL1Trigger;
 
-        int threshMax = DAQManager.getInstance().isStreamingRAW() ? 1023 : 255;
+        float threshMax = DAQManager.getInstance().isStreamingRAW() ? 1023f : 255f;
         return mL1Trigger.edit()
-                .putInt(L1Processor.KEY_L1_THRESH, threshMax)
+                .putFloat(L1Processor.KEY_L1_THRESH, threshMax)
                 .create();
     }
 
@@ -128,8 +128,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      *
      * @return int
      */
-    public Integer getL1Threshold() {
-        return getL1Trigger().getInt(L1Processor.KEY_L1_THRESH);
+    public Float getL1Threshold() {
+        return getL1Trigger().getFloat(L1Processor.KEY_L1_THRESH);
     }
 
     /**
@@ -138,10 +138,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param l1Thresh New L1 threshold
      * @param l2Thresh New L2 threshold
      */
-    public void setThresholds(int l1Thresh, int l2Thresh) {
+    public void setThresholds(float l1Thresh, int l2Thresh) {
         mThresholdsSet = true;
         mL1Trigger = mL1Trigger.edit()
-                .putInt(L1Processor.KEY_L1_THRESH, l1Thresh)
+                .putFloat(L1Processor.KEY_L1_THRESH, l1Thresh)
                 .create();
         mL2Trigger = mL2Trigger.edit()
                 .putInt(L2Processor.KEY_L2_THRESH, l2Thresh)
@@ -154,12 +154,12 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @param l1Thresh New L1 threshold.  If null, unset thresholds and return
      *                 maximum threshold value
      */
-    public void setThresholds(@Nullable Integer l1Thresh) {
+    public void setThresholds(@Nullable Float l1Thresh) {
         if(l1Thresh == null) {
             mThresholdsSet = false;
             return;
         }
-        int l2Thresh = L2Processor.generateL2Threshold(l1Thresh, mL2Trigger);
+        int l2Thresh = ((L2Processor.Config)mL2Trigger).generateL2Threshold(l1Thresh);
         setThresholds(l1Thresh, l2Thresh);
     }
 
