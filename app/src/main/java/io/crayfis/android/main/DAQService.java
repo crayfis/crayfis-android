@@ -209,8 +209,7 @@ public class DAQService extends Service {
         if(previousState != CFApplication.State.INIT)
             throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
 
-        int maxThresh = DAQManager.getInstance().isStreamingRAW() ? 1023 : 255;
-        CONFIG.setThresholds(maxThresh);
+        CONFIG.setThresholds(null);
         mXBManager.newExposureBlock(CFApplication.State.SURVEY);
 
     }

@@ -61,6 +61,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private PreCalibrator.ConfigList mPrecalTriggers;
     private TriggerProcessor.Config mL1Trigger;
     private TriggerProcessor.Config mL2Trigger;
+    private boolean mThresholdsSet;
     private int mExposureBlockTargetEvents;
     private String mCurrentExperiment;
     private String mDeviceNickname;
@@ -80,6 +81,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalTriggers = PreCalibrator.makeConfig(DEFAULT_PRECAL_TRIGGER);
         mL1Trigger = L1Processor.makeConfig(DEFAULT_L1_TRIGGER);
         mL2Trigger = L2Processor.makeConfig(DEFAULT_L2_TRIGGER);
+        mThresholdsSet = false;
         mExposureBlockTargetEvents = DEFAULT_XB_TARGET_EVENTS;
         mCurrentExperiment = DEFAULT_CURRENT_EXPERIMENT;
         mDeviceNickname = DEFAULT_DEVICE_NICKNAME;
@@ -107,7 +109,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     }
 
     public TriggerProcessor.Config getL1Trigger() {
-        return mL1Trigger;
+
+        // set the threshold at max if we haven't calibrated it yet
+        if(mThresholdsSet) return mL1Trigger;
+
+        int threshMax = DAQManager.getInstance().isStreamingRAW() ? 1023 : 255;
+        return mL1Trigger.edit()
+                .putInt(L1Processor.KEY_L1_THRESH, threshMax)
+                .create();
     }
 
     public TriggerProcessor.Config getL2Trigger() {
@@ -120,22 +129,45 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public Integer getL1Threshold() {
-        return mL1Trigger.getInt(L1Processor.KEY_L1_THRESH);
+        return getL1Trigger().getInt(L1Processor.KEY_L1_THRESH);
     }
 
     /**
-     * Set the threshold for camera frame capturing.
+     * Set the thresholds for camera frame capturing.
      *
-     * @param l1Threshold The new threshold.
+     * @param l1Thresh New L1 threshold
+     * @param l2Thresh New L2 threshold
      */
-    public void setThresholds(int l1Threshold) {
+    public void setThresholds(int l1Thresh, int l2Thresh) {
+        mThresholdsSet = true;
         mL1Trigger = mL1Trigger.edit()
-                .putInt(L1Processor.KEY_L1_THRESH, l1Threshold)
+                .putInt(L1Processor.KEY_L1_THRESH, l1Thresh)
                 .create();
-        int l2Threshold = L2Processor.generateL2Threshold(l1Threshold, mL2Trigger);
         mL2Trigger = mL2Trigger.edit()
-                .putInt(L2Processor.KEY_L2_THRESH, l2Threshold)
+                .putInt(L2Processor.KEY_L2_THRESH, l2Thresh)
                 .create();
+    }
+
+    /**
+     * Set the L1 threshold and use an automatically calculated L2
+     *
+     * @param l1Thresh New L1 threshold.  If null, unset thresholds and return
+     *                 maximum threshold value
+     */
+    public void setThresholds(@Nullable Integer l1Thresh) {
+        if(l1Thresh == null) {
+            mThresholdsSet = false;
+            return;
+        }
+        int l2Thresh = L2Processor.generateL2Threshold(l1Thresh, mL2Trigger);
+        setThresholds(l1Thresh, l2Thresh);
+    }
+
+    /**
+     * For locked thresholds, mark as set for DATA state
+     */
+    public void setThresholds() {
+        mThresholdsSet = true;
     }
 
     /**

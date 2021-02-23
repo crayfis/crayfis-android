@@ -26,9 +26,14 @@ public class L1Calibrator extends FrameHistogram {
      */
     void updateThresholds() {
 
-        // first, find the target L1 efficiency
+        // if we have a trigger lock, just set the thresholds
         TriggerProcessor.Config L1Config = CFConfig.getInstance().getL1Trigger();
-        if(L1Config.getBoolean(L1Processor.KEY_TRIGGER_LOCK)) return;
+        if(L1Config.getBoolean(L1Processor.KEY_TRIGGER_LOCK)) {
+            CFConfig.getInstance().setThresholds();
+            return;
+        }
+
+        // first, find the target L1 efficiency
         double fps = DAQManager.getInstance().getFPS();
 
         if (fps == 0) {
@@ -36,6 +41,7 @@ public class L1Calibrator extends FrameHistogram {
         }
         double targetL1Rate = L1Config.getFloat(L1Processor.KEY_TARGET_EPM) / 60.0 / fps;
 
+        // convert this into a threshold
         Histogram h = getHistogram();
         long[] histValues = h.getValues();
         long nTotal = h.getEntries();

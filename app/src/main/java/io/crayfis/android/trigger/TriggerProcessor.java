@@ -288,10 +288,10 @@ public abstract class TriggerProcessor {
 
 
             Editor() {
-                eTaskConfigInt = mTaskConfigInt;
-                eTaskConfigFloat = mTaskConfigFloat;
-                eTaskConfigBool = mTaskConfigBool;
-                eTaskConfigStr = mTaskConfigStr;
+                eTaskConfigInt = new HashMap<>(mTaskConfigInt);
+                eTaskConfigFloat = new HashMap<>(mTaskConfigFloat);
+                eTaskConfigBool = new HashMap<>(mTaskConfigBool);
+                eTaskConfigStr = new HashMap<>(mTaskConfigStr);
 
             }
 

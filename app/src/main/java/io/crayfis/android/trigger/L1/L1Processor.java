@@ -37,7 +37,12 @@ public class L1Processor extends TriggerProcessor {
         // update L1Calibrator
         if(sCalibrator.nBins  != nBins) {
             sCalibrator = new L1Calibrator(nFrames, nBins);
-            config.setThresholds(nBins-1);
+            config.setThresholds(null);
+
+            // this should never happen, but we can make sure anyway
+            if(application.getApplicationState() != CFApplication.State.CALIBRATION)
+                application.setApplicationState(CFApplication.State.CALIBRATION);
+
         } else if(sCalibrator.size() != nFrames) {
             sCalibrator.updateThresholds();
             sCalibrator.resize(nFrames); // resize after updating thresholds
