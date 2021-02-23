@@ -84,12 +84,12 @@ public class L2Processor extends TriggerProcessor {
         }
     }
 
-    public static int generateL2Threshold(float l1thresh, Config l2config) {
-        if((l2config instanceof L2TaskPixels.Config)
-                && l1thresh > 3) {
-            return (int) Math.ceil(l1thresh) - 1;
+    /**
+     * Clear pass rate statistics when an ExposureBlock is aborted
+     */
+    public static void resetPassRate() {
+        synchronized (sPassTimes) {
+            sPassTimes.clear();
         }
-
-        return (int) Math.ceil(l1thresh);
     }
 }

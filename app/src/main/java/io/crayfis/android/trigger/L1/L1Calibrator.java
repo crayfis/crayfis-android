@@ -54,7 +54,7 @@ public class L1Calibrator extends FrameHistogram {
             nTotal -= histValues[threshBase];
             if (nTotal < nTarget) {
                 // take as much of the bin as necessary to give the desired rate
-                threshPrescale = (double) (nTarget - nTotal) / histValues[threshBase--];
+                threshPrescale = 1 - (double) (nTarget - nTotal) / histValues[threshBase--];
                 break;
             }
         }

@@ -68,7 +68,7 @@ class L1Task extends TriggerProcessor.Task {
             L1Processor.L1CountData++;
 
             boolean pass = (max > mConfig.threshBase + 1 ||
-                    max == mConfig.threshBase + 1 && Math.random() < mConfig.threshPrescale);
+                    max == mConfig.threshBase + 1 && Math.random() > mConfig.threshPrescale);
             return pass ? 1 : 0;
         }
 

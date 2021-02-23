@@ -61,8 +61,9 @@ public final class ExposureBlockManager {
             }
             // check whether the threshold has drifted
             double passRate = L2Processor.getPassRateFPM();
-            if(passRate > 1.5 * CONFIG.getTargetEventsPerMinute()) {
+            if(passRate > 1.8 * CONFIG.getTargetEventsPerMinute()) {
                 abortExposureBlock();
+                L2Processor.resetPassRate();
             }
 
         }
