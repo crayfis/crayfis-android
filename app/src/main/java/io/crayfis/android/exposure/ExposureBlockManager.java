@@ -232,11 +232,13 @@ public final class ExposureBlockManager {
      * Make sure we create a new instance in future runs
      */
     public void unregister() {
-        mXBThread.quitSafely();
-        try {
-            mXBThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(mXBThread.isAlive()) {
+            mXBThread.quitSafely();
+            try {
+                mXBThread.join(500L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
         sInstance = null;
     }

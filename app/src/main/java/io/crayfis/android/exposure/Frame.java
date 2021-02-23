@@ -542,7 +542,7 @@ public abstract class Frame {
 
             mFrameThread.quitSafely();
             try {
-                mFrameThread.join();
+                mFrameThread.join(500L);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
