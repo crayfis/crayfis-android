@@ -20,7 +20,7 @@ static const uchar gOffsetByte = (uchar) (gOffset * 255);
 static const uchar gMaxByte = (uchar) 255;
 
 void set_L2Thresh(int l2Thresh) {
-    gL2Thresh = l2Thresh * gMaxByte - gOffsetByte;
+    gL2Thresh = (l2Thresh+1) * gMaxByte - gOffsetByte;
 }
 
 // multiplies input allocation by weights and rounds

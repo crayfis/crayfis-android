@@ -59,8 +59,9 @@ class L2TaskPixels extends TriggerProcessor.Task {
 
         @Override
         public int generateL2Threshold(float l1Thresh) {
-            if(l1Thresh > 5) return (int) l1Thresh - 1;
-            return (int) l1Thresh;
+            if(l1Thresh > 4) // minimum threshold where we want to prescale
+                return (int) Math.ceil(l1Thresh) - 1;
+            return (int) Math.ceil(l1Thresh);
         }
     }
 

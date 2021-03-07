@@ -22,7 +22,7 @@ class L1Task extends TriggerProcessor.Task {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put(L1Processor.KEY_L1_THRESH, 255f);
             KEY_DEFAULT.put(KEY_MAXFRAMES, 1000);
-            KEY_DEFAULT.put(L1Processor.KEY_TARGET_EPM, 30f);
+            KEY_DEFAULT.put(L1Processor.KEY_TARGET_EPM, 20f);
             KEY_DEFAULT.put(L1Processor.KEY_TRIGGER_LOCK, false);
             KEY_DEFAULT.put(L1Processor.KEY_PRESCALE, false);
         }

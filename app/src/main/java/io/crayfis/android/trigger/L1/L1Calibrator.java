@@ -60,7 +60,7 @@ public class L1Calibrator extends FrameHistogram {
         }
 
         double thresh = threshBase + threshPrescale;
-        if(!prescale || thresh < 5) thresh = Math.ceil(thresh);
+        if(!prescale || thresh < 4) thresh = Math.ceil(thresh);
 
         CFLog.i("Setting new L1 threshold: {" + L1Config.getFloat(L1Processor.KEY_L1_THRESH) + "} -> {" + thresh + "}");
 
