@@ -121,12 +121,12 @@ class CFCamera {
         mCameraThread.quitSafely();
         mResultThread.quitSafely();
         try {
-            mCameraThread.join(500L);
+            mCameraThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         try {
-            mResultThread.join(500L);
+            mResultThread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

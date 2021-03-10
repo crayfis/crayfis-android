@@ -211,11 +211,11 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             sb.append(line).append("\n");
         }
 
+        CFLog.d("Received json response:\n" + sb.toString());
+
         final ServerCommand serverCommand = new Gson().fromJson(sb.toString(), ServerCommand.class);
         CFConfig.getInstance().updateFromServer(serverCommand);
         mApplication.savePreferences();
-
-        CFLog.d("Received json response:\n" + sb.toString());
 
         // and now disconnect
         c.disconnect();

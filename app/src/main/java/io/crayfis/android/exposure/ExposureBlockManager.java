@@ -153,7 +153,11 @@ public final class ExposureBlockManager {
 
                 mTotalXBs++;
 
-                flushCommittedBlocks(1000);
+                if(state == CFApplication.State.IDLE || state == CFApplication.State.FINISHED)
+                    // do this immediately so we can kill the thread
+                    flushCommittedBlocks();
+                else
+                    flushCommittedBlocks(1000);
             }
         });
     }
@@ -236,7 +240,7 @@ public final class ExposureBlockManager {
         if(mXBThread.isAlive()) {
             mXBThread.quitSafely();
             try {
-                mXBThread.join(500L);
+                mXBThread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

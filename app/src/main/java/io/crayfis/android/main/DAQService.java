@@ -319,14 +319,13 @@ public class DAQService extends Service {
             case IDLE:
 
                 mXBManager.newExposureBlock(CFApplication.State.FINISHED);
-                mXBManager.flushCommittedBlocks();
+                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
+                mApplication.killTimer();
+
                 mDAQManager.unregister();
                 mXBManager.unregister();
                 UploadExposureService.uploadFileCache(this);
 
-                mApplication.killTimer();
-
-                mBroadcastManager.unregisterReceiver(STATE_CHANGE_RECEIVER);
                 stopForeground(true);
                 stopSelf();
                 break;
@@ -451,8 +450,10 @@ public class DAQService extends Service {
 
             devtxt += mDAQManager.getStatus() + "\n";
 
-            devtxt += "Hot-pixel hash: " + CONFIG.getPrecalConfig().getHotHash() + "\n";
-            devtxt += "Weighting hash: " + CONFIG.getPrecalConfig().getWeightHash() + "\n\n";
+            if(CONFIG.getPrecalConfig() != null) {
+                devtxt += "Hot-pixel hash: " + CONFIG.getPrecalConfig().getHotHash() + "\n";
+                devtxt += "Weighting hash: " + CONFIG.getPrecalConfig().getWeightHash() + "\n\n";
+            }
 
             devtxt += "L0 trig: " + CONFIG.getL0Trigger() + "\n"
                     + "Qual trig: " + CONFIG.getQualTrigger() + "\n"
