@@ -5,6 +5,7 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.util.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import io.crayfis.android.ScriptC_l2Trigger;
 import io.crayfis.android.exposure.Frame;
 import io.crayfis.android.trigger.TriggerProcessor;
 import io.crayfis.android.ui.navdrawer.data.LayoutData;
+import io.crayfis.android.util.CFLog;
 
 /**
  * Created by jswaney on 1/6/18.
@@ -71,6 +73,10 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
     private final ScriptC_l2Trigger mTrigger;
     private final Lock mLock = new ReentrantLock();
 
+    private final Allocation aPixIdx;
+    private final Allocation aPixVal;
+    private final Allocation aPixN;
+
 
     L2TaskByteBlock(TriggerProcessor processor, Config cfg) {
         super(processor);
@@ -79,18 +85,18 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
 
         RenderScript rs = processor.application.getRenderScript();
         mTrigger = new ScriptC_l2Trigger(rs);
-        Allocation pixIdx = Allocation.createSized(rs, Element.U32(rs), mConfig.npix, Allocation.USAGE_SCRIPT);
-        Allocation pixVal = Allocation.createSized(rs, Element.U32(rs), mConfig.npix, Allocation.USAGE_SCRIPT);
-        Allocation pixN = Allocation.createSized(rs, Element.U32(rs), 1, Allocation.USAGE_SCRIPT);
+        aPixIdx = Allocation.createSized(rs, Element.U32(rs), mConfig.npix, Allocation.USAGE_SCRIPT);
+        aPixVal = Allocation.createSized(rs, Element.U32(rs), mConfig.npix, Allocation.USAGE_SCRIPT);
+        aPixN = Allocation.createSized(rs, Element.U32(rs), 1, Allocation.USAGE_SCRIPT);
 
         mTrigger.invoke_set_L2Thresh(mConfig.thresh);
         mTrigger.set_gMaxN(mConfig.maxn);
         mTrigger.set_gNPixMax(mConfig.npix);
         mTrigger.set_gResX(processor.xb.res_x);
         mTrigger.set_gWeights(processor.xb.weights);
-        mTrigger.bind_gPixIdx(pixIdx);
-        mTrigger.bind_gPixVal(pixVal);
-        mTrigger.bind_gPixN(pixN);
+        mTrigger.bind_gPixIdx(aPixIdx);
+        mTrigger.bind_gPixVal(aPixVal);
+        mTrigger.bind_gPixN(aPixN);
 
         // make sure pixN is initialized to 0
         mTrigger.invoke_reset();
@@ -106,7 +112,7 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
 
         LinkedHashSet<Pair<Integer, Integer>> blockXY = new LinkedHashSet<>();
 
-        List<Pair<Integer, Integer>> l2PixelCoords = L2TaskPixels.getL2PixelCoords(frame, mTrigger, mLock);
+        List<Pair<Integer, Integer>> l2PixelCoords = getL2PixelCoords(frame);
 
         for(Pair<Integer, Integer> xy : l2PixelCoords) {
 
@@ -142,5 +148,47 @@ class L2TaskByteBlock extends TriggerProcessor.Task {
         frame.setByteBlock(builder.build());
 
         return l2PixelCoords.size();
+    }
+
+    private List<Pair<Integer, Integer>> getL2PixelCoords(Frame frame) {
+
+        List<Pair<Integer, Integer>> l2Coords = new ArrayList<>();
+        Allocation buf = frame.getAllocation();
+        int[] pixN = new int[1];
+
+        mLock.lock();
+
+        if (frame.getFormat() == Frame.Format.RAW) {
+            mTrigger.forEach_trigger_ushort(buf);
+        } else {
+            mTrigger.forEach_trigger_uchar(buf);
+        }
+
+        // first count the number of hits and construct buffers
+        aPixN.copyTo(pixN);
+
+        if(pixN[0] == 0) {
+            CFLog.e("No triggers found!");
+            mTrigger.invoke_reset();
+            mLock.unlock();
+            return l2Coords;
+        }
+
+        int[] pixIdx = new int[pixN[0]];
+        aPixIdx.copy1DRangeTo(0, pixN[0], pixIdx);
+
+        mTrigger.invoke_reset();
+
+        mLock.unlock();
+
+        // now split coords into x and y
+        for (int i = 0; i < pixN[0]; i++) {
+            int x = pixIdx[i] % frame.getWidth();
+            int y = pixIdx[i] / frame.getWidth();
+            l2Coords.add(Pair.create(x, y));
+            //CFLog.d("rs (" + x + ", " + y + ", " + pixVal[i] + ")");
+        }
+
+        return l2Coords;
     }
 }

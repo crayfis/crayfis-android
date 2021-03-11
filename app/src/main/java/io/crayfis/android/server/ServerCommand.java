@@ -60,7 +60,8 @@ class ServerCommand {
             return mCameraId == daq.getCameraId()
                     && mResX == daq.getResX()
                     && mResY == daq.getResY()
-                    && (mHotHash != null && mHotHash != cfg.getHotHash()
+                    && (cfg == null
+                    || mHotHash != null && mHotHash != cfg.getHotHash()
                     || mWeightHash != null && mWeightHash != cfg.getWeightHash());
         }
 

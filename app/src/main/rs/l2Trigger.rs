@@ -26,8 +26,9 @@ void set_L2Thresh(int l2Thresh) {
 // multiplies input allocation by weights and rounds
 static void trigger_default(uint in, uchar wgt, uint32_t x, uint32_t y) {
     uint adjusted = in * wgt;
-
-    if (adjusted > gL2Thresh) {
+    //rsAtomicMax(&gMax, adjusted);
+    if (adjusted >= gL2Thresh) {
+        //rsDebug("weighted:", (1.0 * adjusted + gOffsetByte) / gMaxByte);
         uint pixN = rsAtomicInc(gPixN);
         if(pixN < gNPixMax) {
             uint32_t idx = x + gResX*y;
