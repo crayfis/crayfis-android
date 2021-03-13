@@ -306,7 +306,9 @@ public class PreCalibrationService extends IntentService {
         }
 
         public Config update(Config config) {
-            if(config.mCameraId != mCameraId || config.mResX != mResX || config.mResY != mResY) {
+            if(config.mCameraId != mCameraId || config.mResX != mResX || config.mResY != mResY
+            || config.mHotHash >= 0 && config.mHotcells == null
+            || config.mWeightHash >= 0 && config.mB64Weights == null) {
                 return this;
             }
 
