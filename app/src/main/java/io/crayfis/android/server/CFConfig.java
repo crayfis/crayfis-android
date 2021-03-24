@@ -273,39 +273,48 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     void updateFromServer(@NonNull final ServerCommand serverCommand) {
 
         CFLog.i("GOT command from server!");
-        boolean changeCamera = false;
+        boolean restartCamera = false;
+        boolean recalibrate = false;
 
         if (serverCommand.getWeights() != null
                 && serverCommand.getWeights().isApplicable()) {
-            mPrecalConfig = mPrecalConfig.update(serverCommand.getWeights().makePrecalConfig());
+            PreCalibrationService.Config newConfig = serverCommand.getWeights().makePrecalConfig();
+            if(mPrecalConfig == null)
+                mPrecalConfig = newConfig;
+            else
+                mPrecalConfig = mPrecalConfig.update(newConfig);
         }
         if (serverCommand.getHotcells() != null
                 && serverCommand.getHotcells().isApplicable()) {
-            mPrecalConfig = mPrecalConfig.update(serverCommand.getHotcells().makePrecalConfig());
+            PreCalibrationService.Config newConfig = serverCommand.getHotcells().makePrecalConfig();
+            if(mPrecalConfig == null)
+                mPrecalConfig = newConfig;
+            else
+                mPrecalConfig = mPrecalConfig.update(newConfig);
         }
         // only call PreCalibrationService if the commands above don't get the job done
         if (serverCommand.getUpdateCommand() != null
                 && serverCommand.getUpdateCommand().isApplicable()
                 && serverCommand.getWeights() == null
                 && serverCommand.getHotcells() == null) {
-            // FIXME: ideally, we would call PreCalibrationService without switching to IDLE
-            changeCamera = true;
+            recalibrate = true;
         }
         if (serverCommand.getCameraCommand() != null
                 && serverCommand.getCameraCommand().isApplicable()) {
             DAQManager.getInstance().changeDataRate(serverCommand.getCameraCommand().shouldIncrease());
+            restartCamera = true;
         }
         if (serverCommand.getL0Trigger() != null) {
             if(serverCommand.getL0Trigger().hasName()) {
                 mL0Trigger = L0Processor.makeConfig(serverCommand.getL0Trigger().toString());
-            } else {
+            } else if(mL0Trigger != null) {
                 mL0Trigger = mL0Trigger.editFromString(serverCommand.getL0Trigger().toString());
             }
         }
         if (serverCommand.getQualityTrigger() != null) {
             if(serverCommand.getQualityTrigger().hasName()) {
                 mQualTrigger = QualityProcessor.makeConfig(serverCommand.getQualityTrigger().toString());
-            } else {
+            } else if(mQualTrigger != null) {
                 mQualTrigger = mQualTrigger.editFromString(serverCommand.getQualityTrigger().toString());
             }
         }
@@ -323,14 +332,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         if (serverCommand.getL1Trigger() != null) {
             if(serverCommand.getL1Trigger().hasName()) {
                 mL1Trigger = L1Processor.makeConfig(serverCommand.getL1Trigger().toString());
-            } else {
+            } else if(mL1Trigger != null) {
                 mL1Trigger = mL1Trigger.editFromString(serverCommand.getL1Trigger().toString());
             }
         }
         if (serverCommand.getL2Trigger() != null) {
             if(serverCommand.getL2Trigger().hasName()) {
                 mL2Trigger = L2Processor.makeConfig(serverCommand.getL2Trigger().toString());
-            } else {
+            } else if(mL2Trigger != null) {
                 mL2Trigger = mL2Trigger.editFromString(serverCommand.getL2Trigger().toString());
             }
         }
@@ -353,19 +362,19 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         // if we're changing the camera settings, reconfigure it
         if (serverCommand.getResolution() != null) {
             mTargetResolutionStr = serverCommand.getResolution();
-            changeCamera = true;
+            restartCamera = true;
         }
         if(serverCommand.getTargetFPS() != null) {
             mTargetFPS = serverCommand.getTargetFPS();
-            changeCamera = true;
+            restartCamera = true;
         }
         if(serverCommand.getNAlloc() != null) {
             mNAlloc = serverCommand.getNAlloc();
-            changeCamera = true;
+            restartCamera = true;
         }
         if(serverCommand.getFracDeadTime() != null) {
             mFracDeadTime = serverCommand.getFracDeadTime();
-            changeCamera = true;
+            restartCamera = true;
         }
         if (serverCommand.getBatteryOverheatTemp() != null) {
             mBatteryOverheatTemp = serverCommand.getBatteryOverheatTemp();
@@ -374,11 +383,14 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
             mDataChunkSize = serverCommand.getDataChunkSize();
         }
         if (serverCommand.shouldRecalibrate() != null) {
-            changeCamera = true;
+            recalibrate = true;
         }
 
-        if (changeCamera) {
-            DAQManager.getInstance().changeCamera();
+        // avoid duplicating operations
+        if (restartCamera) {
+            DAQManager.getInstance().reconfigureCamera();
+        } else if(recalibrate) {
+            DAQManager.getInstance().recalibrate();
         }
     }
 

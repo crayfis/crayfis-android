@@ -93,6 +93,25 @@ public class DAQManager {
         mCFCamera.changeCameraFrom(currentId);
     }
 
+    /**
+     * Keep same camera, but restart with potentially new settings
+     */
+    public void reconfigureCamera() {
+        // switch to INIT if we are running
+        if(mApplication.changeApplicationState(CFApplication.State.SURVEY, CFApplication.State.INIT)
+            || mApplication.changeApplicationState(CFApplication.State.PRECALIBRATION, CFApplication.State.INIT)
+            || mApplication.changeApplicationState(CFApplication.State.CALIBRATION, CFApplication.State.INIT)
+            || mApplication.changeApplicationState(CFApplication.State.DATA, CFApplication.State.INIT))
+
+            mCFCamera.configure();
+    }
+
+    // FIXME: this is a hack
+    public void recalibrate() {
+        mApplication.changeApplicationState(CFApplication.State.CALIBRATION, CFApplication.State.PRECALIBRATION);
+        mApplication.changeApplicationState(CFApplication.State.DATA, CFApplication.State.PRECALIBRATION);
+    }
+
     public void changeDataRate(boolean increase) {
         mCFCamera.changeDataRate(increase);
     }

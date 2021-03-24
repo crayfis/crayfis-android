@@ -343,10 +343,10 @@ public class DAQActivity extends AppCompatActivity {
         CFApplication application = (CFApplication) getApplication();
         CFApplication.State state = application.getApplicationState();
 
-        if(state != CFApplication.State.FINISHED) {
-            application.setApplicationState(CFApplication.State.FINISHED);
-            mRestart = true;
-        }
+        // resume if we haven't gone to a FINISHED state
+        mRestart = (state != CFApplication.State.FINISHED);
+        application.setApplicationState(CFApplication.State.FINISHED);
+
 		Intent i = new Intent(this, UserSettingActivity.class);
 		startActivity(i);
 	}

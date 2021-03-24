@@ -27,7 +27,6 @@ import io.crayfis.android.R;
 import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.server.PreCalibrationService;
 import io.crayfis.android.trigger.L0.L0Processor;
-import io.crayfis.android.trigger.L1.L1Calibrator;
 import io.crayfis.android.exception.IllegalFsmStateException;
 import io.crayfis.android.exposure.ExposureBlock;
 import io.crayfis.android.exposure.ExposureBlockManager;
@@ -113,7 +112,7 @@ public class DAQService extends Service {
         if(mApplication.getApplicationState() == CFApplication.State.FINISHED) {
 
             mBroadcastManager.registerReceiver(STATE_CHANGE_RECEIVER, new IntentFilter(CFApplication.ACTION_STATE_CHANGE));
-            mApplication.setApplicationState(CFApplication.State.INIT);
+            mApplication.changeApplicationState(CFApplication.State.FINISHED, CFApplication.State.INIT);
         }
 
         // tell service to restart if it gets killed
@@ -124,10 +123,8 @@ public class DAQService extends Service {
     @Override
     public void onDestroy() {
         CFLog.i("DAQService Suspending!");
+        mApplication.setApplicationState(CFApplication.State.FINISHED);
 
-        if(mApplication.getApplicationState() != CFApplication.State.FINISHED) {
-            mApplication.setApplicationState(CFApplication.State.FINISHED);
-        }
 
         CFLog.d("DAQService: stopped");
     }
@@ -146,6 +143,7 @@ public class DAQService extends Service {
         public void onReceive(final Context context, final Intent intent) {
             final CFApplication.State previous = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_PREVIOUS);
             final CFApplication.State current = (CFApplication.State) intent.getSerializableExtra(CFApplication.STATE_CHANGE_NEW);
+
             CFLog.i(DAQService.class.getSimpleName() + " state transition: " + previous + " -> " + current);
 
             switch(current) {
@@ -187,16 +185,23 @@ public class DAQService extends Service {
 
                 mXBManager = ExposureBlockManager.getInstance();
                 mXBManager.register(mApplication);
-                mXBManager.newExposureBlock(CFApplication.State.INIT);
 
                 // start camera
 
                 mDAQManager = DAQManager.getInstance();
                 mDAQManager.register(mApplication);
                 break;
+            case SURVEY:
+            case PRECALIBRATION:
+            case CALIBRATION:
+            case DATA:
+                // just reconfiguring the camera
+                break;
             default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+                throw new IllegalFsmStateException(previousState + " -> INIT");
         }
+
+        mXBManager.newExposureBlock(CFApplication.State.INIT);
     }
 
     /**
@@ -207,7 +212,7 @@ public class DAQService extends Service {
      */
     private void doStateTransitionSurvey(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         if(previousState != CFApplication.State.INIT)
-            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+            throw new IllegalFsmStateException(previousState + " -> SURVEY");
 
         CONFIG.setThresholds(null);
         mXBManager.newExposureBlock(CFApplication.State.SURVEY);
@@ -216,30 +221,39 @@ public class DAQService extends Service {
 
 
     private void doStateTransitionPrecalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
-        if(previousState != CFApplication.State.SURVEY)
-            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
-
-        // first generate runconfig for specific camera
         int cameraId = mDAQManager.getCameraId();
         int resX = mDAQManager.getResX();
         int resY = mDAQManager.getResY();
 
-        if (run_config == null || cameraId != run_config.getCameraId()) {
-            generateRunConfig();
-            UploadExposureService.submitMessage(this, run_config.getCameraId(), run_config);
+        switch (previousState) {
+            case SURVEY:
+                // if this is the beginning of a run, first generate runconfig for specific camera
+                if (run_config == null || cameraId != run_config.getCameraId()) {
+                    generateRunConfig();
+                    UploadExposureService.submitMessage(this, run_config.getCameraId(), run_config);
+                }
+
+                // notify user that camera is running
+                mNotificationBuilder.setContentText(getString(R.string.notification_running));
+                startForeground(FOREGROUND_ID, mNotificationBuilder.build());
+                mApplication.consecutiveIdles = 0;
+            case CALIBRATION:
+            case DATA:
+                // just updating weights
+                PreCalibrationService.getWeights(this, cameraId, resX, resY);
+                break;
+            default:
+                throw new IllegalFsmStateException(previousState + " -> PRECALIBRATION");
+
         }
 
-        // notify user that camera is running
-        mNotificationBuilder.setContentText(getString(R.string.notification_running));
-        startForeground(FOREGROUND_ID, mNotificationBuilder.build());
-        mApplication.consecutiveIdles = 0;
 
-        PreCalibrationService.getWeights(this, cameraId, resX, resY);
+
     }
 
     private void doStateTransitionCalibration(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         if(previousState != CFApplication.State.PRECALIBRATION)
-            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+            throw new IllegalFsmStateException(previousState + " -> CALIBRATION");
 
         L1Processor.getCalibrator().clear();
         mXBManager.newExposureBlock(CFApplication.State.CALIBRATION);
@@ -253,7 +267,7 @@ public class DAQService extends Service {
      */
     private void doStateTransitionData(@NonNull final CFApplication.State previousState) throws IllegalFsmStateException {
         if(previousState != CFApplication.State.CALIBRATION)
-            throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+            throw new IllegalFsmStateException(previousState + " -> DATA");
 
         mXBManager.newExposureBlock(CFApplication.State.DATA);
     }
@@ -304,7 +318,7 @@ public class DAQService extends Service {
                 mXBManager.abortExposureBlock();
                 break;
             default:
-                throw new IllegalFsmStateException(previousState + " -> " + mApplication.getApplicationState());
+                throw new IllegalFsmStateException(previousState + " -> IDLE");
         }
         mXBManager.unregister();
     }
@@ -330,7 +344,7 @@ public class DAQService extends Service {
                 stopSelf();
                 break;
             default:
-                throw new IllegalFsmStateException(previous + " -> " + mApplication.getApplicationState());
+                throw new IllegalFsmStateException(previous + " -> FINISHED");
         }
     }
 

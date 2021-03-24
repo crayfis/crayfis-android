@@ -40,9 +40,8 @@ public class L1Processor extends TriggerProcessor {
             sCalibrator = new L1Calibrator(nFrames, nBins);
             config.setThresholds(null);
 
-            // this should never happen, but we can make sure anyway
-            if(application.getApplicationState() != CFApplication.State.CALIBRATION)
-                application.setApplicationState(CFApplication.State.CALIBRATION);
+            // this should be a no-op, but we can make sure anyway
+            application.setApplicationState(CFApplication.State.CALIBRATION);
 
         } else if(sCalibrator.size() != nFrames) {
             sCalibrator.updateThresholds(prescale);
@@ -80,10 +79,8 @@ public class L1Processor extends TriggerProcessor {
 
     @Override
     public void onMaxReached() {
-        if(application.getApplicationState() == CFApplication.State.CALIBRATION) {
+        if(application.changeApplicationState(CFApplication.State.CALIBRATION, CFApplication.State.DATA))
             sCalibrator.submitCalibrationResult(application);
-            application.setApplicationState(CFApplication.State.DATA);
-        }
     }
 
     public static L1Calibrator getCalibrator() {

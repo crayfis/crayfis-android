@@ -78,7 +78,7 @@ public class CFApplication extends Application {
             if(CFConfig.getInstance().getQualTrigger().getName().equals("facedown")
                     || DAQManager.getInstance().isPhoneFlat()) {
                 mWaitingForInit = false;
-                setApplicationState(CFApplication.State.INIT);
+                changeApplicationState(State.IDLE, State.INIT);
             } else {
                 // continue waiting
                 userErrorMessage(false, R.string.warning_facedown);
@@ -149,14 +149,35 @@ public class CFApplication extends Application {
      * @see #STATE_CHANGE_NEW
      */
     public void setApplicationState(State applicationState) {
-        final State currentState = mApplicationState;
-        mApplicationState = applicationState;
-
         final Intent intent = new Intent(ACTION_STATE_CHANGE);
-        intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
-        intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        synchronized (mApplicationState) {
+            if(mApplicationState == applicationState) return;
+            State currentState = mApplicationState;
+            mApplicationState = applicationState;
+
+            intent.putExtra(STATE_CHANGE_PREVIOUS, currentState);
+            intent.putExtra(STATE_CHANGE_NEW, mApplicationState);
+        }
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
+    }
+
+    /**
+     * Like setApplicationState(), but handles race conditions gracefully.
+     *
+     * @param stateOld State from which the transition is intended. If the application
+     *                 state has changed from this value, the transition is a no-op
+     * @param stateNew New state to transition into
+     * @return Whether the intended transition occurred.
+     */
+    public boolean changeApplicationState(State stateOld, State stateNew) {
+        synchronized (mApplicationState) {
+            if(mApplicationState == stateOld) {
+                setApplicationState(stateNew);
+                return true;
+            }
+            return false;
+        }
     }
 
     private boolean handleUnresponsive() {
@@ -334,15 +355,14 @@ public class CFApplication extends Application {
 
         boolean healthy = !mBatteryLow && !mBatteryOverheated;
 
-        // go into idle mode if necessary
-        if (mApplicationState != CFApplication.State.IDLE && mApplicationState != State.FINISHED
-                && !healthy) {
-            setApplicationState(CFApplication.State.IDLE);
+        // go into idle mode if necessary, and not there already
+        if (mApplicationState != State.FINISHED && !healthy) {
+            setApplicationState(State.IDLE);
         }
 
         // if we are in idle mode, restart if everything is okay
-        else if (mApplicationState == CFApplication.State.IDLE && healthy && !mWaitingForInit) {
-            setApplicationState(CFApplication.State.INIT);
+        else if (healthy && !mWaitingForInit) {
+            changeApplicationState(State.IDLE, State.INIT);
         }
 
         return healthy;

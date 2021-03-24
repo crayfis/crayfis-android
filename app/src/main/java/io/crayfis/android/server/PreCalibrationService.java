@@ -116,7 +116,7 @@ public class PreCalibrationService extends IntentService {
         if(mConfig != null && mConfig.isValid()) {
             // we have a config, so let's continue!
             CFConfig.getInstance().setPrecalConfig(mConfig);
-            application.setApplicationState(CFApplication.State.CALIBRATION);
+            application.changeApplicationState(CFApplication.State.PRECALIBRATION, CFApplication.State.CALIBRATION);
         } else {
             // calculate weights manually
             ExposureBlockManager.getInstance()

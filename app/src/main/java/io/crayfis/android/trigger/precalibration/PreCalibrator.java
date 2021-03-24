@@ -107,7 +107,7 @@ public class PreCalibrator extends TriggerProcessor {
         } else {
             submitPrecalibrationResult();
             sConfigStep = 0;
-            application.setApplicationState(CFApplication.State.CALIBRATION);
+            application.changeApplicationState(CFApplication.State.PRECALIBRATION, CFApplication.State.CALIBRATION);
         }
     }
 

@@ -237,14 +237,9 @@ public final class ExposureBlockManager {
      * Make sure we create a new instance in future runs
      */
     public void unregister() {
-        if(mXBThread.isAlive()) {
+        if(mXBThread.isAlive())
             mXBThread.quitSafely();
-            try {
-                mXBThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        // TODO: Thread.join() occasionally freezes here, but would be appropriate
         sInstance = null;
     }
 }

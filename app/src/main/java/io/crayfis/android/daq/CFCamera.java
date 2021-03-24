@@ -91,12 +91,6 @@ class CFCamera {
     private Frame.Producer mFrameProducer;
     private final FrameHistory<Long> mTimestampHistory = new FrameHistory<>(100);
 
-    interface ConfiguredCallback {
-        void onConfigured();
-    }
-
-    private ConfiguredCallback mConfiguredCallback;
-
     CFCamera(Frame.Builder builder) {
         FRAME_BUILDER = builder;
         CONFIG = CFConfig.getInstance();
@@ -136,14 +130,11 @@ class CFCamera {
 
         if (currentId != mCameraId || !mCameraThread.isAlive()) return;
 
-        synchronized (mTimestampHistory) {
-            mTimestampHistory.clear();
-        }
-        CFConfig.getInstance().setPrecalConfig(null);
-
         // find next camera based on DAQ state
-        int nextId = -1;
+        int nextId;
         CFApplication.State state = mApplication.getApplicationState();
+
+        nextId = -1;
 
         switch (state) {
             case INIT:
@@ -166,7 +157,6 @@ class CFCamera {
             case FINISHED:
                 // take a break for a while
         }
-
         if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startInitTimer();
         }
@@ -175,14 +165,7 @@ class CFCamera {
 
         CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
-        configure(new ConfiguredCallback() {
-            @Override
-            public void onConfigured() {
-                if(state == CFApplication.State.INIT) {
-                    mApplication.setApplicationState(CFApplication.State.SURVEY);
-                }
-            }
-        });
+        configure();
 
     }
 
@@ -257,7 +240,12 @@ class CFCamera {
                 return;
             }
 
-            mConfiguredCallback.onConfigured();
+            synchronized (mTimestampHistory) {
+                mTimestampHistory.clear();
+            }
+            CFConfig.getInstance().setPrecalConfig(null);
+            if(!mApplication.changeApplicationState(CFApplication.State.INIT, CFApplication.State.SURVEY))
+                return;
 
             // When the session is ready, we start displaying the preview.
             mCaptureSession = cameraCaptureSession;
@@ -479,9 +467,7 @@ class CFCamera {
         return Math.max(requestedDuration, minDuration);
     }
 
-    void configure(ConfiguredCallback callback) {
-
-        mConfiguredCallback = callback;
+    void configure() {
 
         // get rid of old camera setup
         mCameraOpenCloseLock.acquireUninterruptibly();
