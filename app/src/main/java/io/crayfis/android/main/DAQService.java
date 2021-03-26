@@ -18,6 +18,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import org.opencv.android.OpenCVLoader;
 
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -376,26 +377,24 @@ public class DAQService extends Service {
 
 
         /* get a bunch of hw build info */
-        String hw_params = "";
-        hw_params += "build-board=" + Build.BOARD + ";";
-        hw_params += "build-brand=" + Build.BRAND + ";";
-        hw_params += "build-cpu-abi=" + Build.CPU_ABI + ";";
-        hw_params += "build-cpu-abi2=" + Build.CPU_ABI2 + ";";
-        hw_params += "build-device=" + Build.DEVICE + ";";
-        hw_params += "build-display=" + Build.DISPLAY + ";";
-        hw_params += "build-fingerprint=" + Build.FINGERPRINT + ";";
-        hw_params += "build-hardware=" + Build.HARDWARE + ";";
-        hw_params += "build-host=" + Build.HOST + ";";
-        hw_params += "build-id=" + Build.ID + ";";
-        hw_params += "build-manufacturer=" + Build.MANUFACTURER + ";";
-        hw_params += "build-model=" + Build.MODEL + ";";
-        hw_params += "build-radio=" + Build.RADIO + ";";
-        hw_params += "build-serial=" + Build.SERIAL + ";";
-        hw_params += "build-tags=" + Build.TAGS + ";";
-        hw_params += "build-time=" + Build.TIME + ";";
-        hw_params += "build-type=" + Build.TYPE + ";";
-        hw_params += "build-user=" + Build.USER + ";";
-        b.setHwParams(hw_params);
+        StringBuilder hw_params = new StringBuilder()
+            .append("build-board=" + Build.BOARD + ";")
+            .append("build-brand=" + Build.BRAND + ";")
+            .append("build-cpu-abi=" + Arrays.toString(Build.SUPPORTED_ABIS) + ";")
+            .append("build-device=" + Build.DEVICE + ";")
+            .append("build-display=" + Build.DISPLAY + ";")
+            .append("build-fingerprint=" + Build.FINGERPRINT + ";")
+            .append("build-hardware=" + Build.HARDWARE + ";")
+            .append("build-host=" + Build.HOST + ";")
+            .append("build-id=" + Build.ID + ";")
+            .append("build-manufacturer=" + Build.MANUFACTURER + ";")
+            .append("build-model=" + Build.MODEL + ";")
+            .append("build-radio=" + Build.getRadioVersion() + ";")
+            .append("build-tags=" + Build.TAGS + ";")
+            .append("build-time=" + Build.TIME + ";")
+            .append("build-type=" + Build.TYPE + ";")
+            .append("build-user=" + Build.USER + ";");
+        b.setHwParams(hw_params.toString());
         CFLog.i("SET HWPARAMS = " + hw_params);
 
         /* get a bunch of os build info */
