@@ -21,11 +21,11 @@
 
     <ListPreference
             android:key="prefStartWait"
-            android:defaultValue="0"
+            android:defaultValue="5"
             android:entries="@array/pref_startwait"
             android:summary="@string/settings_startwait_summary"
             android:entryValues="@array/pref_startwait"
-            android:title="@string/pref_startwait" />
+            android:title="@string/settings_startwait_title" />
 
 
     <CheckBoxPreference

@@ -3,18 +3,61 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <TextView
+        style="@style/UserNotifcation.Message"
+        android:id="@+id/time_picker_text_start"
+        android:text="@string/autostart_begin"
+        android:gravity="center"
+        android:layout_alignParentStart="true"
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"/>
+
     <TimePicker
-        android:id="@+id/time_picker"
+        android:id="@+id/time_picker_start"
+        android:timePickerMode="spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_below="@id/time_picker_text_start" />
+
 
     <TextView
         style="@style/UserNotifcation.Message"
-        android:id="@+id/time_picker_text"
-        android:layout_below="@+id/time_picker"
+        android:id="@+id/time_picker_text_stop"
+        android:text="@string/autostart_end"
+        android:gravity="center"
+        android:layout_below="@+id/time_picker_start"
         android:layout_alignParentStart="true" />
+
+
+    <TimePicker
+        android:id="@+id/time_picker_stop"
+        android:timePickerMode="spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/time_picker_text_stop" />
+
+    <!--
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_below="@id/time_picker_stop">
+
+        <NumberPicker
+            android:id="@+id/waitTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+        <TextView
+            style="@style/UserNotifcation.Message"
+            android:text="@string/autostart_wait"
+            android:gravity="center_vertical"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/waitTime"/>
+    </RelativeLayout>
+    -->
 
     <RelativeLayout
         android:id="@+id/continue_container"
@@ -28,8 +71,10 @@
         <Button
             android:id="@+id/time_picker_exit"
             style="@style/UserNotification.Cancel"
-            android:text="@string/cancel_btn" />
+            android:text="@string/do_not_autostart" />
     </RelativeLayout>
+
+
 
 
 </RelativeLayout>

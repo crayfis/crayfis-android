@@ -4,10 +4,7 @@
     <string name="pref_save_data">خزن البيانات؟</string>
     <string name="app_name">كرايفس بيتا</string>
     <string name="pref_show_image">اعرض الصورة</string>
-    <string name="pref_do_reco">"قم بإعادة التركيب"</string>
     <string name="pref_threshold">العتبة</string>
-    <string name="pref_startwait">مدة الانتظار بعد توصيل الجهاز</string>
-    <string name="settings_startwait_summary">الثواني المنتظرة بعد توصيل جهازك</string>
 
     <string name="settings_wifi_title">واي-فاي فقط</string>
     <string name="settings_wifi_summary">استخدم الواي-فاي فقط لتحميل البيانات</string>

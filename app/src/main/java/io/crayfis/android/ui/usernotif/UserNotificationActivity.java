@@ -8,6 +8,8 @@ import android.view.View;
 
 import io.crayfis.android.R;
 
+import static io.crayfis.android.main.MainActivity.RESULT_DENY;
+
 /**
  * Displays a user notification.
  *
@@ -21,6 +23,7 @@ public class UserNotificationActivity extends AppCompatActivity implements UserN
 
     public static final String TITLE = "title";
     public static final String MESSAGE = "message";
+    public static final String CANCEL_BUTTON = "cancel_btn";
 
     private String mTitle;
     private String mMessage;
@@ -30,19 +33,21 @@ public class UserNotificationActivity extends AppCompatActivity implements UserN
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_warning);
 
-        setTitleAndMessage();
-        final UserNotificationFragment fragment = UserNotificationFragment.getInstance(mTitle, mMessage, this);
+        final Bundle extras = getIntent().getExtras();
+        if (extras == null) {
+            throw new RuntimeException("No extras set.");
+        }
+
+        setTitleAndMessage(extras);
+        boolean cancel = extras.getBoolean(CANCEL_BUTTON, false);
+        final UserNotificationFragment fragment = UserNotificationFragment.getInstance(mTitle, mMessage, cancel, this);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, fragment)
                 .commit();
     }
 
-    private void setTitleAndMessage() throws RuntimeException {
+    private void setTitleAndMessage(Bundle extras) throws RuntimeException {
         final Resources resources = getResources();
-        final Bundle extras = getIntent().getExtras();
-        if (extras == null) {
-            throw new RuntimeException("No extras set.");
-        }
 
         final String title = extras.getString(TITLE);
         if (title != null) {
@@ -72,6 +77,12 @@ public class UserNotificationActivity extends AppCompatActivity implements UserN
     @Override
     public void onContinueClicked(@NonNull final View view) {
         setResult(RESULT_OK);
+        finish();
+    }
+
+    @Override
+    public void onCancelClicked(@NonNull final View view) {
+        setResult(RESULT_DENY);
         finish();
     }
 }

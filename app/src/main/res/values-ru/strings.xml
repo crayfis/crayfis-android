@@ -4,10 +4,7 @@
     <string name="pref_save_data">Сохранить данные?</string>
     <string name="app_name">CRAYFIS бета</string>
     <string name="pref_show_image">Показать </string>
-    <string name="pref_do_reco">"Do Reco"</string>
     <string name="pref_threshold">Предел</string>
-    <string name="pref_startwait">Здержка после подключения питания</string>
-    <string name="settings_startwait_summary">Задержка старта после подключения зарядного устройства, в секундах </string>
 
     <string name="settings_wifi_title">Только на Wifi Wifi only</string>
     <string name="settings_wifi_summary">Производить загрузку только по Wifi</string>

@@ -5,29 +5,36 @@
     <string name="pref_save_data">Save Data?</string>
 	<string name="app_name">CRAYFIS beta</string>
 	<string name="pref_show_image">Show Image</string>
-	<string name="pref_do_reco">"Do Reco"</string>
-	<string name="pref_threshold">Threshold</string>
-	<string name="pref_startwait">Waits to start after plugin</string>
+    <string name="pref_threshold">Threshold</string>
     <string name="pref_enable_notif" translatable="false">pref_enable_notif</string>
 
-    <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
-
     <string name="first_run_welcome_title" translatable="false">CRAYFIS beta</string>
-	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\n\n CRAYFIS is an app \nwhich will use your smartphone\n as part of a worldwide network\nto look for cosmic ray particles.\n\n For more info: http://crayfis.io/.</string>
+	<string name="first_run_welcome" translatable="false">Welcome to CRAYFIS beta testing!\nThank you for your help!\n\nCRAYFIS is an app which will use your smartphone as part of a worldwide network to look for cosmic ray particles.\n\nFor more info: https://crayfis.io/.</string>
     <string name="first_run_how_to_title" translatable="false">How to use this app</string>
-    <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended.  This app uses a lot of power.\n\nMake sure your location services are turned on.  Providing us with your location allows us to make the most out of the data you collect.</string>
-    <string name="about_autostart" translatable="false">\"Autostart\" allows you to schedule nightly data-taking whenever your phone is charging and not in use. Please select when this feature %s.</string>
-    <string name="first_run_autostart" translatable="false">\n\nThis can be modified at any time in the Settings pane.</string>
+    <string name="first_run_how_to" translatable="false">Please plug your device into a power source and put it down, preferably with the rear camera facing down.\n\nPlugging in your device is not required but highly recommended. This app uses a lot of power.\n\nMake sure your location services are turned on. Providing us with your location allows us to make the most out of the data you collect.</string>
+    <string name="first_run_quit_title" translatable="false">How to quit the app</string>
+    <string name="first_run_quit" translatable="false">Since CRAYFIS runs in the background to conserve power, exiting the main screen does not automatically kill it. To quit CRAYFIS, press the pause button on the main screen before exiting.\n\nAlternatively, if you pick the phone up, the app will quit itself.</string>
+    <string name="first_run_perms_title" translatable="false">Camera and location settings</string>
+    <string name="first_run_perms" translatable="false">To allow your phone to sleep during data-taking, CRAYFIS will access your camera and location services in the background.\n\nThe camera and GPS will ONLY be used during data-taking, and will be disabled as soon as the phone is unplugged and picked up. Whenever your camera and GPS are in use, a notification (\"Taking data!\") will display in your status bar.\n\nYour data will only be used for scientific research and never for commercial purposes. \n\nSee https://crayfis.io/privacy for more information.</string>
+    <string name="first_run_autostart_title" translatable="false">Scheduling runs</string>
+    <string name="first_run_autostart" translatable="false">CRAYFIS\'s success depends on our users consistently taking data.\n\nThe optional \"Autostart\" feature allows you to schedule nightly runs between hours of your choosing. If your phone is charging and not in use during this time window, the app will automatically start.\n\nThis can be modified at any time in the Settings pane.</string>
+
+    <string name="autostart_begin" translatable="false">Take data if charging from</string>
+    <string name="autostart_end" translatable="false">to</string>
+    <string name="autostart_wait" translatable="false">minutes after charging.</string>
+    <string name="do_not_autostart" translatable="false">DO NOT AUTOSTART</string>
 
     <string name="continue_btn" translatable="false">CONTINUE</string>
     <string name="next_btn" translatable="false">NEXT</string>
     <string name="finish_btn" translatable="false">FINISH</string>
-    <string name="cancel_btn" translatable="false">DO NOT AUTOSTART</string>
+    <string name="cancel_btn" translatable="false">MAYBE LATER</string>
 
     <string name="settings_wifi_title">Wifi only</string>
     <string name="settings_wifi_summary">Only use Wifi to upload data</string>
     <string name="settings_code_summary">Generated from the CRAYFIS website</string>
     <string name="settings_code_title">CRAYFIS User code"</string>
+    <string name="settings_startwait_title" translatable="false">Autostart wait time</string>
+    <string name="settings_startwait_summary" translatable="false">Minutes to wait between plugin and scheduled run</string>
     <string name="settings_gallery_title">Enable gallery</string>
     <string name="settings_gallery_summary">Saves and displays interesting images</string>
     <string name="settings_notif_title" translatable="false">Enable notifications</string>
@@ -89,7 +96,7 @@
     <string name="ok">OK</string>
     <string name="update_notice">A new version of CRAYFIS is available. Click here for the update: </string>
     <string name="crayfis_about">CRAYFIS is an app which uses your phone to look for cosmic ray particles. </string>
-    <string name="swipe_help">Swipe left or right for other views</string>
+    <string name="swipe_help">Tap the icon in the upper left corner views</string>
     <string name="more_details">For more details:</string>
     <string name="update_title">Update CRAYFIS</string>
     <string name="about_title">About CRAYFIS</string>

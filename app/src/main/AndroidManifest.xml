@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <uses-feature android:name="android.hardware.camera"
         android:required="true"/>
@@ -70,6 +71,7 @@
 
         <service
             android:name=".main.DAQService"
+            android:foregroundServiceType="location|camera"
             android:exported="false"/>
 
         <activity android:name=".ui.usernotif.UserNotificationActivity"

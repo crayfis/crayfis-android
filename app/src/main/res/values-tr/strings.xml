@@ -5,10 +5,7 @@
     <string name="pref_save_data">Datayi kayitla?</string>			
 	<string name="app_name">CRAYFIS beta</string>
 	<string name="pref_show_image">Goruntuyu goster</string>
-	<string name="pref_do_reco">"Do Reco"</string>
-	<string name="pref_threshold">Threshold</string>
-	<string name="pref_startwait">Prize soktuktan sonra baslamasi icin bekle</string>
-    <string name="settings_startwait_summary">Baslamasina birkac saniye kaldi</string>
+    <string name="pref_threshold">Threshold</string>
 
     <string name="settings_wifi_title">Sadece Wifi</string>
     <string name="settings_wifi_summary">Data yuklemek icin sadece Wifi kullan</string>

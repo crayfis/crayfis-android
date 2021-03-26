@@ -9,10 +9,7 @@
     <string name="pref_save_data">לשמור מידע?</string>
     <string name="app_name">CRAYFIS beta</string>
     <string name="pref_show_image">הראה תמונה</string>
-    <string name="pref_do_reco">"בצע שחזור"</string>
     <string name="pref_threshold">סף רגישות</string>
-    <string name="pref_startwait">Waits to start after plugin</string>
-    <string name="settings_startwait_summary">Seconds to wait before launch, after you plug in phone</string>
 
     <string name="settings_wifi_title">Wifi בלבד</string>
     <string name="settings_wifi_summary">העלה מידע רק באמצעות Wifi</string>

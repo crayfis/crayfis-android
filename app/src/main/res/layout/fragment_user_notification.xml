@@ -21,6 +21,11 @@
             android:id="@+id/continue_btn"
             android:text="@string/continue_btn"
             style="@style/UserNotification.Continue"/>
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:text="@string/cancel_btn"
+            style="@style/UserNotification.Cancel"/>
     </RelativeLayout>
 
 </RelativeLayout>

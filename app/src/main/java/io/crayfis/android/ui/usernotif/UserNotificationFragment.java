@@ -8,6 +8,7 @@ import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import io.crayfis.android.R;
@@ -27,10 +28,12 @@ public class UserNotificationFragment extends Fragment {
      * @return {@link UserNotificationFragment}
      */
     public static UserNotificationFragment getInstance(@NonNull final String title, @NonNull final String message,
+                                              boolean cancel,
                                               @NonNull final OnContinueClickListener continueClickListener) {
         final UserNotificationFragment rtn = new UserNotificationFragment();
         rtn.mTitle = title;
         rtn.mMessage = message;
+        rtn.mCancel = cancel;
         rtn.mOnContinueClickListener = continueClickListener;
         return rtn;
     }
@@ -56,6 +59,7 @@ public class UserNotificationFragment extends Fragment {
     private String mTitle;
     private String mMessage;
 
+    private boolean mCancel;
     private OnContinueClickListener mOnContinueClickListener;
 
     @Nullable
@@ -90,6 +94,20 @@ public class UserNotificationFragment extends Fragment {
             }
         });
 
+        Button cancelBtn = rtn.findViewById(R.id.cancel_btn);
+        if(mCancel) {
+            cancelBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mOnContinueClickListener != null) {
+                        mOnContinueClickListener.onCancelClicked(v);
+                    }
+                }
+            });
+        } else {
+            cancelBtn.setVisibility(View.GONE);
+        }
+
         return rtn;
     }
 
@@ -103,6 +121,13 @@ public class UserNotificationFragment extends Fragment {
          *
          * @param view The view that received the click.
          */
-        public void onContinueClicked(@NonNull final View view);
+        void onContinueClicked(@NonNull final View view);
+
+        /**
+         * The user has cancelled
+         *
+         * @param view The view that received the click.
+         */
+        void onCancelClicked(@NonNull final View view);
     }
 }

@@ -4,10 +4,7 @@
     <string name="pref_save_data">保存数据?</string>
     <string name="app_name">CRAYFIS 测试版</string>
     <string name="pref_show_image">显示图像</string>
-    <string name="pref_do_reco">"进行重建"</string>
     <string name="pref_threshold">阈值</string>
-    <string name="pref_startwait">接入,等待开始</string>
-    <string name="settings_startwait_summary">接入手机等待运行时间</string>
 
     <string name="settings_wifi_title">无线网络</string>
     <string name="settings_wifi_summary">仅使用无线网络上传数据</string>

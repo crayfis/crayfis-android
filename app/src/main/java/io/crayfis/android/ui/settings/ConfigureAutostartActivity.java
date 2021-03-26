@@ -6,65 +6,46 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.TimePicker;
+
+import androidx.annotation.StringRes;
 
 import io.crayfis.android.R;
 import io.crayfis.android.util.AutostartUtil;
 
 /**
- * Created by Jeff on 10/6/2017.
- */
-
-/**
  * An activity to set start/end times for the autostart window
+ *
+ * Created by Jeff on 10/6/2017
  */
 public class ConfigureAutostartActivity extends Activity {
 
-    private String mPreference; // sharedPreference to be changed
-    private String mMessage;
-
-    private TimePicker mTimePicker;
-    private Button mContinueButton;
-    private View.OnClickListener mStartOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            savePreference();
-            mPreference = getString(R.string.prefStartBefore);
-            mMessage = String.format(getString(R.string.about_autostart), "ENDS");
-            configure();
-            mContinueButton.setOnClickListener(mStopOnClickListener);
-            mContinueButton.setText(getString(R.string.finish_btn));
-        }
-    };
-
-    private View.OnClickListener mStopOnClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            savePreference();
-            AutostartUtil.setAlarm(ConfigureAutostartActivity.this);
-            setResult(RESULT_OK);
-            finish();
-        }
-    };
+    private TimePicker mTimePickerStart;
+    private TimePicker mTimePickerStop;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.configure_autostart);
 
-        mTimePicker = (TimePicker)findViewById(R.id.time_picker);
+        mTimePickerStart = findViewById(R.id.time_picker_start);
+        mTimePickerStop = findViewById(R.id.time_picker_stop);
 
-        // start with beginning of window
-        mPreference = getString(R.string.prefStartAfter);
-        mMessage = String.format(getString(R.string.about_autostart), "STARTS");
+        setTimeFromPreferences(mTimePickerStart, R.string.prefStartAfter);
+        setTimeFromPreferences(mTimePickerStop, R.string.prefStartBefore);
 
-        configure();
+        Button continueButton = findViewById(R.id.time_picker_continue);
+        Button cancelButton = findViewById(R.id.time_picker_exit);
 
-        mContinueButton = (Button)findViewById(R.id.time_picker_continue);
-        Button cancelButton = (Button)findViewById(R.id.time_picker_exit);
-
-        mContinueButton.setOnClickListener(mStartOnClickListener);
-        mContinueButton.setText(getString(R.string.next_btn));
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                savePreference(mTimePickerStart, R.string.prefStartAfter);
+                savePreference(mTimePickerStop, R.string.prefStartBefore);
+                AutostartUtil.setAlarm(ConfigureAutostartActivity.this);
+                setResult(RESULT_OK);
+                finish();
+            }
+        });
 
         cancelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,31 +68,23 @@ public class ConfigureAutostartActivity extends Activity {
     /**
      * Create view given mMessage & mPreference
      */
-    private void configure() {
+    private void setTimeFromPreferences(TimePicker timePicker, @StringRes int pref) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        int defaultTime = mPreference.equals(getString(R.string.prefStartAfter)) ? 0 : 480;
-        int timeInMinutes = sharedPreferences.getInt(mPreference, defaultTime);
-        mTimePicker.setCurrentHour(timeInMinutes/60);
-        mTimePicker.setCurrentMinute(timeInMinutes % 60);
-
-        TextView messageView = (TextView)findViewById(R.id.time_picker_text);
-        if(sharedPreferences.getBoolean(getString(R.string.firstRun), true)) {
-            mMessage += getString(R.string.first_run_autostart);
-        }
-        messageView.setText(mMessage);
+        int defaultTime = (pref == R.string.prefStartAfter) ? 0 : 480;
+        int timeInMinutes = sharedPreferences.getInt(getString(pref), defaultTime);
+        timePicker.setHour(timeInMinutes/60);
+        timePicker.setMinute(timeInMinutes % 60);
     }
 
-    private void savePreference() {
-        int hour = mTimePicker.getCurrentHour();
-        int minute = mTimePicker.getCurrentMinute();
+    private void savePreference(TimePicker timePicker, @StringRes int pref) {
+        int hour = timePicker.getHour();
+        int minute = timePicker.getMinute();
         SharedPreferences sharedPrefs
                 = PreferenceManager.getDefaultSharedPreferences(ConfigureAutostartActivity.this);
 
         SharedPreferences.Editor editor = sharedPrefs.edit();
-        editor.putInt(mPreference, 60*hour + minute);
-        if(mPreference.equals(getString(R.string.prefStartBefore))) {
-            editor.putBoolean(getString(R.string.prefEnableAutoStart), true);
-        }
-        editor.apply();
+        editor.putInt(getString(pref), 60*hour + minute)
+                .putBoolean(getString(R.string.prefEnableAutoStart), true)
+                .apply();
     }
 }

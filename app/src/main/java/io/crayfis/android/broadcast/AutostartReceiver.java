@@ -34,18 +34,8 @@ public class AutostartReceiver extends BroadcastReceiver {
             public void run() {
                 CFApplication application = (CFApplication) context.getApplicationContext();
 
-                // Confirm that we are charging
-                IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-                Intent batteryStatus = context.registerReceiver(null, ifilter);
-                if(batteryStatus == null) return;
-                int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
-                boolean isCharging = ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
-                        (status == BatteryManager.BATTERY_STATUS_FULL));
-
-                CFLog.d("receiver: is battery charging? "+isCharging);
-
                 // don't autostart if not charging
-                if (!isCharging) return;
+                if(!isCharging(context)) return;
 
                 // check if autostart is available
 
@@ -64,9 +54,11 @@ public class AutostartReceiver extends BroadcastReceiver {
                     autostartHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
+                            // make sure we're still charging
+                            if(isCharging(context))
                             context.startService(it);
                         }
-                    }, 1000L*startWait);
+                    }, 60000L*startWait);
 
                 }
             }
@@ -74,5 +66,15 @@ public class AutostartReceiver extends BroadcastReceiver {
 
 
 	}
+
+	private boolean isCharging(Context context) {
+        // Confirm that we are charging
+        IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = context.registerReceiver(null, ifilter);
+        if(batteryStatus == null) return false;
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+        return ((status == BatteryManager.BATTERY_STATUS_CHARGING) ||
+                (status == BatteryManager.BATTERY_STATUS_FULL));
+    }
 
 }

@@ -19,7 +19,6 @@
 package io.crayfis.android.main;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -28,7 +27,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.annotation.NonNull;
@@ -51,7 +49,13 @@ public class MainActivity extends Activity  {
 
 	private static final int REQUEST_CODE_WELCOME = 1;
 	private static final int REQUEST_CODE_HOW_TO = 2;
+	private static final int REQUEST_CODE_HOW_TO_QUIT = 6;
+    private static final int REQUEST_CODE_CAMERA_LOC = 4;
+    private static final int REQUEST_CODE_AUTOSTART_REQUEST = 5;
     private static final int REQUEST_CODE_AUTOSTART = 3;
+
+    public static final int RESULT_DENY = 100;
+
 
     public static String[] permissions = {
         Manifest.permission.CAMERA,
@@ -89,33 +93,56 @@ public class MainActivity extends Activity  {
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
 		super.onActivityResult(requestCode, resultCode, data);
 
-		if (resultCode != RESULT_OK) {
-            finish();
-		} else {
-            Intent intent;
-            switch(requestCode) {
-                case REQUEST_CODE_WELCOME:
-                    intent = new Intent(this, UserNotificationActivity.class);
-                    intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_how_to_title);
-                    intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_how_to);
-                    startActivityForResult(intent, REQUEST_CODE_HOW_TO);
-                    break;
-                case REQUEST_CODE_HOW_TO:
+		CFLog.d("resultCode = " + resultCode);
+		if(resultCode != RESULT_OK && resultCode != RESULT_DENY) {
+		    finish();
+		    return;
+        }
+
+        Intent intent;
+        switch(requestCode) {
+            case REQUEST_CODE_WELCOME:
+                intent = new Intent(this, UserNotificationActivity.class);
+                intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_how_to_title);
+                intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_how_to);
+                startActivityForResult(intent, REQUEST_CODE_HOW_TO);
+                break;
+            case REQUEST_CODE_HOW_TO:
+                intent = new Intent(this, UserNotificationActivity.class);
+                intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_perms_title);
+                intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_perms);
+                startActivityForResult(intent, REQUEST_CODE_CAMERA_LOC);
+                break;
+            case REQUEST_CODE_CAMERA_LOC:
+                intent = new Intent(this, UserNotificationActivity.class);
+                intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_quit_title);
+                intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_quit);
+                startActivityForResult(intent, REQUEST_CODE_HOW_TO_QUIT);
+                break;
+            case REQUEST_CODE_HOW_TO_QUIT:
+                intent = new Intent(this, UserNotificationActivity.class);
+                intent.putExtra(UserNotificationActivity.TITLE, R.string.first_run_autostart_title);
+                intent.putExtra(UserNotificationActivity.MESSAGE, R.string.first_run_autostart);
+                intent.putExtra(UserNotificationActivity.CANCEL_BUTTON, true);
+                startActivityForResult(intent, REQUEST_CODE_AUTOSTART_REQUEST);
+                break;
+            case REQUEST_CODE_AUTOSTART_REQUEST:
+                if(resultCode == RESULT_OK) {
                     intent = new Intent(this, ConfigureAutostartActivity.class);
                     startActivityForResult(intent, REQUEST_CODE_AUTOSTART);
                     break;
-                case REQUEST_CODE_AUTOSTART:
-                    //This is so that if they have entered in an invalid user ID before, but
-                    //then just decide to run it locally, it will reset the userID to empty
-                    SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    final SharedPreferences.Editor editor = sharedprefs.edit();
-                    editor.putBoolean("firstRun", false)
-                            .apply();
+                }
+            case REQUEST_CODE_AUTOSTART:
+                //This is so that if they have entered in an invalid user ID before, but
+                //then just decide to run it locally, it will reset the userID to empty
+                SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                final SharedPreferences.Editor editor = sharedprefs.edit();
+                editor.putBoolean("firstRun", false)
+                        .apply();
 
-                    // now start running
-                    checkPermissions();
-            }
-		}
+                // now start running
+                checkPermissions();
+        }
 	}
 
     /**
