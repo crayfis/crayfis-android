@@ -64,7 +64,7 @@ public final class NavDrawerAdapter extends ArrayAdapter<NavDrawerAdapter.Type> 
             Type.NETWORK_MAP,
             Type.YOUR_ACCOUNT,
             Type.DOSIMETER,
-            Type.FEEDBACK
+            // Type.FEEDBACK // Uservoice is no longer active
     };
 
     public NavDrawerAdapter(final Context context) {

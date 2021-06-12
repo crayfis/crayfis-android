@@ -83,7 +83,7 @@ public class LayoutNetworkMap extends NavDrawerFragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+getString(R.string.server_address)+"/embed/android";
+        final String leaderURL = "https://"+getString(R.string.server_address)+"/embed/android";
 
         browserView.loadUrl(leaderURL);
 

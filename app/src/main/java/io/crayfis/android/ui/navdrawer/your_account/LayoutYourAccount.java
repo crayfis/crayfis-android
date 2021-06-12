@@ -171,7 +171,7 @@ public class LayoutYourAccount extends NavDrawerFragment {
         browserView.setHorizontalScrollBarEnabled(false);
 
         //The website which is wrapped to the webview
-        final String leaderURL = "http://"+getString(R.string.server_address)+"/accounts/login/?embed";
+        final String leaderURL = "https://"+getString(R.string.server_address)+"/accounts/login/?embed";
 
         CFLog.d("CRAYFIS loading" + leaderURL);
         browserView.loadUrl(leaderURL);
