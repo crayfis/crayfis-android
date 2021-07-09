@@ -132,8 +132,8 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
         c.setRequestProperty("Crayfis-version", "b " + mServerInfo.buildVersion);
         c.setRequestProperty("Crayfis-version-code", Integer.toString(mServerInfo.versionCode));
 
-        if (!BuildConfig.SECRET_SALT.isEmpty()) {
-            ByteString bytesSecret = ByteString.copyFromUtf8(BuildConfig.SECRET_SALT);
+        if (!CFConfig.getSecretSalt().isEmpty()) {
+            ByteString bytesSecret = ByteString.copyFromUtf8(CFConfig.getSecretSalt());
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA-256");
                 md.update(bytesSecret.toByteArray());

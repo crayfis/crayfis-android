@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import io.crayfis.android.BuildConfig;
 import io.crayfis.android.daq.DAQManager;
 import io.crayfis.android.daq.ResolutionSpec;
 import io.crayfis.android.trigger.L0.L0Processor;
@@ -18,6 +19,16 @@ import io.crayfis.android.util.CFLog;
  * Global configuration class.
  */
 public final class CFConfig implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    // load secret salt
+    static {
+        if(BuildConfig.DEBUG) {
+            System.loadLibrary("debug-lib");
+        } else {
+            System.loadLibrary("release-lib");
+        }
+    }
+    public static native String getSecretSalt();
 
     private static final CFConfig INSTANCE = new CFConfig();
 
@@ -97,6 +108,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
         mDataChunkSize = DEFAULT_DATACHUNK_SIZE;
+        CFLog.d("Salt: " + getSecretSalt());
     }
 
     public TriggerProcessor.Config getL0Trigger() {

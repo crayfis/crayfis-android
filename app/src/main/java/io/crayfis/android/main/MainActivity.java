@@ -29,8 +29,11 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 
+import io.crayfis.android.server.CFConfig;
 import io.crayfis.android.ui.settings.ConfigureAutostartActivity;
 import io.crayfis.android.R;
 import io.crayfis.android.ui.usernotif.UserNotificationActivity;
@@ -62,18 +65,11 @@ public class MainActivity extends Activity  {
         Manifest.permission.ACCESS_FINE_LOCATION
     };
 
-	public String build_version = null;
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        try {
-            build_version = getPackageManager().getPackageInfo(getPackageName(),0).versionName;
-        }
-        catch (NameNotFoundException ex) {
-            CFLog.w("MainActivity: Could not find build version!");
-        }
+        Toast.makeText(this, CFConfig.getSecretSalt(), Toast.LENGTH_LONG).show();
 
         //Pull the existing shared preferences and set editor
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

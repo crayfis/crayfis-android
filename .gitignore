@@ -34,4 +34,4 @@ res/values/com_crashlytics_export_strings.xml
 **/build
 
 # key for server verification
-apikey.properties
+/app/src/main/cpp/release-lib.cpp

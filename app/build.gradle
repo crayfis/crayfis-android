@@ -39,15 +39,6 @@ def getVersionName = { ->
     }
 }
 
-// add salt for verifying data
-def apikeyProperties = new Properties()
-def apikeyPropertiesFile = rootProject.file("apikey.properties")
-if (apikeyPropertiesFile.exists()) {
-    apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
-} else {
-    apikeyProperties['SECRET_SALT'] = "\"\""
-}
-
 android {
     compileSdkVersion 30
     buildToolsVersion '29.0.2'
@@ -59,8 +50,6 @@ android {
         renderscriptTargetApi 23
         versionCode getVersionCode()
         versionName getVersionName()
-
-        buildConfigField("String", "SECRET_SALT", apikeyProperties['SECRET_SALT'])
     }
 
     // make sure salt is included in release variants
@@ -68,14 +57,13 @@ android {
         if ( variant.buildType.name == "release"){
             variant.getAssembleProvider().configure() {
                 it.doLast() {
-                    if (!rootProject.file("apikey.properties").exists()) {
-                        throw new GradleException("apikey.properties file needed for release build")
+                    if (!rootProject.file("app/src/main/cpp/release-lib.cpp").exists()) {
+                        throw new GradleException("release-lib.cpp needed for release build")
                     }
                 }
             }
         }
     }
-
 
     buildTypes {
         release {
@@ -88,6 +76,28 @@ android {
             proguardFiles getDefaultProguardFile(
                     'proguard-android-optimize.txt'),
                     'proguard-rules.pro'
+
+            // native build with secret salt
+            externalNativeBuild {
+                cmake {
+                    targets "release-lib"
+                }
+            }
+        }
+
+        debug {
+            // blank secret salt
+            externalNativeBuild {
+                cmake {
+                    targets "debug-lib"
+                }
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
         }
     }
 
