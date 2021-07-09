@@ -145,9 +145,6 @@ class CFCamera {
                 nextId = currentId + 1;
                 if (nextId >= getNumberOfCameras()) {
                     nextId = -1;
-                } else {
-                    // need a new SURVEY XB for next camera
-                    ExposureBlockManager.getInstance().abortExposureBlock();
                 }
                 break;
             case PRECALIBRATION:
@@ -157,13 +154,13 @@ class CFCamera {
             case FINISHED:
                 // take a break for a while
         }
+
+        mCameraId = nextId;
+        CFLog.i("cameraId:" + currentId + " -> " + nextId);
+
         if (nextId == -1 && state != CFApplication.State.IDLE && state != CFApplication.State.FINISHED) {
             mApplication.startInitTimer();
         }
-
-        mCameraId = nextId;
-
-        CFLog.i("cameraId:" + currentId + " -> " + nextId);
 
         configure();
 
@@ -198,7 +195,6 @@ class CFCamera {
                     mPreviewRequests.add(mPreviewRequestBuilder.build());
                     mPreviewRequestBuilder.removeTarget(s); // just one per request
                 }
-
 
                 mCameraDevice.createCaptureSession(outputs, mStateCallback, mCameraHandler);
 
@@ -244,8 +240,10 @@ class CFCamera {
                 mTimestampHistory.clear();
             }
             CFConfig.getInstance().setPrecalConfig(null);
-            if(!mApplication.changeApplicationState(CFApplication.State.INIT, CFApplication.State.SURVEY))
-                return;
+            if(!mApplication.changeApplicationState(CFApplication.State.INIT, CFApplication.State.SURVEY)) {
+                // need a new SURVEY XB for next camera
+                ExposureBlockManager.getInstance().abortExposureBlock();
+            }
 
             // When the session is ready, we start displaying the preview.
             mCaptureSession = cameraCaptureSession;
