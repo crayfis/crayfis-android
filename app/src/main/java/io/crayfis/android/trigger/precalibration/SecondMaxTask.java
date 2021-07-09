@@ -36,17 +36,17 @@ class SecondMaxTask extends TriggerProcessor.Task {
         static {
             KEY_DEFAULT = new HashMap<>();
             KEY_DEFAULT.put(KEY_MAXFRAMES, 50000);
-            KEY_DEFAULT.put(PreCalibrator.KEY_HOTCELL_LIMIT, .01f);
-            KEY_DEFAULT.put(PreCalibrator.KEY_SECOND_MAX_THRESH, 4000);
+            KEY_DEFAULT.put(PreCalibrator.KEY_INTEGRAL_THRESH, .01f); // max number of hotcells
+            KEY_DEFAULT.put(PreCalibrator.KEY_DIFFERENTIAL_THRESH, .02f); // max number per bin in second max distribution
         }
 
-        final float hotcellLimit;
-        final int hotcellThresh;
+        final float integralThresh;
+        final float differentialThresh;
         Config(HashMap<String, String> options) {
             super(NAME, options, KEY_DEFAULT);
 
-            hotcellLimit = getFloat(PreCalibrator.KEY_HOTCELL_LIMIT);
-            hotcellThresh = getInt(PreCalibrator.KEY_SECOND_MAX_THRESH);
+            integralThresh = getFloat(PreCalibrator.KEY_INTEGRAL_THRESH);
+            differentialThresh = getFloat(PreCalibrator.KEY_DIFFERENTIAL_THRESH);
         }
 
         @Override
@@ -136,12 +136,13 @@ class SecondMaxTask extends TriggerProcessor.Task {
 
         // find minimum value in aSecond considered as "hot"
         int area = aMax.getType().getX() * aMax.getType().getY();
-        int max = (int) (mConfig.hotcellLimit * area);
+        int integralLimit = (int) (mConfig.integralThresh * area);
+        int differentialLimit = (int) (mConfig.differentialThresh * area);
         int pixKilled = 0;
 
         int cutoff=255;
-        while(pixKilled < max && cutoff > 0) {
-            if(secondHist[cutoff] > mConfig.hotcellThresh) {
+        while(pixKilled < integralLimit && cutoff > 0) {
+            if(secondHist[cutoff] > differentialLimit) {
                 cutoff++;
                 break;
             }

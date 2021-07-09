@@ -318,12 +318,9 @@ class CFCamera {
                 }) // identity RGB -> sRGB transform
         );
 
-
         mPreviewRequestBuilder.set(CaptureRequest.EDGE_MODE, CameraMetadata.EDGE_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.HOT_PIXEL_MODE, CameraMetadata.HOT_PIXEL_MODE_OFF);
         mPreviewRequestBuilder.set(CaptureRequest.NOISE_REDUCTION_MODE, CameraMetadata.NOISE_REDUCTION_MODE_OFF);
-        mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY,
-                mCameraCharacteristics.get(CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY));
         mPreviewRequestBuilder.set(CaptureRequest.SHADING_MODE, CameraMetadata.SHADING_MODE_OFF);
 
         // get rid of larger results we don't need
@@ -379,6 +376,13 @@ class CFCamera {
 
             mPreviewRequestBuilder.set(CaptureRequest.SENSOR_EXPOSURE_TIME, requestedExpTime);
         }
+
+        // set ISO
+        int iso = CONFIG.getISOGain();
+        if(iso == 0)
+            iso = mCameraCharacteristics.get(CameraCharacteristics.SENSOR_MAX_ANALOG_SENSITIVITY);
+
+        mPreviewRequestBuilder.set(CaptureRequest.SENSOR_SENSITIVITY, iso);
 
     }
 

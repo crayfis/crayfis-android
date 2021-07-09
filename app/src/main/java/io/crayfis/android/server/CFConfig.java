@@ -51,6 +51,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private static final PreCalibrationService.Config DEFAULT_PRECAL_CONFIG = null;
     private static final String DEFAULT_TARGET_RESOLUTION_STR = "1080p";
     private static final Float DEFAULT_TARGET_FPS = 30f;
+    private static final int DEFAULT_ISO_GAIN = 0;
     private static final int DEFAULT_N_ALLOC = 2;
     private static final float DEFAULT_FRAC_DEAD_TIME = .01f;
     private static final int DEFAULT_BATTERY_OVERHEAT_TEMP = 410;
@@ -70,6 +71,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     private PreCalibrationService.Config mPrecalConfig;
     private String mTargetResolutionStr;
     private Float mTargetFPS;
+    private int mISOGain;
     private int mNAlloc;
     private float mFracDeadTime;
     private int mBatteryOverheatTemp;
@@ -90,6 +92,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mPrecalConfig = DEFAULT_PRECAL_CONFIG;
         mTargetResolutionStr = DEFAULT_TARGET_RESOLUTION_STR;
         mTargetFPS = DEFAULT_TARGET_FPS;
+        mISOGain = DEFAULT_ISO_GAIN;
         mNAlloc = DEFAULT_N_ALLOC;
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
@@ -240,13 +243,13 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     @Nullable
     public ResolutionSpec getTargetResolution() { return ResolutionSpec.fromString(mTargetResolutionStr); }
 
-    public void setTargetFPS(float fps) {
-        mTargetFPS = fps;
-    }
-
     public double getTargetFPS() {
         if(mTargetFPS == null) mTargetFPS = DEFAULT_TARGET_FPS;
         return mTargetFPS;
+    }
+
+    public int getISOGain() {
+        return mISOGain;
     }
 
     public int getNAlloc() {
@@ -366,6 +369,10 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if(serverCommand.getTargetFPS() != null) {
             mTargetFPS = serverCommand.getTargetFPS();
+            restartCamera = true;
+        }
+        if(serverCommand.getISOGain() != null) {
+            mISOGain = serverCommand.getISOGain();
             restartCamera = true;
         }
         if(serverCommand.getNAlloc() != null) {

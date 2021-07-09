@@ -40,6 +40,7 @@ class ServerCommand {
     @SerializedName("account_score") private Float mAccountScore;
     @SerializedName("set_target_resolution") private String mResolution;
     @SerializedName("set_target_fps") private Float mTargetFPS;
+    @SerializedName("set_iso_gain") private Integer mISOGain;
     @SerializedName("set_n_alloc") private Integer mNAlloc;
     @SerializedName("set_frac_dead_time") private Float mFracDeadTime;
     @SerializedName("set_battery_overheat_temp") private Integer mBatteryOverheatTemp;
@@ -142,13 +143,17 @@ class ServerCommand {
 
     private class PrecalTrigCommand extends TrigCommand {
         @SerializedName(TriggerProcessor.Config.KEY_MAXFRAMES) private Integer mMaxFrames;
-        @SerializedName(PreCalibrator.KEY_HOTCELL_LIMIT) private Float mHotcellThresh;
+        @SerializedName(PreCalibrator.KEY_INTEGRAL_THRESH) private Float mIntegralThresh;
+        @SerializedName(PreCalibrator.KEY_DIFFERENTIAL_THRESH) private Float mDifferentialThresh;
+        @SerializedName(PreCalibrator.KEY_WEIGHT_GRID_SIZE) private Integer mWeightGridSize;
 
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder(super.toString());
             if(mMaxFrames != null) sb.append(TriggerProcessor.Config.KEY_MAXFRAMES + "=" + mMaxFrames + ";");
-            if(mHotcellThresh != null) sb.append(PreCalibrator.KEY_HOTCELL_LIMIT + "=" + mHotcellThresh + ";");
+            if(mIntegralThresh != null) sb.append(PreCalibrator.KEY_INTEGRAL_THRESH + "=" + mIntegralThresh + ";");
+            if(mDifferentialThresh != null) sb.append(PreCalibrator.KEY_DIFFERENTIAL_THRESH + "=" + mDifferentialThresh + ";");
+            if(mWeightGridSize != null) sb.append(PreCalibrator.KEY_WEIGHT_GRID_SIZE + "=" + mWeightGridSize + ";");
             return sb.toString();
         }
     }
@@ -286,6 +291,11 @@ class ServerCommand {
     @Nullable
     Float getTargetFPS() {
         return mTargetFPS;
+    }
+
+    @Nullable
+    Integer getISOGain () {
+        return mISOGain;
     }
 
     @Nullable

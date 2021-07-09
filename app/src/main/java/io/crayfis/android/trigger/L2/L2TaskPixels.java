@@ -25,7 +25,7 @@ class L2TaskPixels extends TriggerProcessor.Task {
 
     static class Config extends L2Processor.Config {
 
-        static final String NAME = "default";
+        static final String NAME = "pixels";
         static final HashMap<String, Object> KEY_DEFAULT;
 
         static {

@@ -55,7 +55,7 @@ public class L2Processor extends TriggerProcessor {
                 return new L2TaskByteBlock.Config(options);
             default:
                 CFLog.w("No L2 implementation found for " + name + ", using default!");
-                return new L2TaskPixels.Config(options);
+                return new L2TaskByteBlock.Config(options);
         }
     }
 
@@ -76,7 +76,7 @@ public class L2Processor extends TriggerProcessor {
     public static double getPassRateFPM() {
         synchronized (sPassTimes) {
             if (sPassTimes.size() < PASS_TIME_CAPACITY) {
-                return 0.0;
+                return -1.0;
             }
             long dt = System.nanoTime() - sPassTimes.getOldest();
             double dtMin = dt / 1000000000. / 60.;

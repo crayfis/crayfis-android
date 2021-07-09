@@ -29,8 +29,8 @@ import io.crayfis.android.util.CFLog;
 
 public class PreCalibrator extends TriggerProcessor {
 
-    public static final String KEY_SECOND_MAX_THRESH = "second_max_thresh";
-    public static final String KEY_HOTCELL_LIMIT = "hotcell_thresh";
+    public static final String KEY_DIFFERENTIAL_THRESH = "differential_thresh";
+    public static final String KEY_INTEGRAL_THRESH = "integral_thresh";
     public static final String KEY_WEIGHT_GRID_SIZE = "grid_size";
 
     public static class ConfigList extends ArrayList<Config> {
