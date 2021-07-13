@@ -108,7 +108,6 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         mFracDeadTime = DEFAULT_FRAC_DEAD_TIME;
         mBatteryOverheatTemp = DEFAULT_BATTERY_OVERHEAT_TEMP;
         mDataChunkSize = DEFAULT_DATACHUNK_SIZE;
-        CFLog.d("Salt: " + getSecretSalt());
     }
 
     public TriggerProcessor.Config getL0Trigger() {
@@ -126,12 +125,15 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
     public TriggerProcessor.Config getL1Trigger() {
 
         // set the threshold at max if we haven't calibrated it yet
-        if(mThresholdsSet) return mL1Trigger;
+        if(!mThresholdsSet) {
 
-        float threshMax = DAQManager.getInstance().isStreamingRAW() ? 1023f : 255f;
-        return mL1Trigger.edit()
-                .putFloat(L1Processor.KEY_L1_THRESH, threshMax)
-                .create();
+            float threshMax = DAQManager.getInstance().isStreamingRAW() ? 1023f : 255f;
+            mL1Trigger = mL1Trigger.edit()
+                    .putFloat(L1Processor.KEY_L1_THRESH, threshMax)
+                    .create();
+
+        }
+        return mL1Trigger;
     }
 
     public TriggerProcessor.Config getL2Trigger() {
@@ -192,7 +194,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return int
      */
     public int getCalibrationSampleFrames() {
-        return mL1Trigger.getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
+        return getL1Trigger().getInt(TriggerProcessor.Config.KEY_MAXFRAMES);
     }
 
     /**
@@ -201,7 +203,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
      * @return float
      */
     public float getTargetEventsPerMinute() {
-        return mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM);
+        return getL1Trigger().getFloat(L1Processor.KEY_TARGET_EPM);
     }
 
     /**
@@ -360,7 +362,7 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         }
         if (serverCommand.getTargetExposureBlockPeriod() != null) {
             mExposureBlockTargetEvents = (int)(serverCommand.getTargetExposureBlockPeriod()
-                    * mL1Trigger.getFloat(L1Processor.KEY_TARGET_EPM) / 60);
+                    * getL1Trigger().getFloat(L1Processor.KEY_TARGET_EPM) / 60);
         }
         if (serverCommand.getCurrentExperiment() != null) {
             mCurrentExperiment = serverCommand.getCurrentExperiment();
@@ -444,8 +446,8 @@ public final class CFConfig implements SharedPreferences.OnSharedPreferenceChang
         editor.putString(KEY_L0_TRIGGER, mL0Trigger.toString())
                 .putString(KEY_QUAL_TRIGGER, mQualTrigger.toString())
                 .putString(KEY_PRECAL_TRIGGER, mPrecalTriggers.toString())
-                .putString(KEY_L1_TRIGGER, mL1Trigger.toString())
-                .putString(KEY_L2_TRIGGER, mL2Trigger.toString())
+                .putString(KEY_L1_TRIGGER, getL1Trigger().toString())
+                .putString(KEY_L2_TRIGGER, getL2Trigger().toString())
                 .putInt(KEY_XB_TARGET_EVENTS, mExposureBlockTargetEvents)
                 .putString(KEY_CURRENT_EXPERIMENT, mCurrentExperiment)
                 .putString(KEY_DEVICE_NICKNAME, mDeviceNickname)

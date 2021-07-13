@@ -75,6 +75,7 @@ public class UploadExposureService extends IntentService {
                     .putExtra(EXTRA_CAMERA_ID, cameraId);
             context.startService(intent);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             // don't crash if an XB is too big
             if(message instanceof DataProtos.ExposureBlock) {
                 final Intent intent = new Intent(context, UploadExposureService.class);
@@ -82,7 +83,6 @@ public class UploadExposureService extends IntentService {
                 final DataProtos.ExposureBlock xb = (DataProtos.ExposureBlock) message;
                 intent.putExtra(PROTOBUF_MESSAGE,
                         DataProtos.ExposureBlock.newBuilder(xb)
-                        .addAllEvents(null)
                         .build());
             }
         }

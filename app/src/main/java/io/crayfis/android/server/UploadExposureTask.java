@@ -198,7 +198,7 @@ class UploadExposureTask extends AsyncTask<Object, Object, Boolean> {
             case 422:
                 // invalid hashcode, presumably on a debug device
                 UploadExposureService.sValidHash.set(false);
-                return Boolean.FALSE;
+                break;
             default:
                 return Boolean.FALSE;
 

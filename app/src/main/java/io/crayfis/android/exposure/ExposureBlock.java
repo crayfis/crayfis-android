@@ -97,7 +97,7 @@ public class ExposureBlock {
         this.camera_id = camera_id;
         this.camera_facing_back = camera_facing_back;
         this.weights = weights;
-        this.underflow_hist = new Histogram(CFConfig.getInstance().getL1Threshold().intValue()+1);
+        this.underflow_hist = new Histogram((int) Math.ceil(CFConfig.getInstance().getL1Threshold())+1);
         this.start_loc = start_loc;
         this.batteryTemp = batteryTemp;
         this.daq_state = daq_state;

@@ -69,8 +69,6 @@ public class MainActivity extends Activity  {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-        Toast.makeText(this, CFConfig.getSecretSalt(), Toast.LENGTH_LONG).show();
-
         //Pull the existing shared preferences and set editor
         SharedPreferences sharedprefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
 

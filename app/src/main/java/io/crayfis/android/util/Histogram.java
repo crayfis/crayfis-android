@@ -29,7 +29,7 @@ public class Histogram implements Iterable<Long> {
     private class HistogramIterator implements Iterator<Long> {
         private int pos = 0;
         public Long next() { pos += 1; return values[pos-1]; }
-        public boolean hasNext() { return (pos < values.length-1); }
+        public boolean hasNext() { return (pos < values.length); }
         public void remove() { throw new UnsupportedOperationException(); }
     }
 
